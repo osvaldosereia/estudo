@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Produtos</title>
+    <!-- Inclui o Tailwind CSS para estilização fácil e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define a fonte Inter para todo o corpo do documento */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Cor de fundo suave */
+        }
+        /* Estilo para o modal de detalhes do produto */
+        .product-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Fundo escuro semi-transparente */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+            overflow-y: auto; /* Permite rolagem se o conteúdo for muito grande */
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-out; /* Animação de entrada */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Estilo para o carrossel */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Largura máxima para o carrossel */
+            margin: 0 auto 1.5rem auto;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out; /* Transição suave para as imagens */
+        }
+        .carousel-images img {
+            width: 100%;
+            height: 300px; /* Altura fixa para as imagens do carrossel */
+            object-fit: cover;
+            flex-shrink: 0; /* Impede que as imagens encolham */
+            border-radius: 0.75rem;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border-radius: 9999px; /* Botões redondos */
+            transition: background-color 0.3s ease;
+            user-select: none; /* Impede seleção de texto */
+        }
+        .carousel-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .carousel-button.prev {
+            left: 1rem;
+        }
+        .carousel-button.next {
+            right: 1rem;
+        }
+        /* Estilo para o indicador de carregamento */
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Cor do spinner */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="container mx-auto max-w-4xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8 rounded-lg p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md">
+            Nosso Catálogo de Produtos
+        </h1>
+
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Os cartões de produto serão gerados dinamicamente aqui pelo JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Produto (inicialmente escondido) -->
+    <div id="product-detail-modal" class="product-detail-modal hidden">
+        <div class="modal-content w-full md:w-3/4 lg:w-2/3 xl:w-1/2">
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+
+            <h2 id="detail-product-title" class="text-3xl font-bold text-gray-900 mb-4 text-center"></h2>
+
+            <!-- Carrossel de Imagens -->
+            <div class="carousel-container">
+                <div id="carousel-images" class="carousel-images">
+                    <!-- Imagens do carrossel serão inseridas aqui pelo JavaScript -->
+                </div>
+                <button id="prev-image-btn" class="carousel-button prev">&#10094;</button>
+                <button id="next-image-btn" class="carousel-button next">&#10095;</button>
+            </div>
+
+            <p id="detail-product-description" class="text-gray-700 text-lg mb-4 leading-relaxed"></p>
+            
+            <!-- Botão para gerar descrição detalhada com Gemini API -->
+            <button id="generate-description-btn" class="bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-200 ease-in-out shadow-md flex items-center justify-center mb-6 w-full">
+                ✨ Gerar Descrição Detalhada
+                <span id="loading-spinner" class="loading-spinner hidden"></span>
+            </button>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg mb-6 shadow-sm">
+                <span class="text-2xl font-extrabold text-blue-700 mb-2 sm:mb-0">Valor: <span id="detail-product-price"></span></span>
+                <button class="bg-green-600 text-white py-3 px-8 rounded-lg text-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 ease-in-out shadow-lg">
+                    ENCOMENDAR
+                </button>
+            </div>
+
+            <!-- Seção de "Produtos Relacionados" ou "Mais Detalhes" (exemplo) -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4">Mais Detalhes</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Material de alta qualidade e durabilidade.</li>
+                    <li>Garantia de 1 ano contra defeitos de fabricação.</li>
+                    <li>Entrega rápida para todo o Brasil.</li>
+                    <li>Suporte ao cliente 24/7.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Array de objetos de produtos com suas informações e imagens
+        const products = [
+            {
+                id: 'smartphone-ultra',
+                name: 'Smartphone Ultra',
+                description: 'Um smartphone de última geração com câmera de alta resolução e bateria de longa duração. Perfeito para o dia a dia e para quem busca performance. Possui tela AMOLED, processador octa-core e 128GB de armazenamento.',
+                price: 'R$ 2.999,00',
+                images: [
+                    'https://placehold.co/600x400/007bff/ffffff?text=Smartphone+Ultra+1',
+                    'https://placehold.co/600x400/007bff/ffffff?text=Smartphone+Ultra+2',
+                    'https://placehold.co/600x400/007bff/ffffff?text=Smartphone+Ultra+3'
+                ]
+            },
+            {
+                id: 'fone-ouvido-premium',
+                name: 'Fone de Ouvido Premium',
+                description: 'Experimente um som imersivo com cancelamento de ruído ativo. Ideal para música, chamadas e viagens. Conforto garantido com almofadas macias e design ergonômico. Conectividade Bluetooth 5.2.',
+                price: 'R$ 799,00',
+                images: [
+                    'https://placehold.co/600x400/28a745/ffffff?text=Fone+Ouvido+1',
+                    'https://placehold.co/600x400/28a745/ffffff?text=Fone+Ouvido+2',
+                    'https://placehold.co/600x400/28a745/ffffff?text=Fone+Ouvido+3'
+                ]
+            },
+            {
+                id: 'smartwatch-esportivo',
+                name: 'Smartwatch Esportivo',
+                description: 'Monitore sua saúde e atividades físicas com este smartwatch resistente à água. Compatível com Android e iOS. Funções como monitor de batimentos cardíacos, contador de passos e GPS integrado.',
+                price: 'R$ 1.250,00',
+                images: [
+                    'https://placehold.co/600x400/dc3545/ffffff?text=Smartwatch+1',
+                    'https://placehold.co/600x400/dc3545/ffffff?text=Smartwatch+2',
+                    'https://placehold.co/600x400/dc3545/ffffff?text=Smartwatch+3'
+                ]
+            },
+            {
+                id: 'laptop-ultrabook',
+                name: 'Laptop Ultrabook',
+                description: 'Leve e potente, ideal para trabalho e estudo. Processador rápido e tela de alta definição. Design elegante e bateria de longa duração, perfeito para mobilidade.',
+                price: 'R$ 4.500,00',
+                images: [
+                    'https://placehold.co/600x400/ffc107/ffffff?text=Laptop+1',
+                    'https://placehold.co/600x400/ffc107/ffffff?text=Laptop+2',
+                    'https://placehold.co/600x400/ffc107/ffffff?text=Laptop+3'
+                ]
+            }
+        ];
+
+        // Referências aos elementos HTML
+        const productListDiv = document.getElementById('product-list');
+        const productDetailModal = document.getElementById('product-detail-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const detailProductTitle = document.getElementById('detail-product-title');
+        const detailProductDescription = document.getElementById('detail-product-description');
+        const detailProductPrice = document.getElementById('detail-product-price');
+        const carouselImagesDiv = document.getElementById('carousel-images');
+        const prevImageBtn = document.getElementById('prev-image-btn');
+        const nextImageBtn = document.getElementById('next-image-btn');
+        const generateDescriptionBtn = document.getElementById('generate-description-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+
+        let currentProductImages = []; // Armazena as imagens do produto atualmente exibido
+        let currentImageIndex = 0; // Índice da imagem atual no carrossel
+        let currentProduct = null; // Armazena o produto atualmente exibido no modal
+
+        // Função para renderizar os cartões de produto
+        function renderProductCards() {
+            productListDiv.innerHTML = ''; // Limpa a lista existente
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card', 'bg-white', 'rounded-xl', 'shadow-md', 'overflow-hidden', 'transform', 'transition', 'duration-300', 'hover:scale-105', 'hover:shadow-xl', 'cursor-pointer');
+                productCard.dataset.productId = product.id; // Armazena o ID do produto para fácil acesso
+
+                productCard.innerHTML = `
+                    <img src="${product.images[0]}" alt="${product.name} - Imagem Principal" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-5">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-2">${product.name}</h2>
+                        <p class="text-gray-600 text-sm leading-relaxed truncate">${product.description}</p>
+                        <button class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out shadow-md">
+                            Ver Detalhes
+                        </button>
+                    </div>
+                `;
+                productListDiv.appendChild(productCard);
+
+                // Adiciona o evento de clique ao cartão inteiro
+                productCard.addEventListener('click', () => openProductDetail(product.id));
+            });
+        }
+
+        // Função para abrir o modal de detalhes do produto
+        function openProductDetail(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return; // Se o produto não for encontrado, sai da função
+
+            currentProduct = product; // Define o produto atual
+            
+            // Preenche os detalhes do produto no modal
+            detailProductTitle.textContent = product.name;
+            detailProductDescription.textContent = product.description;
+            detailProductPrice.textContent = product.price;
+
+            // Configura o carrossel
+            currentProductImages = product.images;
+            currentImageIndex = 0;
+            updateCarousel();
+
+            // Exibe o modal
+            productDetailModal.classList.remove('hidden');
+        }
+
+        // Função para fechar o modal
+        closeModalBtn.addEventListener('click', () => {
+            productDetailModal.classList.add('hidden');
+        });
+
+        // Fecha o modal ao clicar fora dele
+        productDetailModal.addEventListener('click', (event) => {
+            if (event.target === productDetailModal) {
+                productDetailModal.classList.add('hidden');
+            }
+        });
+
+        // Função para atualizar as imagens do carrossel
+        function updateCarousel() {
+            carouselImagesDiv.innerHTML = ''; // Limpa as imagens existentes
+            currentProductImages.forEach((imageSrc, index) => {
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = `Imagem ${index + 1} do produto`;
+                // Esconde as imagens que não são a atual
+                img.classList.add('w-full', 'h-full', 'object-cover', 'rounded-xl');
+                if (index !== currentImageIndex) {
+                    img.style.display = 'none';
+                }
+                carouselImagesDiv.appendChild(img);
+            });
+            // Ajusta a posição do carrossel para mostrar a imagem atual
+            carouselImagesDiv.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+        }
+
+        // Navegação do carrossel
+        prevImageBtn.addEventListener('click', () => {
+            currentImageIndex = (currentImageIndex - 1 + currentProductImages.length) % currentProductImages.length;
+            updateCarousel();
+        });
+
+        nextImageBtn.addEventListener('click', () => {
+            currentImageIndex = (currentImageIndex + 1) % currentProductImages.length;
+            updateCarousel();
+        });
+
+        // Função para chamar a API Gemini e gerar a descrição
+        generateDescriptionBtn.addEventListener('click', async () => {
+            if (!currentProduct) return;
+
+            // Mostra o spinner de carregamento
+            loadingSpinner.classList.remove('hidden');
+            generateDescriptionBtn.disabled = true; // Desabilita o botão para evitar cliques múltiplos
+
+            const prompt = `Gere uma descrição de produto detalhada e atraente para o seguinte produto:
+            Nome: ${currentProduct.name}
+            Descrição atual: ${currentProduct.description}
+            Preço: ${currentProduct.price}
+            
+            Foque em benefícios, características únicas e como ele pode melhorar a vida do usuário. O texto deve ser persuasivo e com cerca de 100-150 palavras.`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Deixe como está, a chave será fornecida pelo ambiente
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            let retries = 0;
+            const maxRetries = 5;
+            const baseDelay = 1000; // 1 segundo
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429) { // Too Many Requests
+                        const delay = baseDelay * Math.pow(2, retries) + Math.random() * 1000; // Atraso exponencial com jitter
+                        console.warn(`Too many requests. Retrying in ${delay / 1000} seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        retries++;
+                        continue;
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const newDescription = result.candidates[0].content.parts[0].text;
+                        detailProductDescription.textContent = newDescription; // Atualiza a descrição no modal
+                        break; // Sai do loop se a chamada for bem-sucedida
+                    } else {
+                        detailProductDescription.textContent = 'Erro ao gerar descrição. Tente novamente.';
+                        console.error('Estrutura de resposta inesperada:', result);
+                        break;
+                    }
+                } catch (error) {
+                    console.error('Erro ao chamar a API Gemini:', error);
+                    detailProductDescription.textContent = 'Erro de conexão. Tente novamente.';
+                    break;
+                }
+            }
+
+            // Esconde o spinner de carregamento e reabilita o botão
+            loadingSpinner.classList.add('hidden');
+            generateDescriptionBtn.disabled = false;
+        });
+
+        // Renderiza os cartões de produto quando a página carrega
+        window.onload = renderProductCards;
+    </script>
+</body>
+</html>
+
