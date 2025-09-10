@@ -1,0 +1,142 @@
+/* ===== Estrutura base ===== */
+body {
+  font-family: "Inter", Arial, sans-serif;
+  background: #f9f9f9;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ===== Topbar ===== */
+header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header .logo {
+  font-weight: bold;
+  font-size: 18px;
+  color: #111;
+}
+header .actions button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  margin-left: 12px;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s;
+}
+header .actions button:hover { color: #63d1c3; }
+.desktop-android { display: none; }
+@media (pointer: fine), (hover: hover) {
+  .desktop-android { display: inline-block; }
+}
+
+/* ===== Busca ===== */
+#busca {
+  margin: 20px;
+  text-align: center;
+}
+#busca h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+#campoBusca {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+#btnBuscar {
+  margin-top: 10px;
+  background: #063c9d;
+  color: #fff;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#btnBuscar:hover { background: #052e79; }
+
+/* ===== Accordions ===== */
+.accordion {
+  background: #fff;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.accordion:hover { background: #f5f5f5; }
+.panel { display: none; margin: 6px 0 0 6px; }
+
+/* ===== Cards ===== */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  margin-bottom: 10px;
+  padding: 12px;
+}
+.card h2 { font-size: 14px; margin-bottom: 6px; }
+.card p { font-size: 12px; color: #444; }
+
+/* ===== Toast ===== */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  display: none;
+}
+#toast.show { display: block; }
+
+/* ===== Modal ===== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+.modal-content h3 { margin-top: 0; }
+.modal-content .ias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+.modal-content .ias button {
+  flex: 1 1 45%;
+  background: #063c9d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+}
+.modal-content button:hover { opacity: 0.9; }
