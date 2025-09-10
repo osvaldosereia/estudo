@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>direito.love – Vade Mecum</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #222;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+    #menuBtn {
+      font-size: 20px;
+      background: none;
+      border: none;
+    }
+    #conteudo {
+      margin-top: 60px;
+      padding: 15px;
+    }
+    .artigo {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .artigo h2 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+    .artigo p {
+      line-height: 1.4;
+    }
+    .ia-btn {
+      display: block;
+      margin-top: 10px;
+      background: #63d1c3;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+    }
+    /* Menu lateral (índice) */
+    #menu {
+      position: fixed;
+      top: 0; left: -250px;
+      width: 250px; height: 100%;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+      transition: left 0.3s;
+      z-index: 2000;
+    }
+    #menu.open {
+      left: 0;
+    }
+    #menu h2 {
+      font-size: 16px;
+      margin-top: 0;
+    }
+    #menu ul {
+      list-style: none;
+      padding: 0;
+    }
+    #menu ul li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="menuBtn">☰</button>
+    <h1>💚 direito.love</h1>
+  </header>
+
+  <!-- Menu lateral -->
+  <div id="menu">
+    <h2>Índice</h2>
+    <ul id="indice"></ul>
+  </div>
+
+  <main id="conteudo">
+    <!-- Artigos carregados aqui -->
+  </main>
+
+  <script>
+    // Mock de dados (simulando cp.json)
+    const artigos = [
+      { id: "cp_art_121", titulo: "Art. 121 — Homicídio", texto: "Matar alguém: Pena - reclusão, de seis a vinte anos." },
+      { id: "cp_art_122", titulo: "Art. 122 — Induzimento ao suicídio", texto: "Induzir ou instigar alguém a suicidar-se ou a praticar automutilação..." }
+    ];
+
+    const conteudo = document.getElementById("conteudo");
+    const indice = document.getElementById("indice");
+
+    // Renderiza índice lateral
+    artigos.forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = a.titulo;
+      li.onclick = () => abrirArtigo(a.id);
+      indice.appendChild(li);
+    });
+
+    // Renderiza artigos
+    function abrirArtigo(id) {
+      const art = artigos.find(a => a.id === id);
+      conteudo.innerHTML = `
+        <div class="artigo">
+          <h2>${art.titulo}</h2>
+          <p>${art.texto}</p>
+          <button class="ia-btn" onclick="gerarPrompt('${art.id}')">📌 Estudar com IA</button>
+        </div>`;
+      menu.classList.remove("open");
+    }
+
+    // Prompt automático
+    function gerarPrompt(id) {
+      const art = artigos.find(a => a.id === id);
+      alert(`Seu prompt está pronto:\n\nEstude o seguinte artigo:\n${art.titulo}\n${art.texto}`);
+    }
+
+    // Controle do menu
+    const menu = document.getElementById("menu");
+    document.getElementById("menuBtn").onclick = () => {
+      menu.classList.toggle("open");
+    };
+  </script>
+</body>
+</html>
