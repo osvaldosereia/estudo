@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chatbot Jurídico — Gerador de Perguntas & Prompts</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#16a34a"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar" role="banner">
+    <div class="brand" aria-label="Chatbot Jurídico">
+      <img src="icons/icon-192.png" alt="" class="logo" title="Início">
+    </div>
+    <nav class="actions">
+      <button id="btnInfo" class="icon-btn" title="Informações" aria-label="Informações">
+        <img src="icons/info.svg" alt="Informações">
+      </button>
+      <button id="btnInstall" class="icon-btn" title="Instalar (Android/Desktop)" aria-label="Instalar PWA">
+        <img src="icons/install.svg" alt="Instalar">
+      </button>
+      <button id="btnReset" class="icon-btn" title="Reiniciar" aria-label="Reiniciar conversa">
+        <img src="icons/reset.svg" alt="Reiniciar">
+      </button>
+    </nav>
+  </header>
+
+  <main id="app" class="chat" role="main" aria-live="polite"></main>
+
+  <footer class="bottombar" role="contentinfo">
+    <small>Feito para estudantes de Direito • 100% client-side no GitHub Pages</small>
+  </footer>
+
+  <!-- Modal Info -->
+  <dialog id="modalInfo" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3>Como funciona</h3>
+      <p>Este chatbot cria um <b>prompt perfeito</b> a partir de perguntas selecionadas sobre um artigo ou tema. Fluxo:</p>
+      <ol>
+        <li>Escolha o Código (Penal, Civil, CPC, etc.).</li>
+        <li>Digite um número de artigo ou uma palavra-chave.</li>
+        <li>Selecione as perguntas que melhor focam seu estudo.</li>
+        <li>(Opcional) Escolha estratégias de estudo.</li>
+        <li>Gere o prompt, copie e cole na IA de sua preferência.</li>
+      </ol>
+      <menu class="modal-actions">
+        <button value="cancel" class="primary">Entendi</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
