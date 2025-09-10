@@ -7,139 +7,86 @@
   <style>
     /* ===== RESET ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      color: #222;
-      line-height: 1.6;
-    }
+    body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; line-height: 1.6; }
 
     /* ===== HEADER ===== */
     header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
+      position: fixed; top: 0; width: 100%;
+      background: #fff; border-bottom: 1px solid #ddd;
       padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       z-index: 1000;
     }
-    header h1 {
-      font-size: 18px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #menuBtn {
-      font-size: 22px;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
+    header h1 { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+    #menuBtn { font-size: 22px; background: none; border: none; cursor: pointer; }
 
     /* ===== MENU LATERAL ===== */
     #menu {
-      position: fixed;
-      top: 0;
-      left: -260px;
-      width: 240px;
-      height: 100%;
-      background: #fff;
-      border-right: 1px solid #ddd;
+      position: fixed; top: 0; left: -280px;
+      width: 280px; height: 100%;
+      background: #fff; border-right: 1px solid #ddd;
       box-shadow: 2px 0 6px rgba(0,0,0,0.15);
-      padding: 20px;
-      transition: left 0.3s ease;
-      z-index: 2000;
-      overflow-y: auto;
+      padding: 15px; transition: left 0.3s ease;
+      z-index: 2000; overflow-y: auto;
     }
     #menu.open { left: 0; }
-    #menu h2 { font-size: 16px; margin-bottom: 10px; }
-    #menu ul { list-style: none; }
-    #menu ul li {
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-      font-size: 14px;
+    #menu input {
+      width: 100%; padding: 10px; margin-bottom: 15px;
+      border: 1px solid #ccc; border-radius: 8px;
     }
+    .section-title {
+      font-size: 14px; font-weight: bold;
+      margin: 15px 0 5px 0; color: #444;
+    }
+    ul { list-style: none; padding-left: 0; }
+    li {
+      padding: 8px 10px; cursor: pointer; border-radius: 6px;
+    }
+    li:hover { background: #f0f0f0; }
+    .submenu { margin-left: 15px; display: none; }
+    .open > .submenu { display: block; }
 
     /* ===== CONTEÚDO ===== */
-    #conteudo {
-      margin-top: 70px;
-      padding: 16px;
-    }
+    #conteudo { margin-top: 70px; padding: 16px; }
     .artigo {
-      max-width: 650px;
-      margin: 0 auto 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 12px;
+      max-width: 650px; margin: 0 auto 20px auto;
+      padding: 20px; background: #fff; border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       animation: fadeIn 0.4s ease;
     }
-    .artigo h2 {
-      margin-bottom: 10px;
-      font-size: 20px;
-      color: #111;
-    }
+    .artigo h2 { margin-bottom: 10px; font-size: 20px; color: #111; }
 
     /* ===== BOTÃO FLUTUANTE ===== */
     .ia-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #63d1c3;
-      color: #fff;
-      font-size: 24px;
-      border: none;
-      cursor: pointer;
+      position: fixed; bottom: 20px; right: 20px;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #63d1c3; color: #fff; font-size: 24px;
+      border: none; cursor: pointer;
       box-shadow: 0 3px 8px rgba(0,0,0,0.2);
       z-index: 3000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: transform 0.2s;
     }
     .ia-btn:hover { transform: scale(1.05); }
 
     /* ===== MODAL ===== */
     #modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
+      display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       z-index: 4000;
     }
     #modalContent {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      width: 90%;
-      max-width: 400px;
+      background: #fff; border-radius: 12px;
+      padding: 20px; width: 90%; max-width: 400px;
       text-align: center;
     }
     #modalContent h3 { margin-bottom: 15px; }
     .opt-btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 8px;
-      background: #63d1c3;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
+      display: block; width: 100%; padding: 12px;
+      margin: 8px 0; border: none; border-radius: 8px;
+      background: #63d1c3; color: #fff; font-weight: bold; cursor: pointer;
     }
 
     /* ===== ANIMAÇÃO ===== */
@@ -153,6 +100,8 @@
       body { background: #121212; color: #eee; }
       header { background: #1e1e1e; border-bottom: 1px solid #333; }
       #menu { background: #1e1e1e; color: #eee; border-right: 1px solid #333; }
+      li:hover { background: #333; }
+      #menu input { background: #2a2a2a; border: 1px solid #444; color: #eee; }
       .artigo { background: #1e1e1e; color: #eee; }
       #modalContent { background: #1e1e1e; color: #eee; }
     }
@@ -166,8 +115,44 @@
 
   <!-- Menu lateral -->
   <div id="menu">
-    <h2>Índice</h2>
-    <ul id="indice"></ul>
+    <input type="text" placeholder="🔍 Buscar artigo ou termo">
+    <div class="section-title">⭐ Favoritos</div>
+    <ul>
+      <li>Art. 121 — Homicídio</li>
+      <li>Art. 5º CF — Direitos Fundamentais</li>
+    </ul>
+    <div class="section-title">⏱️ Recentes</div>
+    <ul>
+      <li>Art. 122 — Induzimento ao suicídio</li>
+      <li>Art. 394 CPP — Procedimento Comum</li>
+    </ul>
+    <div class="section-title">📚 Códigos</div>
+    <ul>
+      <li onclick="toggleSub(this)">📘 Código Penal
+        <ul class="submenu">
+          <li onclick="toggleSub(this)">Parte Geral
+            <ul class="submenu">
+              <li onclick="toggleSub(this)">Título I — Da Aplicação da Lei Penal
+                <ul class="submenu">
+                  <li onclick="abrirArtigo('cp_art_1')">Art. 1º — Anterioridade</li>
+                  <li onclick="abrirArtigo('cp_art_2')">Art. 2º — Retroatividade</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li onclick="toggleSub(this)">Parte Especial
+            <ul class="submenu">
+              <li onclick="abrirArtigo('cp_art_121')">Art. 121 — Homicídio</li>
+              <li onclick="abrirArtigo('cp_art_122')">Art. 122 — Induzimento ao suicídio</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>📕 CPC</li>
+      <li>📗 Código Civil</li>
+      <li>📙 CPP</li>
+      <li>📒 CLT</li>
+    </ul>
   </div>
 
   <!-- Conteúdo principal -->
@@ -189,26 +174,19 @@
   </div>
 
   <script>
-    // ===== Mock de artigos (simulando cp.json) =====
-    const artigos = [
-      { id: "cp_art_121", titulo: "Art. 121 — Homicídio", texto: "Matar alguém: Pena - reclusão, de seis a vinte anos." },
-      { id: "cp_art_122", titulo: "Art. 122 — Induzimento ao suicídio", texto: "Induzir ou instigar alguém a suicidar-se ou a praticar automutilação..." }
-    ];
+    // Mock de artigos
+    const artigos = {
+      "cp_art_1": { titulo: "Art. 1º — Anterioridade", texto: "Não há crime sem lei anterior que o defina..." },
+      "cp_art_2": { titulo: "Art. 2º — Retroatividade", texto: "A lei posterior aplica-se, se mais benéfica..." },
+      "cp_art_121": { titulo: "Art. 121 — Homicídio", texto: "Matar alguém: Pena - reclusão, de seis a vinte anos." },
+      "cp_art_122": { titulo: "Art. 122 — Induzimento ao suicídio", texto: "Induzir ou instigar alguém a suicidar-se ou a praticar automutilação..." }
+    };
 
     const conteudo = document.getElementById("conteudo");
-    const indice = document.getElementById("indice");
 
-    // Renderiza índice
-    artigos.forEach(a => {
-      const li = document.createElement("li");
-      li.textContent = a.titulo;
-      li.onclick = () => abrirArtigo(a.id);
-      indice.appendChild(li);
-    });
-
-    // Renderiza artigo selecionado
+    // Abre artigo
     function abrirArtigo(id) {
-      const art = artigos.find(a => a.id === id);
+      const art = artigos[id];
       conteudo.innerHTML = `
         <div class="artigo">
           <h2>${art.titulo}</h2>
@@ -217,20 +195,23 @@
       menu.classList.remove("open");
     }
 
-    // Menu lateral
+    // Toggle menu lateral
     const menu = document.getElementById("menu");
     document.getElementById("menuBtn").onclick = () => {
       menu.classList.toggle("open");
     };
 
-    // Botão flutuante abre modal
+    // Drilldown
+    function toggleSub(el) {
+      el.classList.toggle("open");
+    }
+
+    // Modal
     const modal = document.getElementById("modal");
     document.getElementById("fabBtn").onclick = () => {
       modal.style.display = "flex";
     };
-    function fecharModal() {
-      modal.style.display = "none";
-    }
+    function fecharModal() { modal.style.display = "none"; }
     modal.onclick = e => { if(e.target === modal) fecharModal(); };
   </script>
 </body>
