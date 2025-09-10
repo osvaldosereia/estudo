@@ -7,210 +7,193 @@
   <style>
     /* ===== RESET ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; line-height: 1.6; }
+    body { font-family: Arial, sans-serif; background: #fff; color: #222; line-height: 1.6; }
 
     /* ===== HEADER ===== */
     header {
-      position: fixed; top: 0; width: 100%;
-      background: #fff; border-bottom: 1px solid #ddd;
-      padding: 12px 16px;
+      position: fixed; top: 0; left: 0; width: 100%;
+      padding: 10px 16px;
       display: flex; justify-content: space-between; align-items: center;
-      z-index: 1000;
+      border-bottom: 1px solid #ddd;
+      background: #fff; z-index: 1000;
     }
-    header h1 { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
-    #menuBtn { font-size: 22px; background: none; border: none; cursor: pointer; }
+    header h1 { font-size: 16px; font-weight: bold; }
+    #searchBar {
+      flex: 1; margin: 0 12px;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    #menuBtn {
+      font-size: 18px;
+      background: none; border: none;
+      cursor: pointer;
+      color: #444;
+    }
 
-    /* ===== MENU LATERAL ===== */
+    /* ===== MENU (Sobre, Contato, Dicas) ===== */
     #menu {
-      position: fixed; top: 0; left: -280px;
-      width: 280px; height: 100%;
-      background: #fff; border-right: 1px solid #ddd;
-      box-shadow: 2px 0 6px rgba(0,0,0,0.15);
-      padding: 15px; transition: left 0.3s ease;
-      z-index: 2000; overflow-y: auto;
+      position: fixed; top: 50px; right: 10px;
+      background: #fff; border: 1px solid #ddd;
+      border-radius: 6px; padding: 10px;
+      font-size: 13px;
+      display: none; z-index: 2000;
     }
-    #menu.open { left: 0; }
-    #menu input {
-      width: 100%; padding: 10px; margin-bottom: 15px;
-      border: 1px solid #ccc; border-radius: 8px;
+    #menu a {
+      display: block; padding: 5px 0;
+      text-decoration: none; color: #444;
     }
-    .section-title {
-      font-size: 14px; font-weight: bold;
-      margin: 15px 0 5px 0; color: #444;
-    }
-    ul { list-style: none; padding-left: 0; }
-    li {
-      padding: 8px 10px; cursor: pointer; border-radius: 6px;
-    }
-    li:hover { background: #f0f0f0; }
-    .submenu { margin-left: 15px; display: none; }
-    .open > .submenu { display: block; }
+    #menu a:hover { color: #000; }
 
-    /* ===== CONTEÚDO ===== */
-    #conteudo { margin-top: 70px; padding: 16px; }
+    /* ===== MAIN ===== */
+    main { margin-top: 60px; padding: 16px; }
+    .accordion {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0; cursor: pointer;
+      font-size: 15px; font-weight: bold; color: #222;
+    }
+    .accordion.open { color: #000; }
+    .panel {
+      display: none; padding-left: 12px; font-size: 14px;
+    }
+    .panel div { padding: 6px 0; cursor: pointer; }
+    .panel div:hover { color: #000; }
+
+    /* ===== ARTIGO ===== */
     .artigo {
-      max-width: 650px; margin: 0 auto 20px auto;
-      padding: 20px; background: #fff; border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      animation: fadeIn 0.4s ease;
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 10px 0;
     }
-    .artigo h2 { margin-bottom: 10px; font-size: 20px; color: #111; }
-
-    /* ===== BOTÃO FLUTUANTE ===== */
-    .ia-btn {
-      position: fixed; bottom: 20px; right: 20px;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: #63d1c3; color: #fff; font-size: 24px;
-      border: none; cursor: pointer;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-      z-index: 3000;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.2s;
+    .artigo h2 { font-size: 16px; margin-bottom: 8px; }
+    .artigo p { font-size: 14px; margin-bottom: 10px; }
+    .prompt-btn {
+      padding: 6px 12px;
+      border: 1px solid #63d1c3;
+      background: #63d1c3; color: #fff;
+      border-radius: 6px; font-size: 13px;
+      cursor: pointer;
     }
-    .ia-btn:hover { transform: scale(1.05); }
 
     /* ===== MODAL ===== */
     #modal {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.4);
       display: flex; align-items: center; justify-content: center;
-      z-index: 4000;
+      z-index: 3000;
     }
     #modalContent {
-      background: #fff; border-radius: 12px;
-      padding: 20px; width: 90%; max-width: 400px;
-      text-align: center;
+      background: #fff; padding: 20px;
+      border-radius: 8px; text-align: center;
+      width: 90%; max-width: 400px;
     }
-    #modalContent h3 { margin-bottom: 15px; }
-    .opt-btn {
-      display: block; width: 100%; padding: 12px;
-      margin: 8px 0; border: none; border-radius: 8px;
-      background: #63d1c3; color: #fff; font-weight: bold; cursor: pointer;
-    }
-
-    /* ===== ANIMAÇÃO ===== */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== DARK MODE ===== */
-    @media (prefers-color-scheme: dark) {
-      body { background: #121212; color: #eee; }
-      header { background: #1e1e1e; border-bottom: 1px solid #333; }
-      #menu { background: #1e1e1e; color: #eee; border-right: 1px solid #333; }
-      li:hover { background: #333; }
-      #menu input { background: #2a2a2a; border: 1px solid #444; color: #eee; }
-      .artigo { background: #1e1e1e; color: #eee; }
-      #modalContent { background: #1e1e1e; color: #eee; }
+    #modalContent h3 { font-size: 15px; margin-bottom: 12px; }
+    .ia-btn {
+      display: block; width: 100%;
+      padding: 10px; margin: 6px 0;
+      border: none; border-radius: 6px;
+      background: #63d1c3; color: #fff; font-size: 14px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>💚 direito.love</h1>
+    <input id="searchBar" type="text" placeholder="Buscar artigo ou termo...">
     <button id="menuBtn">☰</button>
+    <div id="menu">
+      <a href="#">Sobre</a>
+      <a href="#">Contato</a>
+      <a href="#">Dicas</a>
+    </div>
   </header>
 
-  <!-- Menu lateral -->
-  <div id="menu">
-    <input type="text" placeholder="🔍 Buscar artigo ou termo">
-    <div class="section-title">⭐ Favoritos</div>
-    <ul>
-      <li>Art. 121 — Homicídio</li>
-      <li>Art. 5º CF — Direitos Fundamentais</li>
-    </ul>
-    <div class="section-title">⏱️ Recentes</div>
-    <ul>
-      <li>Art. 122 — Induzimento ao suicídio</li>
-      <li>Art. 394 CPP — Procedimento Comum</li>
-    </ul>
-    <div class="section-title">📚 Códigos</div>
-    <ul>
-      <li onclick="toggleSub(this)">📘 Código Penal
-        <ul class="submenu">
-          <li onclick="toggleSub(this)">Parte Geral
-            <ul class="submenu">
-              <li onclick="toggleSub(this)">Título I — Da Aplicação da Lei Penal
-                <ul class="submenu">
-                  <li onclick="abrirArtigo('cp_art_1')">Art. 1º — Anterioridade</li>
-                  <li onclick="abrirArtigo('cp_art_2')">Art. 2º — Retroatividade</li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-          <li onclick="toggleSub(this)">Parte Especial
-            <ul class="submenu">
-              <li onclick="abrirArtigo('cp_art_121')">Art. 121 — Homicídio</li>
-              <li onclick="abrirArtigo('cp_art_122')">Art. 122 — Induzimento ao suicídio</li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>📕 CPC</li>
-      <li>📗 Código Civil</li>
-      <li>📙 CPP</li>
-      <li>📒 CLT</li>
-    </ul>
-  </div>
+  <main>
+    <div class="accordion">📘 Códigos</div>
+    <div class="panel" id="codigosPanel"></div>
 
-  <!-- Conteúdo principal -->
-  <main id="conteudo"></main>
+    <div class="accordion">⚖️ Súmulas</div>
+    <div class="panel"><div>STF</div><div>STJ</div></div>
 
-  <!-- Botão flutuante -->
-  <button class="ia-btn" id="fabBtn">🤖</button>
+    <div class="accordion">📑 Julgados</div>
+    <div class="panel"><div>STF</div><div>STJ</div></div>
 
-  <!-- Modal opções -->
+    <div class="accordion">🔄 Temas Repetitivos</div>
+    <div class="panel"><div>STJ</div><div>TST</div></div>
+
+    <div id="conteudo"></div>
+  </main>
+
+  <!-- Modal -->
   <div id="modal">
     <div id="modalContent">
-      <h3>Escolha como estudar:</h3>
-      <button class="opt-btn">📘 Resumo Explicativo</button>
-      <button class="opt-btn">❓ Questões</button>
-      <button class="opt-btn">⚖️ Casos Concretos</button>
-      <button class="opt-btn">⚡ Flash Points</button>
-      <button class="opt-btn" onclick="fecharModal()">❌ Fechar</button>
+      <h3>✅ Prompt gerado e copiado!</h3>
+      <button class="ia-btn">ChatGPT</button>
+      <button class="ia-btn">Gemini</button>
+      <button class="ia-btn">Perplexity</button>
+      <button class="ia-btn">Claude</button>
+      <button class="ia-btn">Copilot</button>
+      <button class="ia-btn">NotebookLM</button>
+      <button class="ia-btn" onclick="fecharModal()">Fechar</button>
     </div>
   </div>
 
   <script>
-    // Mock de artigos
-    const artigos = {
-      "cp_art_1": { titulo: "Art. 1º — Anterioridade", texto: "Não há crime sem lei anterior que o defina..." },
-      "cp_art_2": { titulo: "Art. 2º — Retroatividade", texto: "A lei posterior aplica-se, se mais benéfica..." },
-      "cp_art_121": { titulo: "Art. 121 — Homicídio", texto: "Matar alguém: Pena - reclusão, de seis a vinte anos." },
-      "cp_art_122": { titulo: "Art. 122 — Induzimento ao suicídio", texto: "Induzir ou instigar alguém a suicidar-se ou a praticar automutilação..." }
+    // ===== MENU BTN =====
+    const menuBtn = document.getElementById("menuBtn");
+    const menu = document.getElementById("menu");
+    menuBtn.onclick = () => {
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
     };
 
-    const conteudo = document.getElementById("conteudo");
+    // ===== ACCORDION =====
+    document.querySelectorAll(".accordion").forEach(acc => {
+      acc.addEventListener("click", () => {
+        acc.classList.toggle("open");
+        const panel = acc.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      });
+    });
 
-    // Abre artigo
-    function abrirArtigo(id) {
-      const art = artigos[id];
+    // ===== MOCK: Lista de códigos (virão de JSON) =====
+    const codigos = [
+      "Código Civil", "Código de Processo Civil",
+      "Código Penal", "Código de Processo Penal",
+      "Código Tributário Nacional", "CLT",
+      "Código de Defesa do Consumidor", "Código de Trânsito Brasileiro",
+      "Código Eleitoral", "Código Florestal",
+      "Código Penal Militar", "Código de Processo Penal Militar"
+    ];
+    const codigosPanel = document.getElementById("codigosPanel");
+    codigos.forEach(c => {
+      const div = document.createElement("div");
+      div.textContent = c;
+      div.onclick = () => carregarCodigo(c);
+      codigosPanel.appendChild(div);
+    });
+
+    // ===== ARTIGOS (simulação, depois virá de /data/*.json) =====
+    const conteudo = document.getElementById("conteudo");
+    function carregarCodigo(nome) {
       conteudo.innerHTML = `
         <div class="artigo">
-          <h2>${art.titulo}</h2>
-          <p>${art.texto}</p>
-        </div>`;
-      menu.classList.remove("open");
+          <h2>${nome} — Exemplo</h2>
+          <p>Texto do artigo virá do JSON em /data.</p>
+          <button class="prompt-btn" onclick="gerarPrompt()">📌 Gerar Prompt</button>
+        </div>
+      `;
     }
 
-    // Toggle menu lateral
-    const menu = document.getElementById("menu");
-    document.getElementById("menuBtn").onclick = () => {
-      menu.classList.toggle("open");
-    };
-
-    // Drilldown
-    function toggleSub(el) {
-      el.classList.toggle("open");
-    }
-
-    // Modal
+    // ===== MODAL =====
     const modal = document.getElementById("modal");
-    document.getElementById("fabBtn").onclick = () => {
+    function gerarPrompt() {
+      // aqui copia prompt real
+      navigator.clipboard.writeText("Prompt gerado com texto do artigo...");
       modal.style.display = "flex";
-    };
+    }
     function fecharModal() { modal.style.display = "none"; }
     modal.onclick = e => { if(e.target === modal) fecharModal(); };
   </script>
