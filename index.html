@@ -49,11 +49,22 @@
     .grid .gbtn:hover{background:#f0f0f0}
     .modal .actions{display:flex;gap:10px;margin-top:14px}
     .modal .actions button{flex:1}
+    /* Acessórios (accordion) */
+    .acc{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:#fff;display:none}
+    .acc summary{padding:12px 14px;cursor:pointer;font-weight:700;color:var(--accent);list-style:none}
+    .acc summary::marker{display:none}
+    .acc .acc-inner{padding:0 14px 12px}
+    .acc .hint{color:var(--muted);font-size:.92rem;margin:0 0 8px}
+    .acc-list{display:grid;grid-template-columns:1fr;gap:8px}
+    .acc-item{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--border);padding-top:8px}
+    .acc-item:first-child{border-top:none;padding-top:0}
+    .acc-item input{margin-top:3px}
     /* Responsive */
     @media (min-width:768px){
       h1{font-size:1.6rem}
       .wrap{padding-top:64px}
       .item span.txt{font-size:1rem}
+      .acc-list{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
@@ -89,6 +100,15 @@
 
       <button id="vermais" class="btn more" onclick="renderMais()">Ver mais</button>
 
+      <!-- Acessórios (aparece só depois que as perguntas aparecem) -->
+      <details id="acc" class="acc">
+        <summary>➕ Acessórios do estudo (opcional)</summary>
+        <div class="acc-inner">
+          <p class="hint">Você pode adicionar alguns acessórios ao prompt para aprofundar seu estudo.</p>
+          <div id="accList" class="acc-list"></div>
+        </div>
+      </details>
+
       <div class="prompt-wrap">
         <textarea id="prompt" placeholder="Seu prompt aparecerá aqui..."></textarea>
         <button class="btn copy" onclick="copiarPrompt()">📋 Copiar prompt</button>
@@ -119,14 +139,26 @@
 
 <script>
   // estado
-  let selecionadas = new Set();          // chaves únicas (texto)
+  let selecionadas = new Set();          // perguntas selecionadas (texto)
   let selecionadasArray = [];            // mantém ordem
-  let resultados = [];                   // resultados por palavra-chave (string pura da pergunta)
+  let resultados = [];                   // resultados por palavra-chave (string da pergunta)
   let pagina = 0;
+  let accSelecionados = new Set();       // acessórios selecionados
 
   // Busca global por palavra-chave já preparada para CP, CC, CPC:
   const ALL_CODES = ["codigo_penal","codigo_civil","codigo_processo_civil"];
   const WHITELIST = new Set(["stf","stj","tre","tse","tj","tjsp","tjmg","tjrj"]);
+
+  const ACCESSORIES = [
+    "Quais pontos de prova mais cobrados (OAB/concursos)?",
+    "Crie 3 perguntas-relâmpago de auto-checagem.",
+    "Traga 10 questões objetivas reais (OAB/concursos) e só mostre o gabarito no final.",
+    "Traga 3 casos concretos com solução passo a passo.",
+    "Qual a tese majoritária atual (STJ/STF)?",
+    "Compare com 2–3 artigos próximos que geram confusão.",
+    "Dê quadro comparativo com critérios objetivos de distinção.",
+    "Quais documentos/provas são mínimos para sustentar a tese?"
+  ];
 
   function toast(msg){
     const t=document.getElementById('toast');
@@ -135,7 +167,6 @@
   }
 
   function normalize(s){
-    // remove acentos de forma compatível
     return (s||"").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   }
 
@@ -148,16 +179,20 @@
 
   function parseTokens(query){
     const raw = normalize(query).split(/\s+/).filter(Boolean);
-    // apenas tokens >=5 letras OU siglas whitelisted
     return raw.filter(tok => tok.length>=5 || WHITELIST.has(tok));
   }
 
   function atualizarPrompt(){
     const promptBox=document.getElementById('prompt');
     const corpo=selecionadasArray.map((p,i)=>(i+1)+'. '+p).join('\n');
+    let extra='';
+    if(accSelecionados.size>0){
+      extra = "\n\nAdicional:\n- " + Array.from(accSelecionados).join("\n- ");
+    }
     promptBox.value="Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\n\n"
       + corpo +
-      "\n\nDepois, envie:\n- 5 questões objetivas para revisão\n- Um checklist com os pontos essenciais.";
+      "\n\nDepois, envie:\n- 5 questões objetivas para revisão\n- Um checklist com os pontos essenciais."
+      + extra;
   }
 
   function togglePergunta(texto, btn){
@@ -179,17 +214,39 @@
     document.getElementById('lista').innerHTML='';
     document.getElementById('vermais').style.display='none';
     resultados=[]; pagina=0;
+    // esconde acessórios
+    document.getElementById('acc').style.display='none';
   }
 
   function renderPerguntas(perguntas){
     const ul=document.getElementById('lista');
     perguntas.forEach(p=>{
       const li=document.createElement('li'); li.className='item';
-      const span=document.createElement('span'); span.className='txt'; span.textContent=p; // apenas a frase
+      const span=document.createElement('span'); span.className='txt'; span.textContent=p;
       const btn=document.createElement('button'); btn.className='addbtn'; btn.textContent= selecionadas.has(p)?'✔️':'➕';
       if(selecionadas.has(p)) btn.classList.add('active');
       btn.onclick=()=>togglePergunta(p,btn);
       li.appendChild(span); li.appendChild(btn); ul.appendChild(li);
+    });
+    // mostrar acessórios (accordion) somente após render de perguntas
+    setupAccessories();
+    document.getElementById('acc').style.display='block';
+  }
+
+  function setupAccessories(){
+    const accList = document.getElementById('accList');
+    if(accList.childElementCount>0) return; // já montado
+    ACCESSORIES.forEach(txt=>{
+      const row=document.createElement('label'); row.className='acc-item';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.value=txt;
+      cb.onchange=(e)=>{
+        if(e.target.checked){ accSelecionados.add(txt); }
+        else{ accSelecionados.delete(txt); }
+        atualizarPrompt();
+      };
+      const span=document.createElement('span'); span.textContent=txt;
+      row.appendChild(cb); row.appendChild(span);
+      accList.appendChild(row);
     });
   }
 
@@ -219,20 +276,20 @@
 
     card.style.display='block';
     limparLista();
-
+    accSelecionados.clear(); // reset acessórios marcados
     const numero=extrairNumero(entrada);
 
-    if(numero){ // modo ARTIGO: mostra TODAS as perguntas do artigo do código selecionado
+    if(numero){ // ARTIGO: mostrar TODAS as perguntas do artigo do código selecionado
       const data = await fetchJSON(`data/${codigo}.json`);
       if(!data){ lista.innerHTML='<li class="item"><span class="txt">Erro ao carregar dados.</span></li>'; return; }
       const art = data['art'+numero];
       if(!art){ lista.innerHTML='<li class="item"><span class="txt">Artigo não encontrado neste código.</span></li>'; return; }
-      ctx.textContent='📌 Você está estudando '+art.titulo+'. Adicione/remova perguntas com o botão ➕.';
+      ctx.textContent='📌 Você está estudando '+art.titulo+'. Adicione/remova perguntas com o botão ➕. Você também pode adicionar acessórios ao prompt (abaixo).';
       renderPerguntas(art.perguntas); // todas as perguntas
       return;
     }
 
-    // PALAVRA-CHAVE (global por TODOS os códigos disponíveis)
+    // PALAVRA-CHAVE (global por TODOS os códigos)
     const tokens=parseTokens(entrada);
     if(tokens.length===0){
       lista.innerHTML='<li class="item"><span class="txt">Use termos com 5+ letras (ou siglas: STF, STJ, TRE, TSE, TJ...).</span></li>'; return;
@@ -248,13 +305,10 @@
       }
     });
 
-    // De-duplicar perguntas idênticas
     const unique = Array.from(new Set(perguntasAll));
-
     const normTokens = tokens.map(normalize);
     const matches = unique.filter(q => {
       const nq = normalize(q);
-      // todas as palavras precisam aparecer
       return normTokens.every(t => nq.includes(t));
     });
 
@@ -264,7 +318,7 @@
     }
 
     resultados = matches;
-    ctx.textContent = `🔎 Resultados para "`+entrada+`". Clique no ➕ para adicionar/remover. Mostrando `+Math.min(10, resultados.length)+` de `+resultados.length+`.`;
+    ctx.textContent = `🔎 Resultados para "`+entrada+`". Clique no ➕ para adicionar/remover. Mostrando `+Math.min(10, resultados.length)+` de `+resultados.length+`. Você também pode adicionar acessórios ao prompt (abaixo).`;
     renderMais();
     if(resultados.length>10) document.getElementById('vermais').style.display='block';
   }
@@ -272,7 +326,6 @@
   function copiarPrompt(){
     const txt=document.getElementById('prompt').value;
     navigator.clipboard.writeText(txt).then(()=>{
-      // abre modal pós-cópia
       document.getElementById('modal').style.display='flex';
     });
   }
@@ -280,12 +333,17 @@
   function fecharModal(){ document.getElementById('modal').style.display='none'; }
 
   function novaPesquisa(){
-    selecionadas.clear(); selecionadasArray=[]; resultados=[]; pagina=0;
+    selecionadas.clear(); selecionadasArray=[]; resultados=[]; pagina=0; accSelecionados.clear();
     document.getElementById('lista').innerHTML='';
     document.getElementById('vermais').style.display='none';
     document.getElementById('prompt').value='';
     document.getElementById('entrada').value='';
     document.getElementById('card').style.display='none';
+    // desmarca todos acessórios
+    const accList=document.getElementById('accList');
+    [...accList.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked=false);
+    document.getElementById('acc').open=false;
+    document.getElementById('acc').style.display='none';
     fecharModal();
     toast('🧹 Limpo para nova pesquisa');
   }
