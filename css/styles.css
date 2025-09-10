@@ -1,0 +1,44 @@
+body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; line-height: 1.6; margin: 0; }
+header { position: fixed; top: 0; left: 0; width: 100%; background: #fff; border-bottom: 1px solid #ddd;
+  padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+header h1 { font-size: 16px; }
+#menuBtn { font-size: 20px; background: none; border: none; cursor: pointer; }
+
+#sidebar { position: fixed; top: 0; left: -85%; width: 85%; height: 100%; background: #fff;
+  border-right: 1px solid #ddd; padding: 20px; transition: left 0.3s ease; z-index: 2000; overflow-y: auto; }
+#sidebar.open { left: 0; }
+#overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+  display: none; z-index: 1500; }
+#overlay.show { display: block; }
+#searchBar { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; }
+
+.accordion { font-weight: bold; font-size: 14px; cursor: pointer; margin: 10px 0; display: flex; justify-content: space-between; }
+.panel { display: none; padding-left: 12px; font-size: 13px; }
+.panel div { padding: 6px 0; cursor: pointer; }
+.panel div:hover { color: #000; }
+
+main { margin-top: 70px; padding: 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+.card { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 14px; margin: 14px 0;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.05); }
+.card h2 { font-size: 15px; margin-bottom: 8px; }
+.card p { font-size: 12px; }
+.prompt-btn, .fav-btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px; }
+.prompt-btn { background: #63d1c3; color: #fff; }
+.prompt-btn:hover { background: #4ab3a7; }
+.fav-btn { background: #fff; border: 1px solid #63d1c3; color: #63d1c3; }
+
+#modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center; z-index: 3000; }
+#modalContent { background: #fff; padding: 20px; border-radius: 10px; width: 90%; max-width: 420px; text-align: center; }
+#modalContent h3 { font-size: 14px; margin-bottom: 12px; }
+.ia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ia-btn { padding: 8px; border: none; border-radius: 6px; background: #63d1c3; color: #fff; font-size: 12px; cursor: pointer; }
+
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px; opacity: 0;
+  transition: opacity 0.5s ease; z-index: 4000; }
+#toast.show { opacity: 1; }
+
+#bottomBar { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #ddd;
+  display: flex; justify-content: center; padding: 8px; z-index: 1000; }
+#bottomBar button { background: none; border: none; font-size: 14px; cursor: pointer; }
