@@ -185,7 +185,7 @@
       if (!numero) return alert("Informe um número de artigo válido!");
       const artigoID = "art" + numero;
 
-      fetch(`/data/${codigo}.json`)
+     fetch(`data/${codigo}.json`)
         .then(res => res.json())
         .then(data => {
           const artigo = data[artigoID];
