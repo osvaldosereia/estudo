@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>direito.love • Estudo por Artigo</title>
+  <style>
+    :root{
+      --bg:#f7f8fa;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6b7280;
+      --primary:#63d1c3;
+      --primary-dark:#4bb2a7;
+      --accent:#0c4160;
+      --border:#e5e7eb;
+      --ok:#10b981;
+      --warn:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif}
+    /* Topbar */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:50;
+      backdrop-filter:saturate(180%) blur(8px);
+      background:rgba(255,255,255,.8);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;
+    }
+    .logo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);}
+    .logo img{height:24px;width:24px;object-fit:contain}
+    /* Container */
+    .wrap{max-width:720px;margin:0 auto;padding:96px 16px 40px;}
+    h1{font-size:1.25rem;line-height:1.2;margin:0 0 6px;color:var(--accent);text-align:center;font-weight:700}
+    .subtitle{margin:0 auto 22px;text-align:center;color:var(--muted);font-size:.95rem}
+    label{display:block;margin:.75rem 0 .4rem;font-weight:600;font-size:.95rem;color:#374151}
+    select,input[type="text"]{
+      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;
+    }
+    .btn{
+      width:100%;margin-top:10px;border:none;border-radius:10px;padding:14px 16px;background:var(--primary);color:#fff;
+      font-weight:600;font-size:1rem;cursor:pointer;transition:.2s;
+    }
+    .btn:hover{background:var(--primary-dark)}
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:18px}
+    .info{color:var(--muted);font-size:.95rem;margin-bottom:10px}
+    ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
+    .item{display:flex;align-items:center;gap:12px;justify-content:space-between;border-bottom:1px solid var(--border);padding:12px 0}
+    .item span.txt{flex:1;text-align:left;font-size:.98rem;line-height:1.35}
+    .addbtn{
+      width:36px;height:36px;min-width:36px;min-height:36px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:1.1rem;cursor:pointer;
+      display:inline-flex;align-items:center;justify-content:center;
+    }
+    .addbtn.active{background:#cbd5e1;color:#111;cursor:pointer}
+    /* Prompt */
+    .prompt-wrap{margin-top:18px}
+    textarea{
+      width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+      font-size:.95rem;background:#fff;min-height:160px;
+    }
+    .copy{margin-top:10px}
+    /* Toast */
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:60;font-size:.92rem}
+    /* Ver mais */
+    .more{margin-top:10px;display:none}
+    /* Responsive tweaks */
+    @media (min-width:768px){
+      h1{font-size:1.5rem}
+      .subtitle{font-size:1rem}
+      .wrap{padding-top:110px}
+      .item span.txt{font-size:1rem}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <img src="https://osvaldosereia.github.io/estudo/icons/logo-mini.png" alt="logo" onerror="this.style.display='none'">
+        <span>direito.love</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Estudo por Artigo</h1>
+    <p class="subtitle">Monte um prompt perfeito escolhendo perguntas cuidadosamente curadas.</p>
+
+    <label for="codigo">Código</label>
+    <select id="codigo">
+      <option value="codigo_penal">Código Penal</option>
+    </select>
+
+    <label for="artigo">Digite o número do artigo ou palavra‑chave</label>
+    <input id="artigo" type="text" placeholder="Ex: 121  •  embriaguez  •  dano moral" />
+
+    <button class="btn" onclick="buscar()">🔎 Buscar</button>
+
+    <div id="card" class="card" style="display:none; margin-top:16px;">
+      <p class="info" id="contexto">📌 Clique no botão ➕ para adicionar/remover uma pergunta do seu estudo.</p>
+      <ul id="lista" class="list"></ul>
+
+      <button id="vermais" class="btn more" onclick="renderMais()">Ver mais</button>
+
+      <div class="prompt-wrap">
+        <textarea id="prompt" placeholder="Seu prompt aparecerá aqui..."></textarea>
+        <button class="btn copy" onclick="copiarPrompt()">📋 Copiar prompt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">ok</div>
+
+<script>
+  let selecionadas = new Set();          // chaves únicas "art||pergunta"
+  let selecionadasArray = [];            // preserva ordem para o prompt
+  let resultados = [];                   // resultados de busca por palavra
+  let pagina = 0;                        // página de resultados (10 por página)
+  let modo = "artigo";                   // "artigo" | "busca"
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(()=>{ t.style.display='none'; }, 1600);
+  }
+
+  function extrairNumero(texto){
+    const s = (texto||'').toLowerCase().replace(/[^0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();
+    const parts = s.split(' ');
+    for(const p of parts){
+      if(/^\\d{1,4}$/.test(p)) return p; // até 4 dígitos
+    }
+    return null;
+  }
+
+  function atualizarPrompt(){
+    const promptBox = document.getElementById('prompt');
+    const corpo = selecionadasArray.map((p,i)=> (i+1)+'. '+p).join('\\n');
+    promptBox.value = "Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\\n\\n"
+      + corpo +
+      "\\n\\nDepois, envie:\\n- 5 questões objetivas para revisão\\n- Um checklist com os pontos essenciais.";
+  }
+
+  function togglePergunta(key, texto, btn){
+    if(selecionadas.has(key)){
+      // remover
+      selecionadas.delete(key);
+      selecionadasArray = selecionadasArray.filter(x => x !== texto);
+      btn.classList.remove('active');
+      btn.textContent = '➕';
+      toast('❎ Pergunta removida');
+    }else{
+      // adicionar
+      selecionadas.add(key);
+      selecionadasArray.push(texto);
+      btn.classList.add('active');
+      btn.textContent = '✔️';
+      toast('✅ Pergunta adicionada');
+    }
+    atualizarPrompt();
+  }
+
+  function limparLista(){
+    document.getElementById('lista').innerHTML = '';
+    document.getElementById('vermais').style.display='none';
+    resultados = [];
+    pagina = 0;
+  }
+
+  function renderPerguntas(perguntas, prefixoArt){
+    const ul = document.getElementById('lista');
+    perguntas.forEach((p, idx)=>{
+      const li = document.createElement('li'); li.className='item';
+      const span = document.createElement('span'); span.className='txt';
+      const mostrar = prefixoArt ? (prefixoArt + ' — ' + p) : p;
+      span.textContent = mostrar;
+      const btn = document.createElement('button'); btn.className='addbtn'; btn.textContent='➕';
+      const key = (prefixoArt||'') + '||' + p;
+      if(selecionadas.has(key)){ btn.classList.add('active'); btn.textContent='✔️'; }
+      btn.onclick = ()=> togglePergunta(key, mostrar, btn);
+      li.appendChild(span); li.appendChild(btn); ul.appendChild(li);
+    });
+  }
+
+  function renderMais(){
+    const slice = resultados.slice(pagina*10, (pagina+1)*10);
+    renderPerguntas(slice.map(r=>r.pergunta), null);
+    pagina++;
+    if(pagina*10 >= resultados.length){
+      document.getElementById('vermais').style.display='none';
+    }
+  }
+
+  function buscar(){
+    const codigo = document.getElementById('codigo').value;
+    const entrada = document.getElementById('artigo').value.trim();
+    const numero = extrairNumero(entrada);
+    const card = document.getElementById('card');
+    const lista = document.getElementById('lista');
+    const ctx = document.getElementById('contexto');
+
+    fetch(`data/${codigo}.json`)
+      .then(r=>r.json())
+      .then(data=>{
+        card.style.display='block';
+        limparLista();
+
+        if(numero){ // modo artigo exato
+          modo = 'artigo';
+          const id = 'art'+numero;
+          const art = data[id];
+          if(!art){ lista.innerHTML = '<li class="item"><span class="txt">Nenhum artigo encontrado.</span></li>'; return; }
+          ctx.textContent = '📌 Você está estudando '+art.titulo+'. Clique no ➕ para adicionar/remover perguntas ao seu prompt.';
+          renderPerguntas(art.perguntas, art.titulo);
+        }else{
+          // modo busca por palavra-chave
+          modo = 'busca';
+          const q = entrada.toLowerCase();
+          const agreg = [];
+          for(const k in data){
+            const titulo = data[k]?.titulo || k.toUpperCase();
+            const arr = data[k]?.perguntas || [];
+            arr.forEach(p=>{
+              if(p.toLowerCase().includes(q)){
+                agreg.push({art:k, titulo, pergunta:p});
+              }
+            });
+          }
+          resultados = agreg.map(r=>({ pergunta: r.titulo+' — '+r.pergunta }));
+          if(resultados.length===0){
+            lista.innerHTML = '<li class="item"><span class="txt">Nenhuma pergunta encontrada para "'+entrada+'".</span></li>';
+            return;
+          }
+          ctx.textContent = '🔎 Resultados para "'+entrada+'". Clique no ➕ para adicionar/remover. Mostrando '+Math.min(10, resultados.length)+' de '+resultados.length+'.';
+          // render primeira página
+          renderMais();
+          if(resultados.length>10){
+            document.getElementById('vermais').style.display='block';
+          }
+        }
+      })
+      .catch(()=>{
+        card.style.display='block';
+        lista.innerHTML = '<li class="item"><span class="txt">Erro ao carregar dados do código selecionado.</span></li>';
+      });
+  }
+
+  function copiarPrompt(){
+    const txt = document.getElementById('prompt').value;
+    navigator.clipboard.writeText(txt).then(()=> toast('📋 Prompt copiado'));
+  }
+</script>
+</body>
+</html>
