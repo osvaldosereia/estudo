@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,43 +6,23 @@
   <title>direito.love • Estudo por Artigo</title>
   <style>
     :root{
-      --bg:#f7f8fa;
-      --card:#ffffff;
-      --text:#1d1d1f;
-      --muted:#6b7280;
-      --primary:#63d1c3;
-      --primary-dark:#4bb2a7;
-      --accent:#0c4160;
-      --border:#e5e7eb;
-      --ok:#10b981;
-      --warn:#ef4444;
+      --bg:#f7f8fa; --card:#ffffff; --text:#1d1d1f; --muted:#6b7280;
+      --primary:#63d1c3; --primary-dark:#4bb2a7; --accent:#0c4160; --border:#e5e7eb;
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif}
     /* Topbar */
-    .topbar{
-      position:fixed;top:0;left:0;right:0;z-index:50;
-      backdrop-filter:saturate(180%) blur(8px);
-      background:rgba(255,255,255,.8);
-      border-bottom:1px solid var(--border);
-    }
-    .topbar-inner{
-      max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;
-    }
-    .logo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);}
-    .logo img{height:24px;width:24px;object-fit:contain}
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--border)}
+    .topbar-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;padding:10px 16px;gap:10px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--accent);}
+    .logo img{height:48px;width:48px;object-fit:contain}
     /* Container */
-    .wrap{max-width:720px;margin:0 auto;padding:96px 16px 40px;}
-    h1{font-size:1.25rem;line-height:1.2;margin:0 0 6px;color:var(--accent);text-align:center;font-weight:700}
-    .subtitle{margin:0 auto 22px;text-align:center;color:var(--muted);font-size:.95rem}
-    label{display:block;margin:.75rem 0 .4rem;font-weight:600;font-size:.95rem;color:#374151}
-    select,input[type="text"]{
-      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;
-    }
-    .btn{
-      width:100%;margin-top:10px;border:none;border-radius:10px;padding:14px 16px;background:var(--primary);color:#fff;
-      font-weight:600;font-size:1rem;cursor:pointer;transition:.2s;
-    }
+    .wrap{max-width:720px;margin:0 auto;padding:56px 16px 40px;} /* respiro reduzido */
+    h1{font-size:1.4rem;line-height:1.2;margin:0 0 6px;color:var(--accent);text-align:center;font-weight:700}
+    .subtitle{margin:0 auto 18px;text-align:center;color:var(--muted);font-size:.95rem}
+    label{display:block;margin:.6rem 0 .35rem;font-weight:600;font-size:.95rem;color:#374151}
+    select,input[type="text"]{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;margin-bottom:12px}
+    .btn{width:100%;margin-top:6px;border:none;border-radius:10px;padding:14px 16px;background:var(--primary);color:#fff;font-weight:600;font-size:1rem;cursor:pointer;transition:.2s}
     .btn:hover{background:var(--primary-dark)}
     /* Card */
     .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:18px}
@@ -51,27 +30,29 @@
     ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
     .item{display:flex;align-items:center;gap:12px;justify-content:space-between;border-bottom:1px solid var(--border);padding:12px 0}
     .item span.txt{flex:1;text-align:left;font-size:.98rem;line-height:1.35}
-    .addbtn{
-      width:36px;height:36px;min-width:36px;min-height:36px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:1.1rem;cursor:pointer;
-      display:inline-flex;align-items:center;justify-content:center;
-    }
-    .addbtn.active{background:#cbd5e1;color:#111;cursor:pointer}
+    .addbtn{width:36px;height:36px;min-width:36px;min-height:36px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:1.1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+    .addbtn.active{background:#cbd5e1;color:#111}
     /* Prompt */
     .prompt-wrap{margin-top:18px}
-    textarea{
-      width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
-      font-size:.95rem;background:#fff;min-height:160px;
-    }
+    textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;background:#fff;min-height:160px}
     .copy{margin-top:10px}
     /* Toast */
     #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:60;font-size:.92rem}
     /* Ver mais */
     .more{margin-top:10px;display:none}
-    /* Responsive tweaks */
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:70}
+    .modal .box{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+    .modal h3{margin:0 0 10px;font-size:1.1rem;color:var(--accent);text-align:center}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .grid .gbtn{padding:12px;border:1px solid var(--border);border-radius:10px;background:#fafafa;cursor:pointer;text-align:center;font-weight:600;text-decoration:none;color:#111}
+    .grid .gbtn:hover{background:#f0f0f0}
+    .modal .actions{display:flex;gap:10px;margin-top:14px}
+    .modal .actions button{flex:1}
+    /* Responsive */
     @media (min-width:768px){
-      h1{font-size:1.5rem}
-      .subtitle{font-size:1rem}
-      .wrap{padding-top:110px}
+      h1{font-size:1.6rem}
+      .wrap{padding-top:64px}
       .item span.txt{font-size:1rem}
     }
   </style>
@@ -93,15 +74,17 @@
     <label for="codigo">Código</label>
     <select id="codigo">
       <option value="codigo_penal">Código Penal</option>
+      <option value="codigo_civil">Código Civil</option>
+      <option value="codigo_processo_civil">Código de Processo Civil</option>
     </select>
 
-    <label for="artigo">Digite o número do artigo ou palavra‑chave</label>
-    <input id="artigo" type="text" placeholder="Ex: 121  •  embriaguez  •  dano moral" />
+    <label for="entrada">Digite o número do artigo ou palavra-chave</label>
+    <input id="entrada" type="text" placeholder="Ex: 121  •  embriaguez  •  dano moral" />
 
     <button class="btn" onclick="buscar()">🔎 Buscar</button>
 
-    <div id="card" class="card" style="display:none; margin-top:16px;">
-      <p class="info" id="contexto">📌 Clique no botão ➕ para adicionar/remover uma pergunta do seu estudo.</p>
+    <div id="card" class="card" style="display:none; margin-top:14px;">
+      <p class="info" id="contexto">📌 Clique no botão ➕ para adicionar/remover perguntas ao seu prompt.</p>
       <ul id="lista" class="list"></ul>
 
       <button id="vermais" class="btn more" onclick="renderMais()">Ver mais</button>
@@ -115,144 +98,196 @@
 
   <div id="toast">ok</div>
 
+  <!-- Modal pós-cópia -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="box">
+      <h3 id="modal-title">Para onde você quer levar o prompt?</h3>
+      <div class="grid">
+        <a class="gbtn" href="https://chat.openai.com/" target="_blank">ChatGPT</a>
+        <a class="gbtn" href="https://gemini.google.com/app" target="_blank">Gemini</a>
+        <a class="gbtn" href="https://claude.ai/" target="_blank">Claude</a>
+        <a class="gbtn" href="https://www.perplexity.ai/" target="_blank">Perplexity</a>
+        <a class="gbtn" href="https://copilot.microsoft.com/" target="_blank">Copilot</a>
+        <a class="gbtn" href="https://huggingface.co/chat/" target="_blank">HF Chat</a>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="novaPesquisa()">🧹 Nova pesquisa</button>
+        <button class="btn" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-  let selecionadas = new Set();          // chaves únicas "art||pergunta"
-  let selecionadasArray = [];            // preserva ordem para o prompt
-  let resultados = [];                   // resultados de busca por palavra
-  let pagina = 0;                        // página de resultados (10 por página)
-  let modo = "artigo";                   // "artigo" | "busca"
+  // estado
+  let selecionadas = new Set();          // chaves únicas (texto)
+  let selecionadasArray = [];            // mantém ordem
+  let resultados = [];                   // resultados por palavra-chave (string pura da pergunta)
+  let pagina = 0;
+
+  // Busca global por palavra-chave já preparada para CP, CC, CPC:
+  const ALL_CODES = ["codigo_penal","codigo_civil","codigo_processo_civil"];
+  const WHITELIST = new Set(["stf","stj","tre","tse","tj","tjsp","tjmg","tjrj"]);
 
   function toast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    setTimeout(()=>{ t.style.display='none'; }, 1600);
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.style.display='block';
+    setTimeout(()=>{t.style.display='none'},1600);
+  }
+
+  function normalize(s){
+    // remove acentos de forma compatível
+    return (s||"").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   }
 
   function extrairNumero(texto){
-    const s = (texto||'').toLowerCase().replace(/[^0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();
-    const parts = s.split(' ');
-    for(const p of parts){
-      if(/^\\d{1,4}$/.test(p)) return p; // até 4 dígitos
-    }
+    const s=(texto||'').toLowerCase().replace(/[^0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+    const parts=s.split(' ');
+    for(const p of parts){ if(/^\d{1,4}$/.test(p)) return p; }
     return null;
   }
 
-  function atualizarPrompt(){
-    const promptBox = document.getElementById('prompt');
-    const corpo = selecionadasArray.map((p,i)=> (i+1)+'. '+p).join('\\n');
-    promptBox.value = "Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\\n\\n"
-      + corpo +
-      "\\n\\nDepois, envie:\\n- 5 questões objetivas para revisão\\n- Um checklist com os pontos essenciais.";
+  function parseTokens(query){
+    const raw = normalize(query).split(/\s+/).filter(Boolean);
+    // apenas tokens >=5 letras OU siglas whitelisted
+    return raw.filter(tok => tok.length>=5 || WHITELIST.has(tok));
   }
 
-  function togglePergunta(key, texto, btn){
-    if(selecionadas.has(key)){
-      // remover
-      selecionadas.delete(key);
-      selecionadasArray = selecionadasArray.filter(x => x !== texto);
-      btn.classList.remove('active');
-      btn.textContent = '➕';
+  function atualizarPrompt(){
+    const promptBox=document.getElementById('prompt');
+    const corpo=selecionadasArray.map((p,i)=>(i+1)+'. '+p).join('\n');
+    promptBox.value="Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\n\n"
+      + corpo +
+      "\n\nDepois, envie:\n- 5 questões objetivas para revisão\n- Um checklist com os pontos essenciais.";
+  }
+
+  function togglePergunta(texto, btn){
+    if(selecionadas.has(texto)){
+      selecionadas.delete(texto);
+      selecionadasArray = selecionadasArray.filter(x=>x!==texto);
+      btn.classList.remove('active'); btn.textContent='➕';
       toast('❎ Pergunta removida');
     }else{
-      // adicionar
-      selecionadas.add(key);
+      selecionadas.add(texto);
       selecionadasArray.push(texto);
-      btn.classList.add('active');
-      btn.textContent = '✔️';
+      btn.classList.add('active'); btn.textContent='✔️';
       toast('✅ Pergunta adicionada');
     }
     atualizarPrompt();
   }
 
   function limparLista(){
-    document.getElementById('lista').innerHTML = '';
+    document.getElementById('lista').innerHTML='';
     document.getElementById('vermais').style.display='none';
-    resultados = [];
-    pagina = 0;
+    resultados=[]; pagina=0;
   }
 
-  function renderPerguntas(perguntas, prefixoArt){
-    const ul = document.getElementById('lista');
-    perguntas.forEach((p, idx)=>{
-      const li = document.createElement('li'); li.className='item';
-      const span = document.createElement('span'); span.className='txt';
-      const mostrar = prefixoArt ? (prefixoArt + ' — ' + p) : p;
-      span.textContent = mostrar;
-      const btn = document.createElement('button'); btn.className='addbtn'; btn.textContent='➕';
-      const key = (prefixoArt||'') + '||' + p;
-      if(selecionadas.has(key)){ btn.classList.add('active'); btn.textContent='✔️'; }
-      btn.onclick = ()=> togglePergunta(key, mostrar, btn);
+  function renderPerguntas(perguntas){
+    const ul=document.getElementById('lista');
+    perguntas.forEach(p=>{
+      const li=document.createElement('li'); li.className='item';
+      const span=document.createElement('span'); span.className='txt'; span.textContent=p; // apenas a frase
+      const btn=document.createElement('button'); btn.className='addbtn'; btn.textContent= selecionadas.has(p)?'✔️':'➕';
+      if(selecionadas.has(p)) btn.classList.add('active');
+      btn.onclick=()=>togglePergunta(p,btn);
       li.appendChild(span); li.appendChild(btn); ul.appendChild(li);
     });
   }
 
   function renderMais(){
-    const slice = resultados.slice(pagina*10, (pagina+1)*10);
-    renderPerguntas(slice.map(r=>r.pergunta), null);
+    const slice=resultados.slice(pagina*10,(pagina+1)*10);
+    renderPerguntas(slice);
     pagina++;
-    if(pagina*10 >= resultados.length){
+    if(pagina*10>=resultados.length){
       document.getElementById('vermais').style.display='none';
     }
   }
 
-  function buscar(){
-    const codigo = document.getElementById('codigo').value;
-    const entrada = document.getElementById('artigo').value.trim();
-    const numero = extrairNumero(entrada);
-    const card = document.getElementById('card');
-    const lista = document.getElementById('lista');
-    const ctx = document.getElementById('contexto');
+  async function fetchJSON(path){
+    try{
+      const r=await fetch(path); if(!r.ok) throw 0; return await r.json();
+    }catch{ return null; }
+  }
 
-    fetch(`data/${codigo}.json`)
-      .then(r=>r.json())
-      .then(data=>{
-        card.style.display='block';
-        limparLista();
+  async function buscar(){
+    const codigo=document.getElementById('codigo').value;
+    const entrada=document.getElementById('entrada').value.trim();
+    const card=document.getElementById('card');
+    const lista=document.getElementById('lista');
+    const ctx=document.getElementById('contexto');
 
-        if(numero){ // modo artigo exato
-          modo = 'artigo';
-          const id = 'art'+numero;
-          const art = data[id];
-          if(!art){ lista.innerHTML = '<li class="item"><span class="txt">Nenhum artigo encontrado.</span></li>'; return; }
-          ctx.textContent = '📌 Você está estudando '+art.titulo+'. Clique no ➕ para adicionar/remover perguntas ao seu prompt.';
-          renderPerguntas(art.perguntas, art.titulo);
-        }else{
-          // modo busca por palavra-chave
-          modo = 'busca';
-          const q = entrada.toLowerCase();
-          const agreg = [];
-          for(const k in data){
-            const titulo = data[k]?.titulo || k.toUpperCase();
-            const arr = data[k]?.perguntas || [];
-            arr.forEach(p=>{
-              if(p.toLowerCase().includes(q)){
-                agreg.push({art:k, titulo, pergunta:p});
-              }
-            });
-          }
-          resultados = agreg.map(r=>({ pergunta: r.titulo+' — '+r.pergunta }));
-          if(resultados.length===0){
-            lista.innerHTML = '<li class="item"><span class="txt">Nenhuma pergunta encontrada para "'+entrada+'".</span></li>';
-            return;
-          }
-          ctx.textContent = '🔎 Resultados para "'+entrada+'". Clique no ➕ para adicionar/remover. Mostrando '+Math.min(10, resultados.length)+' de '+resultados.length+'.';
-          // render primeira página
-          renderMais();
-          if(resultados.length>10){
-            document.getElementById('vermais').style.display='block';
-          }
-        }
-      })
-      .catch(()=>{
-        card.style.display='block';
-        lista.innerHTML = '<li class="item"><span class="txt">Erro ao carregar dados do código selecionado.</span></li>';
-      });
+    if(!entrada){ toast('Digite um número de artigo ou palavra-chave'); return; }
+
+    card.style.display='block';
+    limparLista();
+
+    const numero=extrairNumero(entrada);
+
+    if(numero){ // modo ARTIGO: mostra TODAS as perguntas do artigo do código selecionado
+      const data = await fetchJSON(`data/${codigo}.json`);
+      if(!data){ lista.innerHTML='<li class="item"><span class="txt">Erro ao carregar dados.</span></li>'; return; }
+      const art = data['art'+numero];
+      if(!art){ lista.innerHTML='<li class="item"><span class="txt">Artigo não encontrado neste código.</span></li>'; return; }
+      ctx.textContent='📌 Você está estudando '+art.titulo+'. Adicione/remova perguntas com o botão ➕.';
+      renderPerguntas(art.perguntas); // todas as perguntas
+      return;
+    }
+
+    // PALAVRA-CHAVE (global por TODOS os códigos disponíveis)
+    const tokens=parseTokens(entrada);
+    if(tokens.length===0){
+      lista.innerHTML='<li class="item"><span class="txt">Use termos com 5+ letras (ou siglas: STF, STJ, TRE, TSE, TJ...).</span></li>'; return;
+    }
+
+    const datasets = await Promise.all(ALL_CODES.map(c=>fetchJSON(`data/${c}.json`)));
+    const perguntasAll = [];
+    datasets.forEach(d => {
+      if(!d) return;
+      for(const k in d){
+        const arr = d[k]?.perguntas || [];
+        arr.forEach(q => perguntasAll.push(q));
+      }
+    });
+
+    // De-duplicar perguntas idênticas
+    const unique = Array.from(new Set(perguntasAll));
+
+    const normTokens = tokens.map(normalize);
+    const matches = unique.filter(q => {
+      const nq = normalize(q);
+      // todas as palavras precisam aparecer
+      return normTokens.every(t => nq.includes(t));
+    });
+
+    if(matches.length===0){
+      lista.innerHTML=`<li class="item"><span class="txt">Nenhuma pergunta encontrada para "${entrada}".</span></li>`;
+      return;
+    }
+
+    resultados = matches;
+    ctx.textContent = `🔎 Resultados para "`+entrada+`". Clique no ➕ para adicionar/remover. Mostrando `+Math.min(10, resultados.length)+` de `+resultados.length+`.`;
+    renderMais();
+    if(resultados.length>10) document.getElementById('vermais').style.display='block';
   }
 
   function copiarPrompt(){
-    const txt = document.getElementById('prompt').value;
-    navigator.clipboard.writeText(txt).then(()=> toast('📋 Prompt copiado'));
+    const txt=document.getElementById('prompt').value;
+    navigator.clipboard.writeText(txt).then(()=>{
+      // abre modal pós-cópia
+      document.getElementById('modal').style.display='flex';
+    });
+  }
+
+  function fecharModal(){ document.getElementById('modal').style.display='none'; }
+
+  function novaPesquisa(){
+    selecionadas.clear(); selecionadasArray=[]; resultados=[]; pagina=0;
+    document.getElementById('lista').innerHTML='';
+    document.getElementById('vermais').style.display='none';
+    document.getElementById('prompt').value='';
+    document.getElementById('entrada').value='';
+    document.getElementById('card').style.display='none';
+    fecharModal();
+    toast('🧹 Limpo para nova pesquisa');
   }
 </script>
 </body>
