@@ -7,74 +7,97 @@
   <style>
     /* ===== RESET ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #fff; color: #222; line-height: 1.6; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #222;
+      line-height: 1.7;
+      font-size: 16px;
+    }
 
     /* ===== HEADER ===== */
     header {
       position: fixed; top: 0; left: 0; width: 100%;
-      padding: 10px 16px;
+      padding: 14px 18px;
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid #ddd;
       background: #fff; z-index: 1000;
     }
-    header h1 { font-size: 16px; font-weight: bold; }
+    header h1 { font-size: 18px; font-weight: bold; }
     #searchBar {
-      flex: 1; margin: 0 12px;
-      padding: 6px 10px;
+      flex: 1; margin: 0 16px;
+      padding: 8px 12px;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 15px;
     }
     #menuBtn {
       font-size: 18px;
       background: none; border: none;
-      cursor: pointer;
-      color: #444;
+      cursor: pointer; color: #444;
     }
-
-    /* ===== MENU (Sobre, Contato, Dicas) ===== */
     #menu {
-      position: fixed; top: 50px; right: 10px;
+      position: fixed; top: 60px; right: 15px;
       background: #fff; border: 1px solid #ddd;
       border-radius: 6px; padding: 10px;
-      font-size: 13px;
-      display: none; z-index: 2000;
+      font-size: 14px; display: none; z-index: 2000;
     }
     #menu a {
-      display: block; padding: 5px 0;
+      display: block; padding: 6px 0;
       text-decoration: none; color: #444;
     }
     #menu a:hover { color: #000; }
 
     /* ===== MAIN ===== */
-    main { margin-top: 60px; padding: 16px; }
+    main { margin-top: 70px; padding: 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+
     .accordion {
       border-bottom: 1px solid #eee;
-      padding: 10px 0; cursor: pointer;
-      font-size: 15px; font-weight: bold; color: #222;
+      padding: 14px 6px;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: bold;
+      display: flex; justify-content: space-between; align-items: center;
+      color: #333;
     }
-    .accordion.open { color: #000; }
+    .accordion:hover { color: #000; }
     .panel {
-      display: none; padding-left: 12px; font-size: 14px;
+      display: none; padding-left: 15px; font-size: 15px;
+      margin-bottom: 8px;
     }
-    .panel div { padding: 6px 0; cursor: pointer; }
+    .panel div { padding: 8px 0; cursor: pointer; }
     .panel div:hover { color: #000; }
 
     /* ===== ARTIGO ===== */
     .artigo {
-      max-width: 650px;
-      margin: 20px auto;
-      padding: 10px 0;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 22px;
+      margin: 25px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-    .artigo h2 { font-size: 16px; margin-bottom: 8px; }
-    .artigo p { font-size: 14px; margin-bottom: 10px; }
+    .artigo h2 {
+      font-size: 20px;
+      margin-bottom: 14px;
+      color: #111;
+    }
+    .artigo p {
+      font-size: 16px;
+      margin-bottom: 16px;
+      text-align: justify;
+    }
     .prompt-btn {
-      padding: 6px 12px;
-      border: 1px solid #63d1c3;
-      background: #63d1c3; color: #fff;
-      border-radius: 6px; font-size: 13px;
+      padding: 10px 18px;
+      border: none;
+      background: #63d1c3;
+      color: #fff;
+      font-size: 15px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background 0.2s;
     }
+    .prompt-btn:hover { background: #4ab3a7; }
 
     /* ===== MODAL ===== */
     #modal {
@@ -85,18 +108,21 @@
       z-index: 3000;
     }
     #modalContent {
-      background: #fff; padding: 20px;
-      border-radius: 8px; text-align: center;
-      width: 90%; max-width: 400px;
+      background: #fff; padding: 24px;
+      border-radius: 10px; text-align: center;
+      width: 90%; max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    #modalContent h3 { font-size: 15px; margin-bottom: 12px; }
+    #modalContent h3 { font-size: 16px; margin-bottom: 16px; }
     .ia-btn {
       display: block; width: 100%;
-      padding: 10px; margin: 6px 0;
-      border: none; border-radius: 6px;
-      background: #63d1c3; color: #fff; font-size: 14px;
-      cursor: pointer;
+      padding: 12px; margin: 8px 0;
+      border: none; border-radius: 8px;
+      background: #63d1c3; color: #fff;
+      font-size: 15px; cursor: pointer;
+      transition: background 0.2s;
     }
+    .ia-btn:hover { background: #4ab3a7; }
   </style>
 </head>
 <body>
@@ -112,16 +138,16 @@
   </header>
 
   <main>
-    <div class="accordion">📘 Códigos</div>
+    <div class="accordion">📘 Códigos <span>▸</span></div>
     <div class="panel" id="codigosPanel"></div>
 
-    <div class="accordion">⚖️ Súmulas</div>
+    <div class="accordion">⚖️ Súmulas <span>▸</span></div>
     <div class="panel"><div>STF</div><div>STJ</div></div>
 
-    <div class="accordion">📑 Julgados</div>
+    <div class="accordion">📑 Julgados <span>▸</span></div>
     <div class="panel"><div>STF</div><div>STJ</div></div>
 
-    <div class="accordion">🔄 Temas Repetitivos</div>
+    <div class="accordion">🔄 Temas Repetitivos <span>▸</span></div>
     <div class="panel"><div>STJ</div><div>TST</div></div>
 
     <div id="conteudo"></div>
@@ -154,44 +180,53 @@
       acc.addEventListener("click", () => {
         acc.classList.toggle("open");
         const panel = acc.nextElementSibling;
-        panel.style.display = panel.style.display === "block" ? "none" : "block";
+        const arrow = acc.querySelector("span");
+        if (panel.style.display === "block") {
+          panel.style.display = "none";
+          arrow.textContent = "▸";
+        } else {
+          panel.style.display = "block";
+          arrow.textContent = "▾";
+        }
       });
     });
 
-    // ===== MOCK: Lista de códigos (virão de JSON) =====
+    // ===== LISTA DE CÓDIGOS =====
     const codigos = [
-      "Código Civil", "Código de Processo Civil",
-      "Código Penal", "Código de Processo Penal",
-      "Código Tributário Nacional", "CLT",
-      "Código de Defesa do Consumidor", "Código de Trânsito Brasileiro",
-      "Código Eleitoral", "Código Florestal",
-      "Código Penal Militar", "Código de Processo Penal Militar"
+      { nome: "Código Penal", arquivo: "cp.json" },
+      { nome: "Código Civil", arquivo: "cc.json" },
+      { nome: "Código de Processo Civil", arquivo: "cpc.json" }
+      // ...adicionar outros depois
     ];
     const codigosPanel = document.getElementById("codigosPanel");
     codigos.forEach(c => {
       const div = document.createElement("div");
-      div.textContent = c;
-      div.onclick = () => carregarCodigo(c);
+      div.textContent = c.nome;
+      div.onclick = () => carregarCodigo(c.arquivo);
       codigosPanel.appendChild(div);
     });
 
-    // ===== ARTIGOS (simulação, depois virá de /data/*.json) =====
+    // ===== CONTEÚDO =====
     const conteudo = document.getElementById("conteudo");
-    function carregarCodigo(nome) {
-      conteudo.innerHTML = `
-        <div class="artigo">
-          <h2>${nome} — Exemplo</h2>
-          <p>Texto do artigo virá do JSON em /data.</p>
-          <button class="prompt-btn" onclick="gerarPrompt()">📌 Gerar Prompt</button>
-        </div>
-      `;
+    async function carregarCodigo(arquivo) {
+      const res = await fetch(`/data/${arquivo}`);
+      const artigos = await res.json();
+      conteudo.innerHTML = "";
+      artigos.forEach(art => {
+        conteudo.innerHTML += `
+          <div class="artigo">
+            <h2>${art.artigo} — ${art.titulo}</h2>
+            <p>${art.texto}</p>
+            <button class="prompt-btn" onclick="gerarPrompt('${art.id}')">📌 Gerar Prompt</button>
+          </div>
+        `;
+      });
     }
 
     // ===== MODAL =====
     const modal = document.getElementById("modal");
-    function gerarPrompt() {
-      // aqui copia prompt real
-      navigator.clipboard.writeText("Prompt gerado com texto do artigo...");
+    function gerarPrompt(id) {
+      navigator.clipboard.writeText("Prompt gerado automaticamente para: " + id);
       modal.style.display = "flex";
     }
     function fecharModal() { modal.style.display = "none"; }
