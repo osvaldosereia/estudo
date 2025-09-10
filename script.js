@@ -33,21 +33,29 @@ function resetAll(){
   app.innerHTML=''; save(); startConversation();
 }
 
+// Rolagem inteligente
+function autoScroll() {
+  const nearBottom = app.scrollHeight - app.scrollTop - app.clientHeight < 100;
+  if (nearBottom) {
+    app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
+  }
+}
+
 // UI helpers (chat)
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
 function pushBot(html){
-  const node = el(`<div class="msg bot"><div class="avatar">🤖</div><div class="bubble">${html}</div></div>`);
-  app.appendChild(node); app.scrollTo({top: app.scrollHeight, behavior:'smooth'});
+  const node = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble">${html}</div></div>`);
+  app.appendChild(node); autoScroll();
   return node;
 }
 function pushUser(text){
   const node = el(`<div class="msg user"><div class="bubble">${text}</div><div class="avatar"><img src="icons/brain.svg" alt="Você"></div></div>`);
-  app.appendChild(node); app.scrollTo({top: app.scrollHeight, behavior:'smooth'});
+  app.appendChild(node); autoScroll();
   return node;
 }
 function typing(ms=1500){
-  const t = el(`<div class="msg bot"><div class="avatar">🤖</div><div class="bubble"><span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div></div>`);
-  app.appendChild(t); app.scrollTo({top: app.scrollHeight, behavior:'smooth'});
+  const t = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div></div>`);
+  app.appendChild(t); autoScroll();
   return new Promise(res=> setTimeout(()=>{ t.remove(); res(); }, ms));
 }
 
@@ -133,12 +141,12 @@ async function onCodePicked(){
 
 function renderSearchInput(label){
   const node = pushBot(`<div>
-    <p>Agora me diga: <b>número do artigo</b> ou <b>palavra‑chave</b>.</p>
+    <p>Agora me diga: <b>número do artigo</b> ou <b>palavra-chave</b>.</p>
     <div class="input-row">
       <input id="inpBusca" class="input" placeholder="Ex.: 121  •  ou  homicídio qualificado" aria-label="Número do artigo ou palavra-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
     </div>
-    <p class="small">Dica: número → busco no ${label}; palavra‑chave → busco em todos os Códigos.</p>
+    <p class="small">Dica: número → busco no ${label}; palavra-chave → busco em todos os Códigos.</p>
   </div>`);
   node.querySelector('#btnBuscar').addEventListener('click', async ()=>{
     const v = node.querySelector('#inpBusca').value.trim();
@@ -175,9 +183,8 @@ async function doSearch(){
     </div>
   `).join('');
 
-  const group = el(`<div class="msg bot"><div class="avatar">🤖</div><div class="bubble"><div class="qgroup" id="qgroup">${rows}</div></div></div>`);
-  app.appendChild(group);
-  app.scrollTo({top: app.scrollHeight, behavior:'smooth'});
+  const group = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><div class="qgroup" id="qgroup">${rows}</div></div></div>`);
+  app.appendChild(group); autoScroll();
 
   group.querySelectorAll('[data-role="toggle"]').forEach(btn=>{
     const idx = +btn.getAttribute('data-i');
@@ -278,8 +285,7 @@ async function onCopied(){
   pushBot(`Prontinho! Seu prompt foi copiado. Agora escolha uma IA para abrir 👇`);
   await typing(700);
 
-  // Chips padronizados iguais aos demais
-  const iaNode = pushBot(`<div class="group">
+  pushBot(`<div class="group">
     <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
     <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
     <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
