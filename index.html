@@ -1,393 +1,79 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>direito.love • Vade Mecum de Perguntas</title>
-  <style>
-    :root{
-      --bg:#f7f8fa; --text:#1d1d1f; --muted:#6b7280;
-      --primary:#63d1c3; --primary-dark:#4bb2a7; --accent:#0c4160; --border:#e5e7eb;
-      --btn:#0b3a57; --btn-active:#15803d;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif}
-
-    /* Topbar */
-    .topbar{
-      position:fixed;top:0;left:0;right:0;z-index:50;
-      background:rgba(255,255,255,.92);
-      backdrop-filter:saturate(180%) blur(10px);
-      border-bottom:1px solid var(--border);
-    }
-    .topbar-inner{
-      max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;
-      padding:12px 16px;gap:12px;
-    }
-    .logo{display:flex;align-items:center;gap:10px;color:var(--accent)}
-    .logo img{height:56px;width:56px;object-fit:contain}
-    .brand{font-size:1.25rem;line-height:1}
-    .brand strong{font-weight:800}
-    .brand span{font-weight:600;opacity:.9}
-
-    /* Layout */
-    .wrap{max-width:720px;margin:0 auto;padding:60px 16px 40px;} /* título removido; respiro compacto */
-    .subtitle{margin:16px auto 18px;text-align:center;color:var(--muted);font-size:1rem}
-
-    /* Form */
-    label{display:block;margin:.45rem 0 .25rem;font-weight:600;font-size:.85rem;color:#374151}
-    select,input[type="text"]{
-      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;margin-bottom:10px
-    }
-    .btn{
-      width:100%;margin-top:6px;border:none;border-radius:10px;padding:12px 16px;background:var(--primary);color:#fff;
-      font-weight:700;font-size:1rem;cursor:pointer;transition:.2s
-    }
-    .btn:hover{background:var(--primary-dark)}
-
-    /* Lista de perguntas (sem box de fundo) */
-    .results{margin-top:12px}
-    .info{color:var(--muted);font-size:.95rem;margin:4px 0 8px;display:none} /* removemos a exibição de contexto */
-    ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
-    .item{display:flex;align-items:center;gap:10px;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 0}
-    .item .txt{flex:1;text-align:left;font-size:.98rem;line-height:1.35}
-    .addbtn{
-      width:28px;height:28px;min-width:28px;min-height:28px;border-radius:6px;border:none;background:var(--btn);color:#fff;font-size:1rem;cursor:pointer;
-      display:inline-flex;align-items:center;justify-content:center
-    }
-    .addbtn.active{background:var(--btn-active)}
-
-    /* Ver mais */
-    .more{margin-top:10px;display:none}
-
-    /* Acessórios (accordion) */
-    .acc{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:#fff;display:none}
-    .acc summary{padding:12px 14px;cursor:pointer;font-weight:800;color:var(--accent);list-style:none}
-    .acc summary::marker{display:none}
-    .acc .acc-inner{padding:0 14px 12px}
-    .acc .hint{color:var(--muted);font-size:.92rem;margin:0 0 8px}
-    .acc-list{display:grid;grid-template-columns:1fr;gap:8px}
-    .acc-item{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--border);padding-top:8px}
-    .acc-item:first-child{border-top:none;padding-top:0}
-    .acc-item input{margin-top:3px}
-
-    /* Prompt */
-    .prompt-wrap{margin-top:14px}
-    textarea{
-      width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
-      font-size:.95rem;background:#fff;min-height:160px
-    }
-    .copy{margin-top:10px}
-
-    /* Toast */
-    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:60;font-size:.92rem}
-
-    /* Modal pós-cópia */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:70}
-    .modal .box{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.15)}
-    .modal h3{margin:0 0 10px;font-size:1.1rem;color:var(--accent);text-align:center}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    .grid .gbtn{padding:12px;border:1px solid var(--border);border-radius:10px;background:#fafafa;cursor:pointer;text-align:center;font-weight:700;text-decoration:none;color:#111}
-    .grid .gbtn:hover{background:#f0f0f0}
-    .modal .actions{display:flex;gap:10px;margin-top:14px}
-    .modal .actions button{flex:1}
-
-    /* Credits */
-    .credit{text-align:center;font-size:.85rem;color:#aaa;margin-top:30px}
-
-    /* Responsivo */
-    @media (min-width:768px){
-      .brand{font-size:1.35rem}
-      .wrap{padding-top:66px}
-      .item .txt{font-size:1rem}
-      .acc-list{grid-template-columns:1fr 1fr}
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>direito.love</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="logo">
-        <img src="https://osvaldosereia.github.io/estudo/icons/logo-mini.png" alt="logo" onerror="this.style.display='none'">
-        <div class="brand"><strong>direito</strong><span>.love</span></div>
+  <!-- ===== Topbar ===== -->
+  <header>
+    <div class="logo">💚 direito.love</div>
+    <div class="actions">
+      <button id="resetBtn" title="Reiniciar">🔄</button>
+      <button id="infoBtn" title="Informações">ℹ️</button>
+      <button id="installBtn" title="Baixar App" class="desktop-android">⬇️</button>
+    </div>
+  </header>
+
+  <!-- ===== Conteúdo principal ===== -->
+  <main>
+    <!-- Busca -->
+    <section id="busca">
+      <h2>Sobre o que quer estudar?</h2>
+      <input type="text" id="campoBusca" placeholder="Digite ex: 121, tutela provisória...">
+      <button id="btnBuscar">Avançar</button>
+    </section>
+
+    <!-- Favoritos -->
+    <section id="favoritos">
+      <div class="accordion">⭐ Favoritos <span>▸</span></div>
+      <div id="favoritosPanel" class="panel"></div>
+    </section>
+
+    <!-- Recentes -->
+    <section id="recentes">
+      <div class="accordion">⏱️ Recentes <span>▸</span></div>
+      <div id="recentesPanel" class="panel"></div>
+    </section>
+
+    <!-- Códigos -->
+    <section id="codigos">
+      <div class="accordion">📘 Códigos <span>▸</span></div>
+      <div id="codigosPanel" class="panel"></div>
+    </section>
+  </main>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast"></div>
+
+  <!-- ===== Modal Prompt ===== -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h3>Prompt copiado!</h3>
+      <div class="ias">
+        <button>ChatGPT</button>
+        <button>Gemini</button>
+        <button>Perplexity</button>
+        <button>Claude</button>
+        <button>Copilot</button>
+        <button>NotebookLM</button>
       </div>
+      <button onclick="fecharModal()">Fechar</button>
     </div>
   </div>
 
-  <div class="wrap">
-    <p class="subtitle">Seu Vade Mecum de perguntas inteligentes.</p>
-
-    <label for="codigo">Código</label>
-    <select id="codigo">
-      <option value="codigo_penal">Código Penal</option>
-      <option value="codigo_civil">Código Civil</option>
-      <option value="codigo_processo_civil">Código de Processo Civil</option>
-    </select>
-
-    <label for="entrada">Digite o número do artigo ou palavra-chave</label>
-    <input id="entrada" type="text" placeholder="Ex: 121  •  embriaguez  •  dano moral" />
-
-    <button class="btn" onclick="buscar()">🔎 Buscar</button>
-
-    <div class="results" id="results" style="display:none;">
-      <p class="info" id="contexto" aria-hidden="true"></p> <!-- contexto oculto -->
-
-      <ul id="lista" class="list"></ul>
-      <button id="vermais" class="btn more" onclick="renderMais()">Ver mais</button>
-
-      <!-- Acessórios (acordeon, fechado por padrão; aparece só depois de mostrar perguntas) -->
-      <details id="acc" class="acc">
-        <summary>➕ Acessórios do estudo (opcional)</summary>
-        <div class="acc-inner">
-          <p class="hint">Você pode adicionar acessórios ao prompt para aprofundar seu estudo.</p>
-          <div id="accList" class="acc-list"></div>
-        </div>
-      </details>
-
-      <div class="prompt-wrap">
-        <textarea id="prompt" placeholder="Seu prompt aparecerá aqui..."></textarea>
-        <button class="btn copy" onclick="copiarPrompt()">📋 Copiar prompt</button>
-      </div>
-
-      <div class="credit">feito com 💚 por direito.love</div>
+  <!-- ===== Modal Info ===== -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <h3>ℹ️ Informações</h3>
+      <p>Use o direito.love como seu Vade Mecum digital interativo.</p>
+      <p>Clique em artigos, súmulas ou jurisprudências e gere prompts prontos para estudar em sua IA preferida.</p>
+      <button onclick="document.getElementById('infoModal').style.display='none'">Fechar</button>
     </div>
   </div>
 
-  <div id="toast">ok</div>
-
-  <!-- Modal pós-cópia -->
-  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="box">
-      <h3 id="modal-title">Para onde você quer levar o prompt?</h3>
-      <div class="grid">
-        <a class="gbtn" href="https://chat.openai.com/" target="_blank">ChatGPT</a>
-        <a class="gbtn" href="https://gemini.google.com/app" target="_blank">Gemini</a>
-        <a class="gbtn" href="https://claude.ai/" target="_blank">Claude</a>
-        <a class="gbtn" href="https://www.perplexity.ai/" target="_blank">Perplexity</a>
-        <a class="gbtn" href="https://copilot.microsoft.com/" target="_blank">Copilot</a>
-        <a class="gbtn" href="https://huggingface.co/chat/" target="_blank">HF Chat</a>
-      </div>
-      <div class="actions">
-        <button class="btn" onclick="novaPesquisa()">🧹 Nova pesquisa</button>
-        <button class="btn" onclick="fecharModal()">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-<script>
-  // --- Estado ---
-  let selecionadas = new Set();          // perguntas selecionadas
-  let selecionadasArray = [];            // ordem das selecionadas
-  let resultados = [];                   // resultados por palavra-chave
-  let pagina = 0;
-  let accSelecionados = new Set();       // acessórios
-
-  // Busca global por palavra-chave já preparada:
-  const ALL_CODES = ["codigo_penal","codigo_civil","codigo_processo_civil"];
-  const WHITELIST = new Set(["stf","stj","tre","tse","tj","tjsp","tjmg","tjrj"]);
-
-  const ACCESSORIES = [
-    "Quais pontos de prova mais cobrados (OAB/concursos)?",
-    "Crie 3 perguntas-relâmpago de auto-checagem.",
-    "Traga 10 questões objetivas reais (OAB/concursos) e só mostre o gabarito no final.",
-    "Traga 3 casos concretos com solução passo a passo.",
-    "Qual a tese majoritária atual (STJ/STF)?",
-    "Compare com 2–3 artigos próximos que geram confusão.",
-    "Dê quadro comparativo com critérios objetivos de distinção.",
-    "Quais documentos/provas são mínimos para sustentar a tese?"
-  ];
-
-  // --- Utilitários ---
-  function toast(msg){
-    const t=document.getElementById('toast');
-    t.textContent=msg; t.style.display='block';
-    setTimeout(()=>{t.style.display='none'},1600);
-  }
-
-  function normalize(s){
-    return (s||"").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  }
-
-  function extrairNumero(texto){
-    const s=(texto||'').toLowerCase().replace(/[^0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();
-    const parts=s.split(' ');
-    for(const p of parts){ if(/^\\d{1,4}$/.test(p)) return p; } // até 4 dígitos
-    return null;
-  }
-
-  function parseTokens(query){
-    const raw = normalize(query).split(/\\s+/).filter(Boolean);
-    // tokens com 5+ letras OU siglas whitelist
-    return raw.filter(tok => tok.length>=5 || WHITELIST.has(tok));
-  }
-
-  async function fetchJSON(path){
-    try{ const r=await fetch(path); if(!r.ok) throw 0; return await r.json(); }
-    catch{ return null; }
-  }
-
-  // --- Renderização ---
-  function atualizarPrompt(){
-    const promptBox=document.getElementById('prompt');
-    const corpo=selecionadasArray.map((p,i)=>(i+1)+'. '+p).join('\\n');
-
-    let extra='';
-    if(accSelecionados.size>0){
-      extra = "\\n\\nAdicional:\\n- " + Array.from(accSelecionados).join("\\n- ");
-    }
-
-    promptBox.value="Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\\n\\n"
-      + corpo +
-      "\\n\\nDepois, envie:\\n- 5 questões objetivas para revisão\\n- Um checklist com os pontos essenciais."
-      + extra;
-  }
-
-  function togglePergunta(texto, btn){
-    if(selecionadas.has(texto)){
-      selecionadas.delete(texto);
-      selecionadasArray = selecionadasArray.filter(x=>x!==texto);
-      btn.classList.remove('active'); btn.textContent='➕';
-      toast('❎ Pergunta removida');
-    }else{
-      selecionadas.add(texto);
-      selecionadasArray.push(texto);
-      btn.classList.add('active'); btn.textContent='✔️';
-      toast('✅ Pergunta adicionada');
-    }
-    atualizarPrompt();
-  }
-
-  function limparLista(){
-    document.getElementById('lista').innerHTML='';
-    document.getElementById('vermais').style.display='none';
-    resultados=[]; pagina=0;
-    document.getElementById('acc').style.display='none';
-  }
-
-  function renderPerguntas(perguntas){
-    const ul=document.getElementById('lista');
-    perguntas.forEach(p=>{
-      const li=document.createElement('li'); li.className='item';
-      const span=document.createElement('span'); span.className='txt'; span.textContent=p; // apenas a frase
-      const btn=document.createElement('button'); btn.className='addbtn'; btn.textContent= selecionadas.has(p)?'✔️':'➕';
-      if(selecionadas.has(p)) btn.classList.add('active');
-      btn.onclick=()=>togglePergunta(p,btn);
-      li.appendChild(span); li.appendChild(btn); ul.appendChild(li);
-    });
-    setupAccessories();
-    document.getElementById('acc').style.display='block';
-  }
-
-  function renderMais(){
-    const slice=resultados.slice(pagina*10,(pagina+1)*10);
-    renderPerguntas(slice);
-    pagina++;
-    if(pagina*10>=resultados.length){
-      document.getElementById('vermais').style.display='none';
-    }
-  }
-
-  function setupAccessories(){
-    const accList = document.getElementById('accList');
-    if(accList.childElementCount>0) return; // monta uma vez
-    ACCESSORIES.forEach(txt=>{
-      const row=document.createElement('label'); row.className='acc-item';
-      const cb=document.createElement('input'); cb.type='checkbox'; cb.value=txt;
-      cb.onchange=(e)=>{
-        if(e.target.checked){ accSelecionados.add(txt); }
-        else{ accSelecionados.delete(txt); }
-        atualizarPrompt();
-      };
-      const span=document.createElement('span'); span.textContent=txt;
-      row.appendChild(cb); row.appendChild(span);
-      accList.appendChild(row);
-    });
-  }
-
-  // --- Fluxo principal ---
-  async function buscar(){
-    const codigo=document.getElementById('codigo').value;
-    const entrada=document.getElementById('entrada').value.trim();
-    const results=document.getElementById('results');
-    const lista=document.getElementById('lista');
-
-    if(!entrada){ toast('Digite um número de artigo ou palavra-chave'); return; }
-
-    results.style.display='block';
-    limparLista();
-    accSelecionados.clear();
-    // desmarcar acessórios se já tiverem sido marcados
-    const accList=document.getElementById('accList');
-    [...accList.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked=false);
-
-    const numero=extrairNumero(entrada);
-
-    if(numero){ // ARTIGO: mostrar TODAS as perguntas do artigo do código selecionado
-      const data = await fetchJSON(`data/${codigo}.json`);
-      if(!data){ lista.innerHTML='<li class="item"><span class="txt">Erro ao carregar dados.</span></li>'; return; }
-      const art = data['art'+numero];
-      if(!art){ lista.innerHTML='<li class="item"><span class="txt">Artigo não encontrado neste código.</span></li>'; return; }
-      renderPerguntas(art.perguntas);
-      return;
-    }
-
-    // PALAVRA-CHAVE (busca global nos códigos listados em ALL_CODES)
-    const tokens=parseTokens(entrada);
-    if(tokens.length===0){
-      lista.innerHTML='<li class="item"><span class="txt">Use termos com 5+ letras (ou siglas: STF, STJ, TRE, TSE, TJ...).</span></li>'; return;
-    }
-
-    const datasets = await Promise.all(ALL_CODES.map(c=>fetchJSON(`data/${c}.json`)));
-    const perguntasAll = [];
-    datasets.forEach(d => {
-      if(!d) return;
-      for(const k in d){
-        const arr = d[k]?.perguntas || [];
-        arr.forEach(q => perguntasAll.push(q));
-      }
-    });
-
-    const unique = Array.from(new Set(perguntasAll));
-    const normTokens = tokens.map(normalize);
-    const matches = unique.filter(q => {
-      const nq = normalize(q);
-      return normTokens.every(t => nq.includes(t));
-    });
-
-    if(matches.length===0){
-      lista.innerHTML=`<li class="item"><span class="txt">Nenhuma pergunta encontrada para "${entrada}".</span></li>`;
-      return;
-    }
-
-    resultados = matches;
-    renderMais();
-    if(resultados.length>10) document.getElementById('vermais').style.display='block';
-  }
-
-  function copiarPrompt(){
-    const txt=document.getElementById('prompt').value;
-    navigator.clipboard.writeText(txt).then(()=>{
-      document.getElementById('modal').style.display='flex';
-    });
-  }
-
-  function fecharModal(){ document.getElementById('modal').style.display='none'; }
-
-  function novaPesquisa(){
-    selecionadas.clear(); selecionadasArray=[]; resultados=[]; pagina=0; accSelecionados.clear();
-    document.getElementById('lista').innerHTML='';
-    document.getElementById('vermais').style.display='none';
-    document.getElementById('prompt').value='';
-    document.getElementById('entrada').value='';
-    document.getElementById('results').style.display='none';
-    const accList=document.getElementById('accList');
-    [...accList.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked=false);
-    document.getElementById('acc').open=false;
-    document.getElementById('acc').style.display='none';
-    fecharModal();
-    toast('🧹 Limpo para nova pesquisa');
-  }
-</script>
+  <script src="js/app.js"></script>
 </body>
 </html>
