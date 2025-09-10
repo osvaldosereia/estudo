@@ -4,57 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>direito.love – Vade Mecum Digital</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; color: #222; line-height: 1.7; font-size: 16px; margin: 0; }
-    header { position: fixed; top: 0; left: 0; width: 100%; background: #fff; border-bottom: 1px solid #ddd; padding: 12px 16px;
-      display: flex; align-items: center; z-index: 1000; }
-    header h1 { font-size: 18px; margin: 0; }
-    #searchBar { flex: 1; margin: 0 12px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
-    #menuBtn { font-size: 20px; background: none; border: none; cursor: pointer; }
-
-    /* Sidebar */
-    #sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: #fff; border-right: 1px solid #ddd;
-      padding: 16px; overflow-y: auto; transition: left 0.3s ease; z-index: 2000; }
-    #sidebar.open { left: 0; }
-    .accordion { font-weight: bold; margin: 12px 0; cursor: pointer; display: flex; justify-content: space-between; }
-    .panel { display: none; padding-left: 12px; font-size: 15px; }
-    .panel div { padding: 6px 0; cursor: pointer; }
-    .panel div:hover { color: #000; }
-
-    /* Conteúdo */
-    main { margin-top: 70px; padding: 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
-    .card { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 16px; margin: 16px 0;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .card h2 { margin-bottom: 10px; font-size: 18px; }
-    .prompt-btn { padding: 8px 14px; border: none; background: #63d1c3; color: #fff; border-radius: 6px; cursor: pointer; }
-    .prompt-btn:hover { background: #4ab3a7; }
-
-    /* Histórico */
-    #historico h2 { font-size: 18px; margin-bottom: 10px; }
-    .hist-item { background: #fff; border: 1px solid #eee; border-radius: 6px; padding: 10px; margin: 8px 0;
-      display: flex; justify-content: space-between; align-items: center; }
-    .hist-item span { font-size: 14px; }
-    .reuse-btn { font-size: 13px; padding: 6px 10px; border: 1px solid #63d1c3; background: #fff; color: #63d1c3;
-      border-radius: 6px; cursor: pointer; }
-
-    /* Modal */
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
-      display: flex; align-items: center; justify-content: center; z-index: 3000; }
-    #modalContent { background: #fff; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
-    #modalContent h3 { margin-bottom: 14px; }
-    .ia-btn { display: block; width: 100%; padding: 10px; margin: 6px 0; border: none; border-radius: 6px;
-      background: #63d1c3; color: #fff; font-size: 15px; cursor: pointer; }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
     <h1>💚 direito.love</h1>
-    <input id="searchBar" type="text" placeholder="Buscar...">
     <button id="menuBtn">☰</button>
   </header>
 
-  <!-- Sidebar -->
+  <div id="overlay"></div>
   <div id="sidebar">
+    <input type="text" id="searchBar" placeholder="Buscar artigo...">
     <div class="accordion">📘 Códigos <span>▸</span></div>
     <div class="panel" id="codigosPanel"></div>
     <div class="accordion">⚖️ Súmulas <span>▸</span></div>
@@ -67,111 +27,39 @@
     <div class="panel" id="temasPanel"></div>
   </div>
 
-  <!-- Conteúdo -->
   <main>
-    <section id="historico">
-      <h2>Últimos prompts</h2>
-      <div id="historicoLista"></div>
-    </section>
+    <div class="accordion">⭐ Favoritos <span>▾</span></div>
+    <div class="panel" id="favoritosPanel"></div>
+
+    <div class="accordion">⏱️ Recentes <span>▾</span></div>
+    <div class="panel" id="recentesPanel"></div>
+
     <div id="conteudo"></div>
   </main>
 
   <!-- Modal -->
   <div id="modal">
     <div id="modalContent">
-      <h3>✅ Prompt gerado e copiado!</h3>
-      <button class="ia-btn">ChatGPT</button>
-      <button class="ia-btn">Gemini</button>
-      <button class="ia-btn">Perplexity</button>
-      <button class="ia-btn">Claude</button>
-      <button class="ia-btn">Copilot</button>
-      <button class="ia-btn">NotebookLM</button>
-      <button class="ia-btn" onclick="fecharModal()">Fechar</button>
+      <h3>✅ Prompt copiado!</h3>
+      <div class="ia-grid">
+        <button class="ia-btn">ChatGPT</button>
+        <button class="ia-btn">Gemini</button>
+        <button class="ia-btn">Perplexity</button>
+        <button class="ia-btn">Claude</button>
+        <button class="ia-btn">Copilot</button>
+        <button class="ia-btn">NotebookLM</button>
+      </div>
+      <button class="ia-btn" style="margin-top:10px;" onclick="fecharModal()">Fechar</button>
     </div>
   </div>
 
-  <script>
-    // Mini-prompts
-    const miniPrompts = {
-      codigo: "Você é um professor de Direito com didática impecável.\nExplique o artigo abaixo:\n\n",
-      sumula: "Você é um especialista em jurisprudência brasileira.\nExplique a súmula abaixo:\n\n",
-      juris: "Você é um jurista experiente.\nAnalise a jurisprudência abaixo:\n\n",
-      julgado: "Você é um professor de Direito Processual.\nExplique o julgado abaixo:\n\n",
-      tema: "Você é um especialista em Direito Constitucional.\nExplique o tema repetitivo abaixo:\n\n"
-    };
+  <!-- Toast -->
+  <div id="toast"></div>
 
-    // Sidebar toggle
-    const sidebar = document.getElementById("sidebar");
-    document.getElementById("menuBtn").onclick = () => {
-      sidebar.classList.toggle("open");
-    };
+  <div id="bottomBar">
+    <button onclick="window.scrollTo({top:0,behavior:'smooth'})">🏠 Home</button>
+  </div>
 
-    // Accordions
-    document.querySelectorAll(".accordion").forEach(acc => {
-      acc.addEventListener("click", () => {
-        const panel = acc.nextElementSibling;
-        const arrow = acc.querySelector("span");
-        if (panel.style.display === "block") {
-          panel.style.display = "none"; arrow.textContent = "▸";
-        } else {
-          panel.style.display = "block"; arrow.textContent = "▾";
-        }
-      });
-    });
-
-    // Histórico
-    const historicoLista = document.getElementById("historicoLista");
-    function atualizarHistorico() {
-      historicoLista.innerHTML = "";
-      const historico = JSON.parse(localStorage.getItem("historico") || "[]");
-      historico.slice(-5).reverse().forEach(item => {
-        const div = document.createElement("div");
-        div.className = "hist-item";
-        div.innerHTML = `<span>${item.titulo}<br><small>${item.data}</small></span>
-          <button class="reuse-btn" onclick="reutilizarPrompt('${item.prompt}')">🔄 Reutilizar</button>`;
-        historicoLista.appendChild(div);
-      });
-    }
-    atualizarHistorico();
-
-    function salvarHistorico(titulo, prompt) {
-      const historico = JSON.parse(localStorage.getItem("historico") || "[]");
-      historico.push({ titulo, prompt, data: new Date().toLocaleString() });
-      localStorage.setItem("historico", JSON.stringify(historico));
-      atualizarHistorico();
-    }
-
-    // Carregar artigos de JSON
-    const conteudo = document.getElementById("conteudo");
-    async function carregarArquivo(arquivo, tipo) {
-      const res = await fetch(`/data/${arquivo}`);
-      const itens = await res.json();
-      conteudo.innerHTML = "";
-      itens.forEach(it => {
-        conteudo.innerHTML += `
-          <div class="card">
-            <h2>${it.artigo || it.numero || it.id} — ${it.titulo || ""}</h2>
-            <p>${it.texto}</p>
-            <button class="prompt-btn" onclick="gerarPrompt('${it.tipo}','${it.artigo || it.numero || it.id}','${it.texto.replace(/'/g, "\\'")}')">📌 Gerar Prompt</button>
-          </div>`;
-      });
-    }
-
-    // Gerar prompt
-    const modal = document.getElementById("modal");
-    function gerarPrompt(tipo, titulo, texto) {
-      const prompt = miniPrompts[tipo] + texto;
-      navigator.clipboard.writeText(prompt);
-      salvarHistorico(titulo, prompt);
-      modal.style.display = "flex";
-    }
-    function fecharModal() { modal.style.display = "none"; }
-    modal.onclick = e => { if (e.target === modal) fecharModal(); };
-
-    function reutilizarPrompt(prompt) {
-      navigator.clipboard.writeText(prompt);
-      modal.style.display = "flex";
-    }
-  </script>
+  <script src="js/app.js"></script>
 </body>
 </html>
