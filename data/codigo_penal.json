@@ -1,0 +1,41 @@
+{
+  "art121": {
+    "titulo": "Art. 121 — Homicídio (Código Penal)",
+    "perguntas": [
+      "Quais são as modalidades de homicídio (simples, qualificado e privilegiado)?",
+      "O que configura o dolo direto e eventual no homicídio?",
+      "Como se comprova o nexo causal entre conduta e resultado morte?",
+      "Quando incide a qualificadora do motivo fútil ou torpe?",
+      "Como funciona a qualificadora do meio cruel ou recurso que dificultou a defesa?",
+      "Homicídio culposo: elementos, formas e causas de aumento/diminuição.",
+      "Quando cabe homicídio privilegiado? Quais são os requisitos?",
+      "Competência do Tribunal do Júri e fases do procedimento do júri.",
+      "Como a jurisprudência diferencia animus necandi de animus laedendi?",
+      "Excludentes de ilicitude aplicáveis (legítima defesa, estado de necessidade etc.).",
+      "Erro na execução (aberratio ictus) e resultado diverso do pretendido (aberratio criminis).",
+      "Tentativa de homicídio: critérios de redução de pena e iter criminis.",
+      "Como o STF interpreta o homicídio privilegiado‑qualificado?",
+      "Homicídio qualificado‑feminicídio: requisitos legais e entendimento atual.",
+      "Exemplos práticos: análise de casos curtos com conclusões objetivas."
+    ]
+  },
+  "art129": {
+    "titulo": "Art. 129 — Lesão corporal (Código Penal)",
+    "perguntas": [
+      "Quais são as modalidades de lesão corporal (leve, grave, gravíssima, seguida de morte)?",
+      "Qual o critério para diferenciar lesão corporal de vias de fato?",
+      "Lesão corporal culposa: elementos, causas de aumento e perdão judicial.",
+      "Lesão corporal no contexto doméstico e familiar (Lei Maria da Penha): reflexos penais.",
+      "Ação penal: quando é pública incondicionada, condicionada ou privada?",
+      "Perícia: como se comprova o dano corporal e o tempo de incapacidade?"
+    ]
+  },
+  "art171": {
+    "titulo": "Art. 171 — Estelionato (Código Penal)",
+    "perguntas": [
+      "Elementos do estelionato e distinção de furto mediante fraude.",
+      "Estelionato contra idoso: causas de aumento e posição jurisprudencial.",
+      "Ação penal no estelionato: regra do §5º (representação) e exceções."
+    ]
+  }
+}

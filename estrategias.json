@@ -1,0 +1,37 @@
+[
+  {
+    "id": "explicado",
+    "titulo": "Estudo Explicado",
+    "instrucao": "Explique de forma didática, com exemplos curtos e linguagem simples, destacando conceitos e elementos essenciais."
+  },
+  {
+    "id": "flash",
+    "titulo": "Flash Points (Memorização)",
+    "instrucao": "Liste tópicos‑chave em frases curtas, com mnemônicos quando possível."
+  },
+  {
+    "id": "questoes",
+    "titulo": "Questões Objetivas",
+    "instrucao": "Crie 5 questões objetivas estilo OAB/concurso, com gabarito ao final."
+  },
+  {
+    "id": "casos",
+    "titulo": "Casos Concretos",
+    "instrucao": "Crie 3 casos práticos comentados, do básico ao avançado."
+  },
+  {
+    "id": "quadro",
+    "titulo": "Quadro Comparativo",
+    "instrucao": "Monte um quadro comparando institutos correlatos, apontando semelhanças e diferenças."
+  },
+  {
+    "id": "mapa",
+    "titulo": "Mapa Mental/Esquema",
+    "instrucao": "Organize em um esquema hierárquico com níveis e setas lógicas."
+  },
+  {
+    "id": "juris",
+    "titulo": "Jurisprudência Atualizada",
+    "instrucao": "Resuma a orientação majoritária STF/STJ e aponte leading cases (sem citar números se não tiver certeza)."
+  }
+]
