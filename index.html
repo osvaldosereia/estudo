@@ -3,55 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>direito.love • Estudo por Artigo</title>
+  <title>direito.love • Vade Mecum de Perguntas</title>
   <style>
     :root{
-      --bg:#f7f8fa; --card:#ffffff; --text:#1d1d1f; --muted:#6b7280;
+      --bg:#f7f8fa; --text:#1d1d1f; --muted:#6b7280;
       --primary:#63d1c3; --primary-dark:#4bb2a7; --accent:#0c4160; --border:#e5e7eb;
+      --btn:#0b3a57; --btn-active:#15803d;
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif}
+
     /* Topbar */
-    .topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--border)}
-    .topbar-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;padding:10px 16px;gap:10px}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--accent);}
-    .logo img{height:48px;width:48px;object-fit:contain}
-    /* Container */
-    .wrap{max-width:720px;margin:0 auto;padding:56px 16px 40px;} /* respiro reduzido */
-    h1{font-size:1.4rem;line-height:1.2;margin:0 0 6px;color:var(--accent);text-align:center;font-weight:700}
-    .subtitle{margin:0 auto 18px;text-align:center;color:var(--muted);font-size:.95rem}
-    label{display:block;margin:.6rem 0 .35rem;font-weight:600;font-size:.95rem;color:#374151}
-    select,input[type="text"]{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;margin-bottom:12px}
-    .btn{width:100%;margin-top:6px;border:none;border-radius:10px;padding:14px 16px;background:var(--primary);color:#fff;font-weight:600;font-size:1rem;cursor:pointer;transition:.2s}
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:50;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:saturate(180%) blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;
+      padding:12px 16px;gap:12px;
+    }
+    .logo{display:flex;align-items:center;gap:10px;color:var(--accent)}
+    .logo img{height:56px;width:56px;object-fit:contain}
+    .brand{font-size:1.25rem;line-height:1}
+    .brand strong{font-weight:800}
+    .brand span{font-weight:600;opacity:.9}
+
+    /* Layout */
+    .wrap{max-width:720px;margin:0 auto;padding:60px 16px 40px;} /* título removido; respiro compacto */
+    .subtitle{margin:16px auto 18px;text-align:center;color:var(--muted);font-size:1rem}
+
+    /* Form */
+    label{display:block;margin:.45rem 0 .25rem;font-weight:600;font-size:.85rem;color:#374151}
+    select,input[type="text"]{
+      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:1rem;margin-bottom:10px
+    }
+    .btn{
+      width:100%;margin-top:6px;border:none;border-radius:10px;padding:12px 16px;background:var(--primary);color:#fff;
+      font-weight:700;font-size:1rem;cursor:pointer;transition:.2s
+    }
     .btn:hover{background:var(--primary-dark)}
-    /* Card */
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:18px}
-    .info{color:var(--muted);font-size:.95rem;margin-bottom:10px}
+
+    /* Lista de perguntas (sem box de fundo) */
+    .results{margin-top:12px}
+    .info{color:var(--muted);font-size:.95rem;margin:4px 0 8px;display:none} /* removemos a exibição de contexto */
     ul.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
-    .item{display:flex;align-items:center;gap:12px;justify-content:space-between;border-bottom:1px solid var(--border);padding:12px 0}
-    .item span.txt{flex:1;text-align:left;font-size:.98rem;line-height:1.35}
-    .addbtn{width:36px;height:36px;min-width:36px;min-height:36px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:1.1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-    .addbtn.active{background:#cbd5e1;color:#111}
-    /* Prompt */
-    .prompt-wrap{margin-top:18px}
-    textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;background:#fff;min-height:160px}
-    .copy{margin-top:10px}
-    /* Toast */
-    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:60;font-size:.92rem}
+    .item{display:flex;align-items:center;gap:10px;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 0}
+    .item .txt{flex:1;text-align:left;font-size:.98rem;line-height:1.35}
+    .addbtn{
+      width:28px;height:28px;min-width:28px;min-height:28px;border-radius:6px;border:none;background:var(--btn);color:#fff;font-size:1rem;cursor:pointer;
+      display:inline-flex;align-items:center;justify-content:center
+    }
+    .addbtn.active{background:var(--btn-active)}
+
     /* Ver mais */
     .more{margin-top:10px;display:none}
-    /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:70}
-    .modal .box{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.15)}
-    .modal h3{margin:0 0 10px;font-size:1.1rem;color:var(--accent);text-align:center}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    .grid .gbtn{padding:12px;border:1px solid var(--border);border-radius:10px;background:#fafafa;cursor:pointer;text-align:center;font-weight:600;text-decoration:none;color:#111}
-    .grid .gbtn:hover{background:#f0f0f0}
-    .modal .actions{display:flex;gap:10px;margin-top:14px}
-    .modal .actions button{flex:1}
+
     /* Acessórios (accordion) */
     .acc{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:#fff;display:none}
-    .acc summary{padding:12px 14px;cursor:pointer;font-weight:700;color:var(--accent);list-style:none}
+    .acc summary{padding:12px 14px;cursor:pointer;font-weight:800;color:var(--accent);list-style:none}
     .acc summary::marker{display:none}
     .acc .acc-inner{padding:0 14px 12px}
     .acc .hint{color:var(--muted);font-size:.92rem;margin:0 0 8px}
@@ -59,28 +70,53 @@
     .acc-item{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--border);padding-top:8px}
     .acc-item:first-child{border-top:none;padding-top:0}
     .acc-item input{margin-top:3px}
-    /* Responsive */
+
+    /* Prompt */
+    .prompt-wrap{margin-top:14px}
+    textarea{
+      width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+      font-size:.95rem;background:#fff;min-height:160px
+    }
+    .copy{margin-top:10px}
+
+    /* Toast */
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none;z-index:60;font-size:.92rem}
+
+    /* Modal pós-cópia */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:70}
+    .modal .box{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+    .modal h3{margin:0 0 10px;font-size:1.1rem;color:var(--accent);text-align:center}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .grid .gbtn{padding:12px;border:1px solid var(--border);border-radius:10px;background:#fafafa;cursor:pointer;text-align:center;font-weight:700;text-decoration:none;color:#111}
+    .grid .gbtn:hover{background:#f0f0f0}
+    .modal .actions{display:flex;gap:10px;margin-top:14px}
+    .modal .actions button{flex:1}
+
+    /* Credits */
+    .credit{text-align:center;font-size:.85rem;color:#aaa;margin-top:30px}
+
+    /* Responsivo */
     @media (min-width:768px){
-      h1{font-size:1.6rem}
-      .wrap{padding-top:64px}
-      .item span.txt{font-size:1rem}
+      .brand{font-size:1.35rem}
+      .wrap{padding-top:66px}
+      .item .txt{font-size:1rem}
       .acc-list{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
 <body>
+  <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="logo">
         <img src="https://osvaldosereia.github.io/estudo/icons/logo-mini.png" alt="logo" onerror="this.style.display='none'">
-        <span>direito.love</span>
+        <div class="brand"><strong>direito</strong><span>.love</span></div>
       </div>
     </div>
   </div>
 
   <div class="wrap">
-    <h1>Estudo por Artigo</h1>
-    <p class="subtitle">Monte um prompt perfeito escolhendo perguntas cuidadosamente curadas.</p>
+    <p class="subtitle">Seu Vade Mecum de perguntas inteligentes.</p>
 
     <label for="codigo">Código</label>
     <select id="codigo">
@@ -94,17 +130,17 @@
 
     <button class="btn" onclick="buscar()">🔎 Buscar</button>
 
-    <div id="card" class="card" style="display:none; margin-top:14px;">
-      <p class="info" id="contexto">📌 Clique no botão ➕ para adicionar/remover perguntas ao seu prompt.</p>
-      <ul id="lista" class="list"></ul>
+    <div class="results" id="results" style="display:none;">
+      <p class="info" id="contexto" aria-hidden="true"></p> <!-- contexto oculto -->
 
+      <ul id="lista" class="list"></ul>
       <button id="vermais" class="btn more" onclick="renderMais()">Ver mais</button>
 
-      <!-- Acessórios (aparece só depois que as perguntas aparecem) -->
+      <!-- Acessórios (acordeon, fechado por padrão; aparece só depois de mostrar perguntas) -->
       <details id="acc" class="acc">
         <summary>➕ Acessórios do estudo (opcional)</summary>
         <div class="acc-inner">
-          <p class="hint">Você pode adicionar alguns acessórios ao prompt para aprofundar seu estudo.</p>
+          <p class="hint">Você pode adicionar acessórios ao prompt para aprofundar seu estudo.</p>
           <div id="accList" class="acc-list"></div>
         </div>
       </details>
@@ -113,6 +149,8 @@
         <textarea id="prompt" placeholder="Seu prompt aparecerá aqui..."></textarea>
         <button class="btn copy" onclick="copiarPrompt()">📋 Copiar prompt</button>
       </div>
+
+      <div class="credit">feito com 💚 por direito.love</div>
     </div>
   </div>
 
@@ -138,14 +176,14 @@
   </div>
 
 <script>
-  // estado
-  let selecionadas = new Set();          // perguntas selecionadas (texto)
-  let selecionadasArray = [];            // mantém ordem
-  let resultados = [];                   // resultados por palavra-chave (string da pergunta)
+  // --- Estado ---
+  let selecionadas = new Set();          // perguntas selecionadas
+  let selecionadasArray = [];            // ordem das selecionadas
+  let resultados = [];                   // resultados por palavra-chave
   let pagina = 0;
-  let accSelecionados = new Set();       // acessórios selecionados
+  let accSelecionados = new Set();       // acessórios
 
-  // Busca global por palavra-chave já preparada para CP, CC, CPC:
+  // Busca global por palavra-chave já preparada:
   const ALL_CODES = ["codigo_penal","codigo_civil","codigo_processo_civil"];
   const WHITELIST = new Set(["stf","stj","tre","tse","tj","tjsp","tjmg","tjrj"]);
 
@@ -160,6 +198,7 @@
     "Quais documentos/provas são mínimos para sustentar a tese?"
   ];
 
+  // --- Utilitários ---
   function toast(msg){
     const t=document.getElementById('toast');
     t.textContent=msg; t.style.display='block';
@@ -171,27 +210,36 @@
   }
 
   function extrairNumero(texto){
-    const s=(texto||'').toLowerCase().replace(/[^0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+    const s=(texto||'').toLowerCase().replace(/[^0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();
     const parts=s.split(' ');
-    for(const p of parts){ if(/^\d{1,4}$/.test(p)) return p; }
+    for(const p of parts){ if(/^\\d{1,4}$/.test(p)) return p; } // até 4 dígitos
     return null;
   }
 
   function parseTokens(query){
-    const raw = normalize(query).split(/\s+/).filter(Boolean);
+    const raw = normalize(query).split(/\\s+/).filter(Boolean);
+    // tokens com 5+ letras OU siglas whitelist
     return raw.filter(tok => tok.length>=5 || WHITELIST.has(tok));
   }
 
+  async function fetchJSON(path){
+    try{ const r=await fetch(path); if(!r.ok) throw 0; return await r.json(); }
+    catch{ return null; }
+  }
+
+  // --- Renderização ---
   function atualizarPrompt(){
     const promptBox=document.getElementById('prompt');
-    const corpo=selecionadasArray.map((p,i)=>(i+1)+'. '+p).join('\n');
+    const corpo=selecionadasArray.map((p,i)=>(i+1)+'. '+p).join('\\n');
+
     let extra='';
     if(accSelecionados.size>0){
-      extra = "\n\nAdicional:\n- " + Array.from(accSelecionados).join("\n- ");
+      extra = "\\n\\nAdicional:\\n- " + Array.from(accSelecionados).join("\\n- ");
     }
-    promptBox.value="Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\n\n"
+
+    promptBox.value="Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\\n\\n"
       + corpo +
-      "\n\nDepois, envie:\n- 5 questões objetivas para revisão\n- Um checklist com os pontos essenciais."
+      "\\n\\nDepois, envie:\\n- 5 questões objetivas para revisão\\n- Um checklist com os pontos essenciais."
       + extra;
   }
 
@@ -214,7 +262,6 @@
     document.getElementById('lista').innerHTML='';
     document.getElementById('vermais').style.display='none';
     resultados=[]; pagina=0;
-    // esconde acessórios
     document.getElementById('acc').style.display='none';
   }
 
@@ -222,20 +269,28 @@
     const ul=document.getElementById('lista');
     perguntas.forEach(p=>{
       const li=document.createElement('li'); li.className='item';
-      const span=document.createElement('span'); span.className='txt'; span.textContent=p;
+      const span=document.createElement('span'); span.className='txt'; span.textContent=p; // apenas a frase
       const btn=document.createElement('button'); btn.className='addbtn'; btn.textContent= selecionadas.has(p)?'✔️':'➕';
       if(selecionadas.has(p)) btn.classList.add('active');
       btn.onclick=()=>togglePergunta(p,btn);
       li.appendChild(span); li.appendChild(btn); ul.appendChild(li);
     });
-    // mostrar acessórios (accordion) somente após render de perguntas
     setupAccessories();
     document.getElementById('acc').style.display='block';
   }
 
+  function renderMais(){
+    const slice=resultados.slice(pagina*10,(pagina+1)*10);
+    renderPerguntas(slice);
+    pagina++;
+    if(pagina*10>=resultados.length){
+      document.getElementById('vermais').style.display='none';
+    }
+  }
+
   function setupAccessories(){
     const accList = document.getElementById('accList');
-    if(accList.childElementCount>0) return; // já montado
+    if(accList.childElementCount>0) return; // monta uma vez
     ACCESSORIES.forEach(txt=>{
       const row=document.createElement('label'); row.className='acc-item';
       const cb=document.createElement('input'); cb.type='checkbox'; cb.value=txt;
@@ -250,33 +305,22 @@
     });
   }
 
-  function renderMais(){
-    const slice=resultados.slice(pagina*10,(pagina+1)*10);
-    renderPerguntas(slice);
-    pagina++;
-    if(pagina*10>=resultados.length){
-      document.getElementById('vermais').style.display='none';
-    }
-  }
-
-  async function fetchJSON(path){
-    try{
-      const r=await fetch(path); if(!r.ok) throw 0; return await r.json();
-    }catch{ return null; }
-  }
-
+  // --- Fluxo principal ---
   async function buscar(){
     const codigo=document.getElementById('codigo').value;
     const entrada=document.getElementById('entrada').value.trim();
-    const card=document.getElementById('card');
+    const results=document.getElementById('results');
     const lista=document.getElementById('lista');
-    const ctx=document.getElementById('contexto');
 
     if(!entrada){ toast('Digite um número de artigo ou palavra-chave'); return; }
 
-    card.style.display='block';
+    results.style.display='block';
     limparLista();
-    accSelecionados.clear(); // reset acessórios marcados
+    accSelecionados.clear();
+    // desmarcar acessórios se já tiverem sido marcados
+    const accList=document.getElementById('accList');
+    [...accList.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked=false);
+
     const numero=extrairNumero(entrada);
 
     if(numero){ // ARTIGO: mostrar TODAS as perguntas do artigo do código selecionado
@@ -284,12 +328,11 @@
       if(!data){ lista.innerHTML='<li class="item"><span class="txt">Erro ao carregar dados.</span></li>'; return; }
       const art = data['art'+numero];
       if(!art){ lista.innerHTML='<li class="item"><span class="txt">Artigo não encontrado neste código.</span></li>'; return; }
-      ctx.textContent='📌 Você está estudando '+art.titulo+'. Adicione/remova perguntas com o botão ➕. Você também pode adicionar acessórios ao prompt (abaixo).';
-      renderPerguntas(art.perguntas); // todas as perguntas
+      renderPerguntas(art.perguntas);
       return;
     }
 
-    // PALAVRA-CHAVE (global por TODOS os códigos)
+    // PALAVRA-CHAVE (busca global nos códigos listados em ALL_CODES)
     const tokens=parseTokens(entrada);
     if(tokens.length===0){
       lista.innerHTML='<li class="item"><span class="txt">Use termos com 5+ letras (ou siglas: STF, STJ, TRE, TSE, TJ...).</span></li>'; return;
@@ -318,7 +361,6 @@
     }
 
     resultados = matches;
-    ctx.textContent = `🔎 Resultados para "`+entrada+`". Clique no ➕ para adicionar/remover. Mostrando `+Math.min(10, resultados.length)+` de `+resultados.length+`. Você também pode adicionar acessórios ao prompt (abaixo).`;
     renderMais();
     if(resultados.length>10) document.getElementById('vermais').style.display='block';
   }
@@ -338,8 +380,7 @@
     document.getElementById('vermais').style.display='none';
     document.getElementById('prompt').value='';
     document.getElementById('entrada').value='';
-    document.getElementById('card').style.display='none';
-    // desmarca todos acessórios
+    document.getElementById('results').style.display='none';
     const accList=document.getElementById('accList');
     [...accList.querySelectorAll('input[type="checkbox"]')].forEach(cb=>cb.checked=false);
     document.getElementById('acc').open=false;
