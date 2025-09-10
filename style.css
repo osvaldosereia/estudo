@@ -1,0 +1,70 @@
+*{box-sizing:border-box}html,body{height:100%}
+:root{
+  --bg:#f6f7f8;
+  --panel:#ffffff;
+  --muted:#6b7280;
+  --text:#111827;
+  --brand:#16a34a;
+  --ring:rgba(22,163,74,.25);
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.48 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial}
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--panel);box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:8px}
+.logo{width:28px;height:28px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.actions{display:flex;gap:8px}
+.icon-btn{border:none;background:var(--brand);padding:8px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.icon-btn img{width:18px;height:18px;filter:brightness(0) invert(1)}
+.icon-btn:hover{filter:brightness(.95)}
+
+.chat{max-width:820px;margin:12px auto 100px;padding:0 12px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;background:#e5e7eb;overflow:hidden}
+.msg .avatar img{width:100%;height:100%;object-fit:cover}
+.msg.bot .avatar{background:#dcfce7}
+.msg.user{justify-content:flex-end}
+.msg.user .avatar{order:2;background:#fff}
+.msg .bubble{background:var(--panel);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);max-width:72%}
+.msg.user .bubble{background:#eff6ff}
+
+.group{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{border:1px solid #e5e7eb;background:#fff;padding:8px 10px;border-radius:999px;cursor:pointer;text-decoration:none;color:inherit}
+.chip[data-selected="true"]{outline:2px solid var(--brand);background:#ecfdf5}
+.chip:hover{box-shadow:0 0 0 3px var(--ring)}
+
+.input-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.input{flex:1;min-width:220px;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.input:focus{outline:2px solid var(--ring)}
+.button{border:none;padding:10px 14px;border-radius:12px;background:var(--brand);color:#fff;cursor:pointer}
+.button.secondary{background:#1118270d;color:#111827}
+
+.qgroup{font-size:15px;line-height:1.42} /* -1px font, tighter line-height */
+.qrow{display:flex;align-items:flex-start;gap:8px;padding:2px 0}
+.qrow + .qrow{border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px}
+.qrow .qtext{flex:1}
+.qrow[data-selected="true"]{background:#f7fee7;border-radius:8px;padding:4px}
+
+.tiny-btn{width:26px;height:26px;border-radius:999px;border:1px solid #d1d5db;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.tiny-btn svg{width:14px;height:14px;stroke:#16a34a;fill:none;stroke-width:2}
+.tiny-btn[data-on="true"]{background:var(--brand);border-color:var(--brand)}
+.tiny-btn[data-on="true"] svg{stroke:#fff}
+
+.prompt-box{background:#111827;color:#fff;border-radius:14px;padding:12px;white-space:pre-wrap;max-height:320px;overflow:auto}
+
+.bottombar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent, var(--bg));padding:14px;text-align:center}
+
+.modal{border:none;border-radius:14px;padding:0;width:min(640px,90vw)}
+.modal::backdrop{background:rgba(0,0,0,.25)}
+.modal-content{padding:18px}
+.ia-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 16px}
+.ia{display:block;text-align:center;background:#1118270d;padding:10px;border-radius:12px;text-decoration:none;color:inherit}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.modal-actions .primary{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 12px;cursor:pointer}
+.modal-actions .ghost{background:#eee;border:none;border-radius:10px;padding:10px 12px;cursor:pointer}
+
+.small{font-size:.9rem;color:var(--muted)}
+.typing{display:inline-flex;gap:4px;align-items:center}
+.dot{width:6px;height:6px;background:#9ca3af;border-radius:50%;display:inline-block;animation:bounce 1s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.6}40%{transform:translateY(-4px);opacity:1}}
