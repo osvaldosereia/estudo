@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estudo por Artigo - direito.love</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      color: #0c4160;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 5px;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #63d1c3;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #4bb2a7;
+    }
+    #perguntas-box {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #lista-perguntas li {
+      margin-bottom: 10px;
+      list-style: none;
+      display: flex;
+      align-items: center;
+    }
+    #lista-perguntas button {
+      margin-right: 10px;
+      background: #0c4160;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 15px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Estudo por Artigo</h1>
+
+  <label for="codigo">Selecione o código:</label>
+  <select id="codigo">
+    <option value="codigo_penal">Código Penal</option>
+    <option value="codigo_civil">Código Civil</option>
+    <option value="codigo_processo_civil">Código de Processo Civil</option>
+  </select>
+
+  <label for="artigo">Informe o número do artigo:</label>
+  <input type="number" id="artigo" placeholder="Ex: 28" />
+
+  <button onclick="buscarArtigo()">🔍 Buscar Perguntas</button>
+
+  <section id="perguntas-box" style="display:none;">
+    <h2 id="titulo-artigo">Título do Artigo</h2>
+    <ul id="lista-perguntas"></ul>
+
+    <h3>🧠 Prompt Final</h3>
+    <textarea id="prompt" rows="10" placeholder="Seu prompt aparecerá aqui..."></textarea>
+    <button onclick="copiarPrompt()">📋 Copiar Prompt</button>
+  </section>
+
+  <script>
+    let perguntasSelecionadas = [];
+
+    function buscarArtigo() {
+      const codigo = document.getElementById("codigo").value;
+      const numero = document.getElementById("artigo").value.trim();
+
+      if (!numero) return alert("Informe o número do artigo!");
+
+      const artigoID = "art" + numero;
+      fetch(`/data/${codigo}.json`)
+        .then(res => res.json())
+        .then(data => {
+          const artigo = data[artigoID];
+          if (!artigo) return alert("❌ Artigo não encontrado neste código.");
+
+          document.getElementById("perguntas-box").style.display = "block";
+          document.getElementById("titulo-artigo").textContent = artigo.titulo;
+
+          const lista = document.getElementById("lista-perguntas");
+          lista.innerHTML = "";
+          perguntasSelecionadas = [];
+          atualizarPrompt();
+
+          artigo.perguntas.forEach(p => {
+            const li = document.createElement("li");
+            const btn = document.createElement("button");
+            btn.textContent = "➕";
+            btn.onclick = () => adicionarPergunta(p);
+            li.appendChild(btn);
+            li.appendChild(document.createTextNode(p));
+            lista.appendChild(li);
+          });
+        })
+        .catch(() => alert("Erro ao carregar o código selecionado."));
+    }
+
+    function adicionarPergunta(pergunta) {
+      if (!perguntasSelecionadas.includes(pergunta)) {
+        perguntasSelecionadas.push(pergunta);
+        atualizarPrompt();
+      }
+    }
+
+    function atualizarPrompt() {
+      const promptBox = document.getElementById("prompt");
+      const lista = perguntasSelecionadas.map((p, i) => (i + 1) + ". " + p).join("\n");
+      promptBox.value =
+        "Você é um professor de Direito. Responda com clareza, profundidade e didática as perguntas abaixo:\n\n" +
+        lista +
+        "\n\nDepois, envie:\n- 5 questões objetivas sobre o tema\n- Um checklist final com os pontos mais importantes para revisão.";
+    }
+
+    function copiarPrompt() {
+      const prompt = document.getElementById("prompt").value;
+      navigator.clipboard.writeText(prompt).then(() => alert("✅ Prompt copiado com sucesso!"));
+    }
+  </script>
+</body>
+</html>
