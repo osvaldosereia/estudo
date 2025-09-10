@@ -11,20 +11,22 @@
 </head>
 <body>
   <header class="topbar" role="banner">
-    <div class="brand" aria-label="Chatbot Jurídico">
-  <span style="font-weight:700;">direito</span><span style="font-weight:400;">.love</span>
+    <div class="inner">
+      <div class="brand" aria-label="Chatbot Jurídico">
+        <span class="logo-text"><b>direito</b>.love</span>
+      </div>
+      <nav class="actions">
+        <button id="btnInfo" class="icon-btn" title="Informações" aria-label="Informações">
+          <img src="icons/info.svg" alt="Informações">
+        </button>
+        <button id="btnInstall" class="icon-btn" title="Instalar (Android/Desktop)" aria-label="Instalar PWA">
+          <img src="icons/install.svg" alt="Instalar">
+        </button>
+        <button id="btnReset" class="icon-btn" title="Reiniciar" aria-label="Reiniciar conversa">
+          <img src="icons/reset.svg" alt="Reiniciar">
+        </button>
+      </nav>
     </div>
-    <nav class="actions">
-      <button id="btnInfo" class="icon-btn" title="Informações" aria-label="Informações">
-        <img src="icons/info.svg" alt="Informações">
-      </button>
-      <button id="btnInstall" class="icon-btn" title="Instalar (Android/Desktop)" aria-label="Instalar PWA">
-        <img src="icons/install.svg" alt="Instalar">
-      </button>
-      <button id="btnReset" class="icon-btn" title="Reiniciar" aria-label="Reiniciar conversa">
-        <img src="icons/reset.svg" alt="Reiniciar">
-      </button>
-    </nav>
   </header>
 
   <main id="app" class="chat" role="main" aria-live="polite"></main>
