@@ -139,7 +139,64 @@ atualizarListas();
 async function carregarCodigoPenal() {
   const res = await fetch("/data/codigo_penal.json");
   const cp = await res.json();
+
   const panel = document.getElementById("codigosPanel");
-  panel.innerHTML = `<div onclick="mostrarParte('${cp.id}')">${cp.nome}</div>`;
+  panel.innerHTML = "";
+
+  cp.partes.forEach(parte => {
+    const parteDiv = document.createElement("div");
+    parteDiv.innerHTML = `<div class="accordion">${parte.titulo} <span>▸</span></div>`;
+    const partePanel = document.createElement("div");
+    partePanel.classList.add("panel");
+
+    parte.titulos.forEach(titulo => {
+      const tituloDiv = document.createElement("div");
+      tituloDiv.innerHTML = `<div class="accordion">${titulo.nome} <span>▸</span></div>`;
+      const tituloPanel = document.createElement("div");
+      tituloPanel.classList.add("panel");
+
+      titulo.capitulos.forEach(cap => {
+        const capDiv = document.createElement("div");
+        capDiv.innerHTML = `<div class="accordion">${cap.nome} <span>▸</span></div>`;
+        const capPanel = document.createElement("div");
+        capPanel.classList.add("panel");
+
+        cap.secoes.forEach(secao => {
+          const secDiv = document.createElement("div");
+          secDiv.innerHTML = `<div class="accordion">${secao.nome} <span>▸</span></div>`;
+          const secPanel = document.createElement("div");
+          secPanel.classList.add("panel");
+
+          secao.subsecoes.forEach(sub => {
+            const subDiv = document.createElement("div");
+            subDiv.innerHTML = `<div class="accordion">${sub.nome} <span>▸</span></div>`;
+            const subPanel = document.createElement("div");
+            subPanel.classList.add("panel");
+
+            sub.artigos.forEach(art => {
+              subPanel.innerHTML += `
+                <div class="card">
+                  <h2>${art.artigo} — ${art.titulo}</h2>
+                  <p>${art.texto}</p>
+                  <button class="prompt-btn" onclick="gerarPrompt('${art.tipo}','${art.artigo}','${art.texto.replace(/'/g,"\\'")}')">📌</button>
+                  <button class="fav-btn" onclick="adicionarFavorito(${JSON.stringify(art)})">⭐</button>
+                </div>`;
+            });
+
+            secDiv.appendChild(subPanel);
+            secPanel.appendChild(subDiv);
+          });
+
+          capDiv.appendChild(secPanel);
+          tituloPanel.appendChild(capDiv);
+        });
+
+        tituloDiv.appendChild(tituloPanel);
+        partePanel.appendChild(tituloDiv);
+      });
+
+    parteDiv.appendChild(partePanel);
+    panel.appendChild(parteDiv);
+  });
 }
-carregarCodigoPenal();
+
