@@ -8,7 +8,8 @@ const state = {
   estrategias: [],
   estrategiasPick: [],
   prompt: '',
-  artigoTexto: ''
+  artigoTexto: '',
+  artigoTitulo: ''
 };
 
 const CODES = [
@@ -29,7 +30,7 @@ const modalInfo = document.querySelector('#modalInfo');
 function save(){ localStorage.setItem('chatbot_juridico_state', JSON.stringify(state)); }
 function load(){ try{ Object.assign(state, JSON.parse(localStorage.getItem('chatbot_juridico_state'))||{});}catch{} }
 function resetAll(){
-  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],estrategias:[],estrategiasPick:[],prompt:'',artigoTexto:''});
+  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],estrategias:[],estrategiasPick:[],prompt:'',artigoTexto:'',artigoTitulo:''});
   app.innerHTML=''; save(); startConversation();
 }
 
@@ -50,16 +51,16 @@ function typing(ms=1200){
   app.appendChild(t);
   return new Promise(res=> setTimeout(()=>{ t.remove(); res(); }, ms));
 }
+
 // Data
 async function getJSON(path){ const r=await fetch(path); if(!r.ok) throw new Error('Falha ao carregar '+path); return r.json(); }
-async function loadEstrategias(){ if(state.estrategias.length) return; state.estrategias = await getJSON('estrategias.json'); }
 async function loadCodeData(codeId){ return getJSON(`data/${codeId}.json`); }
 
 // Busca
 function normalizarEntrada(str) {
   return (str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 }
-function matchTitulo(nodeTitulo, entrada){ 
+function matchTitulo(nodeTitulo, entrada){
   const t=normalizarEntrada(nodeTitulo), e=normalizarEntrada(entrada);
   return t===e || t==="artigo"+e || ("artigo"+t)===e;
 }
@@ -71,12 +72,12 @@ function matchTexto(nodeTexto, entrada){
 }
 async function searchByArticleOrText(codeId, entrada){
   const data=await loadCodeData(codeId);
-  for(const [key,node] of Object.entries(data)) if(matchTitulo(node.titulo,entrada)) return { artigo:key,node,perguntas:node.perguntas.map(q=>({codigo:codeId,artigo:key,texto:q})) };
-  for(const [key,node] of Object.entries(data)) if(matchTexto(node.texto||'',entrada)) return { artigo:key,node,perguntas:node.perguntas.map(q=>({codigo:codeId,artigo:key,texto:q})) };
+  for(const [key,node] of Object.entries(data)) if(matchTitulo(node.titulo,entrada)) return { artigo:key, node, perguntas:(node.perguntas||[]).map(q=>({codigo:codeId,artigo:key,texto:q})) };
+  for(const [key,node] of Object.entries(data)) if(matchTexto(node.texto||'',entrada)) return { artigo:key, node, perguntas:(node.perguntas||[]).map(q=>({codigo:codeId,artigo:key,texto:q})) };
   return { artigo:null,node:null,perguntas:[] };
 }
 
-// Fluxo
+// Conversa inicial (mantida)
 async function startConversation(){
   await typing(800); pushBot(`<p>Olá! Eu te ajudo a estudar os <b>artigos dos códigos</b>.</p>`);
   await typing(800); pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
@@ -93,75 +94,101 @@ async function onCodePicked(){
   await typing(600); renderSearchInput(label); state.etapa=1; save();
 }
 function renderSearchInput(label){
-  const node=pushBot(`<div><p>Digite o número do artigo ou palavras do texto.</p><div class="input-row"><input id="inpBusca" class="input" placeholder="Ex.: 121 ou homicídio" /><button id="btnBuscar" class="button">Buscar</button></div></div>`);
+  const node=pushBot(`
+    <div>
+      <p>Digite o <b>número do artigo</b>.</p>
+      <div class="input-row">
+        <input id="inpBusca" class="input" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 121" />
+        <button id="btnBuscar" class="button">Buscar</button>
+      </div>
+    </div>`);
   node.querySelector('#btnBuscar').addEventListener('click',async()=>{
     const v=node.querySelector('#inpBusca').value.trim(); if(!v) return;
     pushUser(v); state.termoBusca=v; save(); await doSearch();
   });
 }
-// Pesquisa e estratégias
-async function doSearch(){
-  await typing(1000);
-  let results={artigo:null,node:null,perguntas:[]};
-  const entrada=state.termoBusca;
-  if(state.codigo && entrada) results=await searchByArticleOrText(state.codigo,entrada);
 
-  state.perguntas=results.perguntas.map(r=>r.texto);
-  state.artigoTexto=results.node?.texto||''; save();
+// -------- NOVO FLUXO: VADE MECUM → MOSTRAR ARTIGO → PROMPT RÁPIDO --------
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-  if(!results.perguntas.length){ pushBot(`Não encontrei nada. Tente um artigo (ex.: 121) ou palavras mais específicas 🙂`); return; }
-
-  // 🔥 Novo fluxo: direto para estratégias
-  pushBot(`Selecione as estratégias de estudo:`);
-  await gotoEstrategias({ showTitle:false, withTyping:false });
-}
-
-async function gotoEstrategias({ showTitle=true, withTyping=true }={}){
-  if(withTyping) await typing(600);
-  await loadEstrategias();
-  const grid=state.estrategias.map(es=>`<button class="chip" data-id="${es.id}">${es.titulo}</button>`).join('');
-  const titleHtml=showTitle?'<h4>Selecione as estratégias de estudo:</h4>':'';
-  const node=pushBot(`<div>${titleHtml}<div class="group" id="estrategias">${grid}</div><div style="margin-top:6px"><button class="button" id="btnGerar">Gerar Prompt</button></div></div>`);
-  node.querySelectorAll('#estrategias .chip').forEach(btn=>btn.addEventListener('click',()=>{
-    const id=btn.getAttribute('data-id'); const i=state.estrategiasPick.indexOf(id);
-    if(i>=0) state.estrategiasPick.splice(i,1); else state.estrategiasPick.push(id);
-    btn.dataset.selected=state.estrategiasPick.includes(id); save();
-  }));
-  node.querySelector('#btnGerar').addEventListener('click',()=>gerarPrompt());
-}
-
-function gerarPrompt(){
-  const codeLabel=CODES.find(c=>c.id===state.codigo)?.label||'Código';
-  const entrada=state.termoBusca;
-  const blocoPerguntas=state.perguntas.map((q,i)=>`${i+1}. ${q}`).join('\n');
-  const escolhidas=state.estrategias.filter(e=>state.estrategiasPick.includes(e.id));
-  const blocoEstrategias=escolhidas.map(e=>`- ${e.titulo}: ${e.instrucao}`).join('\n');
-  state.prompt=
-`Você é um professor de Direito com didática impecável. Contexto:
-- Código: ${codeLabel}
-- Entrada: ${entrada}
-- Texto do artigo: ${state.artigoTexto||'(não disponível)'}
-Analise:
-${blocoPerguntas||'(nenhuma)'}
-${escolhidas.length?'Estratégias:\n'+blocoEstrategias:''}
-Regras: linguagem simples, sem juridiquês excessivo.`;
+function showArticle(node){
+  const titulo = node?.titulo || 'Artigo';
+  const texto = node?.texto || '(texto não disponível)';
+  state.artigoTitulo = titulo;
+  state.artigoTexto  = texto;
   save();
-  const node=pushBot(`<div><h4>Seu Prompt</h4><div class="prompt-box" id="promptBox"></div><div style="margin-top:8px"><button class="button" id="btnCopiar">Copiar</button></div></div>`);
+  pushBot(`<div><h4>${escapeHTML(titulo)}</h4><div class="article-box">${escapeHTML(texto)}</div></div>`);
+}
+
+function buildQuickPrompt(){
+  const codeLabel=CODES.find(c=>c.id===state.codigo)?.label||'Código';
+  const titulo = state.artigoTitulo || '(sem título)';
+  const texto  = state.artigoTexto  || '(sem texto)';
+
+  return `Você é um professor de Direito com didática impecável.
+Objetivo: Estudo RÁPIDO do artigo indicado, em linguagem simples e direta (10–12 linhas), cobrindo:
+1) conceito/finalidade; 2) elementos essenciais; 3) pontos que caem em prova/OAB; 4) mini exemplo prático (3–4 linhas); 5) erro comum a evitar.
+Evite juridiquês desnecessário. Não traga jurisprudência extensa.
+
+Contexto
+- Código: ${codeLabel}
+- Artigo: ${titulo}
+- Texto integral:
+${texto}
+
+Formato da resposta
+- Resumo (10–12 linhas)
+- 3 bullets “cai em prova”
+- Mini exemplo (3–4 linhas)
+- 1 erro comum
+
+Assine no final: "💚 direito.love — Gere um novo prompt em https://direito.love"`;
+}
+
+function showPromptAndIA(){
+  const node=pushBot(`<div><h4>Seu Prompt (Estudo Rápido)</h4><div class="prompt-box" id="promptBox"></div>
+    <div style="margin-top:8px" class="group">
+      <button class="button" id="btnCopiar">Copiar</button>
+      <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
+      <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
+      <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
+    </div>
+  </div>`);
   node.querySelector('#promptBox').textContent=state.prompt;
   node.querySelector('#btnCopiar').addEventListener('click',onCopied);
 }
 
+async function doSearch(){
+  await typing(900);
+  const entrada=state.termoBusca;
+  let results={artigo:null,node:null,perguntas:[]};
+
+  if(state.codigo && entrada) results=await searchByArticleOrText(state.codigo,entrada);
+
+  if(!results.node){
+    pushBot(`Não encontrei esse artigo. Tente digitar apenas o número (ex.: 121).`);
+    return;
+  }
+
+  // 1) Mostra o texto do artigo (Vade Mecum)
+  showArticle(results.node);
+
+  // 2) Em seguida, entrega o prompt de estudo rápido + IA
+  await typing(700);
+  pushBot(`Pronto! Já gerei um <b>prompt de estudo rápido</b>. É só copiar e colar na IA de sua preferência 👇`);
+  state.prompt = buildQuickPrompt(); save();
+  showPromptAndIA();
+
+  // Botão de reinício opcional
+  const reiniciar = pushBot(`<button class="button secondary" id="btnReiniciarChat">Reiniciar conversa</button>`);
+  reiniciar.querySelector('#btnReiniciarChat').addEventListener('click',resetAll);
+}
+
+// Copiar
 async function onCopied(){
   try{ await navigator.clipboard.writeText(state.prompt);}catch{}
-  await typing(600);
-  pushBot(`Prontinho! Seu prompt foi copiado. Agora escolha uma IA 👇`);
-  pushBot(`<div class="group">
-    <a class="chip" href="https://chatgpt.com/" target="_blank">ChatGPT</a>
-    <a class="chip" href="https://gemini.google.com/app" target="_blank">Gemini</a>
-    <a class="chip" href="https://www.perplexity.ai/" target="_blank">Perplexity</a>
-  </div>`);
-  pushBot(`<button class="button secondary" id="btnReiniciarChat">Reiniciar conversa</button>`)
-    .querySelector('#btnReiniciarChat').addEventListener('click',resetAll);
+  await typing(500);
+  pushBot(`✅ Prompt copiado! Abra a IA e cole o texto.`);
 }
 
 // Eventos
