@@ -140,8 +140,7 @@ function renderSearchInput(label){
     <div class="input-row">
       <input id="inpBusca" class="input" placeholder="Ex.: 121" aria-label="Número do artigo ou palavra-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
-    </div>
-    <p class="small">Dica: número → busco no ${label}; palavra-chave → busco em todos os Códigos.</p>
+    
   </div>`);
   node.querySelector('#btnBuscar').addEventListener('click', async ()=>{
     const v = node.querySelector('#inpBusca').value.trim();
