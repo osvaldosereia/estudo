@@ -66,41 +66,70 @@ async function loadCodeData(codeId){ return getJSON(`data/${codeId}.json`); }
 
 // ---------- BUSCA INTELIGENTE ----------
 function normalizarEntrada(str) {
-  return (str||'').toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w]/g, "");
+  return (str||'')
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // tira acento
+    .replace(/[^a-z0-9]/g, ""); // tira tudo que não for letra/número
 }
+
 function matchTitulo(nodeTitulo, entrada) {
   const tNorm = normalizarEntrada(nodeTitulo);
-  const eNorm = "artigo" + normalizarEntrada(entrada);
-  return tNorm === eNorm;
+  const eNorm = normalizarEntrada(entrada);
+
+  // aceita direto ou prefixado com "artigo"
+  return (
+    tNorm === eNorm ||
+    tNorm === "artigo" + eNorm ||
+    ("artigo" + tNorm) === eNorm
+  );
 }
+
 function matchTexto(nodeTexto, entrada) {
   const palavras = (entrada||'').trim().split(/\s+/);
-  if (palavras.length === 0 || palavras.length > 3) return false;
-  const validas = palavras.filter(p => p.length >= 4).map(normalizarEntrada);
+  if (palavras.length === 0 || palavras.length > 5) return false;
+
+  const validas = palavras
+    .filter(p => p.length >= 4)
+    .map(normalizarEntrada);
+
   if (!validas.length) return false;
+
   const textoNorm = normalizarEntrada(nodeTexto||'');
   return validas.every(v => textoNorm.includes(v));
 }
+
 async function searchByArticleOrText(codeId, entrada) {
   const data = await loadCodeData(codeId);
+
+  // Primeiro tenta pelo número do artigo
   for (const [key, node] of Object.entries(data)) {
     if (matchTitulo(node.titulo, entrada)) {
-      return { artigo: key, node, perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q })) };
+      return {
+        artigo: key,
+        node,
+        perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }))
+      };
     }
   }
+
+  // Depois tenta pelo texto (até 5 palavras)
   const palavras = (entrada||'').trim().split(/\s+/);
-  if (palavras.length <= 3) {
+  if (palavras.length <= 5) {
     for (const [key, node] of Object.entries(data)) {
       if (matchTexto(node.texto||'', entrada)) {
-        return { artigo: key, node, perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q })) };
+        return {
+          artigo: key,
+          node,
+          perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }))
+        };
       }
     }
   }
+
   return { artigo:null, node:null, perguntas:[] };
 }
 // ---------- FIM BUSCA INTELIGENTE ----------
+
 
 // Flow
 async function startConversation(){
