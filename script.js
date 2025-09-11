@@ -178,7 +178,7 @@ async function doSearch(){
   const group = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><div class="qgroup">${rows}</div></div></div>`);
   app.appendChild(group); autoScroll();
 
-  const footer = pushBot(`<div class="group"><button class="chip" id="btnProximo">Ok. Continuar ▶</button></div>`);
+  const footer = pushBot(`<div class="group"><button class="chip" id="btnProximo">Continuar ▶</button></div>`);
   footer.querySelector('#btnProximo').addEventListener('click', gotoEstrategias);
 }
 
@@ -186,7 +186,7 @@ async function gotoEstrategias(){
   await typing(800);
   await loadEstrategias();
   const grid = state.estrategias.map(es=>`<button class="chip" data-id="${es.id}">${es.titulo}</button>`).join('');
-  const node = pushBot(`<div><h4>Quer adicionar alguma estratégia de estudo?</h4><div class="group" id="estrategias">${grid}</div>
+  const node = pushBot(`<div><h4>Selecione as estratégias de estudo:</h4><div class="group" id="estrategias">${grid}</div>
     <div style="margin-top:6px"><button class="button" id="btnGerar">Gerar Prompt</button></div></div>`);
   node.querySelectorAll('#estrategias .chip').forEach(btn=>{
     btn.addEventListener('click', ()=>{
