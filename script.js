@@ -106,7 +106,7 @@ function extractArticleNumber(input){
 // Flow
 async function startConversation(){
   await typing(2000);
-  pushBot(`<h3>Foco, força e prompt: vamos nessa?. .</h3>`);
+  pushBot(`<h4>Foco, força e prompt: vamos nessa?</h4>`);
   await typing(1500);
   pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
   await typing(1500);
