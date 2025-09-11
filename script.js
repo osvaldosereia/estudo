@@ -168,7 +168,7 @@ async function doSearch(){
     return;
   }
 
-  pushBot(`Achei <b>${results.length}</b> perguntas. Veja o checklist abaixo (todas serão incluídas):`);
+  pushBot(`Selecionei <b>${results.length}</b> topicos que farão parte do seu prompt:`);
 
   const rows = state.perguntas.map((q,i)=>`
     <div class="qrow">
