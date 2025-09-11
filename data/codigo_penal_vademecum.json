@@ -256,8 +256,8 @@
         "texto": "A superveniência de causa relativamente independente exclui a imputação quando, por si só, produziu o resultado; os fatos anteriores, entretanto, imputam-se a quem os praticou. (Incluído pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "A omissão é penalmente relevante quando o omitente devia e podia agir para evitar o resultado. O dever de agir incumbe a quem:(Incluído pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "omissão é penalmente relevante quando o omitente devia e podia agir para evitar o resultado. O dever de agir incumbe a quem:(Incluído pela Lei nº 7.209, de 11.7.1984)"
       }
     ],
     "incisos": [
@@ -509,8 +509,8 @@
         "texto": "É isento de pena o agente que, por embriaguez completa, proveniente de caso fortuito ou força maior, era, ao tempo da ação ou da omissão, inteiramente incapaz de entender o caráter ilícito do fato ou de determinar-se de acordo com esse entendimento. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "A pena pode ser reduzida de um a dois terços, se o agente, por embriaguez, proveniente de caso fortuito ou força maior, não possuía, ao tempo da ação ou da omissão, a plena capacidade de entender o caráter ilícito do fato ou de determinar-se de acordo com esse entendimento. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "pena pode ser reduzida de um a dois terços, se o agente, por embriaguez, proveniente de caso fortuito ou força maior, não possuía, ao tempo da ação ou da omissão, a plena capacidade de entender o caráter ilícito do fato ou de determinar-se de acordo com esse entendimento. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       }
     ],
     "incisos": [
@@ -599,16 +599,16 @@
         "texto": "Considera-se: (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "As penas privativas de liberdade deverão ser executadas em forma progressiva, segundo o mérito do condenado, observados os seguintes critérios e ressalvadas as hipóteses de transferência a regime mais rigoroso: (Redação dada pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "s penas privativas de liberdade deverão ser executadas em forma progressiva, segundo o mérito do condenado, observados os seguintes critérios e ressalvadas as hipóteses de transferência a regime mais rigoroso: (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
         "rotulo": "§ 3º",
         "texto": "A determinação do regime inicial de cumprimento da pena far-se-á com observância dos critérios previstos no art. 59 deste Código.(Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 4o O condenado por crime contra a administração pública terá a progressão de regime do cumprimento da pena condicionada à reparação do dano que causou, ou à devolução do produto do ilícito praticado, com os acréscimos legais. (Incluído pela Lei nº 10.763, de 12.11.2003)",
-        "texto": ""
+        "rotulo": "§ 4º",
+        "texto": "O condenado por crime contra a administração pública terá a progressão de regime do cumprimento da pena condicionada à reparação do dano que causou, ou à devolução do produto do ilícito praticado, com os acréscimos legais. (Incluído pela Lei nº 10.763, de 12.11.2003)"
       }
     ],
     "incisos": [
@@ -810,24 +810,24 @@
     "caput": "Art. 44 - As penas restritivas de direitos são autônomas e substituem as privativas de liberdade, quando: (Redação dada pela Lei nº 9.714, de 1998)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o (VETADO) (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "(VETADO) (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 2o Na condenação igual ou inferior a um ano, a substituição pode ser feita por multa ou por uma pena restritiva de direitos; se superior a um ano, a pena privativa de liberdade pode ser substituída por uma pena restritiva de direitos e multa ou por duas restritivas de direitos. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "Na condenação igual ou inferior a um ano, a substituição pode ser feita por multa ou por uma pena restritiva de direitos; se superior a um ano, a pena privativa de liberdade pode ser substituída por uma pena restritiva de direitos e multa ou por duas restritivas de direitos. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 3o Se o condenado for reincidente, o juiz poderá aplicar a substituição, desde que, em face de condenação anterior, a medida seja socialmente recomendável e a reincidência não se tenha operado em virtude da prática do mesmo crime. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "Se o condenado for reincidente, o juiz poderá aplicar a substituição, desde que, em face de condenação anterior, a medida seja socialmente recomendável e a reincidência não se tenha operado em virtude da prática do mesmo crime. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 4o A pena restritiva de direitos converte",
-        "texto": "se em privativa de liberdade quando ocorrer o descumprimento injustificado da restrição imposta. No cálculo da pena privativa de liberdade a executar será deduzido o tempo cumprido da pena restritiva de direitos, respeitado o saldo mínimo de trinta dias de detenção ou reclusão. (Incluído pela Lei nº 9.714, de 1998)"
+        "rotulo": "§ 4º",
+        "texto": "A pena restritiva de direitos converte se em privativa de liberdade quando ocorrer o descumprimento injustificado da restrição imposta. No cálculo da pena privativa de liberdade a executar será deduzido o tempo cumprido da pena restritiva de direitos, respeitado o saldo mínimo de trinta dias de detenção ou reclusão. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 5o Sobrevindo condenação a pena privativa de liberdade, por outro crime, o juiz da execução penal decidirá sobre a conversão, podendo deixar de aplicá",
-        "texto": "la se for possível ao condenado cumprir a pena substitutiva anterior. (Incluído pela Lei nº 9.714, de 1998)"
+        "rotulo": "§ 5º",
+        "texto": "Sobrevindo condenação a pena privativa de liberdade, por outro crime, o juiz da execução penal decidirá sobre a conversão, podendo deixar de aplicá la se for possível ao condenado cumprir a pena substitutiva anterior. (Incluído pela Lei nº 9.714, de 1998)"
       }
     ],
     "incisos": [
@@ -856,20 +856,20 @@
     "caput": "Art. 45 - Na aplicação da substituição prevista no artigo anterior, proceder-se-á na forma deste e dos arts. 46, 47 e 48. (Redação dada pela Lei nº 9.714, de 1998)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o A prestação pecuniária consiste no pagamento em dinheiro à vítima, a seus dependentes ou a entidade pública ou privada com destinação social, de importância fixada pelo juiz, não inferior a 1 (um) salário mínimo nem superior a 360 (trezentos e sessenta) salários mínimos. O valor pago será deduzido do montante de eventual condenação em ação de reparação civil, se coincidentes os beneficiários. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "A prestação pecuniária consiste no pagamento em dinheiro à vítima, a seus dependentes ou a entidade pública ou privada com destinação social, de importância fixada pelo juiz, não inferior a 1 (um) salário mínimo nem superior a 360 (trezentos e sessenta) salários mínimos. O valor pago será deduzido do montante de eventual condenação em ação de reparação civil, se coincidentes os beneficiários. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 2o No caso do parágrafo anterior, se houver aceitação do beneficiário, a prestação pecuniária pode consistir em prestação de outra natureza. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "No caso do parágrafo anterior, se houver aceitação do beneficiário, a prestação pecuniária pode consistir em prestação de outra natureza. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 3o A perda de bens e valores pertencentes aos condenados dar",
-        "texto": "se-á, ressalvada a legislação especial, em favor do Fundo Penitenciário Nacional, e seu valor terá como teto – o que for maior – o montante do prejuízo causado ou do provento obtido pelo agente ou por terceiro, em conseqüência da prática do crime. (Incluído pela Lei nº 9.714, de 1998)"
+        "rotulo": "§ 3º",
+        "texto": "A perda de bens e valores pertencentes aos condenados dar se-á, ressalvada a legislação especial, em favor do Fundo Penitenciário Nacional, e seu valor terá como teto – o que for maior – o montante do prejuízo causado ou do provento obtido pelo agente ou por terceiro, em conseqüência da prática do crime. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 4o (VETADO) (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 4º",
+        "texto": "(VETADO) (Incluído pela Lei nº 9.714, de 1998)"
       }
     ],
     "incisos": [],
@@ -882,20 +882,20 @@
     "caput": "Art. 46 - A prestação de serviços à comunidade ou a entidades públicas é aplicável às condenações superiores a seis meses de privação da liberdade. (Redação dada pela Lei nº 9.714, de 1998)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o A prestação de serviços à comunidade ou a entidades públicas consiste na atribuição de tarefas gratuitas ao condenado. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "A prestação de serviços à comunidade ou a entidades públicas consiste na atribuição de tarefas gratuitas ao condenado. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 2o A prestação de serviço à comunidade dar",
-        "texto": "se-á em entidades assistenciais, hospitais, escolas, orfanatos e outros estabelecimentos congêneres, em programas comunitários ou estatais. (Incluído pela Lei nº 9.714, de 1998)"
+        "rotulo": "§ 2º",
+        "texto": "A prestação de serviço à comunidade dar se-á em entidades assistenciais, hospitais, escolas, orfanatos e outros estabelecimentos congêneres, em programas comunitários ou estatais. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 3o As tarefas a que se refere o § 1o serão atribuídas conforme as aptidões do condenado, devendo ser cumpridas à razão de uma hora de tarefa por dia de condenação, fixadas de modo a não prejudicar a jornada normal de trabalho. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "As tarefas a que se refere o § 1º serão atribuídas conforme as aptidões do condenado, devendo ser cumpridas à razão de uma hora de tarefa por dia de condenação, fixadas de modo a não prejudicar a jornada normal de trabalho. (Incluído pela Lei nº 9.714, de 1998)"
       },
       {
-        "rotulo": "§ 4o Se a pena substituída for superior a um ano, é facultado ao condenado cumprir a pena substitutiva em menor tempo (art. 55), nunca inferior à metade da pena privativa de liberdade fixada. (Incluído pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 4º",
+        "texto": "Se a pena substituída for superior a um ano, é facultado ao condenado cumprir a pena substitutiva em menor tempo (art. 55), nunca inferior à metade da pena privativa de liberdade fixada. (Incluído pela Lei nº 9.714, de 1998)"
       }
     ],
     "incisos": [],
@@ -1132,8 +1132,8 @@
         "texto": "A multa pode ser aumentada até o triplo, se o juiz considerar que, em virtude da situação econômica do réu, é ineficaz, embora aplicada no máximo. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "A pena privativa de liberdade aplicada, não superior a 6 (seis) meses, pode ser substituída pela de multa, observados os critérios dos incisos II e III do art. 44 deste Código.(Redação dada pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "pena privativa de liberdade aplicada, não superior a 6 (seis) meses, pode ser substituída pela de multa, observados os critérios dos incisos II e III do art. 44 deste Código.(Redação dada pela Lei nº 7.209, de 11.7.1984)"
       }
     ],
     "incisos": [],
@@ -1425,8 +1425,8 @@
     "caput": "Art. 75 - O tempo de cumprimento das penas privativas de liberdade não pode ser superior a 40 (quarenta) anos. (Redação dada pela Lei nº 13.964, de 2019)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Quando o agente for condenado a penas privativas de liberdade cuja soma seja superior a 40 (quarenta) anos, devem elas ser unificadas para atender ao limite máximo deste artigo. (Redação dada pela Lei nº 13.964, de 2019)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Quando o agente for condenado a penas privativas de liberdade cuja soma seja superior a 40 (quarenta) anos, devem elas ser unificadas para atender ao limite máximo deste artigo. (Redação dada pela Lei nº 13.964, de 2019)"
       },
       {
         "rotulo": "§ 2º",
@@ -1456,8 +1456,8 @@
         "texto": "A condenação anterior a pena de multa não impede a concessão do benefício. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2o A execução da pena privativa de liberdade, não superior a quatro anos, poderá ser suspensa, por quatro a seis anos, desde que o condenado seja maior de setenta anos de idade, ou razões de saúde justifiquem a suspensão. (Redação dada pela Lei nº 9.714, de 1998)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "A execução da pena privativa de liberdade, não superior a quatro anos, poderá ser suspensa, por quatro a seis anos, desde que o condenado seja maior de setenta anos de idade, ou razões de saúde justifiquem a suspensão. (Redação dada pela Lei nº 9.714, de 1998)"
       }
     ],
     "incisos": [
@@ -1490,8 +1490,8 @@
         "texto": "No primeiro ano do prazo, deverá o condenado prestar serviços à comunidade (art. 46) ou submeter-se à limitação de fim de semana (art. 48). (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2° Se o condenado houver reparado o dano, salvo impossibilidade de fazê",
-        "texto": "lo, e se as circunstâncias do art. 59 deste Código lhe forem inteiramente favoráveis, o juiz poderá substituir a exigência do parágrafo anterior pelas seguintes condições, aplicadas cumulativamente: (Redação dada pela Lei nº 9.268, de 1º.4.1996)"
+        "rotulo": "§ 2º",
+        "texto": "Se o condenado houver reparado o dano, salvo impossibilidade de fazê lo, e se as circunstâncias do art. 59 deste Código lhe forem inteiramente favoráveis, o juiz poderá substituir a exigência do parágrafo anterior pelas seguintes condições, aplicadas cumulativamente: (Redação dada pela Lei nº 9.268, de 1º.4.1996)"
       }
     ],
     "incisos": [
@@ -1719,12 +1719,12 @@
     "caput": "Art. 91 - São efeitos da condenação: (Redação dada pela Lei nº 7.209, de 11.7.1984)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o Poderá ser decretada a perda de bens ou valores equivalentes ao produto ou proveito do crime quando estes não forem encontrados ou quando se localizarem no exterior. (Incluído pela Lei nº 12.694, de 2012)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Poderá ser decretada a perda de bens ou valores equivalentes ao produto ou proveito do crime quando estes não forem encontrados ou quando se localizarem no exterior. (Incluído pela Lei nº 12.694, de 2012)"
       },
       {
-        "rotulo": "§ 2o Na hipótese do § 1o, as medidas assecuratórias previstas na legislação processual poderão abranger bens ou valores equivalentes do investigado ou acusado para posterior decretação de perda. (Incluído pela Lei nº 12.694, de 2012)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "Na hipótese do § 1º, as medidas assecuratórias previstas na legislação processual poderão abranger bens ou valores equivalentes do investigado ou acusado para posterior decretação de perda. (Incluído pela Lei nº 12.694, de 2012)"
       }
     ],
     "incisos": [
@@ -1757,24 +1757,24 @@
     "caput": "Art. 91-A - Na hipótese de condenação por infrações às quais a lei comine pena máxima superior a 6 (seis) anos de reclusão, poderá ser decretada a perda, como produto ou proveito do crime, dos bens correspondentes à diferença entre o valor do patrimônio do condenado e aquele que seja compatível com o seu rendimento lícito. (Incluído pela Lei nº 13.964, de 2019)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Para efeito da perda prevista no caput deste artigo, entende",
-        "texto": "se por patrimônio do condenado todos os bens: (Incluído pela Lei nº 13.964, de 2019)"
+        "rotulo": "§ 1º",
+        "texto": "Para efeito da perda prevista no caput deste artigo, entende se por patrimônio do condenado todos os bens: (Incluído pela Lei nº 13.964, de 2019)"
       },
       {
-        "rotulo": "§ 2º O condenado poderá demonstrar a inexistência da incompatibilidade ou a procedência lícita do patrimônio. (Incluído pela Lei nº 13.964, de 2019)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "O condenado poderá demonstrar a inexistência da incompatibilidade ou a procedência lícita do patrimônio. (Incluído pela Lei nº 13.964, de 2019)"
       },
       {
-        "rotulo": "§ 3º A perda prevista neste artigo deverá ser requerida expressamente pelo Ministério Público, por ocasião do oferecimento da denúncia, com indicação da diferença apurada. (Incluído pela Lei nº 13.964, de 2019)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "A perda prevista neste artigo deverá ser requerida expressamente pelo Ministério Público, por ocasião do oferecimento da denúncia, com indicação da diferença apurada. (Incluído pela Lei nº 13.964, de 2019)"
       },
       {
-        "rotulo": "§ 4º Na sentença condenatória, o juiz deve declarar o valor da diferença apurada e especificar os bens cuja perda for decretada. (Incluído pela Lei nº 13.964, de 2019)",
-        "texto": ""
+        "rotulo": "§ 4º",
+        "texto": "Na sentença condenatória, o juiz deve declarar o valor da diferença apurada e especificar os bens cuja perda for decretada. (Incluído pela Lei nº 13.964, de 2019)"
       },
       {
-        "rotulo": "§ 5º Os instrumentos utilizados para a prática de crimes por organizações criminosas e milícias deverão ser declarados perdidos em favor da União ou do Estado, dependendo da Justiça onde tramita a ação penal, ainda que não ponham em perigo a segurança das pessoas, a moral ou a ordem pública, nem ofereçam sério risco de ser utilizados para o cometimento de novos crimes. (Incluído pela Lei nº 13.964, de 2019)",
-        "texto": ""
+        "rotulo": "§ 5º",
+        "texto": "Os instrumentos utilizados para a prática de crimes por organizações criminosas e milícias deverão ser declarados perdidos em favor da União ou do Estado, dependendo da Justiça onde tramita a ação penal, ainda que não ponham em perigo a segurança das pessoas, a moral ou a ordem pública, nem ofereçam sério risco de ser utilizados para o cometimento de novos crimes. (Incluído pela Lei nº 13.964, de 2019)"
       }
     ],
     "incisos": [
@@ -1798,12 +1798,12 @@
     "caput": "Art. 92 - São também efeitos da condenação: (Redação dada pela Lei nº 7.209, de 11.7.1984)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Os efeitos de que trata este artigo não são automáticos, devendo ser motivadamente declarados na sentença pelo juiz, mas independem de pedido expresso da acusação, observado o disposto no inciso III do § 2º deste artigo. (Incluído pela Lei nº 14.994, de 2024)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Os efeitos de que trata este artigo não são automáticos, devendo ser motivadamente declarados na sentença pelo juiz, mas independem de pedido expresso da acusação, observado o disposto no inciso III do § 2º deste artigo. (Incluído pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 2º Ao condenado por crime praticado contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121",
-        "texto": "A deste Código serão: (Incluído pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 2º",
+        "texto": "Ao condenado por crime praticado contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121 A deste Código serão: (Incluído pela Lei nº 14.994, de 2024)"
       }
     ],
     "incisos": [
@@ -1938,8 +1938,8 @@
         "texto": "A internação, ou tratamento ambulatorial, será por tempo indeterminado, perdurando enquanto não for averiguada, mediante perícia médica, a cessação de periculosidade. O prazo mínimo deverá ser de 1 (um) a 3 (três) anos. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "A perícia médica realizar-se-á ao termo do prazo mínimo fixado e deverá ser repetida de ano em ano, ou a qualquer tempo, se o determinar o juiz da execução. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "perícia médica realizar-se-á ao termo do prazo mínimo fixado e deverá ser repetida de ano em ano, ou a qualquer tempo, se o determinar o juiz da execução. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
         "rotulo": "§ 3º",
@@ -1982,8 +1982,8 @@
         "texto": "A ação pública é promovida pelo Ministério Público, dependendo, quando a lei o exige, de representação do ofendido ou de requisição do Ministro da Justiça. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "A ação de iniciativa privada é promovida mediante queixa do ofendido ou de quem tenha qualidade para representá-lo. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
+        "rotulo": "§ 2º-A",
+        "texto": "ação de iniciativa privada é promovida mediante queixa do ofendido ou de quem tenha qualidade para representá-lo. (Redação dada pela Lei nº 7.209, de 11.7.1984)"
       },
       {
         "rotulo": "§ 3º",
@@ -2197,12 +2197,12 @@
     "caput": "Art. 110 - A prescrição depois de transitar em julgado a sentença condenatória regula-se pela pena aplicada e verifica-se nos prazos fixados no artigo anterior, os quais se aumentam de um terço, se o condenado é reincidente. (Redação dada pela Lei nº 7.209, de 11.7.1984)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o A prescrição, depois da sentença condenatória com trânsito em julgado para a acusação ou depois de improvido seu recurso, regula",
-        "texto": "se pela pena aplicada, não podendo, em nenhuma hipótese, ter por termo inicial data anterior à da denúncia ou queixa. (Redação dada pela Lei nº 12.234, de 2010)."
+        "rotulo": "§ 1º",
+        "texto": "A prescrição, depois da sentença condenatória com trânsito em julgado para a acusação ou depois de improvido seu recurso, regula se pela pena aplicada, não podendo, em nenhuma hipótese, ter por termo inicial data anterior à da denúncia ou queixa. (Redação dada pela Lei nº 12.234, de 2010)."
       },
       {
-        "rotulo": "§ 2o (Revogado pela Lei nº 12.234, de 2010).",
-        "texto": " Termo inicial da prescrição antes de transitar em julgado a sentença final"
+        "rotulo": "§ 2º",
+        "texto": "(Revogado pela Lei nº 12.234, de 2010). Termo inicial da prescrição antes de transitar em julgado a sentença final"
       }
     ],
     "incisos": [],
@@ -2419,44 +2419,44 @@
     "caput": "Art. 121 - Matar alguem: Pena - reclusão, de seis a vinte anos.",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Se o agente comete o crime impelido por motivo de relevante valor social ou moral, ou sob o domínio de violenta emoção, logo em seguida a injusta provocação da vítima, o juiz pode reduzir a pena de um sexto a um terço.",
-        "texto": ""
-      },
-      {
-        "rotulo": "§ 2° Se o homicídio é cometido:",
-        "texto": ""
-      },
-      {
-        "rotulo": "§ 2o",
-        "texto": "A (Revogado pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 1º",
+        "texto": "Se o agente comete o crime impelido por motivo de relevante valor social ou moral, ou sob o domínio de violenta emoção, logo em seguida a injusta provocação da vítima, o juiz pode reduzir a pena de um sexto a um terço."
       },
       {
         "rotulo": "§ 2º",
-        "texto": "B. A pena do homicídio contra menor de 14 (quatorze) anos é aumentada de: (Incluído pela Lei nº 14.344, de 2022) Vigência"
+        "texto": "Se o homicídio é cometido:"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "C. A pena do homicídio cometido nas dependências de instituição de ensino é aumentada de: (Incluído pela Lei nº 15.159, de 2025)"
+        "rotulo": "§ 2º-A",
+        "texto": "(Revogado pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 3º Se o homicídio é culposo: (Vide Lei nº 4.611, de 1965)",
-        "texto": " Pena - detenção, de um a três anos."
+        "rotulo": "§ 2º-B",
+        "texto": "A pena do homicídio contra menor de 14 (quatorze) anos é aumentada de: (Incluído pela Lei nº 14.344, de 2022) Vigência"
       },
       {
-        "rotulo": "§ 4o No homicídio culposo, a pena é aumentada de 1/3 (um terço), se o crime resulta de inobservância de regra técnica de profissão, arte ou ofício, ou se o agente deixa de prestar imediato socorro à vítima, não procura diminuir as conseqüências do seu ato, ou foge para evitar prisão em flagrante. Sendo doloso o homicídio, a pena é aumentada de 1/3 (um terço) se o crime é praticado contra pessoa menor de 14 (quatorze) ou maior de 60 (sessenta) anos. (Redação dada pela Lei nº 10.741, de 2003)",
-        "texto": ""
+        "rotulo": "§ 2º-C",
+        "texto": "A pena do homicídio cometido nas dependências de instituição de ensino é aumentada de: (Incluído pela Lei nº 15.159, de 2025)"
+      },
+      {
+        "rotulo": "§ 3º",
+        "texto": "Se o homicídio é culposo: (Vide Lei nº 4.611, de 1965) Pena - detenção, de um a três anos."
+      },
+      {
+        "rotulo": "§ 4º",
+        "texto": "No homicídio culposo, a pena é aumentada de 1/3 (um terço), se o crime resulta de inobservância de regra técnica de profissão, arte ou ofício, ou se o agente deixa de prestar imediato socorro à vítima, não procura diminuir as conseqüências do seu ato, ou foge para evitar prisão em flagrante. Sendo doloso o homicídio, a pena é aumentada de 1/3 (um terço) se o crime é praticado contra pessoa menor de 14 (quatorze) ou maior de 60 (sessenta) anos. (Redação dada pela Lei nº 10.741, de 2003)"
       },
       {
         "rotulo": "§ 5º",
         "texto": "Na hipótese de homicídio culposo, o juiz poderá deixar de aplicar a pena, se as conseqüências da infração atingirem o próprio agente de forma tão grave que a sanção penal se torne desnecessária. (Incluído pela Lei nº 6.416, de 24.5.1977)"
       },
       {
-        "rotulo": "§ 6o A pena é aumentada de 1/3 (um terço) até a metade se o crime for praticado por milícia privada, sob o pretexto de prestação de serviço de segurança, ou por grupo de extermínio. (Incluído pela Lei nº 12.720, de 2012)",
-        "texto": ""
+        "rotulo": "§ 6º",
+        "texto": "A pena é aumentada de 1/3 (um terço) até a metade se o crime for praticado por milícia privada, sob o pretexto de prestação de serviço de segurança, ou por grupo de extermínio. (Incluído pela Lei nº 12.720, de 2012)"
       },
       {
-        "rotulo": "§ 7o (Revogado pela Lei nº 14.994, de 2024)",
-        "texto": " Feminicídio (Incluído pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 7º",
+        "texto": "(Revogado pela Lei nº 14.994, de 2024) Feminicídio (Incluído pela Lei nº 14.994, de 2024)"
       }
     ],
     "incisos": [
@@ -2554,16 +2554,16 @@
     "caput": "Art. 121-A - Matar mulher por razões da condição do sexo feminino: (Incluído pela Lei nº 14.994, de 2024) Pena – reclusão, de 20 (vinte) a 40 (quarenta) anos. (Incluído pela Lei nº 14.994, de 2024)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Considera",
-        "texto": "se que há razões da condição do sexo feminino quando o crime envolve: (Incluído pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 1º",
+        "texto": "Considera se que há razões da condição do sexo feminino quando o crime envolve: (Incluído pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 2º A pena do feminicídio é aumentada de 1/3 (um terço) até a metade se o crime é praticado: (Incluído pela Lei nº 14.994, de 2024)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "A pena do feminicídio é aumentada de 1/3 (um terço) até a metade se o crime é praticado: (Incluído pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 3º Comunicam",
-        "texto": "se ao coautor ou partícipe as circunstâncias pessoais elementares do crime previstas no § 1º deste artigo. (Incluído pela Lei nº 14.994, de 2024) Induzimento, instigação ou auxílio a suicídio ou a automutilação (Redação dada pela Lei nº 13.968, de 2019)"
+        "rotulo": "§ 3º",
+        "texto": "Comunicam se ao coautor ou partícipe as circunstâncias pessoais elementares do crime previstas no § 1º deste artigo. (Incluído pela Lei nº 14.994, de 2024) Induzimento, instigação ou auxílio a suicídio ou a automutilação (Redação dada pela Lei nº 13.968, de 2019)"
       }
     ],
     "incisos": [
@@ -2612,32 +2612,32 @@
     "caput": "Art. 122 - Induzir ou instigar alguém a suicidar-se ou a praticar automutilação ou prestar-lhe auxílio material para que o faça: (Redação dada pela Lei nº 13.968, de 2019)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Se da automutilação ou da tentativa de suicídio resulta lesão corporal de natureza grave ou gravíssima, nos termos dos §§ 1º e 2º do art. 129 deste Código: (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": " Pena - reclusão, de 1 (um) a 3 (três) anos. (Incluído pela Lei nº 13.968, de 2019)"
+        "rotulo": "§ 1º",
+        "texto": "Se da automutilação ou da tentativa de suicídio resulta lesão corporal de natureza grave ou gravíssima, nos termos dos §§ 1º e 2º do art. 129 deste Código: (Incluído pela Lei nº 13.968, de 2019) Pena - reclusão, de 1 (um) a 3 (três) anos. (Incluído pela Lei nº 13.968, de 2019)"
       },
       {
-        "rotulo": "§ 2º Se o suicídio se consuma ou se da automutilação resulta morte: (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": " Pena - reclusão, de 2 (dois) a 6 (seis) anos. (Incluído pela Lei nº 13.968, de 2019)"
+        "rotulo": "§ 2º",
+        "texto": "Se o suicídio se consuma ou se da automutilação resulta morte: (Incluído pela Lei nº 13.968, de 2019) Pena - reclusão, de 2 (dois) a 6 (seis) anos. (Incluído pela Lei nº 13.968, de 2019)"
       },
       {
-        "rotulo": "§ 3º A pena é duplicada: (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "A pena é duplicada: (Incluído pela Lei nº 13.968, de 2019)"
       },
       {
-        "rotulo": "§ 4º A pena é aumentada até o dobro se a conduta é realizada por meio da rede de computadores, de rede social ou transmitida em tempo real. (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": ""
+        "rotulo": "§ 4º",
+        "texto": "A pena é aumentada até o dobro se a conduta é realizada por meio da rede de computadores, de rede social ou transmitida em tempo real. (Incluído pela Lei nº 13.968, de 2019)"
       },
       {
-        "rotulo": "§ 5º Aplica",
-        "texto": "se a pena em dobro se o autor é líder, coordenador ou administrador de grupo, de comunidade ou de rede virtual, ou por estes é responsável. (Redação dada pela Lei nº 14.811, de 2024)"
+        "rotulo": "§ 5º",
+        "texto": "Aplica se a pena em dobro se o autor é líder, coordenador ou administrador de grupo, de comunidade ou de rede virtual, ou por estes é responsável. (Redação dada pela Lei nº 14.811, de 2024)"
       },
       {
-        "rotulo": "§ 6º Se o crime de que trata o § 1º deste artigo resulta em lesão corporal de natureza gravíssima e é cometido contra menor de 14 (quatorze) anos ou contra quem, por enfermidade ou deficiência mental, não tem o necessário discernimento para a prática do ato, ou que, por qualquer outra causa, não pode oferecer resistência, responde o agente pelo crime descrito no § 2º do art. 129 deste Código. (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": ""
+        "rotulo": "§ 6º",
+        "texto": "Se o crime de que trata o § 1º deste artigo resulta em lesão corporal de natureza gravíssima e é cometido contra menor de 14 (quatorze) anos ou contra quem, por enfermidade ou deficiência mental, não tem o necessário discernimento para a prática do ato, ou que, por qualquer outra causa, não pode oferecer resistência, responde o agente pelo crime descrito no § 2º do art. 129 deste Código. (Incluído pela Lei nº 13.968, de 2019)"
       },
       {
-        "rotulo": "§ 7º Se o crime de que trata o § 2º deste artigo é cometido contra menor de 14 (quatorze) anos ou contra quem não tem o necessário discernimento para a prática do ato, ou que, por qualquer outra causa, não pode oferecer resistência, responde o agente pelo crime de homicídio, nos termos do art. 121 deste Código. (Incluído pela Lei nº 13.968, de 2019)",
-        "texto": ""
+        "rotulo": "§ 7º",
+        "texto": "Se o crime de que trata o § 2º deste artigo é cometido contra menor de 14 (quatorze) anos ou contra quem não tem o necessário discernimento para a prática do ato, ou que, por qualquer outra causa, não pode oferecer resistência, responde o agente pelo crime de homicídio, nos termos do art. 121 deste Código. (Incluído pela Lei nº 13.968, de 2019)"
       }
     ],
     "incisos": [
@@ -2731,56 +2731,56 @@
     "caput": "Art. 129 - Ofender a integridade corporal ou a saúde de outrem: Pena - detenção, de três meses a um ano.",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Se resulta:",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Se resulta:"
       },
       {
-        "rotulo": "§ 2° Se resulta:",
-        "texto": ""
+        "rotulo": "§ 10. Nos casos previstos nos §§ 1º a 3o deste artigo, se as circunstâncias são as indicadas no § 9º deste artigo, aumenta",
+        "texto": "se a pena em 1/3 (um terço). (Incluído pela Lei nº 10.886, de 2004)"
       },
       {
-        "rotulo": "§ 3° Se resulta morte e as circunstâncias evidenciam que o agente não quís o resultado, nem assumiu o risco de produzí",
-        "texto": "lo: Pena - reclusão, de quatro a doze anos."
+        "rotulo": "§ 13. Se a lesão é praticada contra a mulher, por razões da condição do sexo feminino, nos termos do § 1º do art. 121",
+        "texto": "A deste Código: (Redação dada pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 4° Se o agente comete o crime impelido por motivo de relevante valor social ou moral ou sob o domínio de violenta emoção, logo em seguida a injusta provocação da vítima, o juiz pode reduzir a pena de um sexto a um terço.",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "Se resulta:"
       },
       {
-        "rotulo": "§ 5° O juiz, não sendo graves as lesões, pode ainda substituir a pena de detenção pela de multa, de duzentos mil réis a dois contos de réis:",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "Se resulta morte e as circunstâncias evidenciam que o agente não quís o resultado, nem assumiu o risco de produzí lo: Pena - reclusão, de quatro a doze anos."
       },
       {
-        "rotulo": "§ 6° Se a lesão é culposa: (Vide Lei nº 4.611, de 1965)",
-        "texto": " Pena - detenção, de dois meses a um ano."
+        "rotulo": "§ 4º",
+        "texto": "Se o agente comete o crime impelido por motivo de relevante valor social ou moral ou sob o domínio de violenta emoção, logo em seguida a injusta provocação da vítima, o juiz pode reduzir a pena de um sexto a um terço."
       },
       {
-        "rotulo": "§ 7o Aumenta",
-        "texto": "se a pena de 1/3 (um terço) se ocorrer qualquer das hipóteses dos §§ 4o e 6o do art. 121 deste Código. (Redação dada pela Lei nº 12.720, de 2012)"
+        "rotulo": "§ 5º",
+        "texto": "O juiz, não sendo graves as lesões, pode ainda substituir a pena de detenção pela de multa, de duzentos mil réis a dois contos de réis:"
+      },
+      {
+        "rotulo": "§ 6º",
+        "texto": "Se a lesão é culposa: (Vide Lei nº 4.611, de 1965) Pena - detenção, de dois meses a um ano."
+      },
+      {
+        "rotulo": "§ 7º",
+        "texto": "Aumenta se a pena de 1/3 (um terço) se ocorrer qualquer das hipóteses dos §§ 4o e 6o do art. 121 deste Código. (Redação dada pela Lei nº 12.720, de 2012)"
       },
       {
         "rotulo": "§ 8º",
         "texto": "Aplica-se à lesão culposa o disposto no § 5º do art. 121.(Redação dada pela Lei nº 8.069, de 1990)"
       },
       {
-        "rotulo": "§ 9o Se a lesão for praticada contra ascendente, descendente, irmão, cônjuge ou companheiro, ou com quem conviva ou tenha convivido, ou, ainda, prevalecendo",
-        "texto": "se o agente das relações domésticas, de coabitação ou de hospitalidade: (Redação dada pela Lei nº 11.340, de 2006)"
+        "rotulo": "§ 9º",
+        "texto": "Se a lesão for praticada contra ascendente, descendente, irmão, cônjuge ou companheiro, ou com quem conviva ou tenha convivido, ou, ainda, prevalecendo se o agente das relações domésticas, de coabitação ou de hospitalidade: (Redação dada pela Lei nº 11.340, de 2006)"
       },
       {
-        "rotulo": "§ 10. Nos casos previstos nos §§ 1o a 3o deste artigo, se as circunstâncias são as indicadas no § 9o deste artigo, aumenta",
-        "texto": "se a pena em 1/3 (um terço). (Incluído pela Lei nº 10.886, de 2004)"
-      },
-      {
-        "rotulo": "§ 11. Na hipótese do § 9o deste artigo, a pena será aumentada de um terço se o crime for cometido contra pessoa portadora de deficiência. (Incluído pela Lei nº 11.340, de 2006)",
+        "rotulo": "§ 11. Na hipótese do § 9º deste artigo, a pena será aumentada de um terço se o crime for cometido contra pessoa portadora de deficiência. (Incluído pela Lei nº 11.340, de 2006)",
         "texto": ""
       },
       {
         "rotulo": "§ 12. Aumenta",
         "texto": "se a pena de: (Redação dada pela Lei nº 15.159, de 2025)"
-      },
-      {
-        "rotulo": "§ 13. Se a lesão é praticada contra a mulher, por razões da condição do sexo feminino, nos termos do § 1º do art. 121",
-        "texto": "A deste Código: (Redação dada pela Lei nº 14.994, de 2024)"
       }
     ],
     "incisos": [
@@ -3097,8 +3097,8 @@
         "texto": "Se a injúria consiste em violência ou vias de fato, que, por sua natureza ou pelo meio empregado, se considerem aviltantes: Pena - detenção, de três meses a um ano, e multa, além da pena correspondente à violência."
       },
       {
-        "rotulo": "§ 3º Se a injúria consiste na utilização de elementos referentes a religião ou à condição de pessoa idosa ou com deficiência: (Redação dada pela Lei nº 14.532, de 2023)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "Se a injúria consiste na utilização de elementos referentes a religião ou à condição de pessoa idosa ou com deficiência: (Redação dada pela Lei nº 14.532, de 2023)"
       }
     ],
     "incisos": [
@@ -3126,12 +3126,12 @@
         "texto": "Se o crime é cometido mediante paga ou promessa de recompensa, aplica-se a pena em dobro. (Redação dada pela Lei nº 13.964, de 2019)"
       },
       {
-        "rotulo": "§ 2º Se o crime é cometido ou divulgado em quaisquer modalidades das redes sociais da rede mundial de computadores, aplica",
-        "texto": "se em triplo a pena. (Incluído pela Lei nº 13.964, de 2019) (Vigência)"
+        "rotulo": "§ 2º",
+        "texto": "Se o crime é cometido ou divulgado em quaisquer modalidades das redes sociais da rede mundial de computadores, aplica se em triplo a pena. (Incluído pela Lei nº 13.964, de 2019) (Vigência)"
       },
       {
-        "rotulo": "§ 3º Se o crime é cometido contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121",
-        "texto": "A deste Código, aplica-se a pena em dobro. (Incluído pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 3º",
+        "texto": "Se o crime é cometido contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121 A deste Código, aplica-se a pena em dobro. (Incluído pela Lei nº 14.994, de 2024)"
       }
     ],
     "incisos": [
@@ -3236,8 +3236,8 @@
         "texto": "As penas aplicam-se cumulativamente e em dobro, quando, para a execução do crime, se reúnem mais de três pessoas, ou há emprego de armas."
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "Além das penas cominadas, aplicam-se as correspondentes à violência."
+        "rotulo": "§ 2º-A",
+        "texto": "lém das penas cominadas, aplicam-se as correspondentes à violência."
       },
       {
         "rotulo": "§ 3º",
@@ -3279,12 +3279,12 @@
     "caput": "Art. 147 - Ameaçar alguém, por palavra, escrito ou gesto, ou qualquer outro meio simbólico, de causar-lhe mal injusto e grave: Pena - detenção, de um a seis meses, ou multa.",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Se o crime é cometido contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121",
-        "texto": "A deste Código, aplica-se a pena em dobro. (Incluído pela Lei nº 14.994, de 2024)"
+        "rotulo": "§ 1º",
+        "texto": "Se o crime é cometido contra a mulher por razões da condição do sexo feminino, nos termos do § 1º do art. 121 A deste Código, aplica-se a pena em dobro. (Incluído pela Lei nº 14.994, de 2024)"
       },
       {
-        "rotulo": "§ 2º Somente se procede mediante representação, exceto na hipótese prevista no § 1º deste artigo. (Incluído pela Lei nº 14.994, de 2024)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "Somente se procede mediante representação, exceto na hipótese prevista no § 1º deste artigo. (Incluído pela Lei nº 14.994, de 2024)"
       }
     ],
     "incisos": [],
@@ -3297,16 +3297,16 @@
     "caput": "Art. 147-A - Perseguir alguém, reiteradamente e por qualquer meio, ameaçando-lhe a integridade física ou psicológica, restringindo-lhe a capacidade de locomoção ou, de qualquer forma, invadindo ou perturbando sua esfera de liberdade ou privacidade. (Incluído pela Lei nº 14.132, de 2021) Pena – reclusão, de 6 (seis) meses a 2 (dois) anos, e multa. (Incluído pela Lei nº 14.132, de 2021)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º A pena é aumentada de metade se o crime é cometido: (Incluído pela Lei nº 14.132, de 2021)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "A pena é aumentada de metade se o crime é cometido: (Incluído pela Lei nº 14.132, de 2021)"
       },
       {
-        "rotulo": "§ 2º As penas deste artigo são aplicáveis sem prejuízo das correspondentes à violência. (Incluído pela Lei nº 14.132, de 2021)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "As penas deste artigo são aplicáveis sem prejuízo das correspondentes à violência. (Incluído pela Lei nº 14.132, de 2021)"
       },
       {
-        "rotulo": "§ 3º Somente se procede mediante representação. (Incluído pela Lei nº 14.132, de 2021)",
-        "texto": " Violência psicológica contra a mulher (Incluído pela Lei nº 14.188, de 2021)"
+        "rotulo": "§ 3º",
+        "texto": "Somente se procede mediante representação. (Incluído pela Lei nº 14.132, de 2021) Violência psicológica contra a mulher (Incluído pela Lei nº 14.188, de 2021)"
       }
     ],
     "incisos": [
@@ -3393,12 +3393,12 @@
     "caput": "Art. 149 - Reduzir alguém a condição análoga à de escravo, quer submetendo-o a trabalhos forçados ou a jornada exaustiva, quer sujeitando-o a condições degradantes de trabalho, quer restringindo, por qualquer meio, sua locomoção em razão de dívida contraída com o empregador ou preposto: (Redação dada pela Lei nº 10.803, de 11.12.2003) Pena - reclusão, de dois a oito anos, e multa, além da pena correspondente à violência. (Redação dada pela Lei nº 10.803, de 11.12.2003)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o Nas mesmas penas incorre quem: (Incluído pela Lei nº 10.803, de 11.12.2003)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Nas mesmas penas incorre quem: (Incluído pela Lei nº 10.803, de 11.12.2003)"
       },
       {
-        "rotulo": "§ 2o A pena é aumentada de metade, se o crime é cometido: (Incluído pela Lei nº 10.803, de 11.12.2003)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "A pena é aumentada de metade, se o crime é cometido: (Incluído pela Lei nº 10.803, de 11.12.2003)"
       }
     ],
     "incisos": [
@@ -3432,12 +3432,12 @@
     "caput": "Art. 149-A - Agenciar, aliciar, recrutar, transportar, transferir, comprar, alojar ou acolher pessoa, mediante grave ameaça, violência, coação, fraude ou abuso, com a finalidade de: (Incluído pela Lei nº 13.344, de 2016) (Vigência)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o A pena é aumentada de um terço até a metade se: (Incluído pela Lei nº 13.344, de 2016) (Vigência)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "A pena é aumentada de um terço até a metade se: (Incluído pela Lei nº 13.344, de 2016) (Vigência)"
       },
       {
-        "rotulo": "§ 2o A pena é reduzida de um a dois terços se o agente for primário e não integrar organização criminosa. (Incluído pela Lei nº 13.344, de 2016) (Vigência)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "A pena é reduzida de um a dois terços se o agente for primário e não integrar organização criminosa. (Incluído pela Lei nº 13.344, de 2016) (Vigência)"
       }
     ],
     "incisos": [
@@ -3566,8 +3566,8 @@
         "texto": "Na mesma pena incorre:"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "As penas aumentam-se de metade, se há dano para outrem."
+        "rotulo": "§ 2º-A",
+        "texto": "s penas aumentam-se de metade, se há dano para outrem."
       },
       {
         "rotulo": "§ 3º",
@@ -3623,16 +3623,16 @@
     "caput": "Art. 153 - Divulgar alguém, sem justa causa, conteúdo de documento particular ou de correspondência confidencial, de que é destinatário ou detentor, e cuja divulgação possa produzir dano a outrem: Pena - detenção, de um a seis meses, ou multa, de trezentos mil réis a dois contos de réis. (Vide Lei nº 7.209, de 1984)",
     "paragrafos": [
       {
-        "rotulo": "§ 1º Somente se procede mediante representação. (Parágrafo único renumerado pela Lei nº 9.983, de 2000)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Somente se procede mediante representação. (Parágrafo único renumerado pela Lei nº 9.983, de 2000)"
       },
       {
-        "rotulo": "§ 1o",
+        "rotulo": "§ 1º",
         "texto": "A. Divulgar, sem justa causa, informações sigilosas ou reservadas, assim definidas em lei, contidas ou não nos sistemas de informações ou banco de dados da Administração Pública: (Incluído pela Lei nº 9.983, de 2000) Pena – detenção, de 1 (um) a 4 (quatro) anos, e multa. (Incluído pela Lei nº 9.983, de 2000)"
       },
       {
-        "rotulo": "§ 2o Quando resultar prejuízo para a Administração Pública, a ação penal será incondicionada. (Incluído pela Lei nº 9.983, de 2000)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "Quando resultar prejuízo para a Administração Pública, a ação penal será incondicionada. (Incluído pela Lei nº 9.983, de 2000)"
       }
     ],
     "incisos": [],
@@ -3659,24 +3659,24 @@
     "caput": "Art. 154-A - Invadir dispositivo informático de uso alheio, conectado ou não à rede de computadores, com o fim de obter, adulterar ou destruir dados ou informações sem autorização expressa ou tácita do usuário do dispositivo ou de instalar vulnerabilidades para obter vantagem ilícita: (Redação dada pela Lei nº 14.155, de 2021)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o Na mesma pena incorre quem produz, oferece, distribui, vende ou difunde dispositivo ou programa de computador com o intuito de permitir a prática da conduta definida no caput. (Incluído pela Lei nº 12.737, de 2012) Vigência",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Na mesma pena incorre quem produz, oferece, distribui, vende ou difunde dispositivo ou programa de computador com o intuito de permitir a prática da conduta definida no caput. (Incluído pela Lei nº 12.737, de 2012) Vigência"
       },
       {
-        "rotulo": "§ 2º Aumenta",
-        "texto": "se a pena de 1/3 (um terço) a 2/3 (dois terços) se da invasão resulta prejuízo econômico. (Redação dada pela Lei nº 14.155, de 2021)"
+        "rotulo": "§ 2º",
+        "texto": "Aumenta se a pena de 1/3 (um terço) a 2/3 (dois terços) se da invasão resulta prejuízo econômico. (Redação dada pela Lei nº 14.155, de 2021)"
       },
       {
-        "rotulo": "§ 3o Se da invasão resultar a obtenção de conteúdo de comunicações eletrônicas privadas, segredos comerciais ou industriais, informações sigilosas, assim definidas em lei, ou o controle remoto não autorizado do dispositivo invadido: (Incluído pela Lei nº 12.737, de 2012) Vigência",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "Se da invasão resultar a obtenção de conteúdo de comunicações eletrônicas privadas, segredos comerciais ou industriais, informações sigilosas, assim definidas em lei, ou o controle remoto não autorizado do dispositivo invadido: (Incluído pela Lei nº 12.737, de 2012) Vigência"
       },
       {
-        "rotulo": "§ 4o Na hipótese do § 3o, aumenta",
-        "texto": "se a pena de um a dois terços se houver divulgação, comercialização ou transmissão a terceiro, a qualquer título, dos dados ou informações obtidos. (Incluído pela Lei nº 12.737, de 2012) Vigência"
+        "rotulo": "§ 4º",
+        "texto": "Na hipótese do § 3º, aumenta se a pena de um a dois terços se houver divulgação, comercialização ou transmissão a terceiro, a qualquer título, dos dados ou informações obtidos. (Incluído pela Lei nº 12.737, de 2012) Vigência"
       },
       {
-        "rotulo": "§ 5o Aumenta",
-        "texto": "se a pena de um terço à metade se o crime for praticado contra: (Incluído pela Lei nº 12.737, de 2012) Vigência"
+        "rotulo": "§ 5º",
+        "texto": "Aumenta se a pena de um terço à metade se o crime for praticado contra: (Incluído pela Lei nº 12.737, de 2012) Vigência"
       }
     ],
     "incisos": [
@@ -3751,16 +3751,16 @@
         "texto": "A pena é de reclusão de três a oito anos, se a subtração for de veículo automotor que venha a ser transportado para outro Estado ou para o exterior. (Incluído pela Lei nº 9.426, de 1996)"
       },
       {
-        "rotulo": "§ 6o A pena é de reclusão de 2 (dois) a 5 (cinco) anos se a subtração for de semovente domesticável de produção, ainda que abatido ou dividido em partes no local da subtração. (Incluído pela Lei nº 13.330, de 2016)",
-        "texto": ""
+        "rotulo": "§ 6º",
+        "texto": "A pena é de reclusão de 2 (dois) a 5 (cinco) anos se a subtração for de semovente domesticável de produção, ainda que abatido ou dividido em partes no local da subtração. (Incluído pela Lei nº 13.330, de 2016)"
       },
       {
-        "rotulo": "§ 7º A pena é de reclusão de 4 (quatro) a 10 (dez) anos e multa, se a subtração for de substâncias explosivas ou de acessórios que, conjunta ou isoladamente, possibilitem sua fabricação, montagem ou emprego. (Incluído pela Lei nº 13.654, de 2018)",
-        "texto": ""
+        "rotulo": "§ 7º",
+        "texto": "A pena é de reclusão de 4 (quatro) a 10 (dez) anos e multa, se a subtração for de substâncias explosivas ou de acessórios que, conjunta ou isoladamente, possibilitem sua fabricação, montagem ou emprego. (Incluído pela Lei nº 13.654, de 2018)"
       },
       {
-        "rotulo": "§ 8º A pena é de reclusão de 2 (dois) a 8 (oito) anos e multa, se a subtração for de fios, cabos ou equipamentos utilizados para fornecimento ou transmissão de energia elétrica ou de telefonia ou para transferência de dados, bem como equipamentos ou materiais ferroviários ou metroviários, aplicável, em qualquer caso, o disposto no § 2º deste artigo. (Incluído pela Lei nº 15.181, de 2025)",
-        "texto": ""
+        "rotulo": "§ 8º",
+        "texto": "A pena é de reclusão de 2 (dois) a 8 (oito) anos e multa, se a subtração for de fios, cabos ou equipamentos utilizados para fornecimento ou transmissão de energia elétrica ou de telefonia ou para transferência de dados, bem como equipamentos ou materiais ferroviários ou metroviários, aplicável, em qualquer caso, o disposto no § 2º deste artigo. (Incluído pela Lei nº 15.181, de 2025)"
       }
     ],
     "incisos": [
@@ -3835,20 +3835,20 @@
         "texto": "A A pena é de reclusão de 6 (seis) a 12 (doze) anos e multa, se a subtração for cometida contra quaisquer bens que comprometam o funcionamento de órgãos da União, de Estado ou de Município ou de estabelecimentos públicos ou privados que prestem serviços públicos essenciais. (Incluído pela Lei nº 15.181, de 2025)"
       },
       {
-        "rotulo": "§ 2º A pena aumenta",
-        "texto": "se de 1/3 (um terço) até metade: (Redação dada pela Lei nº 13.654, de 2018)"
-      },
-      {
         "rotulo": "§ 2º",
-        "texto": "A A pena aumenta-se de 2/3 (dois terços): (Incluído pela Lei nº 13.654, de 2018)"
+        "texto": "A pena aumenta se de 1/3 (um terço) até metade: (Redação dada pela Lei nº 13.654, de 2018)"
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "B. Se a violência ou grave ameaça é exercida com emprego de arma de fogo de uso restrito ou proibido, aplica-se em dobro a pena prevista no caput deste artigo. (Incluído pela Lei nº 13.964, de 2019)"
+        "rotulo": "§ 2º-A",
+        "texto": "A pena aumenta-se de 2/3 (dois terços): (Incluído pela Lei nº 13.654, de 2018)"
       },
       {
-        "rotulo": "§ 3º Se da violência resulta: (Redação dada pela Lei nº 13.654, de 2018)",
-        "texto": ""
+        "rotulo": "§ 2º-B",
+        "texto": "Se a violência ou grave ameaça é exercida com emprego de arma de fogo de uso restrito ou proibido, aplica-se em dobro a pena prevista no caput deste artigo. (Incluído pela Lei nº 13.964, de 2019)"
+      },
+      {
+        "rotulo": "§ 3º",
+        "texto": "Se da violência resulta: (Redação dada pela Lei nº 13.654, de 2018)"
       }
     ],
     "incisos": [
@@ -3926,12 +3926,12 @@
         "texto": "Se o crime é cometido por duas ou mais pessoas, ou com emprego de arma, aumenta-se a pena de um terço até metade."
       },
       {
-        "rotulo": "§ 2º",
-        "texto": "Aplica-se à extorsão praticada mediante violência o disposto no § 3º do artigo anterior. Vide Lei nº 8.072, de 25.7.90"
+        "rotulo": "§ 2º-A",
+        "texto": "plica-se à extorsão praticada mediante violência o disposto no § 3º do artigo anterior. Vide Lei nº 8.072, de 25.7.90"
       },
       {
-        "rotulo": "§ 3o Se o crime é cometido mediante a restrição da liberdade da vítima, e essa condição é necessária para a obtenção da vantagem econômica, a pena é de reclusão, de 6 (seis) a 12 (doze) anos, além da multa; se resulta lesão corporal grave ou morte, aplicam",
-        "texto": "se as penas previstas no art. 159, §§ 2o e 3o, respectivamente. (Incluído pela Lei nº 11.923, de 2009)"
+        "rotulo": "§ 3º",
+        "texto": "Se o crime é cometido mediante a restrição da liberdade da vítima, e essa condição é necessária para a obtenção da vantagem econômica, a pena é de reclusão, de 6 (seis) a 12 (doze) anos, além da multa; se resulta lesão corporal grave ou morte, aplicam se as penas previstas no art. 159, §§ 2o e 3o, respectivamente. (Incluído pela Lei nº 11.923, de 2009)"
       }
     ],
     "incisos": [],
@@ -3944,8 +3944,8 @@
     "caput": "Art. 159 - Seqüestrar pessoa com o fim de obter, para si ou para outrem, qualquer vantagem, como condição ou preço do resgate: Vide Lei nº 8.072, de 25.7.90 (Vide Lei nº 10.446, de 2002) Pena - reclusão, de oito a quinze anos.. (Redação dada pela Lei nº 8.072, de 25.7.1990)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o Se o seqüestro dura mais de 24 (vinte e quatro) horas, se o seqüestrado é menor de 18 (dezoito) ou maior de 60 (sessenta) anos, ou se o crime é cometido por bando ou quadrilha. Vide Lei nº 8.072, de 25.7.90 (Redação dada pela Lei nº 10.741, de 2003)",
-        "texto": " Pena - reclusão, de doze a vinte anos. (Redação dada pela Lei nº 8.072, de 25.7.1990)"
+        "rotulo": "§ 1º",
+        "texto": "Se o seqüestro dura mais de 24 (vinte e quatro) horas, se o seqüestrado é menor de 18 (dezoito) ou maior de 60 (sessenta) anos, ou se o crime é cometido por bando ou quadrilha. Vide Lei nº 8.072, de 25.7.90 (Redação dada pela Lei nº 10.741, de 2003) Pena - reclusão, de doze a vinte anos. (Redação dada pela Lei nº 8.072, de 25.7.1990)"
       },
       {
         "rotulo": "§ 2º",
@@ -4122,16 +4122,16 @@
     "caput": "Art. 168-A - Deixar de repassar à previdência social as contribuições recolhidas dos contribuintes, no prazo e forma legal ou convencional: (Incluído pela Lei nº 9.983, de 2000) Pena – reclusão, de 2 (dois) a 5 (cinco) anos, e multa. (Incluído pela Lei nº 9.983, de 2000)",
     "paragrafos": [
       {
-        "rotulo": "§ 1o Nas mesmas penas incorre quem deixar de: (Incluído pela Lei nº 9.983, de 2000)",
-        "texto": ""
+        "rotulo": "§ 1º",
+        "texto": "Nas mesmas penas incorre quem deixar de: (Incluído pela Lei nº 9.983, de 2000)"
       },
       {
-        "rotulo": "§ 2o É extinta a punibilidade se o agente, espontaneamente, declara, confessa e efetua o pagamento das contribuições, importâncias ou valores e presta as informações devidas à previdência social, na forma definida em lei ou regulamento, antes do início da ação fiscal. (Incluído pela Lei nº 9.983, de 2000)",
-        "texto": ""
+        "rotulo": "§ 2º",
+        "texto": "É extinta a punibilidade se o agente, espontaneamente, declara, confessa e efetua o pagamento das contribuições, importâncias ou valores e presta as informações devidas à previdência social, na forma definida em lei ou regulamento, antes do início da ação fiscal. (Incluído pela Lei nº 9.983, de 2000)"
       },
       {
-        "rotulo": "§ 3o É facultado ao juiz deixar de aplicar a pena ou aplicar somente a de multa se o agente for primário e de bons antecedentes, desde que: (Incluído pela Lei nº 9.983, de 2000)",
-        "texto": ""
+        "rotulo": "§ 3º",
+        "texto": "É facultado ao juiz deixar de aplicar a pena ou aplicar somente a de multa se o agente for primário e de bons antecedentes, desde que: (Incluído pela Lei nº 9.983, de 2000)"
       }
     ],
     "incisos": [
