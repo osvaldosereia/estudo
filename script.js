@@ -11,14 +11,14 @@ const state = {
 };
 
 const CODES = [
-  {id: 'codigo_penal', label: 'Código Penal (CP)'},
-  {id: 'codigo_civil', label: 'Código Civil (CC)'},
-  {id: 'cpp', label: 'Código de Processo Penal (CPP)'},
-  {id: 'cpc', label: 'Código de Processo Civil (CPC)'},
-  {id: 'cf', label: 'Constituição Federal (CF)'},
-  {id: 'cdc', label: 'Código de Defesa do Consumidor (CDC)'},
+  {id: 'codigo_penal', label: 'Código Penal'},
+  {id: 'codigo_civil', label: 'Código Civil'},
+  {id: 'cpp', label: 'Código de Processo Penal'},
+  {id: 'cpc', label: 'Código de Processo Civil'},
+  {id: 'cf', label: 'Constituição Federal'},
+  {id: 'cdc', label: 'Código de Defesa do Consumidor'},
   {id: 'clt', label: 'CLT'},
-  {id: 'ctn', label: 'Código Tributário Nacional (CTN)'}
+  {id: 'ctn', label: 'Código Tributário Nacional'}
 ];
 
 const app = document.querySelector('#app');
