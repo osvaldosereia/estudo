@@ -106,9 +106,9 @@ function extractArticleNumber(input){
 // Flow
 async function startConversation(){
   await typing(2000);
-  pushBot(`<h3>Oi! Eu sou seu assistente de estudos jurídicos.</h3><p class="small">Vou te guiar passo a passo, sem juridiquês.</p>`);
+  pushBot(`<h3>Foco, força e prompt: vamos nessa?. .</h3>`);
   await typing(1500);
-  pushBot(`<p>Primeiro, escolha um <b>Código brasileiro</b> para estudarmos.</p>`);
+  pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
   await typing(1500);
   renderCodeChips();
   state.etapa = 0; save();
