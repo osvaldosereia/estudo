@@ -7,7 +7,8 @@ const state = {
   perguntas: [],
   estrategias: [],
   estrategiasPick: [],
-  prompt: ''
+  prompt: '',
+  artigoTexto: ''   // 👈 novo campo para guardar o texto integral
 };
 
 const CODES = [
@@ -28,7 +29,7 @@ const modalInfo = document.querySelector('#modalInfo');
 function save(){ localStorage.setItem('chatbot_juridico_state', JSON.stringify(state)); }
 function load(){ try{ Object.assign(state, JSON.parse(localStorage.getItem('chatbot_juridico_state'))||{});}catch{} }
 function resetAll(){
-  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],estrategias:[],estrategiasPick:[],prompt:''});
+  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],estrategias:[],estrategiasPick:[],prompt:'',artigoTexto:''});
   app.innerHTML=''; save(); startConversation();
 }
 
@@ -64,22 +65,16 @@ async function loadEstrategias(){ if(state.estrategias.length) return; state.est
 async function loadCodeData(codeId){ return getJSON(`data/${codeId}.json`); }
 
 // ---------- BUSCA INTELIGENTE ----------
-// Normaliza string: minúsculas, sem acento, sem espaços/pontuação
 function normalizarEntrada(str) {
   return (str||'').toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w]/g, ""); // remove tudo que não for [a-z0-9_]
+    .replace(/[^\w]/g, "");
 }
-
-// Busca por título ("Artigo 121", "Artigo 121-A")
 function matchTitulo(nodeTitulo, entrada) {
-  // "Artigo 121-A" => "artigo121a"
   const tNorm = normalizarEntrada(nodeTitulo);
   const eNorm = "artigo" + normalizarEntrada(entrada);
   return tNorm === eNorm;
 }
-
-// Busca no texto (até 3 palavras; exige TODAS com 4+ letras)
 function matchTexto(nodeTexto, entrada) {
   const palavras = (entrada||'').trim().split(/\s+/);
   if (palavras.length === 0 || palavras.length > 3) return false;
@@ -88,29 +83,22 @@ function matchTexto(nodeTexto, entrada) {
   const textoNorm = normalizarEntrada(nodeTexto||'');
   return validas.every(v => textoNorm.includes(v));
 }
-
-// Busca unificada: tenta título; se não achar e entrada tiver ≤3 palavras, tenta texto
 async function searchByArticleOrText(codeId, entrada) {
   const data = await loadCodeData(codeId);
-
-  // 1) Título
   for (const [key, node] of Object.entries(data)) {
     if (matchTitulo(node.titulo, entrada)) {
-      return node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }));
+      return { artigo: key, node, perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q })) };
     }
   }
-
-  // 2) Texto (até 3 palavras; todas ≥4 letras)
   const palavras = (entrada||'').trim().split(/\s+/);
   if (palavras.length <= 3) {
     for (const [key, node] of Object.entries(data)) {
       if (matchTexto(node.texto||'', entrada)) {
-        return node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }));
+        return { artigo: key, node, perguntas: node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q })) };
       }
     }
   }
-
-  return [];
+  return { artigo:null, node:null, perguntas:[] };
 }
 // ---------- FIM BUSCA INTELIGENTE ----------
 
@@ -157,7 +145,6 @@ function renderSearchInput(label){
     const v = node.querySelector('#inpBusca').value.trim();
     if(!v) return;
     pushUser(v);
-    // Nova estratégia: sempre usar a entrada bruta na busca inteligente
     state.artigoNum = null;
     state.termoBusca = v;
     save();
@@ -167,20 +154,21 @@ function renderSearchInput(label){
 
 async function doSearch(){
   await typing(1000);
-  let results = [];
+  let results = { artigo:null, node:null, perguntas:[] };
   const entrada = state.termoBusca || (state.artigoNum ? String(state.artigoNum) : "");
   if (state.codigo && entrada) {
     results = await searchByArticleOrText(state.codigo, entrada);
   }
-  state.perguntas = results.map(r=>r.texto);
+  state.perguntas = results.perguntas.map(r=>r.texto);
+  state.artigoTexto = results.node?.texto || ''; // 👈 salva o texto integral
   save();
 
-  if (!results.length){
+  if (!results.perguntas.length){
     pushBot(`Não encontrei nada com esse termo. Tente um número de artigo (ex.: 121, 121-A) ou 2–3 palavras mais específicas 🙂`);
     return;
   }
 
-  pushBot(`Selecionei <b>${results.length}</b> tópicos essenciais que farão parte do seu prompt:`);
+  pushBot(`Selecionei <b>${results.perguntas.length}</b> tópicos essenciais que farão parte do seu prompt:`);
 
   const rows = state.perguntas.map((q,i)=>`
     <div class="qrow">
@@ -225,6 +213,7 @@ function gerarPrompt(){
 Contexto:
 - Código: ${codeLabel}
 - Entrada do usuário: ${entrada}
+- Texto do artigo: ${state.artigoTexto || '(não disponível)'}
 
 Perguntas (organize e responda de forma didática, com exemplos curtos):
 ${blocoPerguntas || '(nenhuma)'}
