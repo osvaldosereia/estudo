@@ -4,7 +4,7 @@ const state = {
   codigo: null,
   termoBusca: '',
   prompt: '',
-  artigo: null // guardamos o node do artigo encontrado
+  artigo: null
 };
 
 const CODES = [
@@ -39,7 +39,7 @@ function pushUser(text){
   app.appendChild(node); app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
   return node;
 }
-function typing(ms=1200){
+function typing(ms=900){
   const t = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div></div>`);
   app.appendChild(t);
   return new Promise(res=> setTimeout(()=>{ t.remove(); res(); }, ms));
@@ -50,27 +50,46 @@ function onlyDigits(s){ const m = String(s||'').match(/^\d{1,4}$/); return m ? m
 function numeroBase(n){ const m = String(n||'').match(/^(\d{1,4})([A-Za-z-]*)?$/); return m? m[1] : null; }
 function hasLetter(n){ return /[A-Za-z]/.test(String(n||'')); }
 
+// ===== Fallback mínimo para testes =====
+const FALLBACK = {
+  "codigo_penal": {
+    "art1": {
+      "id": "art1","numero":"1","titulo":"Art. 1º",
+      "caput":"Não há crime sem lei anterior que o defina. Não há pena sem prévia cominação legal.",
+      "paragrafos": [],"incisos": [],
+      "texto":"Não há crime sem lei anterior que o defina. Não há pena sem prévia cominação legal."
+    },
+    "art2": {
+      "id":"art2","numero":"2","titulo":"Art. 2º",
+      "caput":"Ninguém pode ser punido por fato que lei posterior deixa de considerar crime, cessando em virtude dela a execução e os efeitos penais da sentença condenatória.",
+      "paragrafos":[{"rotulo":"Parágrafo único","texto":"A lei posterior, que de qualquer modo favorecer o agente, aplica-se aos fatos anteriores, ainda que decididos por sentença condenatória transitada em julgado."}],
+      "incisos":[],
+      "texto":"Ninguém pode ser punido por fato que lei posterior deixa de considerar crime, cessando em virtude dela a execução e os efeitos penais da sentença condenatória.\n\nParágrafo único - A lei posterior, que de qualquer modo favorecer o agente, aplica-se aos fatos anteriores, ainda que decididos por sentença condenatória transitada em julgado."
+    }
+  }
+};
+
 // ===== Data =====
 async function getJSON(path){
   const r=await fetch(path);
-  if(!r.ok) throw new Error('Falha ao carregar '+path);
+  if(!r.ok) throw new Error(`HTTP ${r.status} ao carregar ${path}`);
   return r.json();
 }
-// Tenta primeiro _vademecum.json; se não houver, cai para .json
-async function loadCodeData(codeId){
+// tenta vademecum, depois bruto; se falhar, lança erro
+async function tryLoadCodeData(codeId){
   const candidates = [
     `data/${codeId}_vademecum.json`,
     `data/${codeId}.json`
   ];
+  let lastErr;
   for (const p of candidates){
-    try{ return await getJSON(p); } catch(_e){}
+    try{ return await getJSON(p); } catch(e){ lastErr = e; }
   }
-  throw new Error('Nenhum arquivo de dados encontrado para ' + codeId);
+  throw lastErr || new Error('Arquivo de dados não encontrado');
 }
 
 // ===== Busca =====
 function buildFullText(node){
-  // Concatena campos para busca textual robusta
   const parts = [];
   if(node.caput) parts.push(node.caput);
   if(Array.isArray(node.incisos)) node.incisos.forEach(i=>{
@@ -86,41 +105,29 @@ function buildFullText(node){
 function normalize(str){
   return (str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 }
-
 function matchByNumber(node, entradaNum){
-  // Regra: entrada é NUMÉRICA (ex.: "121").
-  // Só casa com artigo cujo número base é igual E NÃO possui letra (evita 121 vs 121-A)
   const nb = numeroBase(node.numero);
   return nb === entradaNum && !hasLetter(node.numero);
 }
-
 function matchByText(node, entrada){
-  // Busca por termos (>=4 letras) presentes em caput/§/incisos/alíneas
   const tokens = (entrada||'').trim().split(/\s+/).filter(p=>p.length>=4);
   if(!tokens.length) return false;
   const corpus = normalize(buildFullText(node)).replace(/[^a-z0-9\s]/g,' ');
   return tokens.every(t => corpus.includes(normalize(t)));
 }
-
 async function searchArticle(codeId, entrada){
-  const data = await loadCodeData(codeId);
-
-  // data é um objeto { art1: {...}, art2: {...} }
+  const data = await tryLoadCodeData(codeId);
   const nodes = Object.values(data);
-
-  // 1) Se for número, tentar match exato
   const num = onlyDigits(entrada);
   if(num){
     const hit = nodes.find(n => matchByNumber(n, num));
     if(hit) return hit;
   }
-
-  // 2) Busca textual (fallback)
   const hitText = nodes.find(n => matchByText(n, entrada));
   return hitText || null;
 }
 
-// ===== Render de Artigo (por blocos) =====
+// ===== Render =====
 function renderArticleHTML(node){
   const titulo = node?.titulo || `Art. ${node?.numero||''}`;
   const caput = node?.caput || '';
@@ -166,23 +173,7 @@ function renderArticleHTML(node){
 function buildQuickPrompt(node, codeId){
   const codeLabel = CODES.find(c=>c.id===codeId)?.label||'Código';
   const titulo = node?.titulo || `Art. ${node?.numero||''}`;
-  // Preferir o campo "texto" já formatado; se faltar, montar do render (stripping tags).
-  let texto = node?.texto;
-  if(!texto){
-    // fallback: concatenar caput/incisos/parágrafos em texto simples
-    const parts = [];
-    if(node.caput) parts.push(node.caput);
-    if(Array.isArray(node.incisos)){
-      node.incisos.forEach(i=>{
-        parts.push(`${i.rom} - ${i.texto||''}`);
-        if(Array.isArray(i.alineas)) i.alineas.forEach(a=> parts.push(`  ${a.letra}) ${a.texto||''}`));
-      });
-    }
-    if(Array.isArray(node.paragrafos)){
-      node.paragrafos.forEach(p=> parts.push(`${p.rotulo? p.rotulo+' - ' : ''}${p.texto||''}`));
-    }
-    texto = parts.join('\n');
-  }
+  const texto = node?.texto || buildFullText(node);
 
   return `Você é um professor de Direito com didática impecável.
 Objetivo: Estudo RÁPIDO do artigo indicado, em linguagem simples e direta (10–12 linhas), cobrindo:
@@ -190,4 +181,142 @@ Objetivo: Estudo RÁPIDO do artigo indicado, em linguagem simples e direta (10�
 Evite juridiquês desnecessário. Não traga jurisprudência extensa.
 
 Contexto
-- Cód
+- Código: ${codeLabel}
+- Artigo: ${titulo}
+- Texto integral:
+${texto}
+
+Formato da resposta
+- Resumo (10–12 linhas)
+- 3 bullets “cai em prova”
+- Mini exemplo (3–4 linhas)
+- 1 erro comum
+
+Assine no final: "💚 direito.love — Gere um novo prompt em https://direito.love"`;
+}
+
+// ===== Conversa =====
+async function startConversation(){
+  await typing(600); pushBot(`<p>Olá! Eu te ajudo a estudar os <b>artigos dos códigos</b>.</p>`);
+  await typing(600); pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
+  renderCodeChips(); state.etapa=0; save();
+
+  // Aviso se estiver em file:// (CORS)
+  if (location.protocol === 'file:') {
+    pushBot(`<div class="small">⚠️ Você está abrindo o arquivo via <b>file://</b>. Para a busca funcionar, sirva o site via HTTP (GitHub Pages, Vercel, Netlify ou um servidor local tipo “Live Server”).</div>`);
+  }
+}
+function renderCodeChips(){
+  const chips=CODES.map(c=>`<button class="chip" data-id="${c.id}">${c.label}</button>`).join('');
+  const node=pushBot(`<div class="group" id="codes">${chips}</div>`);
+  node.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{ state.codigo=btn.getAttribute('data-id'); save(); onCodePicked(); }));
+}
+async function onCodePicked(){
+  const label=CODES.find(c=>c.id===state.codigo)?.label||'Código';
+  await typing(500); pushBot(`Excelente! Vamos de <b>${label}</b>.`);
+  await typing(500); renderSearchInput(label); state.etapa=1; save();
+}
+function renderSearchInput(label){
+  const node=pushBot(`
+    <div>
+      <p>Digite o <b>número do artigo</b>.</p>
+      <div class="input-row">
+        <input id="inpBusca" class="input" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 121" />
+        <button id="btnBuscar" class="button">Buscar</button>
+      </div>
+    </div>`);
+  node.querySelector('#btnBuscar').addEventListener('click',async()=>{
+    const v=node.querySelector('#inpBusca').value.trim();
+    if(!v) return;
+    pushUser(v); state.termoBusca=v; save(); await doSearch();
+  });
+}
+
+async function doSearch(){
+  await typing(700);
+  const entrada=state.termoBusca;
+
+  try{
+    const node = await searchArticle(state.codigo, entrada);
+    if(!node){
+      pushBot(`Não encontrei esse artigo. Dica: digite apenas o número exato (ex.: 121).`);
+      return;
+    }
+
+    state.artigo = node; save();
+
+    const html = renderArticleHTML(node);
+    pushBot(`<div><div class="article-box">${html}</div></div>`);
+
+    await typing(500);
+    pushBot(`Pronto! Já gerei um <b>prompt de estudo rápido</b>. É só copiar e colar na IA de sua preferência 👇`);
+    state.prompt = buildQuickPrompt(node, state.codigo); save();
+    showPromptAndIA();
+
+    const reiniciar = pushBot(`<button class="button secondary" id="btnReiniciarChat">Reiniciar conversa</button>`);
+    reiniciar.querySelector('#btnReiniciarChat').addEventListener('click',resetAll);
+
+  } catch (err){
+    console.error(err);
+    // Diagnóstico e fallback
+    const path1 = `data/${state.codigo}_vademecum.json`;
+    const path2 = `data/${state.codigo}.json`;
+
+    pushBot(`<div class="small">❌ Não consegui carregar os dados.<br>
+    <b>Possíveis causas</b>:<br>
+    • Abrindo o site via <code>file://</code> (CORS bloqueia o fetch).<br>
+    • Arquivo ausente: <code>${path1}</code> ou <code>${path2}</code>.<br>
+    • Nome/capitalização do arquivo errados (GitHub Pages é case-sensitive).<br>
+    </div>`);
+
+    if (FALLBACK[state.codigo]){
+      await typing(400);
+      pushBot(`<div class="small">✅ Usando <b>dados de teste embutidos</b> (Art. 1º e 2º) só para você validar o fluxo. Coloque depois o JSON real em <code>${path1}</code>.</div>`);
+      // Procura no fallback
+      const data = FALLBACK[state.codigo];
+      const nodes = Object.values(data);
+      const num = onlyDigits(entrada);
+      let node = null;
+      if(num) node = nodes.find(n => matchByNumber(n, num));
+      if(!node) node = nodes.find(n => matchByText(n, entrada)) || nodes[0];
+
+      state.artigo = node; save();
+      const html = renderArticleHTML(node);
+      pushBot(`<div><div class="article-box">${html}</div></div>`);
+
+      await typing(400);
+      pushBot(`Pronto! Já gerei um <b>prompt de estudo rápido</b>. É só copiar e colar na IA de sua preferência 👇`);
+      state.prompt = buildQuickPrompt(node, state.codigo); save();
+      showPromptAndIA();
+    } else {
+      pushBot(`<div class="small">👉 Coloque o arquivo de dados no caminho correto e tente novamente:<br><code>${path1}</code></div>`);
+    }
+  }
+}
+
+function showPromptAndIA(){
+  const node=pushBot(`<div><h4>Seu Prompt (Estudo Rápido)</h4><div class="prompt-box" id="promptBox"></div>
+    <div style="margin-top:8px" class="group">
+      <button class="button" id="btnCopiar">Copiar</button>
+      <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
+      <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
+      <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
+    </div>
+  </div>`);
+  node.querySelector('#promptBox').textContent=state.prompt;
+  node.querySelector('#btnCopiar').addEventListener('click',onCopied);
+}
+
+async function onCopied(){
+  try{ await navigator.clipboard.writeText(state.prompt);}catch{}
+  await typing(400);
+  pushBot(`✅ Prompt copiado! Abra a IA e cole o texto.`);
+}
+
+// ===== Boot =====
+document.addEventListener('DOMContentLoaded',()=>{
+  load();
+  document.getElementById('btnReset')?.addEventListener('click',resetAll);
+  document.getElementById('btnInfo')?.addEventListener('click',()=>modalInfo.showModal());
+  startConversation();
+});
