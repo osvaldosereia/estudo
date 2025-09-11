@@ -55,6 +55,14 @@
 
   <script src="script.js"></script>
   <script>
+    // Corrigindo a função de rolagem para sempre rolar até o fim
+    function autoScroll() {
+      const app = document.querySelector('#app');
+      if (app) {
+        app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
+      }
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js');
