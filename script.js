@@ -136,7 +136,7 @@ async function onCodePicked(){
 
 function renderSearchInput(label){
   const node = pushBot(`<div>
-    <p>Agora me diga: <b>número do artigo</b> ou <b>palavra-chave</b>.</p>
+    <p>Agora me diga: <b>número do artigo</b>.</p>
     <div class="input-row">
       <input id="inpBusca" class="input" placeholder="Ex.: 121  •  ou  homicídio qualificado" aria-label="Número do artigo ou palavra-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
