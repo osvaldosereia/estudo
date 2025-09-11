@@ -35,39 +35,17 @@
     <small>Feito para estudantes de Direito • 100% client-side no GitHub Pages</small>
   </footer>
 
-  <!-- Modal Info -->
   <dialog id="modalInfo" class="modal">
     <form method="dialog" class="modal-content">
       <h3>Como funciona</h3>
-      <p>Este chatbot cria um <b>prompt perfeito</b> a partir de perguntas selecionadas sobre um artigo ou tema. Fluxo:</p>
-      <ol>
-        <li>Escolha o Código (Penal, Civil, CPC, etc.).</li>
-        <li>Digite um número de artigo ou uma palavra-chave.</li>
-        <li>Selecione as perguntas que melhor focam seu estudo.</li>
-        <li>(Opcional) Escolha estratégias de estudo.</li>
-        <li>Gere o prompt, copie e cole na IA de sua preferência.</li>
-      </ol>
+      <p>Este chatbot cria um <b>prompt perfeito</b> a partir de perguntas selecionadas sobre um artigo ou tema.</p>
       <menu class="modal-actions">
         <button value="cancel" class="primary">Entendi</button>
       </menu>
     </form>
   </dialog>
 
-<script src="script.js?v=2025-09-11-2" defer></script>
-  <script>
-    // Corrigindo a função de rolagem para sempre rolar até o fim
-    function autoScroll() {
-      const app = document.querySelector('#app');
-      if (app) {
-        app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
-      }
-    }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
-  </script>
+  <!-- Aqui forçamos a versão nova -->
+  <script src="script.js?v=2025-09-11-3" defer></script>
 </body>
 </html>
