@@ -105,7 +105,7 @@ async function searchByArticleOrText(codeId, entrada) {
 // Flow
 async function startConversation(){
   await typing(2000);
-  pushBot(`<h4>Olá! qui eu te ajudo a estudar os artigos dos códigos.</h4>`);
+  pushBot(`<p>Olá! qui eu te ajudo a estudar os <b>artigos dos códigos</b>.</p>`);
   await typing(1500);
   pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
   await typing(1500);
@@ -135,7 +135,7 @@ async function onCodePicked(){
 
 function renderSearchInput(label){
   const node = pushBot(`<div>
-    <p>Digite o número ou até 3 palavras do texto do artigo.</p>
+    <p>Digite o número do artigo ou escreva algumas palavras que fazem parte do texto do artigo.</p>
     <div class="input-row">
       <input id="inpBusca" class="input" placeholder="Ex.: 121, 121-A, ou 2–3 palavras" aria-label="Número do artigo ou até 3 palavras-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
