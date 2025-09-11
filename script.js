@@ -2,7 +2,7 @@
 const state = {
   etapa: 0,
   codigo: null,
-  artigoNum: null,
+  artigoNum: null, // mantido por compatibilidade, não usado na busca nova
   termoBusca: '',
   perguntas: [],
   estrategias: [],
@@ -63,45 +63,56 @@ async function getJSON(path){ const r=await fetch(path); if(!r.ok) throw new Err
 async function loadEstrategias(){ if(state.estrategias.length) return; state.estrategias = await getJSON('estrategias.json'); }
 async function loadCodeData(codeId){ return getJSON(`data/${codeId}.json`); }
 
-async function searchByArticle(codeId, articleNum) {
+// ---------- BUSCA INTELIGENTE ----------
+// Normaliza string: minúsculas, sem acento, sem espaços/pontuação
+function normalizarEntrada(str) {
+  return (str||'').toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w]/g, ""); // remove tudo que não for [a-z0-9_]
+}
+
+// Busca por título ("Artigo 121", "Artigo 121-A")
+function matchTitulo(nodeTitulo, entrada) {
+  // "Artigo 121-A" => "artigo121a"
+  const tNorm = normalizarEntrada(nodeTitulo);
+  const eNorm = "artigo" + normalizarEntrada(entrada);
+  return tNorm === eNorm;
+}
+
+// Busca no texto (até 3 palavras; exige TODAS com 4+ letras)
+function matchTexto(nodeTexto, entrada) {
+  const palavras = (entrada||'').trim().split(/\s+/);
+  if (palavras.length === 0 || palavras.length > 3) return false;
+  const validas = palavras.filter(p => p.length >= 4).map(normalizarEntrada);
+  if (!validas.length) return false;
+  const textoNorm = normalizarEntrada(nodeTexto||'');
+  return validas.every(v => textoNorm.includes(v));
+}
+
+// Busca unificada: tenta título; se não achar e entrada tiver ≤3 palavras, tenta texto
+async function searchByArticleOrText(codeId, entrada) {
   const data = await loadCodeData(codeId);
-  const key = `art${articleNum}`;
-  const node = data[key];
-  if (!node) return [];
-  return node.perguntas.map(q=>({codigo: codeId, artigo: key, texto: q}));
-}
-function tokenizeTerms(s){
-  return (s||'').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^\w\s]/g,' ')
-    .split(/\s+/).filter(t=>t && (t.length>=3 || /^[A-Z]{2,4}$/.test(t)));
-}
-async function searchByKeywords(terms){
-  const results = [];
-  for (const c of CODES) {
-    try {
-      const data = await loadCodeData(c.id);
-      for (const [art, node] of Object.entries(data)) {
-        for (const q of node.perguntas) {
-          const hay = q.toLowerCase();
-          if (terms.every(t=>hay.includes(t))) {
-            results.push({codigo:c.id, artigo:art, texto:q});
-          }
-        }
+
+  // 1) Título
+  for (const [key, node] of Object.entries(data)) {
+    if (matchTitulo(node.titulo, entrada)) {
+      return node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }));
+    }
+  }
+
+  // 2) Texto (até 3 palavras; todas ≥4 letras)
+  const palavras = (entrada||'').trim().split(/\s+/);
+  if (palavras.length <= 3) {
+    for (const [key, node] of Object.entries(data)) {
+      if (matchTexto(node.texto||'', entrada)) {
+        return node.perguntas.map(q => ({ codigo: codeId, artigo: key, texto: q }));
       }
-    } catch {}
+    }
   }
-  return results;
+
+  return [];
 }
-function extractArticleNumber(input){
-  const cleaned = input.replace(/[.,;/\-_|]/g, ' ').trim();
-  const parts = cleaned.split(/\s+/).slice(0,5);
-  for (const p of parts) {
-    const m = p.match(/^\d{1,4}$/);
-    if (m) return parseInt(m[0],10);
-  }
-  return null;
-}
+// ---------- FIM BUSCA INTELIGENTE ----------
 
 // Flow
 async function startConversation(){
@@ -136,19 +147,19 @@ async function onCodePicked(){
 
 function renderSearchInput(label){
   const node = pushBot(`<div>
-    <p>Digite o: <b>número do artigo</b> (somente o número).</p>
+    <p>Digite: <b>número do artigo</b> (ex.: <code>121</code>, <code>121-A</code>) <b>ou até 3 palavras-chave</b> (ex.: <code>insignificancia</code>).</p>
     <div class="input-row">
-      <input id="inpBusca" class="input" placeholder="Ex.: 121" aria-label="Número do artigo ou palavra-chave" />
+      <input id="inpBusca" class="input" placeholder="Ex.: 121, 121-A, ou 2–3 palavras" aria-label="Número do artigo ou até 3 palavras-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
-    
+    </div>
   </div>`);
   node.querySelector('#btnBuscar').addEventListener('click', async ()=>{
     const v = node.querySelector('#inpBusca').value.trim();
     if(!v) return;
     pushUser(v);
-    const art = extractArticleNumber(v);
-    state.artigoNum = art;
-    state.termoBusca = art? '' : v;
+    // Nova estratégia: sempre usar a entrada bruta na busca inteligente
+    state.artigoNum = null;
+    state.termoBusca = v;
     save();
     await doSearch();
   });
@@ -157,17 +168,19 @@ function renderSearchInput(label){
 async function doSearch(){
   await typing(1000);
   let results = [];
-  if (state.artigoNum) results = await searchByArticle(state.codigo, state.artigoNum);
-  else results = await searchByKeywords(tokenizeTerms(state.termoBusca));
+  const entrada = state.termoBusca || (state.artigoNum ? String(state.artigoNum) : "");
+  if (state.codigo && entrada) {
+    results = await searchByArticleOrText(state.codigo, entrada);
+  }
   state.perguntas = results.map(r=>r.texto);
   save();
 
   if (!results.length){
-    pushBot(`Não encontrei nada com esse termo. Tenta outro número de artigo ou palavras mais específicas 🙂`);
+    pushBot(`Não encontrei nada com esse termo. Tente um número de artigo (ex.: 121, 121-A) ou 2–3 palavras mais específicas 🙂`);
     return;
   }
 
-  pushBot(`Selecionei <b>${results.length}</b> topicos essenciais que farão parte do seu prompt:`);
+  pushBot(`Selecionei <b>${results.length}</b> tópicos essenciais que farão parte do seu prompt:`);
 
   const rows = state.perguntas.map((q,i)=>`
     <div class="qrow">
@@ -201,6 +214,7 @@ async function gotoEstrategias(){
 
 function gerarPrompt(){
   const codeLabel = (CODES.find(c=>c.id===state.codigo)?.label)||'Código';
+  const entrada = state.termoBusca || (state.artigoNum ? `Artigo ${state.artigoNum}` : '(não informado)');
   const blocoPerguntas = state.perguntas.map((q,i)=>`${i+1}. ${q}`).join('\n');
   const escolhidas = state.estrategias.filter(e => state.estrategiasPick.includes(e.id));
   const blocoEstrategias = escolhidas.map(e=>`- ${e.titulo}: ${e.instrucao}`).join('\n');
@@ -210,7 +224,7 @@ function gerarPrompt(){
 
 Contexto:
 - Código: ${codeLabel}
-- Entrada do usuário: ${state.artigoNum? 'Artigo ' + state.artigoNum : state.termoBusca}
+- Entrada do usuário: ${entrada}
 
 Perguntas (organize e responda de forma didática, com exemplos curtos):
 ${blocoPerguntas || '(nenhuma)'}
