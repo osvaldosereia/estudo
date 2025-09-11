@@ -5,7 +5,6 @@ const state = {
   artigoNum: null,
   termoBusca: '',
   perguntas: [],
-  selecionadas: [],
   estrategias: [],
   estrategiasPick: [],
   prompt: ''
@@ -29,7 +28,7 @@ const modalInfo = document.querySelector('#modalInfo');
 function save(){ localStorage.setItem('chatbot_juridico_state', JSON.stringify(state)); }
 function load(){ try{ Object.assign(state, JSON.parse(localStorage.getItem('chatbot_juridico_state'))||{});}catch{} }
 function resetAll(){
-  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],selecionadas:[],estrategias:[],estrategiasPick:[],prompt:''});
+  Object.assign(state, {etapa:0,codigo:null,artigoNum:null,termoBusca:'',perguntas:[],estrategias:[],estrategiasPick:[],prompt:''});
   app.innerHTML=''; save(); startConversation();
 }
 
@@ -58,10 +57,6 @@ function typing(ms=1500){
   app.appendChild(t); autoScroll();
   return new Promise(res=> setTimeout(()=>{ t.remove(); res(); }, ms));
 }
-
-// Icons for tiny buttons
-function iconPlus(){ return `<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`; }
-function iconCheck(){ return `<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`; }
 
 // Data
 async function getJSON(path){ const r=await fetch(path); if(!r.ok) throw new Error('Falha ao carregar '+path); return r.json(); }
@@ -165,68 +160,26 @@ async function doSearch(){
   let results = [];
   if (state.artigoNum) results = await searchByArticle(state.codigo, state.artigoNum);
   else results = await searchByKeywords(tokenizeTerms(state.termoBusca));
-  state.perguntas = results;
-  state.selecionadas = [];
+  state.perguntas = results.map(r=>r.texto);
   save();
 
   if (!results.length){
     pushBot(`Não encontrei nada com esse termo. Tenta outro número de artigo ou palavras mais específicas 🙂`);
     return;
   }
-  pushBot(`Achei <b>${results.length}</b> sugestões de perguntas. Selecione as que quiser:`);
 
-  // Um único balão com todas as frases, separadas por linha discreta
-  const rows = results.map((it, i)=>`
-    <div class="qrow" data-index="${i}">
-      <div class="qtext">${it.texto}</div>
-      <button class="tiny-btn" data-i="${i}" data-role="toggle" title="Incluir">${iconPlus()}</button>
-    </div>
-  `).join('');
+  pushBot(`Achei <b>${results.length}</b> perguntas. Veja o checklist abaixo (todas serão incluídas):`);
 
-  const group = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><div class="qgroup" id="qgroup">${rows}</div></div></div>`);
+  const rows = state.perguntas.map((q,i)=>`
+    <div class="qrow">
+      <div class="qtext">${i+1}. ${q}</div>
+    </div>`).join('');
+
+  const group = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><div class="qgroup">${rows}</div></div></div>`);
   app.appendChild(group); autoScroll();
 
-  group.querySelectorAll('[data-role="toggle"]').forEach(btn=>{
-    const idx = +btn.getAttribute('data-i');
-    btn.addEventListener('click', ()=> togglePergunta(idx, btn));
-  });
-
-  renderSelecionadasFooter();
-}
-
-function togglePergunta(idx, btn){
-  const text = state.perguntas[idx].texto;
-  const row = btn.closest('.qrow');
-  const i = state.selecionadas.indexOf(text);
-  if (i>=0){
-    state.selecionadas.splice(i,1);
-    btn.innerHTML = iconPlus();
-    btn.dataset.on = "false";
-    row.removeAttribute('data-selected');
-  } else {
-    state.selecionadas.push(text);
-    btn.innerHTML = iconCheck();
-    btn.dataset.on = "true";
-    row.setAttribute('data-selected','true');
-  }
-  updateSelecionadasFooter();
-  save();
-}
-
-let footerNode = null;
-function renderSelecionadasFooter(){
-  footerNode = pushBot(`<div id="selFooter">
-    <p class="small">Selecionadas: <b id="countSel">0</b></p>
-    <div class="group">
-      <button class="chip" id="btnProximo" disabled>Próximo ▶</button>
-    </div>
-  </div>`);
-  footerNode.querySelector('#btnProximo').addEventListener('click', gotoEstrategias);
-}
-function updateSelecionadasFooter(){
-  if (!footerNode) return;
-  footerNode.querySelector('#countSel').textContent = state.selecionadas.length;
-  footerNode.querySelector('#btnProximo').disabled = state.selecionadas.length===0;
+  const footer = pushBot(`<div class="group"><button class="chip" id="btnProximo">Próximo ▶</button></div>`);
+  footer.querySelector('#btnProximo').addEventListener('click', gotoEstrategias);
 }
 
 async function gotoEstrategias(){
@@ -249,18 +202,18 @@ async function gotoEstrategias(){
 
 function gerarPrompt(){
   const codeLabel = (CODES.find(c=>c.id===state.codigo)?.label)||'Código';
-  const blocoPerguntas = state.selecionadas.map((q,i)=>`${i+1}. ${q}`).join('\n');
+  const blocoPerguntas = state.perguntas.map((q,i)=>`${i+1}. ${q}`).join('\n');
   const escolhidas = state.estrategias.filter(e => state.estrategiasPick.includes(e.id));
   const blocoEstrategias = escolhidas.map(e=>`- ${e.titulo}: ${e.instrucao}`).join('\n');
 
   state.prompt =
-`Você é um professor de Direito com didática impecável. Ajude-me a estudar o tema conforme as perguntas selecionadas e o contexto abaixo.
+`Você é um professor de Direito com didática impecável. Ajude-me a estudar o tema conforme as perguntas listadas e o contexto abaixo.
 
 Contexto:
 - Código: ${codeLabel}
 - Entrada do usuário: ${state.artigoNum? 'Artigo ' + state.artigoNum : state.termoBusca}
 
-Perguntas selecionadas (organize e responda de forma didática, com exemplos curtos):
+Perguntas (organize e responda de forma didática, com exemplos curtos):
 ${blocoPerguntas || '(nenhuma)'}
 
 ${escolhidas.length ? 'Estratégias de estudo adicionais (aplique de forma integrada):\n' + blocoEstrategias : ''}
@@ -302,7 +255,6 @@ async function onCopied(){
 // Eventos globais
 document.addEventListener('DOMContentLoaded', ()=>{
   load();
-  // Topbar
   document.getElementById('btnReset').addEventListener('click', resetAll);
   document.getElementById('btnInfo').addEventListener('click', ()=> modalInfo.showModal());
 
@@ -320,6 +272,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
     deferredPrompt = null;
   });
 
-  // Start (append-only flow)
   startConversation();
 });
