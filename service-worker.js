@@ -1,35 +1,34 @@
-const CACHE = 'chatbot-juridico-v1';
-const ASSETS = [
-  '/', '/index.html', '/style.css', '/script.js',
-  '/manifest.json', '/estrategias.json',
-  '/icons/icon-192.png', '/icons/icon-512.png'
-];
+const CACHE = 'dlove-v3-2025-09-11';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
-  self.skipWaiting();
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k!==CACHE && caches.delete(k)))));
-  self.clients.claim();
-});
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  const url = new URL(req.url);
+  const isHTML = req.mode === 'navigate' || (req.headers.get('accept')||'').includes('text/html');
+  const isCore = /\/(index\.html|script\.js|style\.css)$/.test(url.pathname);
 
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  // HTML: network-first
-  if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(cache => cache.put(e.request, copy));
-      return res;
-    }).catch(()=>caches.match(e.request)));
+  if (isHTML || isCore) {
+    e.respondWith(
+      fetch(req).then(res => {
+        caches.open(CACHE).then(c => c.put(req, res.clone()));
+        return res;
+      }).catch(() => caches.match(req))
+    );
     return;
   }
-  // Outros: cache-first
-  e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-    const copy = res.clone();
-    caches.open(CACHE).then(cache => cache.put(e.request, copy));
-    return res;
-  })));
+
+  e.respondWith(
+    caches.match(req).then(cached => cached || fetch(req).then(res => {
+      caches.open(CACHE).then(c => c.put(req, res.clone()));
+      return res;
+    }))
+  );
 });
