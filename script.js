@@ -136,9 +136,9 @@ async function onCodePicked(){
 
 function renderSearchInput(label){
   const node = pushBot(`<div>
-    <p>Agora me diga: <b>número do artigo</b>.</p>
+    <p>Digite o: <b>número do artigo</b>(somente o número).</p>
     <div class="input-row">
-      <input id="inpBusca" class="input" placeholder="Ex.: 121  •  ou  homicídio qualificado" aria-label="Número do artigo ou palavra-chave" />
+      <input id="inpBusca" class="input" placeholder="Ex.: 121" aria-label="Número do artigo ou palavra-chave" />
       <button id="btnBuscar" class="button">Buscar</button>
     </div>
     <p class="small">Dica: número → busco no ${label}; palavra-chave → busco em todos os Códigos.</p>
@@ -168,7 +168,7 @@ async function doSearch(){
     return;
   }
 
-  pushBot(`Selecionei <b>${results.length}</b> topicos que farão parte do seu prompt:`);
+  pushBot(`Selecionei <b>${results.length}</b> topicos essenciais que farão parte do seu prompt:`);
 
   const rows = state.perguntas.map((q,i)=>`
     <div class="qrow">
@@ -178,7 +178,7 @@ async function doSearch(){
   const group = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><div class="qgroup">${rows}</div></div></div>`);
   app.appendChild(group); autoScroll();
 
-  const footer = pushBot(`<div class="group"><button class="chip" id="btnProximo">Próximo ▶</button></div>`);
+  const footer = pushBot(`<div class="group"><button class="chip" id="btnProximo">Ok. Continuar ▶</button></div>`);
   footer.querySelector('#btnProximo').addEventListener('click', gotoEstrategias);
 }
 
