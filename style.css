@@ -80,7 +80,7 @@ body{
 .button.secondary{background:#1118270d;color:#111827}
 
 /* Perguntas em checklist */
-.qgroup{font-size:15px;line-height:1.42}
+.qgroup{font-size:13px;line-height:1.42}
 .qrow{display:flex;align-items:flex-start;gap:8px;padding:2px 0}
 .qrow + .qrow{border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px}
 .qrow .qtext{flex:1}
