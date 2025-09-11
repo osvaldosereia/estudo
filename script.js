@@ -244,12 +244,12 @@ Contexto:
 - Entrada do usuário: ${entrada}
 - Texto do artigo: ${state.artigoTexto || '(não disponível)'}
 
-Perguntas (organize e responda de forma didática, com exemplos curtos):
+Analises Obrigatórias (organize e responda de forma didática):
 ${blocoPerguntas || '(nenhuma)'}
 
-${escolhidas.length ? 'Estratégias de estudo adicionais (aplique de forma integrada):\n' + blocoEstrategias : ''}
+${escolhidas.length ? 'Estratégias para a resposta (aplique de forma integrada):\n' + blocoEstrategias : ''}
 
-Regras: linguagem simples, sem juridiquês excessivo; quando possível, traga entendimento doutrinário majoritário e prática forense. Ao final, inclua um checklist enxuto de revisão.`;
+Regras: linguagem simples e acessível, sem juridiquês excessivo.`;
 
   save();
   const node = pushBot(`<div>
