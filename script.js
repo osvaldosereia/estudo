@@ -50,6 +50,15 @@ function onlyDigits(s){ const m = String(s||'').match(/^\d{1,4}$/); return m ? m
 function numeroBase(n){ const m = String(n||'').match(/^(\d{1,4})([A-Za-z-]*)?$/); return m? m[1] : null; }
 function hasLetter(n){ return /[A-Za-z]/.test(String(n||'')); }
 
+// Normalizador robusto (mantém letras do sufixo, remove pontuação e acento)
+function normToken(s){
+  return (s||'')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,'');
+}
+
 // ===== Fallback mínimo para testes =====
 const FALLBACK = {
   "codigo_penal": {
@@ -89,6 +98,15 @@ async function tryLoadCodeData(codeId){
 }
 
 // ===== Busca =====
+// 1) casa entrada com numero/titulo incluindo sufixos com letra (121-A, 121a, art.121-a)
+function matchTituloOuNumero(node, entradaRaw){
+  const e = normToken(entradaRaw);
+  const t = normToken(node.titulo||''); // "art. 121-a"
+  const n = normToken(node.numero||''); // "121a"
+  // aceita "art121a", "artigo121a", etc.
+  return e===n || e===t || e===('art'+n) || e===('artigo'+n);
+}
+
 function buildFullText(node){
   const parts = [];
   if(node.caput) parts.push(node.caput);
@@ -115,21 +133,44 @@ function matchByText(node, entrada){
   const corpus = normalize(buildFullText(node)).replace(/[^a-z0-9\s]/g,' ');
   return tokens.every(t => corpus.includes(normalize(t)));
 }
+
 async function searchArticle(codeId, entrada){
   const data = await tryLoadCodeData(codeId);
   const nodes = Object.values(data);
+
+  // (A) match por numero/titulo com sufixo (pega 121-A, 121a, art.121-a, etc.)
+  const hitExact = nodes.find(n => matchTituloOuNumero(n, entrada));
+  if (hitExact) return hitExact;
+
+  // (B) se a entrada for SÓ números, priorize artigo sem letra (121 ≠ 121-A)
   const num = onlyDigits(entrada);
   if(num){
-    const hit = nodes.find(n => matchByNumber(n, num));
-    if(hit) return hit;
+    const hitNum = nodes.find(n => matchByNumber(n, num));
+    if(hitNum) return hitNum;
   }
+
+  // (C) fallback textual
   const hitText = nodes.find(n => matchByText(n, entrada));
   return hitText || null;
 }
 
 // ===== Render =====
+// IMPORTANTE: prioriza node.texto para preservar 100% a ordem original.
 function renderArticleHTML(node){
   const titulo = node?.titulo || `Art. ${node?.numero||''}`;
+  const plain = (node?.texto||'').trim();
+
+  if (plain){
+    // usa <pre> com pre-wrap para respeitar quebras e evitar "embolado"
+    return `
+      <div class="article">
+        <div class="art-title">${escapeHTML(titulo)}</div>
+        <pre style="white-space:pre-wrap;margin:0">${escapeHTML(plain)}</pre>
+      </div>
+    `;
+  }
+
+  // Fallback estruturado (caso algum código não tenha "texto")
   const caput = node?.caput || '';
   const incisos = Array.isArray(node?.incisos) ? node.incisos : [];
   const paragrafos = Array.isArray(node?.paragrafos) ? node.paragrafos : [];
@@ -219,9 +260,9 @@ async function onCodePicked(){
 function renderSearchInput(label){
   const node=pushBot(`
     <div>
-      <p>Digite o <b>número do artigo</b>.</p>
+      <p>Digite o <b>número do artigo</b> (ex.: <code>121</code> ou <code>121-A</code>).</p>
       <div class="input-row">
-        <input id="inpBusca" class="input" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 121" />
+        <input id="inpBusca" class="input" placeholder="Ex.: 121 ou 121-A" />
         <button id="btnBuscar" class="button">Buscar</button>
       </div>
     </div>`);
@@ -239,7 +280,7 @@ async function doSearch(){
   try{
     const node = await searchArticle(state.codigo, entrada);
     if(!node){
-      pushBot(`Não encontrei esse artigo. Dica: digite apenas o número exato (ex.: 121).`);
+      pushBot(`Não encontrei esse artigo. Dicas: digite apenas o número (<code>121</code>) ou o número com letra (<code>121-A</code>).`);
       return;
     }
 
@@ -258,7 +299,6 @@ async function doSearch(){
 
   } catch (err){
     console.error(err);
-    // Diagnóstico e fallback
     const path1 = `data/${state.codigo}_vademecum.json`;
     const path2 = `data/${state.codigo}.json`;
 
@@ -272,12 +312,15 @@ async function doSearch(){
     if (FALLBACK[state.codigo]){
       await typing(400);
       pushBot(`<div class="small">✅ Usando <b>dados de teste embutidos</b> (Art. 1º e 2º) só para você validar o fluxo. Coloque depois o JSON real em <code>${path1}</code>.</div>`);
-      // Procura no fallback
       const data = FALLBACK[state.codigo];
       const nodes = Object.values(data);
-      const num = onlyDigits(entrada);
-      let node = null;
-      if(num) node = nodes.find(n => matchByNumber(n, num));
+
+      // tenta com letra/numero no fallback também
+      let node = nodes.find(n => matchTituloOuNumero(n, entrada));
+      if (!node){
+        const num = onlyDigits(entrada);
+        if(num) node = nodes.find(n => matchByNumber(n, num));
+      }
       if(!node) node = nodes.find(n => matchByText(n, entrada)) || nodes[0];
 
       state.artigo = node; save();
