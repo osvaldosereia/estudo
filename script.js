@@ -262,14 +262,12 @@ function buildMultiPrompt(selecionados) {
     `### ${n.titulo}\nTexto integral:\n${n.texto}`
   ).join('\n\n');
 
-  return `Você é um professor de Direito com didática impecável.
-Objetivo: Estudo RÁPIDO dos artigos indicados, em linguagem simples.
-Para cada artigo: 1) conceito; 2) pontos de prova/OAB; 3) mini exemplo; 4) erro comum.
+  return `Assuma a perona de um professor de Direito muito experiente e com didática impecável.
+Objetivo: Analise os artigos dos codigos em questão e prepare um materia didatico para estudo rápido mas rico em detalhes. Seja objetivo em suas respostas mas pesquise e garanta que o estudante receba todas as informações necessárias para responder qualquer questçao de prova da OAB e concurso publico.
+Para cada artigo: 1) conceito detalhado envolvendo doutrina, jurisprudencia, processual e pratica. Tudo escrito de forma objetiva; 2) mini exemplo; 3) check-list essencial; 4) erros comuns em provas; 5) pegadinhas de provas.
 Finalize com comparação entre os artigos.
 
 Artigos selecionados: ${selecionados.map(n => n.titulo).join(', ')}
-
-${blocos}
 
 💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
