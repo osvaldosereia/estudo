@@ -13,7 +13,7 @@ const state = {
   selecionados: [],
   prompt: '',
   catalogs: { quiz: {}, videos: {} },
-  quiz: { data: null, idx: 0, acertos: 0, path: null }
+  quiz: { data: null, idx: 0, acertos: 0, path: null, answered: [] }
 };
 
 const appEls = {
@@ -101,7 +101,6 @@ async function ensureCodeLoaded(codeId){
   state.artigosIndex = Object.values(state.artigosData);
 }
 async function autoDiscoverCodes(){
-  // idem versão anterior (mantido) — omiti aqui por brevidade
   const candidates=['codigo_civil','codigo_penal','codigo_cpc','codigo_cpp','codigo_ctn','codigo_consumidor'];
   const found=[];
   for (const id of candidates){
@@ -202,7 +201,18 @@ async function buildExtrasForArticle(node){
   if (quizCat && quizCat[artKey]){
     const b=document.createElement('button');
     b.className='btn btn-outline'; b.type='button'; b.textContent='Questões';
-    b.onclick = ()=>{ const pack=quizCat[artKey]; state.quiz={data:{...pack,questoes:(pack.questoes||[]).slice(0,5)},idx:0,acertos:0,path:`quiz/${codeKey}_quiz.json`}; openQuizAt(0); };
+    b.onclick = ()=>{
+      const pack = quizCat[artKey];
+      const qs = (pack.questoes || []).slice(0, 10); // <= 10 questões
+      state.quiz = {
+        data: { ...pack, questoes: qs },
+        idx: 0,
+        acertos: 0,
+        path: `quiz/${codeKey}_quiz.json`,
+        answered: Array(qs.length).fill(null)
+      };
+      openQuizAt(0);
+    };
     appEls.amExtras.appendChild(b);
   }
   if (vidCat && vidCat[artKey] && Array.isArray(vidCat[artKey].videos) && vidCat[artKey].videos.length){
@@ -335,29 +345,126 @@ function onGerarPrompt(e){
 
 /* ====== Quiz ====== */
 function renderQuizQuestion(){
-  const qz=state.quiz; const qs=(qz.data&&qz.data.questoes)||[]; const i=qz.idx; if(!qs[i]) return;
-  appEls.qzTitle.textContent=qz.data.titulo||'Questões';
-  appEls.qzEnunciado.textContent=`${i+1}. ${qs[i].enunciado||''}`;
-  appEls.qzAlternativas.innerHTML='';
-  (qs[i].alternativas||[]).forEach((alt,idx)=>{
-    const label=document.createElement('label');
-    label.innerHTML=`<input type="radio" name="qz_alt" value="${idx}"> <span>${escapeHTML(alt)}</span>`;
+  const qz = state.quiz;
+  const qs = (qz.data && qz.data.questoes) || [];
+  const i  = qz.idx;
+  const q  = qs[i]; if(!q) return;
+
+  // título + progresso
+  appEls.qzTitle.textContent = qz.data.titulo || 'Questões';
+  const prog = document.createElement('div');
+  prog.className = 'qz-progress';
+  prog.textContent = `Questão ${i+1} de ${qs.length}`;
+  appEls.qzEnunciado.innerHTML = '';
+  appEls.qzEnunciado.appendChild(prog);
+  appEls.qzEnunciado.appendChild(document.createTextNode(`${i+1}. ${q.enunciado || ''}`));
+
+  // alternativas
+  appEls.qzAlternativas.innerHTML = '';
+  (q.alternativas || []).forEach((alt, idx) => {
+    const label = document.createElement('label');
+    label.dataset.idx = String(idx);
+    label.innerHTML = `<input type="radio" name="qz_alt" value="${idx}"> <span>${escapeHTML(alt)}</span>`;
     appEls.qzAlternativas.appendChild(label);
   });
-  appEls.qzFeedback.hidden=true; appEls.qzFeedback.textContent='';
-  appEls.btnQzConfirmar.hidden=false; appEls.btnQzProxima.hidden=true;
-  appEls.btnQzPrev.disabled=(i<=0); appEls.btnQzNext.disabled=(i>=qs.length-1);
+
+  // feedback (esconde até confirmar)
+  appEls.qzFeedback.hidden = true;
+  appEls.qzFeedback.textContent = '';
+  appEls.qzFeedback.classList.remove('ok','err');
+
+  // navegação: só depois de confirmar
+  appEls.btnQzConfirmar.hidden = false;
+  appEls.btnQzProxima.hidden = true;
+  appEls.btnQzPrev.disabled = true;
+  appEls.btnQzNext.disabled = true;
 }
-function openQuizAt(i){ state.quiz.idx=i; renderQuizQuestion(); if(!appEls.modalQuiz.open) appEls.modalQuiz.showModal(); }
+
+function openQuizAt(i){
+  state.quiz.idx = i;
+  renderQuizQuestion();
+  if(!appEls.modalQuiz.open) appEls.modalQuiz.showModal();
+}
+
 function confirmQuizAnswer(){
-  const qz=state.quiz; const qs=qz.data.questoes||[]; const i=qz.idx; const q=qs[i];
-  const sel=appEls.qzAlternativas.querySelector('input[name="qz_alt"]:checked'); if(!sel) return;
-  const ok = Number(sel.value)===Number(q.correta); if (ok) qz.acertos++;
-  const comment = q.comentario?`\n\n${q.comentario}`:'';
-  appEls.qzFeedback.textContent = ok ? `✅ Correto!${comment}` : `❌ Não foi dessa. Alternativa correta: ${String.fromCharCode(65+Number(q.correta))}.${comment}`;
-  appEls.qzFeedback.hidden=false; appEls.btnQzConfirmar.hidden=true; appEls.btnQzProxima.hidden=(i>=qs.length-1);
-  if (i>=qs.length-1) appEls.qzFeedback.textContent += `\n\nResultado: ${qz.acertos}/${qs.length}`;
+  const qz = state.quiz;
+  const qs = qz.data.questoes || [];
+  const i  = qz.idx;
+  const q  = qs[i];
+
+  const sel = appEls.qzAlternativas.querySelector('input[name="qz_alt"]:checked');
+  if (!sel) return;
+
+  const chosen = Number(sel.value);
+  const correct = Number(q.correta);
+  const ok = (chosen === correct);
+
+  if (ok) qz.acertos++;
+
+  // pinta correto/errado e trava
+  appEls.qzAlternativas.querySelectorAll('label').forEach(lbl => {
+    const idx = Number(lbl.dataset.idx);
+    lbl.classList.add('locked');
+    if (idx === correct) lbl.classList.add('correct');
+    if (idx === chosen && chosen !== correct) lbl.classList.add('wrong');
+    if (idx === chosen && chosen === correct) lbl.classList.add('correct');
+  });
+
+  // gabarito comentado
+  const letter = (n)=> String.fromCharCode(65 + Number(n));
+  const head = ok ? `✅ Correto!` : `❌ Não foi dessa. Alternativa correta: ${letter(correct)}.`;
+  const comment = q.comentario ? `\n\n${q.comentario}` : '';
+  appEls.qzFeedback.textContent = head + comment;
+  appEls.qzFeedback.hidden = false;
+  appEls.qzFeedback.classList.toggle('ok', ok);
+  appEls.qzFeedback.classList.toggle('err', !ok);
+
+  // registra
+  qz.answered[i] = { chosen, correct, ok };
+
+  // liberar navegação
+  const isFirst = (i <= 0);
+  const isLast  = (i >= qs.length - 1);
+  appEls.btnQzConfirmar.hidden = true;
+  appEls.btnQzProxima.hidden = isLast;      // aparece só se não for a última
+  appEls.btnQzPrev.disabled = isFirst;
+  appEls.btnQzNext.disabled = isLast;
+
+  // fim gamificado
+  if (isLast){
+    const total = qs.length;
+    const pct = Math.round((qz.acertos / total) * 100);
+    const tier =
+      qz.acertos === total ? {tag:'🏆 Lenda do Penal', cor:'#22c55e'} :
+      qz.acertos >= total-1 ? {tag:'🥇 Promotor em formação', cor:'#16a34a'} :
+      qz.acertos >= Math.ceil(total*0.7) ? {tag:'🥈 Muito bom!', cor:'#0ea5e9'} :
+      qz.acertos >= Math.ceil(total*0.5) ? {tag:'🥉 Dá pra melhorar', cor:'#f59e0b'} :
+      {tag:'📚 Bora revisar', cor:'#ef4444'};
+
+    const wrap = document.createElement('div');
+    wrap.style.marginTop = '12px';
+    wrap.innerHTML = `
+      <div class="qz-badge" style="background:${tier.cor}">${tier.tag}</div>
+      <div style="margin-top:8px"><b>Resultado:</b> ${qz.acertos}/${total} (${pct}%).</div>
+      <div style="margin-top:6px">Quer tentar de novo para subir sua medalha?</div>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <button id="qzRestart" class="btn btn-outline" type="button">Refazer</button>
+        <button id="qzClose" class="btn btn-primary" type="button">Fechar</button>
+      </div>
+    `;
+    appEls.qzFeedback.appendChild(wrap);
+
+    const restart = wrap.querySelector('#qzRestart');
+    const closeBtn = wrap.querySelector('#qzClose');
+    restart.addEventListener('click', ()=>{
+      qz.idx = 0; qz.acertos = 0;
+      qz.answered = Array(qs.length).fill(null);
+      renderQuizQuestion();
+    });
+    closeBtn.addEventListener('click', ()=> appEls.modalQuiz.close());
+  }
 }
+
 function renderVideosModal(data){
   appEls.vdTitle.textContent=data.titulo||'Vídeo aula'; appEls.vdLista.innerHTML='';
   (data.videos||[]).forEach(v=>{ const li=document.createElement('li'); const a=document.createElement('a'); a.href=v.url; a.target='_blank'; a.rel='noopener'; a.textContent=v.title||v.url; li.appendChild(a); appEls.vdLista.appendChild(li); });
@@ -383,7 +490,10 @@ function bind(){
 
   // quiz
   appEls.btnQzPrev.addEventListener('click', ()=>{ if(state.quiz.idx>0) openQuizAt(state.quiz.idx-1); });
-  appEls.btnQzNext.addEventListener('click', ()=>{ const qs=(state.quiz.data.questoes||[]).length; if(state.quiz.idx<qs-1) openQuizAt(state.quiz.idx+1); });
+  appEls.btnQzNext.addEventListener('click', ()=>{
+    const qs=(state.quiz.data.questoes||[]).length;
+    if(state.quiz.idx<qs-1) openQuizAt(state.quiz.idx+1);
+  });
   appEls.btnQzConfirmar.addEventListener('click', confirmQuizAnswer);
   appEls.btnQzProxima.addEventListener('click', ()=> openQuizAt(state.quiz.idx+1));
   appEls.btnQzFechar.addEventListener('click', ()=> appEls.modalQuiz.close());
