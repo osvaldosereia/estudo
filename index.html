@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chatbot Jurídico — Vade Mecum & Estudo Rápido</title>
+  <title>Vade Mecum — Busca Rápida de Artigos</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
   <meta name="theme-color" content="#16a34a"/>
@@ -12,24 +12,67 @@
 <body>
   <header class="topbar" role="banner">
     <div class="inner">
-      <div class="brand" aria-label="Chatbot Jurídico">
+      <div class="brand" aria-label="Vade Mecum Digital">
         <span class="logo-text"><b>direito</b>.love</span>
       </div>
       <nav class="actions">
         <button id="btnInfo" class="icon-btn" title="Informações" aria-label="Informações">
           <img src="icons/info.svg" alt="Informações">
         </button>
-        <button id="btnInstall" class="icon-btn" title="Instalar (Android/Desktop)" aria-label="Instalar PWA">
-          <img src="icons/install.svg" alt="Instalar">
-        </button>
-        <button id="btnReset" class="icon-btn" title="Reiniciar" aria-label="Reiniciar conversa">
+        <button id="btnReset" class="icon-btn" title="Limpar seleção" aria-label="Limpar seleção">
           <img src="icons/reset.svg" alt="Reiniciar">
         </button>
       </nav>
     </div>
   </header>
 
-  <main id="app" class="chat" role="main" aria-live="polite"></main>
+  <main class="page" role="main">
+    <section class="controls" aria-label="Busca de Artigos">
+      <div class="grid">
+        <div class="field">
+          <label for="selCodigo">Código/Lei</label>
+          <select id="selCodigo" class="input" aria-label="Selecione o Código ou Lei"></select>
+        </div>
+        <div class="field">
+          <label for="inpArtigo">Artigo</label>
+          <input id="inpArtigo" class="input" placeholder="Ex.: 121 ou 121-A" aria-label="Número do artigo" />
+        </div>
+        <div class="field button-cell">
+          <button id="btnBuscar" class="button">Buscar</button>
+        </div>
+      </div>
+      <p class="hint">Dica: digite apenas o número (ex.: <code>121</code>) ou com letra (ex.: <code>121-A</code>). Também aceita busca por termos com 4+ letras.</p>
+    </section>
+
+    <section class="results" aria-label="Resultados">
+      <h3 class="section-title">Resultado</h3>
+      <div id="resultChips" class="group"></div>
+      <div id="resultMsg" class="small"></div>
+    </section>
+
+    <section class="selected" aria-label="Artigos Selecionados">
+      <div class="selected-head">
+        <h3 class="section-title">Selecionados para o prompt <span id="selCount">(0/5)</span></h3>
+        <button id="btnClearSel" class="chip danger" title="Limpar seleção">Limpar</button>
+      </div>
+      <div id="selectedChips" class="group"></div>
+
+      <div class="prompt-actions">
+        <button id="btnGerarPrompt" class="button" disabled>Gerar Prompt</button>
+      </div>
+
+      <div id="promptArea" class="prompt-area" hidden>
+        <h4>Seu Prompt</h4>
+        <div id="promptBox" class="prompt-box"></div>
+        <div class="group" style="margin-top:8px">
+          <button id="btnCopiar" class="button">Copiar</button>
+          <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
+          <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
+          <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <footer class="bottombar" role="contentinfo">
     <small>Feito para estudantes de Direito • 100% client-side no GitHub Pages</small>
@@ -38,13 +81,30 @@
   <dialog id="modalInfo" class="modal">
     <form method="dialog" class="modal-content">
       <h3>Como funciona</h3>
-      <p>Este chatbot funciona como um <b>Vade Mecum digital</b>. Você escolhe o código, digita o número do artigo, eu mostro o <b>texto do artigo</b> e já te entrego um <b>prompt de estudo rápido</b> para colar na IA que preferir.</p>
+      <p>Escolha um Código/Lei, busque pelo artigo, clique no chip para abrir o texto em modal e use as setas para ir ao anterior/próximo. Clique em <b>Incluir no prompt</b> para montar até 5 artigos e depois gerar o prompt.</p>
       <menu class="modal-actions">
         <button value="cancel" class="primary">Entendi</button>
       </menu>
     </form>
   </dialog>
 
-  <script src="script.js?v=2025-09-11-7"></script>
+  <dialog id="modalArtigo" class="modal article-modal">
+    <form method="dialog" class="modal-content">
+      <header class="am-top">
+        <button id="btnPrev" class="icon-ghost" title="Artigo anterior" aria-label="Artigo anterior">←</button>
+        <div class="am-title" id="amTitle">Artigo</div>
+        <button id="btnNext" class="icon-ghost" title="Próximo artigo" aria-label="Próximo artigo">→</button>
+      </header>
+      <div class="am-body">
+        <div id="amBody"></div>
+      </div>
+      <footer class="am-actions">
+        <button id="btnFechar" value="cancel" class="chip">Fechar</button>
+        <button id="btnIncluir" class="button">Incluir no prompt</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="script.js?v=2025-09-11-fast"></script>
 </body>
 </html>
