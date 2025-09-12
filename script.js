@@ -183,18 +183,25 @@ function tokensFromEntrada(entrada){
   return norm(entrada).split(/\s+/).filter(t=>t.length>=4);
 }
 function buildFullText(node){
-  const parts=[];
-  if(node.caput) parts.push(node.caput);
-  if(Array.isArray(node.incisos)) node.incisos.forEach(i=>{
-    parts.push(`${i.rom||''} - ${i.texto||''}`);
-    if(Array.isArray(i.alineas)) i.alineas.forEach(a=> parts.push(`${a.letra||''}) ${a.texto||''}`));
-  });
-  if(Array.isArray(node.paragrafos)) node.paragrafos.forEach(p=>{
-    parts.push(`${p.rotulo? p.rotulo+' - ' : ''}${p.texto||''}`);
-  });
-  if(node.texto) parts.push(node.texto);
+  const parts = [];
+  if (node.caput) parts.push(node.caput);
+
+  if (Array.isArray(node.incisos)) {
+    node.incisos.forEach(i => {
+      if (i.rom || i.texto) parts.push(`${i.rom ? i.rom + ' - ' : ''}${i.texto || ''}`.trim());
+      if (Array.isArray(i.alineas)) {
+        i.alineas.forEach(a => parts.push(`${a.letra || ''}) ${a.texto || ''}`.trim()));
+      }
+    });
+  }
+  if (Array.isArray(node.paragrafos)) {
+    node.paragrafos.forEach(p => {
+      parts.push(`${p.rotulo ? p.rotulo + ' ' : ''}${p.texto || ''}`.trim());
+    });
+  }
   return parts.join('\n');
 }
+
 function matchByNumber(node, entradaNum){
   const [nb] = numeroBase(node.numero||'');
   return String(nb) === String(entradaNum) && !/[A-Za-z]/.test(node.numero||'');
@@ -230,15 +237,6 @@ async function searchArticle(codeId, entrada){
 // ===== Article modal =====
 function renderArticleHTML(node){
   const titulo = node?.titulo || `Art. ${node?.numero||''}`;
-  const plain = (node?.texto||'').trim();
-  if (plain){
-    return `
-      <div class="article">
-        <div class="art-title">${escapeHTML(titulo)}</div>
-        <pre style="white-space:pre-wrap;margin:0">${escapeHTML(plain)}</pre>
-      </div>
-    `;
-  }
   const caput = node?.caput || '';
   const incisos = Array.isArray(node?.incisos) ? node.incisos : [];
   const paragrafos = Array.isArray(node?.paragrafos) ? node.paragrafos : [];
@@ -247,7 +245,7 @@ function renderArticleHTML(node){
     ? `<ol class="art-incisos">
         ${incisos.map(i=>`
           <li>
-            <div class="art-inciso-head">${escapeHTML(i.rom||'')} - ${escapeHTML(i.texto||'')}</div>
+            <div class="art-inciso-head">${escapeHTML(i.rom||'')}${i.rom ? ' - ' : ''}${escapeHTML(i.texto||'')}</div>
             ${Array.isArray(i.alineas) && i.alineas.length ? `
               <ul class="art-alineas">
                 ${i.alineas.map(a=>`<li><span class="letra">${escapeHTML(a.letra||'')})</span> ${escapeHTML(a.texto||'')}</li>`).join('')}
@@ -262,7 +260,7 @@ function renderArticleHTML(node){
     ? `<div class="art-paragrafos">
         ${paragrafos.map(p=>`
           <div class="art-paragrafo">
-            ${p.rotulo ? `<span class="label">${escapeHTML(p.rotulo)}</span> - ` : ``}${escapeHTML(p.texto||'')}
+            ${p.rotulo ? `<span class="label">${escapeHTML(p.rotulo)}</span> ` : ``}${escapeHTML(p.texto||'')}
           </div>
         `).join('')}
       </div>`
@@ -377,8 +375,8 @@ function onIncluir(e){
   if (exists || state.selecionados.length>=5) return;
 
   state.selecionados.push({
-    id: node.id, numero: node.numero, titulo: node.titulo, texto: node.texto || buildFullText(node)
-  });
+  id: node.id, numero: node.numero, titulo: node.titulo, texto: buildFullText(node)
+});
   renderSelected();
   updatePromptButtonsState();
 
