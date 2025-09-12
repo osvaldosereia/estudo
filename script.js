@@ -1,77 +1,32 @@
 // ===== Estado e helpers =====
 const state = {
-  etapa: 0,
   codigo: null,
   termoBusca: '',
-  prompt: '',
-  artigo: null
+  artigoAtualIdx: -1,            // índice do artigo atualmente aberto no modal
+  artigosIndex: [],              // lista ordenada de nós (para prev/next)
+  artigosData: null,             // mapa id->nó do código carregado
+  selecionados: [],              // até 5 artigos {id, numero, titulo, texto}
+  prompt: ''
 };
 
 const CODES = [
-  {id: 'codigo_penal', label: 'Código Penal'},
-  {id: 'codigo_civil', label: 'Código Civil'},
-  {id: 'cpp', label: 'Código de Processo Penal'},
-  {id: 'cpc', label: 'Código de Processo Civil'},
-  {id: 'cf', label: 'Constituição Federal'},
-  {id: 'cdc', label: 'Código de Defesa do Consumidor'},
-  {id: 'clt', label: 'CLT'},
-  {id: 'ctn', label: 'Código Tributário Nacional'}
+  // Códigos
+  {id: 'codigo_penal', label: 'Código Penal', group: 'Códigos'},
+  {id: 'codigo_civil', label: 'Código Civil', group: 'Códigos'},
+  {id: 'cpp', label: 'Código de Processo Penal', group: 'Códigos'},
+  {id: 'cpc', label: 'Código de Processo Civil', group: 'Códigos'},
+  {id: 'cf', label: 'Constituição Federal', group: 'Códigos'},
+  {id: 'cdc', label: 'Código de Defesa do Consumidor', group: 'Códigos'},
+  {id: 'clt', label: 'CLT', group: 'Códigos'},
+  {id: 'ctn', label: 'Código Tributário Nacional', group: 'Códigos'},
+
+  // Leis (exemplos — adicione os JSON depois em /data/)
+  {id: 'lei_mediacao', label: 'Lei de Mediação (13.140/2015)', group: 'Leis'},
+  {id: 'lei_9099', label: 'Lei 9.099/1995 (Juizados)', group: 'Leis'}
 ];
 
-const app = document.querySelector('#app');
-const modalInfo = document.querySelector('#modalInfo');
-
-function save(){ localStorage.setItem('chatbot_juridico_state', JSON.stringify(state)); }
-function load(){ try{ Object.assign(state, JSON.parse(localStorage.getItem('chatbot_juridico_state'))||{});}catch{} }
-function resetAll(){
-  Object.assign(state, {etapa:0,codigo:null,termoBusca:'',prompt:'',artigo:null});
-  app.innerHTML=''; save(); startConversation();
-}
-
-function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
-function pushBot(html){
-  const node = el(`
-    <div class="msg bot">
-      <div class="avatar"><img src="icons/robo.png" alt="Bot"></div>
-      <div class="text-line">${html}</div>
-    </div>`);
-  app.appendChild(node);
-  app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
-  return node;
-}
-
-function pushUser(text){
-  const node = el(`
-    <div class="msg user">
-      <div class="text-line">${escapeHTML(text)}</div>
-      <div class="avatar"><img src="icons/brain.svg" alt="Você"></div>
-    </div>`);
-  app.appendChild(node);
-  app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
-  return node;
-}
-function typing(ms=900){
-  const t = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble"><span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div></div>`);
-  app.appendChild(t);
-  return new Promise(res=> setTimeout(()=>{ t.remove(); res(); }, ms));
-}
-
-function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-function onlyDigits(s){ const m = String(s||'').match(/^\d{1,4}$/); return m ? m[0] : null; }
-function numeroBase(n){ const m = String(n||'').match(/^(\d{1,4})([A-Za-z-]*)?$/); return m? m[1] : null; }
-function hasLetter(n){ return /[A-Za-z]/.test(String(n||'')); }
-
-// Normalizador robusto (mantém letras do sufixo, remove pontuação e acento)
-function normToken(s){
-  return (s||'')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]/g,'');
-}
-
-// ===== Fallback mínimo para testes =====
 const FALLBACK = {
+  // fallback mínimo p/ testes (apenas CP art1/2)
   "codigo_penal": {
     "art1": {
       "id": "art1","numero":"1","titulo":"Art. 1º",
@@ -89,13 +44,57 @@ const FALLBACK = {
   }
 };
 
+const appEls = {
+  selCodigo: document.getElementById('selCodigo'),
+  inpArtigo: document.getElementById('inpArtigo'),
+  btnBuscar: document.getElementById('btnBuscar'),
+  resultChips: document.getElementById('resultChips'),
+  resultMsg: document.getElementById('resultMsg'),
+  selectedChips: document.getElementById('selectedChips'),
+  selCount: document.getElementById('selCount'),
+  btnClearSel: document.getElementById('btnClearSel'),
+  btnGerarPrompt: document.getElementById('btnGerarPrompt'),
+  promptArea: document.getElementById('promptArea'),
+  promptBox: document.getElementById('promptBox'),
+  btnCopiar: document.getElementById('btnCopiar'),
+  btnInfo: document.getElementById('btnInfo'),
+  btnReset: document.getElementById('btnReset'),
+  modalInfo: document.getElementById('modalInfo'),
+
+  modalArtigo: document.getElementById('modalArtigo'),
+  amTitle: document.getElementById('amTitle'),
+  amBody: document.getElementById('amBody'),
+  btnPrev: document.getElementById('btnPrev'),
+  btnNext: document.getElementById('btnNext'),
+  btnFechar: document.getElementById('btnFechar'),
+  btnIncluir: document.getElementById('btnIncluir')
+};
+
+// ===== Utils =====
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+function norm(s){
+  return (s||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,' ');
+}
+function onlyDigits(s){ const m = String(s||'').match(/^\d{1,4}$/); return m ? m[0] : null; }
+function numeroBase(n){ const m = String(n||'').match(/^(\d{1,4})(?:\s*[-–—]?\s*([A-Za-z]))?$/); return m ? [parseInt(m[1],10), (m[2]||'').toUpperCase()] : [NaN,'']; }
+function byNumeroComparator(a,b){
+  const [an, ax] = numeroBase(a.numero||'');
+  const [bn, bx] = numeroBase(b.numero||'');
+  if (an!==bn) return (an||0)-(bn||0);
+  if (ax===bx) return 0;
+  if (!ax) return -1; // sem letra vem antes
+  if (!bx) return 1;
+  return ax.localeCompare(bx); // A < B < C
+}
+
 // ===== Data =====
 async function getJSON(path){
   const r=await fetch(path);
   if(!r.ok) throw new Error(`HTTP ${r.status} ao carregar ${path}`);
   return r.json();
 }
-// tenta vademecum, depois bruto; se falhar, lança erro
 async function tryLoadCodeData(codeId){
   const candidates = [
     `data/${codeId}_vademecum.json`,
@@ -108,22 +107,84 @@ async function tryLoadCodeData(codeId){
   throw lastErr || new Error('Arquivo de dados não encontrado');
 }
 
+async function ensureCodeLoaded(codeId){
+  if (state.codigo === codeId && state.artigosData) return;
+  state.codigo = codeId;
+  try{
+    state.artigosData = await tryLoadCodeData(codeId);
+  } catch(err){
+    if (FALLBACK[codeId]){
+      state.artigosData = FALLBACK[codeId];
+      console.warn('Usando fallback embutido para', codeId);
+    } else {
+      state.artigosData = null;
+      throw err;
+    }
+  }
+  // construir índice ordenado
+  const nodes = Object.values(state.artigosData);
+  nodes.sort(byNumeroComparator);
+  state.artigosIndex = nodes;
+}
+
+// ===== Render básico =====
+function renderCodeSelect(){
+  const groups = [...new Set(CODES.map(c=>c.group))];
+  appEls.selCodigo.innerHTML = groups.map(g=>{
+    const opts = CODES.filter(c=>c.group===g)
+      .map(c=>`<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
+    return `<optgroup label="${escapeHTML(g)}">${opts}</optgroup>`;
+  }).join('');
+  // seleção padrão
+  appEls.selCodigo.value = state.codigo || 'codigo_penal';
+}
+
+function clearResults(){
+  appEls.resultChips.innerHTML = '';
+  appEls.resultMsg.textContent = '';
+}
+
+function renderResultChip(artNode){
+  const btn = document.createElement('button');
+  btn.className = 'chip';
+  btn.textContent = artNode.titulo || `Art. ${artNode.numero||''}`;
+  btn.title = 'Abrir artigo';
+  btn.addEventListener('click', ()=> openArticleModalByNode(artNode));
+  appEls.resultChips.appendChild(btn);
+}
+
+function renderSelected(){
+  appEls.selectedChips.innerHTML = '';
+  state.selecionados.forEach((n, idx)=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `${escapeHTML(n.titulo||('Art. '+(n.numero||'')))} <button class="icon-ghost" aria-label="Remover" title="Remover" data-idx="${idx}">×</button>`;
+    chip.querySelector('button').addEventListener('click', (e)=>{
+      const i = parseInt(e.currentTarget.getAttribute('data-idx'),10);
+      state.selecionados.splice(i,1);
+      renderSelected();
+      updatePromptButtonsState();
+    });
+    appEls.selectedChips.appendChild(chip);
+  });
+  appEls.selCount.textContent = `(${state.selecionados.length}/5)`;
+}
+
+function updatePromptButtonsState(){
+  appEls.btnGerarPrompt.disabled = state.selecionados.length === 0;
+}
+
 // ===== Busca =====
-// 1) casa entrada com numero/titulo incluindo sufixos com letra (121-A, 121a, art.121-a)
-function matchTituloOuNumero(node, entradaRaw){
-  const e = normToken(entradaRaw);
-  const t = normToken(node.titulo||''); // "art. 121-a"
-  const n = normToken(node.numero||''); // "121a"
-  // aceita "art121a", "artigo121a", etc.
-  return e===n || e===t || e===('art'+n) || e===('artigo'+n);
+function tokensFromEntrada(entrada){
+  return norm(entrada).split(/\s+/).filter(t=>t.length>=4);
 }
 
 function buildFullText(node){
-  const parts = [];
+  const parts=[];
   if(node.caput) parts.push(node.caput);
   if(Array.isArray(node.incisos)) node.incisos.forEach(i=>{
-    parts.push(`${i.rom} - ${i.texto||''}`);
-    if(Array.isArray(i.alineas)) i.alineas.forEach(a=> parts.push(`${a.letra}) ${a.texto||''}`));
+    parts.push(`${i.rom||''} - ${i.texto||''}`);
+    if(Array.isArray(i.alineas)) i.alineas.forEach(a=> parts.push(`${a.letra||''}) ${a.texto||''}`));
   });
   if(Array.isArray(node.paragrafos)) node.paragrafos.forEach(p=>{
     parts.push(`${p.rotulo? p.rotulo+' - ' : ''}${p.texto||''}`);
@@ -131,48 +192,49 @@ function buildFullText(node){
   if(node.texto) parts.push(node.texto);
   return parts.join('\n');
 }
-function normalize(str){
-  return (str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-}
+
 function matchByNumber(node, entradaNum){
-  const nb = numeroBase(node.numero);
-  return nb === entradaNum && !hasLetter(node.numero);
+  const [nb] = numeroBase(node.numero||'');
+  return String(nb) === String(entradaNum) && !/[A-Za-z]/.test(node.numero||'');
+}
+function matchTituloOuNumero(node, entradaRaw){
+  const e = norm(entradaRaw).replace(/\s+/g,'');
+  const t = norm(node.titulo||'').replace(/\s+/g,''); // art.121a
+  const n = norm(node.numero||''); // 121-a
+  return e===n || e===t || e===('art'+n) || e===('artigo'+n);
 }
 function matchByText(node, entrada){
-  const tokens = (entrada||'').trim().split(/\s+/).filter(p=>p.length>=4);
+  const tokens = tokensFromEntrada(entrada);
   if(!tokens.length) return false;
-  const corpus = normalize(buildFullText(node)).replace(/[^a-z0-9\s]/g,' ');
-  return tokens.every(t => corpus.includes(normalize(t)));
+  const corpus = norm(buildFullText(node));
+  return tokens.every(t => corpus.includes(t));
 }
 
 async function searchArticle(codeId, entrada){
-  const data = await tryLoadCodeData(codeId);
-  const nodes = Object.values(data);
+  await ensureCodeLoaded(codeId);
+  const nodes = state.artigosIndex.slice();
 
-  // (A) match por numero/titulo com sufixo (pega 121-A, 121a, art.121-a, etc.)
+  // A) match exato por numero/titulo (inclui 121-A, art121a etc.)
   const hitExact = nodes.find(n => matchTituloOuNumero(n, entrada));
   if (hitExact) return hitExact;
 
-  // (B) se a entrada for SÓ números, priorize artigo sem letra (121 ≠ 121-A)
+  // B) se só números, priorizar sem letra (121 ≠ 121-A)
   const num = onlyDigits(entrada);
   if(num){
     const hitNum = nodes.find(n => matchByNumber(n, num));
     if(hitNum) return hitNum;
   }
 
-  // (C) fallback textual
+  // C) fallback textual
   const hitText = nodes.find(n => matchByText(n, entrada));
   return hitText || null;
 }
 
-// ===== Render =====
-// IMPORTANTE: prioriza node.texto para preservar 100% a ordem original.
+// ===== Article modal =====
 function renderArticleHTML(node){
   const titulo = node?.titulo || `Art. ${node?.numero||''}`;
   const plain = (node?.texto||'').trim();
-
   if (plain){
-    // usa <pre> com pre-wrap para respeitar quebras e evitar "embolado"
     return `
       <div class="article">
         <div class="art-title">${escapeHTML(titulo)}</div>
@@ -180,8 +242,6 @@ function renderArticleHTML(node){
       </div>
     `;
   }
-
-  // Fallback estruturado (caso algum código não tenha "texto")
   const caput = node?.caput || '';
   const incisos = Array.isArray(node?.incisos) ? node.incisos : [];
   const paragrafos = Array.isArray(node?.paragrafos) ? node.paragrafos : [];
@@ -190,10 +250,10 @@ function renderArticleHTML(node){
     ? `<ol class="art-incisos">
         ${incisos.map(i=>`
           <li>
-            <div class="art-inciso-head">${escapeHTML(i.rom)} - ${escapeHTML(i.texto||'')}</div>
+            <div class="art-inciso-head">${escapeHTML(i.rom||'')} - ${escapeHTML(i.texto||'')}</div>
             ${Array.isArray(i.alineas) && i.alineas.length ? `
               <ul class="art-alineas">
-                ${i.alineas.map(a=>`<li><span class="letra">${escapeHTML(a.letra)})</span> ${escapeHTML(a.texto||'')}</li>`).join('')}
+                ${i.alineas.map(a=>`<li><span class="letra">${escapeHTML(a.letra||'')})</span> ${escapeHTML(a.texto||'')}</li>`).join('')}
               </ul>
             ` : ``}
           </li>
@@ -221,156 +281,169 @@ function renderArticleHTML(node){
   `;
 }
 
-// ===== Prompt rápido =====
-function buildQuickPrompt(node, codeId){
-  const codeLabel = CODES.find(c=>c.id===codeId)?.label||'Código';
-  const titulo = node?.titulo || `Art. ${node?.numero||''}`;
-  const texto = node?.texto || buildFullText(node);
+function indexOfNode(node){
+  return state.artigosIndex.findIndex(n => (n.id && node.id && n.id===node.id) || (n.titulo===node.titulo && n.numero===node.numero));
+}
+
+function openArticleModalByIndex(idx){
+  if (idx<0 || idx>=state.artigosIndex.length) return;
+  state.artigoAtualIdx = idx;
+  const node = state.artigosIndex[idx];
+
+  appEls.amTitle.textContent = node.titulo || `Art. ${node.numero||''}`;
+  appEls.amBody.innerHTML = `<div class="article-box">${renderArticleHTML(node)}</div>`;
+
+  appEls.btnPrev.disabled = (idx<=0);
+  appEls.btnNext.disabled = (idx>=state.artigosIndex.length-1);
+
+  // Botão incluir no prompt
+  const already = state.selecionados.some(s => (s.id && node.id && s.id===node.id) || (s.titulo===node.titulo && s.numero===node.numero));
+  appEls.btnIncluir.disabled = already || state.selecionados.length >= 5;
+  appEls.btnIncluir.textContent = already ? 'Já incluído' : (state.selecionados.length>=5 ? 'Limite atingido (5)' : 'Incluir no prompt');
+
+  if (!appEls.modalArtigo.open) appEls.modalArtigo.showModal();
+}
+
+function openArticleModalByNode(node){
+  const idx = indexOfNode(node);
+  openArticleModalByIndex(idx>=0 ? idx : 0);
+}
+
+// ===== Prompt =====
+function codeLabelById(id){
+  return CODES.find(c=>c.id===id)?.label || 'Código/Lei';
+}
+
+function buildMultiPrompt(selecionados, codeId){
+  const codeLabel = codeLabelById(codeId);
+  const blocos = selecionados.map((n,i)=> {
+    const titulo = n.titulo || `Art. ${n.numero||''}`;
+    const texto = n.texto || buildFullText(n);
+    return `### ${titulo}
+Texto integral:
+${texto}`;
+  }).join('\n\n');
 
   return `Você é um professor de Direito com didática impecável.
-Objetivo: Estudo RÁPIDO do artigo indicado, em linguagem simples e direta (10–12 linhas), cobrindo:
+Objetivo: Estudo RÁPIDO e comparado dos artigos indicados, em linguagem simples e direta.
+Para CADA artigo, siga este formato:
 1) conceito/finalidade; 2) elementos essenciais; 3) pontos que caem em prova/OAB; 4) mini exemplo prático (3–4 linhas); 5) erro comum a evitar.
-Evite juridiquês desnecessário. Não traga jurisprudência extensa.
+Ao final, traga uma seção breve com “conexões e distinções entre os artigos”.
 
 Contexto
-- Código: ${codeLabel}
-- Artigo: ${titulo}
-- Texto integral:
-${texto}
+- Código/Lei: ${codeLabel}
+- Artigos selecionados (${selecionados.length}): ${selecionados.map(n=>n.titulo || ('Art. '+(n.numero||''))).join(', ')}
+
+${blocos}
 
 Formato da resposta
-- Resumo (10–12 linhas)
-- 3 bullets “cai em prova”
-- Mini exemplo (3–4 linhas)
-- 1 erro comum
+- Seções separadas por artigo
+- 3 bullets “cai em prova” em cada artigo
+- Mini exemplo por artigo (3–4 linhas)
+- 1 erro comum por artigo
+- Fechar com “Conexões e distinções”
 
 Assine no final: "💚 direito.love — Gere um novo prompt em https://direito.love"`;
 }
 
-// ===== Conversa =====
-async function startConversation(){
-  await typing(600); pushBot(`<p>Olá! Eu te ajudo a estudar os <b>artigos dos códigos</b>.</p>`);
-  await typing(600); pushBot(`<p>O tema do estudo faz parte de qual <b>Código?</b></p>`);
-  renderCodeChips(); state.etapa=0; save();
-
-  // Aviso se estiver em file:// (CORS)
-  if (location.protocol === 'file:') {
-    pushBot(`<div class="small">⚠️ Você está abrindo o arquivo via <b>file://</b>. Para a busca funcionar, sirva o site via HTTP (GitHub Pages, Vercel, Netlify ou um servidor local tipo “Live Server”).</div>`);
-  }
-}
-function renderCodeChips(){
-  const chips=CODES.map(c=>`<button class="chip" data-id="${c.id}">${c.label}</button>`).join('');
-  const node=pushBot(`<div class="group" id="codes">${chips}</div>`);
-  node.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{ state.codigo=btn.getAttribute('data-id'); save(); onCodePicked(); }));
-}
-async function onCodePicked(){
-  const label=CODES.find(c=>c.id===state.codigo)?.label||'Código';
-  await typing(500); pushBot(`Excelente! Vamos de <b>${label}</b>.`);
-  await typing(500); renderSearchInput(label); state.etapa=1; save();
-}
-function renderSearchInput(label){
-  const node=pushBot(`
-    <div>
-      <p>Digite o <b>número do artigo</b> (ex.: <code>121</code> ou <code>121-A</code>).</p>
-      <div class="input-row">
-        <input id="inpBusca" class="input" placeholder="Ex.: 121 ou 121-A" />
-        <button id="btnBuscar" class="button">Buscar</button>
-      </div>
-    </div>`);
-  node.querySelector('#btnBuscar').addEventListener('click',async()=>{
-    const v=node.querySelector('#inpBusca').value.trim();
-    if(!v) return;
-    pushUser(v); state.termoBusca=v; save(); await doSearch();
-  });
-}
-
-async function doSearch(){
-  await typing(700);
-  const entrada=state.termoBusca;
+// ===== Eventos =====
+async function onBuscar(){
+  const codeId = appEls.selCodigo.value;
+  const entrada = appEls.inpArtigo.value.trim();
+  appEls.resultChips.innerHTML = '';
+  appEls.resultMsg.textContent = 'Buscando…';
 
   try{
-    const node = await searchArticle(state.codigo, entrada);
-    if(!node){
-      pushBot(`Não encontrei esse artigo. Dicas: digite apenas o número (<code>121</code>) ou o número com letra (<code>121-A</code>).`);
+    const hit = await searchArticle(codeId, entrada);
+    appEls.resultChips.innerHTML = '';
+    if (!hit){
+      appEls.resultMsg.textContent = 'Não encontrei esse artigo. Tente só o número (ex.: 121) ou 121-A. Também aceito busca por termos com 4+ letras.';
       return;
     }
 
-    state.artigo = node; save();
+    // Mostra 1 chip — e prepara navegação em todo o código
+    appEls.resultMsg.textContent = '';
+    renderResultChip(hit);
 
-    const html = renderArticleHTML(node);
-    pushBot(`<div><div class="article-box">${html}</div></div>`);
-
-    await typing(500);
-    pushBot(`Pronto! Já gerei um <b>prompt de estudo rápido</b>. É só copiar e colar na IA de sua preferência 👇`);
-    state.prompt = buildQuickPrompt(node, state.codigo); save();
-    showPromptAndIA();
-
-    const reiniciar = pushBot(`<button class="button secondary" id="btnReiniciarChat">Reiniciar conversa</button>`);
-    reiniciar.querySelector('#btnReiniciarChat').addEventListener('click',resetAll);
-
-  } catch (err){
+  } catch(err){
     console.error(err);
-    const path1 = `data/${state.codigo}_vademecum.json`;
-    const path2 = `data/${state.codigo}.json`;
-
-    pushBot(`<div class="small">❌ Não consegui carregar os dados.<br>
-    <b>Possíveis causas</b>:<br>
-    • Abrindo o site via <code>file://</code> (CORS bloqueia o fetch).<br>
-    • Arquivo ausente: <code>${path1}</code> ou <code>${path2}</code>.<br>
-    • Nome/capitalização do arquivo errados (GitHub Pages é case-sensitive).<br>
-    </div>`);
-
-    if (FALLBACK[state.codigo]){
-      await typing(400);
-      pushBot(`<div class="small">✅ Usando <b>dados de teste embutidos</b> (Art. 1º e 2º) só para você validar o fluxo. Coloque depois o JSON real em <code>${path1}</code>.</div>`);
-      const data = FALLBACK[state.codigo];
-      const nodes = Object.values(data);
-
-      // tenta com letra/numero no fallback também
-      let node = nodes.find(n => matchTituloOuNumero(n, entrada));
-      if (!node){
-        const num = onlyDigits(entrada);
-        if(num) node = nodes.find(n => matchByNumber(n, num));
-      }
-      if(!node) node = nodes.find(n => matchByText(n, entrada)) || nodes[0];
-
-      state.artigo = node; save();
-      const html = renderArticleHTML(node);
-      pushBot(`<div><div class="article-box">${html}</div></div>`);
-
-      await typing(400);
-      pushBot(`Pronto! Já gerei um <b>prompt de estudo rápido</b>. É só copiar e colar na IA de sua preferência 👇`);
-      state.prompt = buildQuickPrompt(node, state.codigo); save();
-      showPromptAndIA();
-    } else {
-      pushBot(`<div class="small">👉 Coloque o arquivo de dados no caminho correto e tente novamente:<br><code>${path1}</code></div>`);
-    }
+    appEls.resultMsg.innerHTML = `❌ Não consegui carregar os dados para <code>${escapeHTML(codeId)}</code>.
+    Verifique se o JSON existe em <code>data/${codeId}_vademecum.json</code> ou <code>data/${codeId}.json</code>.`;
   }
 }
 
-function showPromptAndIA(){
-  const node=pushBot(`<div><h4>Seu Prompt (Estudo Rápido)</h4><div class="prompt-box" id="promptBox"></div>
-    <div style="margin-top:8px" class="group">
-      <button class="button" id="btnCopiar">Copiar</button>
-      <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
-      <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
-      <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
-    </div>
-  </div>`);
-  node.querySelector('#promptBox').textContent=state.prompt;
-  node.querySelector('#btnCopiar').addEventListener('click',onCopied);
+function onPrev(e){
+  e.preventDefault();
+  if (state.artigoAtualIdx>0) openArticleModalByIndex(state.artigoAtualIdx-1);
+}
+function onNext(e){
+  e.preventDefault();
+  if (state.artigoAtualIdx<state.artigosIndex.length-1) openArticleModalByIndex(state.artigoAtualIdx+1);
+}
+function onIncluir(e){
+  e.preventDefault();
+  const node = state.artigosIndex[state.artigoAtualIdx];
+  if (!node) return;
+  const exists = state.selecionados.some(s => (s.id && node.id && s.id===node.id) || (s.titulo===node.titulo && s.numero===node.numero));
+  if (exists || state.selecionados.length>=5) return;
+
+  // Salva um snapshot mínimo
+  state.selecionados.push({
+    id: node.id, numero: node.numero, titulo: node.titulo, texto: node.texto || buildFullText(node)
+  });
+  renderSelected();
+  updatePromptButtonsState();
+
+  // feedback
+  appEls.btnIncluir.disabled = true;
+  appEls.btnIncluir.textContent = 'Incluído ✔';
 }
 
-async function onCopied(){
-  try{ await navigator.clipboard.writeText(state.prompt);}catch{}
-  await typing(400);
-  pushBot(`✅ Prompt copiado! Abra a IA e cole o texto.`);
+function onClearSelecionados(){
+  state.selecionados = [];
+  renderSelected();
+  updatePromptButtonsState();
+  appEls.promptArea.hidden = true;
+  appEls.promptBox.textContent = '';
+}
+
+function onGerarPrompt(){
+  const prompt = buildMultiPrompt(state.selecionados, state.codigo);
+  state.prompt = prompt;
+  appEls.promptBox.textContent = prompt;
+  appEls.promptArea.hidden = false;
+}
+
+async function onCopiar(){
+  try{
+    await navigator.clipboard.writeText(state.prompt||'');
+  }catch{}
 }
 
 // ===== Boot =====
-document.addEventListener('DOMContentLoaded',()=>{
-  load();
-  document.getElementById('btnReset')?.addEventListener('click',resetAll);
-  document.getElementById('btnInfo')?.addEventListener('click',()=>modalInfo.showModal());
-  startConversation();
-});
+function bind(){
+  document.getElementById('btnInfo')?.addEventListener('click',()=>appEls.modalInfo.showModal());
+  document.getElementById('btnReset')?.addEventListener('click',()=>{
+    appEls.inpArtigo.value=''; clearResults(); onClearSelecionados();
+  });
+  appEls.btnBuscar.addEventListener('click', onBuscar);
+  appEls.inpArtigo.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); onBuscar(); } });
+
+  appEls.btnPrev.addEventListener('click', onPrev);
+  appEls.btnNext.addEventListener('click', onNext);
+  appEls.btnIncluir.addEventListener('click', onIncluir);
+  appEls.btnFechar.addEventListener('click', ()=>{/* fecha pelo method=dialog */});
+
+  appEls.btnClearSel.addEventListener('click', onClearSelecionados);
+  appEls.btnGerarPrompt.addEventListener('click', onGerarPrompt);
+  appEls.btnCopiar.addEventListener('click', onCopiar);
+}
+
+function start(){
+  renderCodeSelect();
+  bind();
+  // seleção padrão
+  state.codigo = appEls.selCodigo.value;
+}
+
+document.addEventListener('DOMContentLoaded', start);
