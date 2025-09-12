@@ -1,3 +1,4 @@
+/* script.js — auto-discovery de códigos em /data  */
 const state = {
   codigo: null,
   termoBusca: '',
@@ -8,10 +9,8 @@ const state = {
   prompt: ''
 };
 
-const CODES = [
-  { id: 'codigo_civil', label: 'Código Civil', group: 'Códigos' }
-  { id: 'codigo_penal', label: 'Código Penal', group: 'Códigos' }
-];
+// será preenchido dinamicamente por autoDiscoverCodes()
+const CODES = [];
 
 const appEls = {
   selCodigo: document.getElementById('selCodigo'),
@@ -74,12 +73,38 @@ function matchByText(node, entrada) {
   const corpus = norm(node.texto || '');
   return tokens.every(t => corpus.includes(t));
 }
+function capitalizeWords(s) {
+  return (s || '').split(/[_\s]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+function prettyLabelFromCodeId(codeId) {
+  // codeId exemplo: "codigo_civil", "codigo_penal", "codigo_cpc"...
+  const key = String(codeId).replace(/^codigo_/, '');
+  const map = {
+    civil: 'Código Civil',
+    penal: 'Código Penal',
+    cpc: 'Código de Processo Civil (CPC)',
+    cpp: 'Código de Processo Penal (CPP)',
+    ctn: 'Código Tributário Nacional (CTN)',
+    consumidor: 'Código de Defesa do Consumidor (CDC)'
+  };
+  return map[key] || `Código ${capitalizeWords(key.replace(/_/g, ' '))}`;
+}
 
-// ===== Data =====
+// ===== Data (com cache-busting) =====
 async function getJSON(path) {
-  const r = await fetch(path);
+  const url = path + (path.includes('?') ? '&' : '?') + 'v=' + Date.now();
+  const r = await fetch(url, { cache: 'no-store' });
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.json();
+}
+async function fileExists(path) {
+  const url = path + (path.includes('?') ? '&' : '?') + 'v=' + Date.now();
+  try {
+    const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    return r.ok;
+  } catch {
+    return false;
+  }
 }
 async function tryLoadCodeData(codeId) {
   const paths = [`data/${codeId}_vademecum.json`, `data/${codeId}.json`];
@@ -93,6 +118,48 @@ async function ensureCodeLoaded(codeId) {
   state.codigo = codeId;
   state.artigosData = await tryLoadCodeData(codeId);
   state.artigosIndex = Object.values(state.artigosData);
+}
+
+// ===== Descoberta automática de códigos =====
+async function autoDiscoverCodes() {
+  // 1) Tenta listar via GitHub API (público, sem token)
+  try {
+    const apiUrl = 'https://api.github.com/repos/osvaldosereia/estudo/contents/data';
+    const r = await fetch(apiUrl, { cache: 'no-store' });
+    if (!r.ok) throw new Error('GitHub API falhou: ' + r.status);
+    const items = await r.json();
+    const files = (Array.isArray(items) ? items : []).filter(it =>
+      it && it.type === 'file' && /^codigo_.+_vademecum\.json$/i.test(it.name)
+    );
+    const codes = files.map(f => {
+      const id = f.name.replace(/_vademecum\.json$/i, ''); // "codigo_civil_vademecum.json" -> "codigo_civil"
+      return { id, label: prettyLabelFromCodeId(id), name: f.name };
+    });
+    if (codes.length) return codes;
+    throw new Error('Nenhum arquivo *_vademecum.json encontrado via API.');
+  } catch (e) {
+    console.warn('[autoDiscoverCodes] API listing falhou:', e.message || e);
+  }
+
+  // 2) Fallback: testa presença local de alguns códigos comuns
+  const candidates = [
+    'codigo_civil', 'codigo_penal',
+    'codigo_cpc', 'codigo_cpp', 'codigo_ctn', 'codigo_consumidor'
+  ];
+  const found = [];
+  for (const id of candidates) {
+    const has = await fileExists(`data/${id}_vademecum.json`) || await fileExists(`data/${id}.json`);
+    if (has) found.push({ id, label: prettyLabelFromCodeId(id) });
+  }
+  if (found.length) return found;
+
+  // 3) Último recurso: deixa só civil se existir
+  if (await fileExists('data/codigo_civil_vademecum.json') || await fileExists('data/codigo_civil.json')) {
+    return [{ id: 'codigo_civil', label: 'Código Civil' }];
+  }
+
+  // nada encontrado
+  return [];
 }
 
 // ===== Busca com lógica inteligente =====
@@ -126,9 +193,8 @@ async function searchArticle(codeId, entrada) {
 
 // ===== Render =====
 function renderCodeSelect() {
-  appEls.selCodigo.innerHTML =
-    `<option value="" selected disabled>Selecione…</option><option value="codigo_civil">Código Civil</option>
-    </option><option value="codigo_penal">Código Penal</option>`;
+  const options = CODES.map(c => `<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
+  appEls.selCodigo.innerHTML = `<option value="" selected disabled>Selecione…</option>${options}`;
   state.codigo = null;
 }
 function renderResultChip(node) {
@@ -183,7 +249,6 @@ function openArticleModalByIndex(idx) {
     ? 'Já incluído'
     : (state.selecionados.length >= 5 ? 'Limite atingido (5)' : 'Incluir no prompt');
 
-  // Só abre se ainda não estiver aberto (evita exceção)
   if (!appEls.modalArtigo.open) appEls.modalArtigo.showModal();
 }
 function openArticleModalByNode(node) {
@@ -272,7 +337,6 @@ async function onCopiar(e) {
 
 // ===== Init =====
 function bind() {
-  // Evita que botões dentro de <form method="dialog"> fechem o modal
   ['btnPrev','btnNext','btnIncluir','btnFechar','btnBuscar','btnGerarPrompt','btnClearSel','btnCopiar']
     .forEach(k => appEls[k] && appEls[k].setAttribute('type','button'));
 
@@ -282,7 +346,7 @@ function bind() {
   appEls.btnGerarPrompt.addEventListener('click', onGerarPrompt);
   appEls.btnCopiar.addEventListener('click', onCopiar);
 
-  appEls.btnFechar.addEventListener('click', (e) => {
+  appEls.btnFechar && appEls.btnFechar.addEventListener('click', (e) => {
     e.preventDefault(); e.stopPropagation();
     appEls.modalArtigo.close();
   });
@@ -305,8 +369,15 @@ function bind() {
     }
   });
 }
-function start() {
+
+async function initCodes() {
+  const discovered = await autoDiscoverCodes();
+  CODES.length = 0;
+  CODES.push(...discovered);
   renderCodeSelect();
+}
+async function start() {
+  await initCodes();
   bind();
 }
 document.addEventListener('DOMContentLoaded', start);
