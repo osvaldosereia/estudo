@@ -36,11 +36,8 @@ const appEls = {
 
 // ===== Utils =====
 function escapeHTML(s) {
-  return (s || '').replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[m]));
+  return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
-
 function norm(s) {
   return (s || '')
     .toLowerCase()
@@ -48,20 +45,16 @@ function norm(s) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9\s]/g, '');
 }
-
 function onlyDigits(s) {
-  const m = String(s || '').match(/^\d{1,4}$/);
+  const m = String(s || '').match(/\d{1,4}/);
   return m ? m[0] : null;
 }
-
 function tokensFromEntrada(entrada) {
   return norm(entrada).split(/\s+/).filter(t => t.length >= 4);
 }
-
 function buildFullText(node) {
   return node.texto || '';
 }
-
 function matchByNumber(node, entradaNum) {
   const tituloNormalizado = (node.titulo || '')
     .toLowerCase()
@@ -69,13 +62,11 @@ function matchByNumber(node, entradaNum) {
     .replace(/[^a-z0-9]/g, '');
   return tituloNormalizado.includes(`art${entradaNum}`);
 }
-
 function matchTituloOuNumero(node, entradaRaw) {
   const e = norm(entradaRaw).replace(/\s+/g, '');
   const t = norm(node.titulo || '').replace(/\s+/g, '');
   return e === t || e === t.replace(/^art/, '') || e === 'art' + t || e === 'artigo' + t;
 }
-
 function matchByText(node, entrada) {
   const tokens = tokensFromEntrada(entrada);
   if (!tokens.length) return false;
@@ -89,17 +80,13 @@ async function getJSON(path) {
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.json();
 }
-
 async function tryLoadCodeData(codeId) {
   const paths = [`data/${codeId}_vademecum.json`, `data/${codeId}.json`];
   for (const p of paths) {
-    try {
-      return await getJSON(p);
-    } catch {}
+    try { return await getJSON(p); } catch {}
   }
   throw new Error('Arquivo JSON não encontrado.');
 }
-
 async function ensureCodeLoaded(codeId) {
   if (state.codigo === codeId && state.artigosData) return;
   state.codigo = codeId;
@@ -107,22 +94,32 @@ async function ensureCodeLoaded(codeId) {
   state.artigosIndex = Object.values(state.artigosData);
 }
 
-// ===== Busca =====
+// ===== Busca com lógica inteligente =====
 async function searchArticle(codeId, entrada) {
   await ensureCodeLoaded(codeId);
   const nodes = state.artigosIndex.slice();
 
-  const hitExact = nodes.find(n => matchTituloOuNumero(n, entrada));
-  if (hitExact) return hitExact;
+  const entradaNorm = entrada.trim();
+  const soNumero = /^\d{1,4}$/.test(entradaNorm);
+  const soLetras = /^[a-zA-ZÀ-ÿ\s]{4,}$/.test(entradaNorm);
+  const misto = /\d/.test(entradaNorm) && /[a-zA-ZÀ-ÿ]/.test(entradaNorm);
 
-  const num = onlyDigits(entrada);
-  if (num) {
-    const hitNum = nodes.find(n => matchByNumber(n, num));
-    if (hitNum) return hitNum;
+  if (soNumero || misto) {
+    const num = onlyDigits(entradaNorm);
+    if (num) {
+      const hitNum = nodes.find(n => matchByNumber(n, num));
+      if (hitNum) return hitNum;
+    }
+    const hitTitulo = nodes.find(n => matchTituloOuNumero(n, entradaNorm));
+    if (hitTitulo) return hitTitulo;
   }
 
-  const hitText = nodes.find(n => matchByText(n, entrada));
-  return hitText || null;
+  if (soLetras) {
+    const hitText = nodes.find(n => matchByText(n, entradaNorm));
+    if (hitText) return hitText;
+  }
+
+  return null;
 }
 
 // ===== Render =====
@@ -131,7 +128,6 @@ function renderCodeSelect() {
     `<option value="codigo_civil">Código Civil</option>`;
   state.codigo = null;
 }
-
 function renderResultChip(node) {
   const btn = document.createElement('button');
   btn.className = 'chip';
@@ -139,7 +135,6 @@ function renderResultChip(node) {
   btn.addEventListener('click', () => openArticleModalByNode(node));
   appEls.resultChips.appendChild(btn);
 }
-
 function renderSelected() {
   appEls.selectedChips.innerHTML = '';
   state.selecionados.forEach((n, i) => {
@@ -155,7 +150,6 @@ function renderSelected() {
   });
   appEls.selCount.textContent = `(${state.selecionados.length}/5)`;
 }
-
 function updatePromptButtonsState() {
   appEls.btnGerarPrompt.disabled = state.selecionados.length === 0;
 }
@@ -165,17 +159,19 @@ function renderArticleHTML(node) {
   return `
     <div class="article">
       <div class="art-title">${escapeHTML(node.titulo)}</div>
-      <p class="art-caput">${escapeHTML(node.texto)}</p>
+      <pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.texto)}</pre>
     </div>`;
 }
-
-function openArticleModalByNode(node) {
-  const idx = state.artigosIndex.findIndex(n => n.titulo === node.titulo);
-  if (idx < 0) return;
+function openArticleModalByIndex(idx) {
+  if (idx < 0 || idx >= state.artigosIndex.length) return;
+  const node = state.artigosIndex[idx];
   state.artigoAtualIdx = idx;
 
   appEls.amTitle.textContent = node.titulo;
   appEls.amBody.innerHTML = renderArticleHTML(node);
+
+  appEls.btnPrev.disabled = (idx <= 0);
+  appEls.btnNext.disabled = (idx >= state.artigosIndex.length - 1);
 
   const already = state.selecionados.some(n => n.titulo === node.titulo);
   appEls.btnIncluir.disabled = already || state.selecionados.length >= 5;
@@ -183,6 +179,10 @@ function openArticleModalByNode(node) {
     (state.selecionados.length >= 5 ? 'Limite atingido (5)' : 'Incluir no prompt');
 
   appEls.modalArtigo.showModal();
+}
+function openArticleModalByNode(node) {
+  const idx = state.artigosIndex.findIndex(n => n.titulo === node.titulo);
+  openArticleModalByIndex(idx);
 }
 
 // ===== Prompt =====
@@ -230,7 +230,6 @@ async function onBuscar() {
     appEls.resultMsg.textContent = 'Erro ao carregar os dados.';
   }
 }
-
 function onIncluir() {
   const node = state.artigosIndex[state.artigoAtualIdx];
   if (!node || state.selecionados.length >= 5) return;
@@ -243,7 +242,6 @@ function onIncluir() {
   appEls.btnIncluir.disabled = true;
   appEls.btnIncluir.textContent = 'Incluído ✔';
 }
-
 function onClearSelecionados() {
   state.selecionados = [];
   renderSelected();
@@ -251,14 +249,12 @@ function onClearSelecionados() {
   appEls.promptArea.hidden = true;
   appEls.promptBox.textContent = '';
 }
-
 function onGerarPrompt() {
   const prompt = buildMultiPrompt(state.selecionados);
   state.prompt = prompt;
   appEls.promptBox.textContent = prompt;
   appEls.promptArea.hidden = false;
 }
-
 async function onCopiar() {
   try {
     await navigator.clipboard.writeText(state.prompt || '');
@@ -275,11 +271,12 @@ function bind() {
   appEls.btnFechar.onclick = () => appEls.modalArtigo.close();
 
   appEls.btnPrev.onclick = () => {
-    if (state.artigoAtualIdx > 0) openArticleModalByNode(state.artigosIndex[state.artigoAtualIdx - 1]);
+    if (state.artigoAtualIdx > 0)
+      openArticleModalByIndex(state.artigoAtualIdx - 1);
   };
   appEls.btnNext.onclick = () => {
     if (state.artigoAtualIdx < state.artigosIndex.length - 1)
-      openArticleModalByNode(state.artigosIndex[state.artigoAtualIdx + 1]);
+      openArticleModalByIndex(state.artigoAtualIdx + 1);
   };
 
   appEls.inpArtigo.onkeydown = e => {
@@ -289,10 +286,8 @@ function bind() {
     }
   };
 }
-
 function start() {
   renderCodeSelect();
   bind();
 }
-
 document.addEventListener('DOMContentLoaded', start);
