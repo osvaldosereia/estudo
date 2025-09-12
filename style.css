@@ -252,3 +252,19 @@ select.input.select{
   display:inline-block; padding:6px 10px; border-radius:999px;
   background:#0f1430; color:#fff; font-weight:800
 }
+/* --- Quiz states --- */
+.qz-alternativas label.correct{
+  background:#eaf7ee; border-color:#9ad3b0;
+}
+.qz-alternativas label.wrong{
+  background:#fdebec; border-color:#f5a2a2;
+}
+.qz-alternativas label.locked{
+  pointer-events:none; opacity:.85;
+}
+.qz-feedback.ok{ background:#eaf7ee; }
+.qz-feedback.err{ background:#fdebec; }
+.qz-progress{ font-size:.86rem; opacity:.8; margin:0 0 8px; }
+.qz-badge{
+  display:inline-block; padding:6px 10px; border-radius:999px; color:#fff; font-weight:800
+}
