@@ -175,14 +175,16 @@ function openArticleModalByIndex(idx) {
 
   const already = state.selecionados.some(n => n.titulo === node.titulo);
   appEls.btnIncluir.disabled = already || state.selecionados.length >= 5;
-  appEls.btnIncluir.textContent = already ? 'Já incluído' :
-    (state.selecionados.length >= 5 ? 'Limite atingido (5)' : 'Incluir no prompt');
+  appEls.btnIncluir.textContent = already
+    ? 'Já incluído'
+    : (state.selecionados.length >= 5 ? 'Limite atingido (5)' : 'Incluir no prompt');
 
   appEls.modalArtigo.showModal();
 }
+
 function openArticleModalByNode(node) {
   const idx = state.artigosIndex.findIndex(n => n.titulo === node.titulo);
-  openArticleModalByIndex(idx);
+  if (idx >= 0) openArticleModalByIndex(idx);
 }
 
 // ===== Prompt =====
@@ -271,13 +273,15 @@ function bind() {
   appEls.btnFechar.onclick = () => appEls.modalArtigo.close();
 
   appEls.btnPrev.onclick = () => {
-    if (state.artigoAtualIdx > 0)
-      openArticleModalByIndex(state.artigoAtualIdx - 1);
-  };
-  appEls.btnNext.onclick = () => {
-    if (state.artigoAtualIdx < state.artigosIndex.length - 1)
-      openArticleModalByIndex(state.artigoAtualIdx + 1);
-  };
+  if (state.artigoAtualIdx > 0)
+    openArticleModalByIndex(state.artigoAtualIdx - 1);
+};
+
+appEls.btnNext.onclick = () => {
+  if (state.artigoAtualIdx < state.artigosIndex.length - 1)
+    openArticleModalByIndex(state.artigoAtualIdx + 1);
+};
+
 
   appEls.inpArtigo.onkeydown = e => {
     if (e.key === 'Enter') {
