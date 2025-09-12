@@ -37,7 +37,7 @@ body{
 }
 .topbar .inner{
   display:flex; align-items:center; justify-content:space-between;
-  max-width:980px; margin:0 auto; padding:0 12px;
+  max-width:980px; margin:0 auto; padding:0 15px;
 }
 .brand{display:flex;align-items:center;gap:10px}
 .logo-text{font-size:1.32rem; letter-spacing:.3px; color:var(--brand)}
