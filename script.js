@@ -10,6 +10,7 @@ const state = {
 
 const CODES = [
   { id: 'codigo_civil', label: 'Código Civil', group: 'Códigos' }
+  { id: 'codigo_penal', label: 'Código Penal', group: 'Códigos' }
 ];
 
 const appEls = {
@@ -126,7 +127,8 @@ async function searchArticle(codeId, entrada) {
 // ===== Render =====
 function renderCodeSelect() {
   appEls.selCodigo.innerHTML =
-    `<option value="" selected disabled>Selecione…</option><option value="codigo_civil">Código Civil</option>`;
+    `<option value="" selected disabled>Selecione…</option><option value="codigo_civil">Código Civil</option>
+    </option><option value="codigo_penal">Código Penal</option>`;
   state.codigo = null;
 }
 function renderResultChip(node) {
