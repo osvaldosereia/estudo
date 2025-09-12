@@ -40,9 +40,9 @@ function buildFullText(node){
   return node.texto || '';
 }
 
-function matchByNumber(node, entradaNum){
-  const match = (node.titulo || '').match(/^art\.?\s*(\d{1,4})/i);
-  return match && match[1] === String(entradaNum);
+function matchByNumber(node, entradaNum) {
+  const tituloNormalizado = (node.titulo || '').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+  return tituloNormalizado.includes(`art${entradaNum}`);
 }
 
 function matchTituloOuNumero(node, entradaRaw){
