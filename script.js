@@ -30,13 +30,24 @@ function resetAll(){
 
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
 function pushBot(html){
-  const node = el(`<div class="msg bot"><div class="avatar"><img src="icons/robo.png" alt="Bot"></div><div class="bubble">${html}</div></div>`);
-  app.appendChild(node); app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
+  const node = el(`
+    <div class="msg bot">
+      <div class="avatar"><img src="icons/robo.png" alt="Bot"></div>
+      <div class="text-line">${html}</div>
+    </div>`);
+  app.appendChild(node);
+  app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
   return node;
 }
+
 function pushUser(text){
-  const node = el(`<div class="msg user"><div class="bubble">${text}</div><div class="avatar"><img src="icons/brain.svg" alt="Você"></div></div>`);
-  app.appendChild(node); app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
+  const node = el(`
+    <div class="msg user">
+      <div class="text-line">${escapeHTML(text)}</div>
+      <div class="avatar"><img src="icons/brain.svg" alt="Você"></div>
+    </div>`);
+  app.appendChild(node);
+  app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
   return node;
 }
 function typing(ms=900){
