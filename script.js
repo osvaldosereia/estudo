@@ -95,6 +95,7 @@ async function ensureCodeLoaded(codeId) {
 }
 
 // ===== Busca com lógica inteligente =====
+// Só número -> título; só letras -> texto; misto (número+letra) -> título
 async function searchArticle(codeId, entrada) {
   await ensureCodeLoaded(codeId);
   const nodes = state.artigosIndex.slice();
@@ -124,15 +125,15 @@ async function searchArticle(codeId, entrada) {
 
 // ===== Render =====
 function renderCodeSelect() {
-  appEls.selCodigo.innerHTML = `<option value="" selected disabled>Selecione…</option>` +
-    `<option value="codigo_civil">Código Civil</option>`;
+  appEls.selCodigo.innerHTML =
+    `<option value="" selected disabled>Selecione…</option><option value="codigo_civil">Código Civil</option>`;
   state.codigo = null;
 }
 function renderResultChip(node) {
   const btn = document.createElement('button');
   btn.className = 'chip';
   btn.textContent = node.titulo;
-  btn.addEventListener('click', () => openArticleModalByNode(node));
+  btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openArticleModalByNode(node); });
   appEls.resultChips.appendChild(btn);
 }
 function renderSelected() {
@@ -140,8 +141,9 @@ function renderSelected() {
   state.selecionados.forEach((n, i) => {
     const chip = document.createElement('span');
     chip.className = 'chip';
-    chip.innerHTML = `${escapeHTML(n.titulo)} <button class="icon-ghost" data-idx="${i}">×</button>`;
-    chip.querySelector('button').onclick = () => {
+    chip.innerHTML = `${escapeHTML(n.titulo)} <button class="icon-ghost" data-idx="${i}" type="button">×</button>`;
+    chip.querySelector('button').onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
       state.selecionados.splice(i, 1);
       renderSelected();
       updatePromptButtonsState();
@@ -179,9 +181,9 @@ function openArticleModalByIndex(idx) {
     ? 'Já incluído'
     : (state.selecionados.length >= 5 ? 'Limite atingido (5)' : 'Incluir no prompt');
 
-  appEls.modalArtigo.showModal();
+  // Só abre se ainda não estiver aberto (evita exceção)
+  if (!appEls.modalArtigo.open) appEls.modalArtigo.showModal();
 }
-
 function openArticleModalByNode(node) {
   const idx = state.artigosIndex.findIndex(n => n.titulo === node.titulo);
   if (idx >= 0) openArticleModalByIndex(idx);
@@ -206,7 +208,8 @@ ${blocos}
 }
 
 // ===== Eventos =====
-async function onBuscar() {
+async function onBuscar(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   const codeId = appEls.selCodigo.value;
   const entrada = appEls.inpArtigo.value.trim();
 
@@ -232,7 +235,8 @@ async function onBuscar() {
     appEls.resultMsg.textContent = 'Erro ao carregar os dados.';
   }
 }
-function onIncluir() {
+function onIncluir(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   const node = state.artigosIndex[state.artigoAtualIdx];
   if (!node || state.selecionados.length >= 5) return;
   if (state.selecionados.some(n => n.titulo === node.titulo)) return;
@@ -244,51 +248,60 @@ function onIncluir() {
   appEls.btnIncluir.disabled = true;
   appEls.btnIncluir.textContent = 'Incluído ✔';
 }
-function onClearSelecionados() {
+function onClearSelecionados(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   state.selecionados = [];
   renderSelected();
   updatePromptButtonsState();
   appEls.promptArea.hidden = true;
   appEls.promptBox.textContent = '';
 }
-function onGerarPrompt() {
+function onGerarPrompt(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   const prompt = buildMultiPrompt(state.selecionados);
   state.prompt = prompt;
   appEls.promptBox.textContent = prompt;
   appEls.promptArea.hidden = false;
 }
-async function onCopiar() {
-  try {
-    await navigator.clipboard.writeText(state.prompt || '');
-  } catch {}
+async function onCopiar(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  try { await navigator.clipboard.writeText(state.prompt || ''); } catch {}
 }
 
 // ===== Init =====
 function bind() {
-  appEls.btnBuscar.onclick = onBuscar;
-  appEls.btnIncluir.onclick = onIncluir;
-  appEls.btnClearSel.onclick = onClearSelecionados;
-  appEls.btnGerarPrompt.onclick = onGerarPrompt;
-  appEls.btnCopiar.onclick = onCopiar;
-  appEls.btnFechar.onclick = () => appEls.modalArtigo.close();
+  // Evita que botões dentro de <form method="dialog"> fechem o modal
+  ['btnPrev','btnNext','btnIncluir','btnFechar','btnBuscar','btnGerarPrompt','btnClearSel','btnCopiar']
+    .forEach(k => appEls[k] && appEls[k].setAttribute('type','button'));
 
-  appEls.btnPrev.onclick = () => {
-  if (state.artigoAtualIdx > 0)
-    openArticleModalByIndex(state.artigoAtualIdx - 1);
-};
+  appEls.btnBuscar.addEventListener('click', onBuscar);
+  appEls.btnIncluir.addEventListener('click', onIncluir);
+  appEls.btnClearSel.addEventListener('click', onClearSelecionados);
+  appEls.btnGerarPrompt.addEventListener('click', onGerarPrompt);
+  appEls.btnCopiar.addEventListener('click', onCopiar);
 
-appEls.btnNext.onclick = () => {
-  if (state.artigoAtualIdx < state.artigosIndex.length - 1)
-    openArticleModalByIndex(state.artigoAtualIdx + 1);
-};
+  appEls.btnFechar.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    appEls.modalArtigo.close();
+  });
 
+  appEls.btnPrev.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (state.artigoAtualIdx > 0)
+      openArticleModalByIndex(state.artigoAtualIdx - 1);
+  });
+  appEls.btnNext.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (state.artigoAtualIdx < state.artigosIndex.length - 1)
+      openArticleModalByIndex(state.artigoAtualIdx + 1);
+  });
 
-  appEls.inpArtigo.onkeydown = e => {
+  appEls.inpArtigo.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
-      e.preventDefault();
+      e.preventDefault(); e.stopPropagation();
       onBuscar();
     }
-  };
+  });
 }
 function start() {
   renderCodeSelect();
