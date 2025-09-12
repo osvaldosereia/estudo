@@ -6,7 +6,7 @@
   <title>Vade Mecum — Busca Rápida de Artigos</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
-  <meta name="theme-color" content="#16a34a"/>
+  <meta name="theme-color" content="#212842"/>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -29,19 +29,19 @@
   <main class="page" role="main">
     <section class="controls" aria-label="Busca de Artigos">
       <div class="grid">
-        <div class="field">
+        <div class="field" data-area="code">
           <label for="selCodigo">Código/Lei</label>
           <select id="selCodigo" class="input" aria-label="Selecione o Código ou Lei"></select>
         </div>
-        <div class="field">
-          <label for="inpArtigo">Artigo</label>
+        <div class="field" data-area="article">
+          <label for="inpArtigo">Número do Artigo</label>
           <input id="inpArtigo" class="input" placeholder="Ex.: 121 ou 121-A" aria-label="Número do artigo" />
         </div>
-        <div class="field button-cell">
+        <div class="field button-cell" data-area="go">
           <button id="btnBuscar" class="button">Buscar</button>
         </div>
       </div>
-      <p class="hint">Dica: digite apenas o número (ex.: <code>121</code>) ou com letra (ex.: <code>121-A</code>). Também aceita busca por termos com 4+ letras.</p>
+      <p class="hint">Dica: digite apenas o número (ex.: 121) ou com letra (ex.: 121-A). Também aceita busca por termos com 4+ letras.</p>
     </section>
 
     <section class="results" aria-label="Resultados">
@@ -74,10 +74,6 @@
     </section>
   </main>
 
-  <footer class="bottombar" role="contentinfo">
-    <small>Feito para estudantes de Direito • 100% client-side no GitHub Pages</small>
-  </footer>
-
   <dialog id="modalInfo" class="modal">
     <form method="dialog" class="modal-content">
       <h3>Como funciona</h3>
@@ -91,20 +87,22 @@
   <dialog id="modalArtigo" class="modal article-modal">
     <form method="dialog" class="modal-content">
       <header class="am-top">
-        <button id="btnPrev" class="icon-ghost" title="Artigo anterior" aria-label="Artigo anterior">←</button>
         <div class="am-title" id="amTitle">Artigo</div>
-        <button id="btnNext" class="icon-ghost" title="Próximo artigo" aria-label="Próximo artigo">→</button>
       </header>
       <div class="am-body">
         <div id="amBody"></div>
       </div>
       <footer class="am-actions">
-        <button id="btnFechar" value="cancel" class="chip">Fechar</button>
-        <button id="btnIncluir" class="button">Incluir no prompt</button>
+        <button id="btnPrev" class="btn-nav" title="Artigo anterior" aria-label="Artigo anterior">←</button>
+        <div class="am-center">
+          <button id="btnFechar" value="cancel" class="chip">Fechar</button>
+          <button id="btnIncluir" class="button">Incluir no prompt</button>
+        </div>
+        <button id="btnNext" class="btn-nav" title="Próximo artigo" aria-label="Próximo artigo">→</button>
       </footer>
     </form>
   </dialog>
 
-  <script src="script.js?v=2025-09-11-fast"></script>
+  <script src="script.js?v=2025-09-11-fast2"></script>
 </body>
 </html>
