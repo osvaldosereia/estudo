@@ -1,0 +1,17 @@
+{
+  "art121": {
+    "titulo": "Art. 121 — Homicídio",
+    "questoes": [
+      {
+        "enunciado": "No homicídio simples, qual é o bem jurídico tutelado?",
+        "alternativas": ["Honra", "Patrimônio", "Vida", "Dignidade sexual"],
+        "correta": 2,
+        "comentario": "O tipo penal protege a vida humana extrauterina."
+      }
+    ]
+  },
+  "art121a": {
+    "titulo": "Art. 121-A — Exemplo",
+    "questoes": []
+  }
+}
