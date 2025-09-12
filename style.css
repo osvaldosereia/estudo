@@ -8,7 +8,7 @@ html,body{height:100%}
 
   /* Derivados */
   --bg:var(--cream);
-  --topbar:#E9DFC9;          /* cream um tom mais escuro */
+  --topbar:#C9BFA9;          /* cream um tom mais escuro */
   --surface:var(--white);
   --surface-2:#F5EDDE;
   --muted:#5b6478;
