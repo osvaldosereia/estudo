@@ -2,10 +2,10 @@
 const state = {
   codigo: null,
   termoBusca: '',
-  artigoAtualIdx: -1,            // índice do artigo atualmente aberto no modal
-  artigosIndex: [],              // lista ordenada de nós (para prev/next)
-  artigosData: null,             // mapa id->nó do código carregado
-  selecionados: [],              // até 5 artigos {id, numero, titulo, texto}
+  artigoAtualIdx: -1,
+  artigosIndex: [],
+  artigosData: null,
+  selecionados: [],
   prompt: ''
 };
 
@@ -20,13 +20,12 @@ const CODES = [
   {id: 'clt', label: 'CLT', group: 'Códigos'},
   {id: 'ctn', label: 'Código Tributário Nacional', group: 'Códigos'},
 
-  // Leis (exemplos — adicione os JSON depois em /data/)
+  // Leis (exemplos)
   {id: 'lei_mediacao', label: 'Lei de Mediação (13.140/2015)', group: 'Leis'},
   {id: 'lei_9099', label: 'Lei 9.099/1995 (Juizados)', group: 'Leis'}
 ];
 
 const FALLBACK = {
-  // fallback mínimo p/ testes (apenas CP art1/2)
   "codigo_penal": {
     "art1": {
       "id": "art1","numero":"1","titulo":"Art. 1º",
@@ -84,9 +83,9 @@ function byNumeroComparator(a,b){
   const [bn, bx] = numeroBase(b.numero||'');
   if (an!==bn) return (an||0)-(bn||0);
   if (ax===bx) return 0;
-  if (!ax) return -1; // sem letra vem antes
+  if (!ax) return -1;
   if (!bx) return 1;
-  return ax.localeCompare(bx); // A < B < C
+  return ax.localeCompare(bx);
 }
 
 // ===== Data =====
@@ -121,7 +120,6 @@ async function ensureCodeLoaded(codeId){
       throw err;
     }
   }
-  // construir índice ordenado
   const nodes = Object.values(state.artigosData);
   nodes.sort(byNumeroComparator);
   state.artigosIndex = nodes;
@@ -130,13 +128,12 @@ async function ensureCodeLoaded(codeId){
 // ===== Render básico =====
 function renderCodeSelect(){
   const groups = [...new Set(CODES.map(c=>c.group))];
-  appEls.selCodigo.innerHTML = groups.map(g=>{
+  selCodigo.innerHTML = groups.map(g=>{
     const opts = CODES.filter(c=>c.group===g)
       .map(c=>`<option value="${c.id}">${escapeHTML(c.label)}</option>`).join('');
     return `<optgroup label="${escapeHTML(g)}">${opts}</optgroup>`;
   }).join('');
-  // seleção padrão
-  appEls.selCodigo.value = state.codigo || 'codigo_penal';
+  selCodigo.value = state.codigo || 'codigo_penal';
 }
 
 function clearResults(){
@@ -178,7 +175,6 @@ function updatePromptButtonsState(){
 function tokensFromEntrada(entrada){
   return norm(entrada).split(/\s+/).filter(t=>t.length>=4);
 }
-
 function buildFullText(node){
   const parts=[];
   if(node.caput) parts.push(node.caput);
@@ -192,15 +188,14 @@ function buildFullText(node){
   if(node.texto) parts.push(node.texto);
   return parts.join('\n');
 }
-
 function matchByNumber(node, entradaNum){
   const [nb] = numeroBase(node.numero||'');
   return String(nb) === String(entradaNum) && !/[A-Za-z]/.test(node.numero||'');
 }
 function matchTituloOuNumero(node, entradaRaw){
   const e = norm(entradaRaw).replace(/\s+/g,'');
-  const t = norm(node.titulo||'').replace(/\s+/g,''); // art.121a
-  const n = norm(node.numero||''); // 121-a
+  const t = norm(node.titulo||'').replace(/\s+/g,'');
+  const n = norm(node.numero||'');
   return e===n || e===t || e===('art'+n) || e===('artigo'+n);
 }
 function matchByText(node, entrada){
@@ -209,23 +204,18 @@ function matchByText(node, entrada){
   const corpus = norm(buildFullText(node));
   return tokens.every(t => corpus.includes(t));
 }
-
 async function searchArticle(codeId, entrada){
   await ensureCodeLoaded(codeId);
   const nodes = state.artigosIndex.slice();
 
-  // A) match exato por numero/titulo (inclui 121-A, art121a etc.)
   const hitExact = nodes.find(n => matchTituloOuNumero(n, entrada));
   if (hitExact) return hitExact;
 
-  // B) se só números, priorizar sem letra (121 ≠ 121-A)
   const num = onlyDigits(entrada);
   if(num){
     const hitNum = nodes.find(n => matchByNumber(n, num));
     if(hitNum) return hitNum;
   }
-
-  // C) fallback textual
   const hitText = nodes.find(n => matchByText(n, entrada));
   return hitText || null;
 }
@@ -284,7 +274,6 @@ function renderArticleHTML(node){
 function indexOfNode(node){
   return state.artigosIndex.findIndex(n => (n.id && node.id && n.id===node.id) || (n.titulo===node.titulo && n.numero===node.numero));
 }
-
 function openArticleModalByIndex(idx){
   if (idx<0 || idx>=state.artigosIndex.length) return;
   state.artigoAtualIdx = idx;
@@ -296,27 +285,22 @@ function openArticleModalByIndex(idx){
   appEls.btnPrev.disabled = (idx<=0);
   appEls.btnNext.disabled = (idx>=state.artigosIndex.length-1);
 
-  // Botão incluir no prompt
   const already = state.selecionados.some(s => (s.id && node.id && s.id===node.id) || (s.titulo===node.titulo && s.numero===node.numero));
   appEls.btnIncluir.disabled = already || state.selecionados.length >= 5;
   appEls.btnIncluir.textContent = already ? 'Já incluído' : (state.selecionados.length>=5 ? 'Limite atingido (5)' : 'Incluir no prompt');
 
   if (!appEls.modalArtigo.open) appEls.modalArtigo.showModal();
 }
-
 function openArticleModalByNode(node){
   const idx = indexOfNode(node);
   openArticleModalByIndex(idx>=0 ? idx : 0);
 }
 
 // ===== Prompt =====
-function codeLabelById(id){
-  return CODES.find(c=>c.id===id)?.label || 'Código/Lei';
-}
-
+function codeLabelById(id){ return CODES.find(c=>c.id===id)?.label || 'Código/Lei'; }
 function buildMultiPrompt(selecionados, codeId){
   const codeLabel = codeLabelById(codeId);
-  const blocos = selecionados.map((n,i)=> {
+  const blocos = selecionados.map(n=> {
     const titulo = n.titulo || `Art. ${n.numero||''}`;
     const texto = n.texto || buildFullText(n);
     return `### ${titulo}
@@ -360,11 +344,8 @@ async function onBuscar(){
       appEls.resultMsg.textContent = 'Não encontrei esse artigo. Tente só o número (ex.: 121) ou 121-A. Também aceito busca por termos com 4+ letras.';
       return;
     }
-
-    // Mostra 1 chip — e prepara navegação em todo o código
     appEls.resultMsg.textContent = '';
     renderResultChip(hit);
-
   } catch(err){
     console.error(err);
     appEls.resultMsg.innerHTML = `❌ Não consegui carregar os dados para <code>${escapeHTML(codeId)}</code>.
@@ -372,14 +353,8 @@ async function onBuscar(){
   }
 }
 
-function onPrev(e){
-  e.preventDefault();
-  if (state.artigoAtualIdx>0) openArticleModalByIndex(state.artigoAtualIdx-1);
-}
-function onNext(e){
-  e.preventDefault();
-  if (state.artigoAtualIdx<state.artigosIndex.length-1) openArticleModalByIndex(state.artigoAtualIdx+1);
-}
+function onPrev(e){ e.preventDefault(); if (state.artigoAtualIdx>0) openArticleModalByIndex(state.artigoAtualIdx-1); }
+function onNext(e){ e.preventDefault(); if (state.artigoAtualIdx<state.artigosIndex.length-1) openArticleModalByIndex(state.artigoAtualIdx+1); }
 function onIncluir(e){
   e.preventDefault();
   const node = state.artigosIndex[state.artigoAtualIdx];
@@ -387,18 +362,15 @@ function onIncluir(e){
   const exists = state.selecionados.some(s => (s.id && node.id && s.id===node.id) || (s.titulo===node.titulo && s.numero===node.numero));
   if (exists || state.selecionados.length>=5) return;
 
-  // Salva um snapshot mínimo
   state.selecionados.push({
     id: node.id, numero: node.numero, titulo: node.titulo, texto: node.texto || buildFullText(node)
   });
   renderSelected();
   updatePromptButtonsState();
 
-  // feedback
   appEls.btnIncluir.disabled = true;
   appEls.btnIncluir.textContent = 'Incluído ✔';
 }
-
 function onClearSelecionados(){
   state.selecionados = [];
   renderSelected();
@@ -406,24 +378,18 @@ function onClearSelecionados(){
   appEls.promptArea.hidden = true;
   appEls.promptBox.textContent = '';
 }
-
 function onGerarPrompt(){
   const prompt = buildMultiPrompt(state.selecionados, state.codigo);
   state.prompt = prompt;
   appEls.promptBox.textContent = prompt;
   appEls.promptArea.hidden = false;
 }
-
-async function onCopiar(){
-  try{
-    await navigator.clipboard.writeText(state.prompt||'');
-  }catch{}
-}
+async function onCopiar(){ try{ await navigator.clipboard.writeText(state.prompt||''); }catch{} }
 
 // ===== Boot =====
 function bind(){
-  document.getElementById('btnInfo')?.addEventListener('click',()=>appEls.modalInfo.showModal());
-  document.getElementById('btnReset')?.addEventListener('click',()=>{
+  appEls.btnInfo?.addEventListener('click',()=>appEls.modalInfo.showModal());
+  appEls.btnReset?.addEventListener('click',()=>{
     appEls.inpArtigo.value=''; clearResults(); onClearSelecionados();
   });
   appEls.btnBuscar.addEventListener('click', onBuscar);
@@ -432,18 +398,12 @@ function bind(){
   appEls.btnPrev.addEventListener('click', onPrev);
   appEls.btnNext.addEventListener('click', onNext);
   appEls.btnIncluir.addEventListener('click', onIncluir);
-  appEls.btnFechar.addEventListener('click', ()=>{/* fecha pelo method=dialog */});
+  appEls.btnFechar.addEventListener('click', ()=>{/* fecha via method=dialog */});
 
   appEls.btnClearSel.addEventListener('click', onClearSelecionados);
   appEls.btnGerarPrompt.addEventListener('click', onGerarPrompt);
   appEls.btnCopiar.addEventListener('click', onCopiar);
 }
-
-function start(){
-  renderCodeSelect();
-  bind();
-  // seleção padrão
-  state.codigo = appEls.selCodigo.value;
-}
+function start(){ renderCodeSelect(); bind(); state.codigo = appEls.selCodigo.value; }
 
 document.addEventListener('DOMContentLoaded', start);
