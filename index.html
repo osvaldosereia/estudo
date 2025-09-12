@@ -31,14 +31,14 @@
       <div class="grid">
         <div class="field" data-area="code">
           <label for="selCodigo">Código/Lei</label>
-          <select id="selCodigo" class="input" aria-label="Selecione o Código ou Lei"></select>
+          <select id="selCodigo" class="input select" aria-label="Selecione o Código ou Lei"></select>
         </div>
         <div class="field" data-area="article">
           <label for="inpArtigo">Número do Artigo</label>
           <input id="inpArtigo" class="input" placeholder="Ex.: 121 ou 121-A" aria-label="Número do artigo" />
         </div>
         <div class="field button-cell" data-area="go">
-          <button id="btnBuscar" class="button">Buscar</button>
+          <button id="btnBuscar" class="btn btn-primary">Buscar</button>
         </div>
       </div>
       <p class="hint">Dica: digite apenas o número (ex.: 121) ou com letra (ex.: 121-A). Também aceita busca por termos com 4+ letras.</p>
@@ -53,22 +53,22 @@
     <section class="selected" aria-label="Artigos Selecionados">
       <div class="selected-head">
         <h3 class="section-title">Selecionados para o prompt <span id="selCount">(0/5)</span></h3>
-        <button id="btnClearSel" class="chip danger" title="Limpar seleção">Limpar</button>
+        <button id="btnClearSel" class="btn btn-outline" title="Limpar seleção">Limpar</button>
       </div>
       <div id="selectedChips" class="group"></div>
 
       <div class="prompt-actions">
-        <button id="btnGerarPrompt" class="button" disabled>Gerar Prompt</button>
+        <button id="btnGerarPrompt" class="btn btn-primary" disabled>Gerar Prompt</button>
       </div>
 
       <div id="promptArea" class="prompt-area" hidden>
         <h4>Seu Prompt</h4>
         <div id="promptBox" class="prompt-box"></div>
         <div class="group" style="margin-top:8px">
-          <button id="btnCopiar" class="button">Copiar</button>
-          <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
-          <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
-          <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
+          <button id="btnCopiar" class="btn btn-primary">Copiar</button>
+          <a class="btn btn-outline" href="https://chatgpt.com/" target="_blank" rel="noopener">Abrir ChatGPT</a>
+          <a class="btn btn-outline" href="https://gemini.google.com/app" target="_blank" rel="noopener">Abrir Gemini</a>
+          <a class="btn btn-outline" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Abrir Perplexity</a>
         </div>
       </div>
     </section>
@@ -79,7 +79,7 @@
       <h3>Como funciona</h3>
       <p>Escolha um Código/Lei, busque pelo artigo, clique no chip para abrir o texto em modal e use as setas para ir ao anterior/próximo. Clique em <b>Incluir no prompt</b> para montar até 5 artigos e depois gerar o prompt.</p>
       <menu class="modal-actions">
-        <button value="cancel" class="primary">Entendi</button>
+        <button value="cancel" class="btn btn-primary">Entendi</button>
       </menu>
     </form>
   </dialog>
@@ -89,20 +89,23 @@
       <header class="am-top">
         <div class="am-title" id="amTitle">Artigo</div>
       </header>
+
       <div class="am-body">
         <div id="amBody"></div>
       </div>
+
+      <!-- Base fixa com setas laterais e botões centrais -->
       <footer class="am-actions">
-        <button id="btnPrev" class="btn-nav" title="Artigo anterior" aria-label="Artigo anterior">←</button>
+        <button id="btnPrev" class="btn btn-outline btn-square" title="Artigo anterior" aria-label="Artigo anterior">←</button>
         <div class="am-center">
-          <button id="btnFechar" value="cancel" class="chip">Fechar</button>
-          <button id="btnIncluir" class="button">Incluir no prompt</button>
+          <button id="btnFechar" value="cancel" class="btn btn-outline">Fechar</button>
+          <button id="btnIncluir" class="btn btn-primary">Incluir no prompt</button>
         </div>
-        <button id="btnNext" class="btn-nav" title="Próximo artigo" aria-label="Próximo artigo">→</button>
+        <button id="btnNext" class="btn btn-outline btn-square" title="Próximo artigo" aria-label="Próximo artigo">→</button>
       </footer>
     </form>
   </dialog>
 
-  <script src="script.js?v=2025-09-11-fast2"></script>
+  <script src="script.js?v=2025-09-11-fast3"></script>
 </body>
 </html>
