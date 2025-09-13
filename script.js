@@ -157,7 +157,7 @@ async function ensureCodeLoaded(codeId){
   state.artigosIndex.forEach(n=>{ n._nt = norm(n.titulo||''); });
 }
 async function autoDiscoverCodes(){
-  const candidates=['codigo_civil','codigo_penal','codigo_cpc','codigo_cpp','codigo_ctn','codigo_consumidor'];
+  const candidates=['codigo_civil','codigo_penal','codigo_cpc','codigo_processo_penal','codigo_ctn','codigo_consumidor'];
   const found=[];
   for (const id of candidates){
     const has = await fileExists(`data/${id}_vademecum.json`) || await fileExists(`data/${id}.json`);
