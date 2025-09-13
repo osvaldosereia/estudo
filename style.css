@@ -286,3 +286,10 @@ mark{background:rgba(255, 238, 128,.7)}
   z-index:1000; font-weight:700;
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
+
+/* Espaçamento entre radios e botão Limpar */
+.search-options {
+  display: flex;
+  align-items: center;
+  gap: 14px; /* ajuste o valor conforme o visual */
+}
