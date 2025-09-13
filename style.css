@@ -348,19 +348,51 @@ mark{background:rgba(255, 238, 128,.7)}
   }
 }
 
-/* ==== Mini-modal: Estudar Rápido ==== */
+/* ==== Mini-modal: Estudar Rápido ===================================== */
 .ia-modal { width: clamp(300px, 92vw, 420px); }
-.ia-modal .modal-content { height: auto; }
+.ia-modal::backdrop { background: rgba(0,0,0,.4); }
+
+.ia-modal .modal-content{
+  height: auto;
+  padding: 0; /* usa header/body próprios */
+}
 
 .ia-top{
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface-2);
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  background: var(--surface-2);
 }
-.ia-title{ font-weight:600; color:var(--brand); }
+.ia-title{ font-weight:600; color: var(--brand); }
 
-.ia-body{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
-.ia-text{ margin:0; color:#1a1f30; }
+.ia-body{
+  padding:14px 16px;
+  display:flex; flex-direction:column; gap:12px;
+}
+.ia-text{ margin:0; color:#1a1f30; line-height:1.45; }
 
 .ia-grid{
-  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  display:grid; gap:8px;
+  grid-template-columns: 1fr 1fr;   /* 2x2 no mobile */
 }
+@media (min-width: 640px){
+  .ia-grid{ grid-template-columns: repeat(4, 1fr); } /* 4 colunas em telas maiores */
+}
+
+/* Botões das IAs (mantém o visual do site) */
+.ia-grid .btn{ height:38px; }
+
+/* Botão “X” com hit-area confortável */
+.icon-btn.ghost{
+  border:0; background:transparent; cursor:pointer;
+  width:32px; height:32px; line-height:1; font-size:20px;
+  border-radius:8px; display:inline-flex; align-items:center; justify-content:center;
+}
+.icon-btn.ghost:hover{ background: rgba(0,0,0,.06); }
+@media (prefers-color-scheme: dark){
+  .icon-btn.ghost:hover{ background: rgba(255,255,255,.08); }
+}
+
+/* ==== (Opcional) limpar debug antigo, caso exista ==================== */
+.search-options{ background: transparent !important; }
+
