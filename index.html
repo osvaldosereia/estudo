@@ -69,7 +69,10 @@
           <button id="btnBuscar" class="btn btn-primary" type="button">Buscar</button>
         </div>
       </div>
-      <p class="hint">Aceita número (ex.: 121, 121-A) ou <b>palavras inteiras</b>. Use o alternador para modo <b>Preciso</b> ou <b>Flexível</b>.</p>
+
+      <!-- Fonte menor nesta dica -->
+      <p class="hint hint--sm">Aceita número (ex.: 121, 121-A) ou <b>palavras inteiras</b>. Use o alternador para modo <b>Preciso</b> ou <b>Flexível</b>.</p>
+
       <div class="search-options">
         <label class="seg">
           <input type="radio" name="mode" value="precise" checked>
@@ -111,7 +114,8 @@
         <button id="btnNext" class="btn btn-outline btn-square" title="Próximo artigo" aria-label="Próximo artigo" type="button">→</button>
       </header>
       <div class="am-subtop">
-        <button id="btnScope" class="btn btn-outline btn-small" type="button" title="Alternar navegação">Navegar: Resultados</button>
+        <!-- btnScope será mostrado só quando houver busca com mais de 1 resultado -->
+        <button id="btnScope" class="btn btn-outline btn-small" type="button" title="Alternar navegação" hidden>Navegar: Resultados</button>
         <button id="btnFav" class="btn btn-outline btn-small" type="button" title="Favoritar">☆ Favoritar</button>
       </div>
       <div class="am-body" id="amBody" tabindex="0"></div>
@@ -119,7 +123,6 @@
       <footer class="am-actions">
         <button id="btnFechar" class="btn btn-outline btn-square" title="Fechar" aria-label="Fechar" type="button">×</button>
         <div class="am-flexgap"></div>
-        
         <div id="amPromptWrap" class="am-prompt-wrap">
           <button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>
         </div>
@@ -130,7 +133,10 @@
   <!-- Modal Favoritos -->
   <dialog id="modalFavs" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Favoritos</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Favoritos</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="modal-search">
         <select id="favScope" class="input select" aria-label="Filtrar por código">
           <option value="current">Somente do código atual</option>
@@ -139,7 +145,7 @@
       </div>
       <div id="favList" class="list-wrap skeleton"></div>
       <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
+        <button class="btn btn-primary" type="button" data-close>Fechar</button>
       </menu>
     </form>
   </dialog>
@@ -147,39 +153,53 @@
   <!-- Modal Vídeos (opcional) -->
   <dialog id="modalVideos" class="modal videos-modal">
     <form method="dialog" class="modal-content">
-      <header class="vd-top"><div class="vd-title" id="vdTitle">Vídeo aula</div></header>
+      <div class="modal-head">
+        <h3 class="modal-title" id="vdTitle">Vídeo aula</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="vd-body"><ul id="vdLista" class="vd-lista"></ul></div>
-      <footer class="vd-actions"><button id="btnVdFechar" value="cancel" class="btn btn-primary" type="button">Fechar</button></footer>
+      <footer class="vd-actions">
+        <button id="btnVdFechar" class="btn btn-primary" type="button">Fechar</button>
+      </footer>
     </form>
   </dialog>
 
   <!-- Modais da Sidebar -->
   <dialog id="modalCursos" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Dicas de Cursos</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Dicas de Cursos</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div id="cursosBody" class="pad">Carregando…</div>
       <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
+        <button class="btn btn-primary" type="button" data-close>Fechar</button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="modalNoticias" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Notícias e Artigos Acadêmicos</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Notícias e Artigos Acadêmicos</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="modal-search">
         <input id="newsSearch" class="input" placeholder="Buscar por título, fonte ou palavra-chave" aria-label="Buscar notícias e artigos">
       </div>
       <div id="newsList" class="list-wrap skeleton"></div>
       <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
+        <button class="btn btn-primary" type="button" data-close>Fechar</button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="modalVocab" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Vocabulário Jurídico</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Vocabulário Jurídico</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="modal-search">
         <input id="vocabSearch" class="input" placeholder="Buscar termo" aria-label="Buscar no vocabulário">
       </div>
@@ -194,7 +214,10 @@
 
   <dialog id="modalPrincipios" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Princípios do Direito</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Princípios do Direito</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="modal-search">
         <input id="princSearch" class="input" placeholder="Buscar princípio" aria-label="Buscar princípios">
       </div>
@@ -209,14 +232,17 @@
 
   <dialog id="modalSobre" class="modal">
     <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Sobre</h3>
+      <div class="modal-head">
+        <h3 class="modal-title">Sobre</h3>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
       <div class="pad">Informações do projeto direito.love.</div>
       <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
+        <button class="btn btn-primary" type="button" data-close>Fechar</button>
       </menu>
     </form>
   </dialog>
 
-  <script src="script.js?v=uxui-favs-ac-1"></script>
+  <script src="script.js?v=fix-scope-copy-close-1"></script>
 </body>
 </html>
