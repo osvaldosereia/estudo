@@ -1,28 +1,14 @@
 /* =========================================================================
-   Vade Mecum Digital — script.js (TXT-first)
-   Regras:
-   - Fonte primária: .txt (como no Planalto). JSON só como fallback.
-   - Parser de artigos (linha começa com ART/Art/Artigo):
-       * Título: "Art. N" (+ sufixo A/B/C se houver)
-       * Corpo: do fim do cabeçalho até **o ÚLTIMO '.'** antes do próximo "Art"
-         (case-insensitive), sem “comer” o cabeçalho seguinte.
-   - Busca por número ou palavra → abre modal do artigo
-   - “Estudar Rápido” gera o mesmo prompt de sempre (sem seleção de estratégia)
-   - UX: favoritos, autocomplete, chips/lista, mini-modal IA, sidebar, etc.
+   Vade Mecum Digital — script.js (TXT-first, fixes de parsing e busca)
+   - Fonte primária: .txt (Planalto). JSON só como fallback.
+   - Parser:
+       * Artigo começa em linha com "Art"/"ART"/"Artigo" + número (+ sufixo A-Z opcional)
+       * Artigo termina no ÚLTIMO '.' OU ')' antes do próximo "Art"
+       * Título vira "Art. N" ou "Art. N-A" SOMENTE se existir também "Art. N"
+         (senão, a letra capturada é devolvida ao texto: "A pena…")
+   - Modal mostra o BLOCO DO TXT exatamente como está no arquivo (sem quebrar)
+   - Busca por número e palavras ajustada
    ========================================================================= */
-
-/* UX + UI upgrades (incl. Favoritos + Autocomplete):
-   - Fechar modal NÃO limpa busca; botão "Limpar" separado
-   - Prev/Next percorre resultados quando aberto da busca (toggle Resultados/Código)
-   - Toast "Copiado!"
-   - Resultados Chips/Lista com snippet + destaque
-   - Busca Precisa/Flexível
-   - Autocomplete de títulos de artigos (Enter/Setas/Click)
-   - Lembrar último código (localStorage) + Favoritar artigo + Modal Favoritos
-   - Skeleton em listas; polyfill básico de <dialog>
-   - Dark mode via tokens (CSS)
-   - Estudar Rápido: mini-modal com 4 IAs (GPT, Gemini, Copilot, Perplexity)
-*/
 
 const state = {
   codigo: null,
@@ -123,7 +109,9 @@ const appEls = {
 
 /* ====== Utils ====== */
 const escapeHTML = s => (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+const norm = s => (s||'').toLowerCase().normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ')
+  .replace(/\s+/g,' ').trim();
 const words = s => { const n=norm(s); return n?n.split(' ').filter(Boolean):[]; };
 const onlyDigits = s => { const m=String(s||'').match(/\d{1,4}/); return m?m[0]:null; };
 const codeKeyFromId = id => String(id||'').replace(/^codigo_/,'').trim();
@@ -155,91 +143,105 @@ async function fileExists(path){
   try{ const r=await fetch(url,{method:'HEAD',cache:'no-store'}); return r.ok; }catch{ return false; }
 }
 
-/* ====== Códigos (TXT-first) ============================================= */
-/* Esta versão prioriza .txt (como no Planalto) e mantém JSON como fallback. */
-
+/* ====== TXT-first loader ================================================= */
 async function getText(path){
   const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
   const r = await fetch(url, { cache:'no-store' });
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.text();
 }
-
 function normalizeNewlines(s){ return String(s||'').replace(/\r\n?/g, '\n'); }
 
 /**
- * Parser TXT → artigos
- * - Cabeçalho: início de linha contendo "Art", "ART" ou "Artigo" + número (+ sufixo A/B/C)
- * - Corpo: do fim do cabeçalho até o **ÚLTIMO ponto final ('.')** que ocorra
- *          antes do próximo cabeçalho "Art" (case-insensitive).
- *   -> Isso evita que títulos/subtítulos do código vazem para dentro do artigo.
- *
- * Retorna: { art121: { id, titulo, texto }, ... }
+ * Parser TXT → artigos (com pós-processamento para sufixos "A/B/C")
+ * - O bloco completo do artigo é guardado em `full` (igual ao TXT, cortado no último '.' ou ')').
+ * - `titulo`: "Art. N" ou "Art. N-A" SOMENTE se existir "Art. N" no conjunto.
+ * - `texto`: corpo sem o cabeçalho (útil para snippet/busca); mas no modal e no prompt usamos `full`.
  */
 function parseTxtToArtigos(txt){
   const text = normalizeNewlines(txt);
 
-  // Cabeçalhos em início de linha. Case-insensitive. Aceita "Art", "ART", "Artigo".
-  // Captura: número (1-4 dígitos) + sufixo opcional (A-Z) + sinais tipo º, o, pontuação final
+  // 1) Detectar todos os cabeçalhos
   const reHeader = /(^|\n)\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?/gi;
-
   const headers = [];
   let m;
   while ((m = reHeader.exec(text)) !== null) {
     const newlineLen = m[1] ? m[1].length : 0;
-    const headerStart = m.index + newlineLen;
-    headers.push({ headerStart });
+    headers.push({
+      start: m.index + newlineLen,
+      raw: m[0],
+      word: m[2],         // "Art" ou "Artigo"
+      num: m[3],          // número
+      suf: (m[4]||'').toUpperCase(), // sufixo capturado (A-Z) opcional
+    });
   }
   if (!headers.length) return {};
 
+  // 2) Montar blocos brutos (start..nextStart), cortando no último '.' ou ')'
+  const blocks = headers.map((h, i) => {
+    const nextStart = i < headers.length - 1 ? headers[i+1].start : text.length;
+    let block = text.slice(h.start, nextStart);
+
+    // Cortar no último '.' OU ')' antes do próximo "Art"
+    const lastDot  = block.lastIndexOf('.');
+    const lastParen= block.lastIndexOf(')');
+    const lastPos = Math.max(lastDot, lastParen);
+    if (lastPos >= 0) block = block.slice(0, lastPos + 1);
+
+    // Encontrar fim do cabeçalho dentro do bloco para separar texto sem header
+    const headerLineMatch = block.match(/^\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?\s*/i);
+    let headerEnd = 0;
+    if (headerLineMatch) headerEnd = headerLineMatch[0].length;
+
+    const body = block.slice(headerEnd).replace(/^\s+/, '');
+
+    return { ...h, nextStart, block, headerEnd, body };
+  });
+
+  // 3) Pré-títulos com sufixo (provisório)
+  const prelim = blocks.map(b => {
+    const key = `art${b.num}${(b.suf||'').toLowerCase()}`;
+    const titulo = `Art. ${b.num}${b.suf?('-'+b.suf):''}`;
+    return { id:key, num:b.num, suf:b.suf, titulo, full:b.block, texto:b.body };
+  });
+
+  // 4) Desambiguar sufixos: só vira "N-A" se existir também "N" puro
+  const byNum = new Map();
+  prelim.forEach(n => {
+    const arr = byNum.get(n.num) || [];
+    arr.push(n);
+    byNum.set(n.num, arr);
+  });
+
+  const hasPlain = new Map(); // num -> bool
+  byNum.forEach((arr, num) => {
+    hasPlain.set(num, arr.some(n => !n.suf)); // existe N sem sufixo?
+  });
+
   const data = {};
-  for (let i = 0; i < headers.length; i++) {
-    const start = headers[i].headerStart;
-    const nextStart = i < headers.length - 1 ? headers[i+1].headerStart : text.length;
-
-    // Isola a linha do cabeçalho (até no máx. 200 chars) para montar título e achar o fim do header
-    const headerSlice = text.slice(start, Math.min(start + 200, nextStart));
-    const headerLineMatch = headerSlice.match(/^\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?\s*/i);
-    if (!headerLineMatch) continue;
-
-    const headerEnd = start + headerLineMatch[0].length;
-
-    const num = headerLineMatch[2];
-    const suf = (headerLineMatch[3] || '').toUpperCase(); // ex.: 'A'
-    const titulo = `Art. ${num}${suf ? '-' + suf : ''}`;
-    const key = `art${num}${(suf || '').toLowerCase()}`;
-
-    // Segmento bruto entre este header e o próximo header
-    let segment = text.slice(headerEnd, nextStart);
-
-    // === Regra pedida: cortar no ÚLTIMO '.' antes do próximo "Art" ===
-    // 1) Se existir pelo menos um '.', cortamos no último ponto.
-    // 2) Se não houver '.', fica o segmento inteiro (pode acontecer em alguns textos).
-    const relLastDot = segment.lastIndexOf('.');
-    if (relLastDot >= 0) {
-      segment = segment.slice(0, relLastDot + 1);
+  prelim.forEach(n => {
+    if (n.suf && !hasPlain.get(n.num)) {
+      // sufixo foi um falso-positivo (ex.: "Art. 312 A pena…")
+      // -> título vira "Art. 312" e a letra já está no `full`/`texto` porque veio do TXT
+      n.titulo = `Art. ${n.num}`;
+      n.id = `art${n.num}`;
     }
-
-    // Limpeza leve nas bordas; preservar quebras internas e acentos
-    let body = segment.replace(/^\s+/, '').replace(/\s+$/, '');
-
-    data[key] = { id: key, titulo, texto: body };
-  }
+    data[n.id] = { id:n.id, titulo:n.titulo, texto:n.texto, full:n.full };
+  });
 
   return data;
 }
 
-/* Descoberta automática de códigos disponíveis: TXT primeiro, JSON fallback */
+/* Descoberta automática de códigos disponíveis (TXT primeiro, JSON fallback) */
 async function autoDiscoverCodes(){
   const candidates = [
-    // Começamos com o Penal (você pode adicionar Civil/CPC depois)
     { id:'codigo_Penal', label:'Código Penal',
       txt:['data/codigo_penal.txt','data/codigo_Penal.txt'],
       json:['data/codigo_Penal_vademecum.json','data/codigo_Penal.json'] },
   ];
 
   const found = [];
-  state.codePaths = {}; // id -> { type:'txt'|'json', path:string }
+  state.codePaths = {};
 
   for (const c of candidates){
     let chosen = null;
@@ -256,7 +258,6 @@ async function autoDiscoverCodes(){
       found.push({ id:c.id, label:c.label });
     }
   }
-
   return found;
 }
 
@@ -267,14 +268,12 @@ function renderCodeSelect(codes){
   el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
 }
 
-/* Carrega o código selecionado, parseando TXT se for o caso */
 async function tryLoadCodeData(codeId){
   const mapping = state.codePaths && state.codePaths[codeId];
   if (mapping && mapping.type === 'txt'){
     const raw = await getText(mapping.path);
     return parseTxtToArtigos(raw);
-    }
-  // Fallback antigo para JSON (mantido por compatibilidade)
+  }
   const paths=[`data/${codeId}_vademecum.json`,`data/${codeId}.json`];
   for (const p of paths){ try{ return await getJSON(p);}catch{} }
   throw new Error('Nenhum arquivo de código encontrado (.txt ou .json).');
@@ -285,11 +284,15 @@ async function ensureCodeLoaded(codeId){
   state.codigo = codeId;
   state.artigosData = await tryLoadCodeData(codeId);
   state.artigosIndex = Object.values(state.artigosData);
-  // pré-computa títulos normalizados para autocomplete
-  state.artigosIndex.forEach(n=>{ n._nt = norm(n.titulo||''); });
+
+  // índices normalizados para autocomplete/busca
+  state.artigosIndex.forEach(n=>{
+    n._nt = norm(n.titulo||'');         // ex.: "art 121 a"
+    n._ns = n._nt.replace(/\s+/g,'');   // ex.: "art121a"
+  });
 }
 
-/* ====== Catálogo de Vídeos ====== */
+/* ====== Vídeos (opcional) ====== */
 async function loadVideosCatalog(codeKey){
   if (state.catalogs.videos[codeKey]!==undefined) return state.catalogs.videos[codeKey];
   const tries=[`videos/${codeKey}_videos.json`,`videos/${codeKey}.json`,`videos/${codeKey}_video.json`];
@@ -301,13 +304,13 @@ async function loadVideosCatalog(codeKey){
 function nodeHasAllWholeWords(node, entrada){
   const toks = words(entrada).filter(w => w.length>=2 && !/^\d+$/.test(w));
   if (!toks.length) return false;
-  const textoWords = new Set(words(node.texto || ''));
+  const textoWords = new Set(words((node.full || node.texto || '')));
   return toks.every(t => textoWords.has(t));
 }
 function nodeContainsAny(node, entrada){
   const toks = words(entrada).filter(w => w.length>=3);
   if (!toks.length) return false;
-  const texto = norm(node.texto||'') + ' ' + norm(node.titulo||'');
+  const texto = norm((node.full||node.texto||'')) + ' ' + norm(node.titulo||'');
   return toks.some(t => texto.includes(t));
 }
 async function searchArticles(codeId, entrada){
@@ -315,31 +318,25 @@ async function searchArticles(codeId, entrada){
   const nodes = state.artigosIndex.slice();
   const raw = entrada.trim();
 
-  // tentativa direta por número/título
-  const soNumero = /^\d{1,4}([A-Za-z])?$/.test(raw);
-  const misto = /\d/.test(raw) && /[A-Za-z]/.test(raw);
-  const soLetras = /^[A-Za-zÀ-ÿ\s]+$/.test(raw);
+  // procura direta por número/título
+  const numMatch = raw.match(/^\s*(?:art\.?\s*)?(\d{1,4})([a-z])?\s*$/i);
+  if (numMatch){
+    const base = numMatch[1];
+    const suf  = (numMatch[2]||'').toLowerCase();
+    const target = `art${base}${suf}`;
+    const byNs = nodes.find(n => (n._ns||'') === target); // match exato "art121a"
+    if (byNs) return [byNs];
 
-  if (soNumero || misto){
-    const num = onlyDigits(raw);
-    if (num){
-      const hitNum = nodes.find(n => norm(n.titulo||'').includes(`art${num}`));
-      if (hitNum) return [hitNum];
-    }
-    const en = norm(raw).replace(/\s+/g,'');
-    const hitT = nodes.find(n => {
-      const t = norm(n.titulo||'').replace(/\s+/g,'');
-      return en===t || en===t.replace(/^art/,'');
-    });
-    if (hitT) return [hitT];
+    // fallback: contém "art121"
+    const contains = nodes.find(n => (n._ns||'').startsWith(`art${base}`));
+    if (contains) return [contains];
   }
 
   // busca textual
-  if (state.searchMode==='precise' || soLetras){
+  if (state.searchMode==='precise' || /^[A-Za-zÀ-ÿ\s]+$/.test(raw)){
     const precise = nodes.filter(n => nodeHasAllWholeWords(n, raw));
     if (precise.length) return precise;
   }
-  // flexível (contain/OR)
   const flex = nodes.filter(n => nodeContainsAny(n, raw));
   return flex;
 }
@@ -355,8 +352,8 @@ function highlight(text, query){
   });
   return html;
 }
-function buildSnippet(node, query, len=220){
-  const txt = node.texto || '';
+function buildSnippet(node, query, len=240){
+  const txt = node.full || node.texto || '';
   if (!query) return escapeHTML(txt.slice(0,len)) + (txt.length>len?'…':'');
   const toks = words(query).filter(w=>w.length>=3);
   if (!toks.length) return escapeHTML(txt.slice(0,len)) + (txt.length>len?'…':'');
@@ -405,20 +402,15 @@ function switchView(view){
     b.classList.toggle('is-active', active);
     b.setAttribute('aria-selected', active?'true':'false');
   });
-  if (view==='chips'){
-    appEls.resultChips.hidden=false;
-    appEls.resultList.hidden=true;
-  }else{
-    appEls.resultChips.hidden=true;
-    appEls.resultList.hidden=false;
-  }
+  appEls.resultChips.hidden = (view!=='chips');
+  appEls.resultList.hidden  = (view==='chips');
 }
 
-/* ====== Modal Artigo ====== */
+/* ====== Modal Artigo (render fiel ao TXT) ====== */
 const renderArticleHTML = node =>
   `<div class="article">
      <div class="art-title">${escapeHTML(node.titulo)}</div>
-     <pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.texto)}</pre>
+     <pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.full || node.texto || '')}</pre>
    </div>`;
 
 async function buildExtrasForArticle(node){
@@ -434,18 +426,14 @@ async function buildExtrasForArticle(node){
     b.onclick = ()=> renderVideosModal(vidCat[artKey]);
     appEls.amExtras.appendChild(b);
   }
-  const favBtn = appEls.btnFav;
-  if (favBtn){
+  if (appEls.btnFav){
     const fav = isFavorite(node);
-    favBtn.textContent = fav ? '★ Favorito' : '☆ Favoritar';
+    appEls.btnFav.textContent = fav ? '★ Favorito' : '☆ Favoritar';
   }
   appEls.amExtras.hidden = appEls.amExtras.children.length===0;
 }
 
-function getScopeArray(){
-  // Navegação pelo código completo
-  return state.artigosIndex || [];
-}
+function getScopeArray(){ return state.artigosIndex || []; }
 
 function openArticleModalByIndexVia(scopeArr, idx){
   if (idx<0 || idx>=scopeArr.length) return;
@@ -463,25 +451,16 @@ function openArticleModalByIndexVia(scopeArr, idx){
   appEls.btnNext.disabled = (idx>=scopeArr.length-1);
 
   renderCopyButton();
-
   showDialog(appEls.modalArtigo);
   appEls.amBody.focus({preventScroll:true});
 }
-function openArticleModalByIndex(idx){
-  return openArticleModalByIndexVia(getScopeArray(), idx);
-}
-function openArticleModalByNode(node, fromSearch = false){
+function openArticleModalByIndex(idx){ return openArticleModalByIndexVia(getScopeArray(), idx); }
+function openArticleModalByNode(node){
   if (!node) return;
-
-  // Sempre navegar pelo CÓDIGO TODO
   state.navScope = 'all';
   const scopeArr = state.artigosIndex || [];
-
-  // achar posição do artigo no array do código
-  let idx = scopeArr.findIndex(n => n.titulo === node.titulo);
-  if (idx < 0 && node.id) idx = scopeArr.findIndex(n => n.id === node.id);
-  if (idx < 0) idx = 0; // fallback seguro
-
+  let idx = scopeArr.findIndex(n => n.titulo === node.titulo || n.id===node.id);
+  if (idx < 0) idx = 0;
   openArticleModalByIndexVia(scopeArr, idx);
 }
 
@@ -533,7 +512,6 @@ function renderFavList(){
     return;
   }
 
-  // ordenar por código e título
   entries.sort((a,b)=> (a.codeId||'').localeCompare(b.codeId||'') || (a.titulo||'').localeCompare(b.titulo||''));
 
   entries.forEach(entry=>{
@@ -566,31 +544,24 @@ function renderFavList(){
 function renderCopyButton(){
   appEls.amPromptWrap.innerHTML =
     '<button id="btnEstudarRapido" class="btn btn-primary" type="button">Estudar Rápido</button>';
-  const btn = document.getElementById('btnEstudarRapido');
-  btn?.addEventListener('click', onEstudarRapido);
+  document.getElementById('btnEstudarRapido')?.addEventListener('click', onEstudarRapido);
 }
-
 function buildSinglePrompt(node){
-  const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  // sem seleção de estratégia (mantido simples)
+  const bloco = node.full || node.texto || '';
   return `Assuma a persona de um professor de Direito experiente convidado pelo direito.love e gere um material de estudo rápido. Analise detalhadamente todo o artigo abaixo (caput, paragrafos, incisos e alineas), cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) Pontos de atenção na prática jurídica; (6) Princípios Relacionados ao tema; (7) nota comparativa se houver artigos correlatos. Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-
 function onEstudarRapido(){
-  const scopeArr = getScopeArray();
-  const node = scopeArr[state.navIndex];
+  const node = getScopeArray()[state.navIndex];
   if (!node) return;
-  state.prompt = buildSinglePrompt(node); // prepara o prompt
-  showDialog(appEls.modalIA);             // abre o mini-modal
+  state.prompt = buildSinglePrompt(node);
+  showDialog(appEls.modalIA);
 }
-
-// compat: se algo ainda chamar onCopiarPrompt(), redireciona
+// compat
 async function onCopiarPrompt(){ onEstudarRapido(); }
 
-// Detecta plataforma simples
+/* ====== Open IA apps ====== */
 function isAndroid(){ return /Android/i.test(navigator.userAgent || navigator.vendor || ''); }
 function isiOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent || navigator.vendor || ''); }
-
 function openAIAppOrWeb(app){
   const urls = {
     gpt: 'https://chatgpt.com/',
@@ -598,37 +569,24 @@ function openAIAppOrWeb(app){
     copilot: 'https://copilot.microsoft.com/',
     pplx: 'https://www.perplexity.ai/'
   };
-
   if (app === 'gemini'){
     if (isAndroid()){
       const fallback = encodeURIComponent(urls.gemini);
-      const intentUrl =
-        'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
+      const intentUrl = 'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
         + `S.browser_fallback_url=${fallback};end`;
-      window.location.href = intentUrl;
-      return;
+      window.location.href = intentUrl; return;
     }
-    if (isiOS()){
-      window.location.href = urls.gemini;
-      return;
-    }
-    window.open(urls.gemini, '_blank');
-    return;
+    if (isiOS()){ window.location.href = urls.gemini; return; }
+    window.open(urls.gemini, '_blank'); return;
   }
-
   const url = urls[app] || urls.gpt;
   if (isAndroid() || isiOS()) { window.location.href = url; }
   else { window.open(url, '_blank'); }
 }
-
 async function copyThenOpen(app){
   const p = state.prompt || '';
-  try{
-    await navigator.clipboard.writeText(p);
-    showToast('Prompt copiado!');
-  }catch{
-    showToast('Copie manualmente (Ctrl/Cmd+C)');
-  }
+  try{ await navigator.clipboard.writeText(p); showToast('Prompt copiado!'); }
+  catch{ showToast('Copie manualmente (Ctrl/Cmd+C)'); }
   closeDialog(appEls.modalIA);
   openAIAppOrWeb(app);
 }
@@ -648,7 +606,7 @@ function renderVideosModal(data){
   showDialog(appEls.modalVideos);
 }
 
-/* ====== Cursos (HTML externo) ====== */
+/* ====== Cursos ====== */
 let cursosLoaded=false;
 async function loadCursosHTML(){
   if (cursosLoaded) return;
@@ -662,7 +620,7 @@ async function loadCursosHTML(){
   }
 }
 
-/* ====== Notícias & Artigos (JSON) ====== */
+/* ====== Notícias & Vocabulário & Princípios (sem mudanças de lógica) ====== */
 async function ensureNewsLoaded(){
   if (state.news.data.length) return;
   try{
@@ -676,24 +634,16 @@ async function ensureNewsLoaded(){
 }
 function renderNewsList(){
   const q = norm(appEls.newsSearch.value||'');
-  const list = document.createElement('div');
-  list.className='list';
+  const list = document.createElement('div'); list.className='list';
   const items = state.news.data.slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
   const filtered = q ? items.filter(it=> norm(`${it.title||''} ${it.source||''} ${it.tags||''}`).includes(q) ) : items;
-  if (!filtered.length){
-    appEls.newsList.innerHTML = '<div class="empty">Sem itens.</div>'; return;
-  }
+  if (!filtered.length){ appEls.newsList.innerHTML = '<div class="empty">Sem itens.</div>'; return; }
   filtered.forEach(it=>{
-    const row = document.createElement('div');
-    row.className='list-item';
-    const title = document.createElement('div');
-    title.className = 'li-title';
-    title.textContent = it.title || 'Sem título';
-    const meta = document.createElement('div');
-    meta.className = 'li-meta';
+    const row = document.createElement('div'); row.className='list-item';
+    const title = document.createElement('div'); title.className='li-title'; title.textContent = it.title || 'Sem título';
+    const meta = document.createElement('div'); meta.className='li-meta';
     meta.textContent = (it.type ? `[${it.type}] ` : '') + (it.source||'') + (it.date?` — ${it.date}`:'');
-    const actions = document.createElement('div');
-    actions.className = 'li-actions';
+    const actions = document.createElement('div'); actions.className='li-actions';
     const a = document.createElement('a');
     a.href = it.url || '#'; a.target='_blank'; a.rel='noopener'; a.className='btn btn-outline btn-small'; a.textContent='Ler';
     actions.appendChild(a);
@@ -704,7 +654,6 @@ function renderNewsList(){
 }
 if (appEls.newsSearch) appEls.newsSearch.addEventListener('input', renderNewsList);
 
-/* ====== Vocabulário Jurídico (JSON) ====== */
 async function ensureVocabLoaded(){
   if (state.vocab.data.length) return;
   try{
@@ -722,9 +671,7 @@ function renderVocabList(){
   const items = state.vocab.data.slice().sort((a,b)=>String(a.titulo||'').localeCompare(String(b.titulo||'')));
   const filtered = q ? items.filter(it=> norm(`${it.titulo} ${it.texto}`).includes(q) ) : items;
   const wrap = document.createElement('div'); wrap.className='list';
-  if (!filtered.length){
-    appEls.vocabList.innerHTML = '<div class="empty">Sem termos.</div>'; return;
-  }
+  if (!filtered.length){ appEls.vocabList.innerHTML = '<div class="empty">Sem termos.</div>'; return; }
   filtered.forEach((it, idx)=>{
     const row = document.createElement('div'); row.className='list-item';
     const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
@@ -744,9 +691,8 @@ function renderVocabList(){
   appEls.vocabList.querySelectorAll('input[type="checkbox"]').forEach(chk=>{
     chk.addEventListener('change', ()=>{
       const titulo = chk.dataset.titulo, tema = chk.dataset.tema;
-      if (chk.checked){
-        state.vocab.selected.push({titulo, tema});
-      }else{
+      if (chk.checked){ state.vocab.selected.push({titulo, tema}); }
+      else{
         const i = state.vocab.selected.findIndex(x=> x.titulo===titulo && x.tema===tema );
         if (i>=0) state.vocab.selected.splice(i,1);
       }
@@ -766,7 +712,6 @@ if (appEls.btnVocabCopy){
   });
 }
 
-/* ====== Princípios do Direito (JSON) ====== */
 async function ensurePrincLoaded(){
   if (state.princ.data.length) return;
   try{
@@ -805,8 +750,6 @@ function renderPrincList(){
   });
   appEls.princList.innerHTML=''; appEls.princList.appendChild(wrap);
 }
-if (appEls.princSearch) appEls.princSearch.addEventListener('input', renderPrincList);
-
 function buildPrincPrompt(sel){
   const blocos = sel.map(x=>`### ${x.titulo}\n${x.texto}`).join('\n\n');
   return `Com base nos princípios abaixo, produza um resumo didático, com: definição, base legal comum, aplicações práticas forenses, jurisprudência majoritária ilustrativa e pegadinhas de prova. Termine com 5 questões objetivas (sem gabarito visível).\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
@@ -861,11 +804,10 @@ function acCompute(q){
   if (!codeId || !state.artigosIndex.length) return [];
   const nq = norm(q);
   if (!nq) return [];
-  // se digitou padrão tipo "121" ou "121a", priorize match por número
+  // prioriza numeração exata (art121a)
   const m = nq.match(/^(\d{1,4})([a-z])?$/i);
-  const byNum = m ? state.artigosIndex.filter(n=> n._nt.includes(`art${m[1]}${m[2]||''}`)).slice(0,10) : [];
-  const others = state.artigosIndex.filter(n=> n._nt.includes(nq)).slice(0,10);
-  // mescla removendo duplicados mantendo ordem
+  const byNum = m ? state.artigosIndex.filter(n=> (n._ns||'').startsWith(`art${m[1]}${(m[2]||'').toLowerCase()}`)).slice(0,10) : [];
+  const others = state.artigosIndex.filter(n=> (n._nt||'').includes(nq)).slice(0,10);
   const map = new Map();
   [...byNum, ...others].forEach(n=>{ if(!map.has(n.titulo)) map.set(n.titulo,n); });
   return Array.from(map.values()).slice(0,10);
@@ -974,7 +916,7 @@ function bind(){
   ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
     .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
 
-  // esconder e desativar o botão 'Navegar: Resultados/Código' (escopo sempre código inteiro)
+  // botão de escopo desativado (sempre navega pelo código completo)
   if (appEls.btnScope) { 
     appEls.btnScope.style.display = 'none'; 
     appEls.btnScope.disabled = true; 
@@ -1017,13 +959,6 @@ function bind(){
   appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
   appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
   appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
-  if (appEls.btnScope && !appEls.btnScope.disabled) appEls.btnScope.addEventListener('click', ()=>{
-    state.navScope = state.navScope==='results' ? 'all' : 'results';
-    appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
-    const curr = state.navArray[state.navIndex];
-    openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
-  });
-
   appEls.btnFav && appEls.btnFav.addEventListener('click', toggleFavorite);
 
   // vídeos
