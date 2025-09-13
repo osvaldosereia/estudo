@@ -396,3 +396,98 @@ mark{background:rgba(255, 238, 128,.7)}
 /* ==== (Opcional) limpar debug antigo, caso exista ==================== */
 .search-options{ background: transparent !important; }
 
+/* ===========================
+   OVERRIDES – ARTIGO (MODAL)
+   =========================== */
+
+/* Tokens para tamanho/linha do texto do artigo */
+:root{
+  --art-font-size: 0.95rem;   /* desktop */
+  --art-line: 1.28;
+  --art-font-size-sm: 0.92rem; /* mobile */
+  --art-line-sm: 1.24;
+}
+
+/* Título do artigo no modal */
+#modalArtigo .art-title{
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  margin: 0 0 .35rem 0;
+}
+
+/* Texto do artigo exatamente como no TXT */
+#modalArtigo .art-caput{
+  /* preserve a formatação do .txt */
+  white-space: pre-wrap;       /* mantém quebras do arquivo */
+  word-break: normal;          /* não quebrar palavras ao meio */
+  overflow-wrap: normal;       /* idem */
+  hyphens: manual;             /* sem hifenização automática */
+
+  /* leitura mais compacta */
+  font-size: var(--art-font-size);
+  line-height: var(--art-line);
+  letter-spacing: normal;
+
+  /* reset de estilos que podem vir do tema */
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: .25rem 0 0 0;
+  font-family: inherit;        /* usa a mesma fonte do site */
+  color: inherit;
+}
+
+/* Em telas menores, ainda mais compacto */
+@media (max-width: 768px){
+  #modalArtigo .art-caput{
+    font-size: var(--art-font-size-sm);
+    line-height: var(--art-line-sm);
+  }
+}
+
+/* Container do conteúdo do artigo */
+#modalArtigo .article{
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Destaque de busca dentro de snippets/texto */
+#modalArtigo .art-caput mark,
+.li-text mark{
+  padding: 0 .12em;
+  border-radius: .15em;
+}
+
+/* Se seu CSS tiver algo agressivo como break-all global, neutraliza aqui */
+#modalArtigo pre, 
+#modalArtigo .art-caput, 
+#modalArtigo .article{
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+/* (Opcional) limita altura do corpo e permite rolagem, mantendo o título visível
+   Ajuste se seu modal já gerencia scroll internamente */
+#modalArtigo .art-caput{
+  max-height: calc(80vh - 140px);
+  overflow: auto;
+}
+
+/* Snippets da lista de resultados um pouco mais compactos */
+.list .li-text{
+  line-height: 1.25;
+  font-size: 0.95rem;
+}
+
+/* Chips com leve compactação */
+.chip{
+  line-height: 1.1;
+}
+
+/* Botões pequenos consistentes */
+.btn.btn-small{
+  line-height: 1.1;
+  padding: .35rem .55rem;
+  font-size: .85rem;
+}
