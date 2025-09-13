@@ -428,8 +428,9 @@ function renderCopyButton(){
 }
 function buildSinglePrompt(node){
   const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  const presets = Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
-  const extras = [];
+  const presets = appEls.presetWrap 
+  ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value) 
+  : [];
   if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
   if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
   if (presets.includes('juris')) extras.push('(c) referências de jurisprudência majoritária (STJ/STF) em linguagem simples');
@@ -751,6 +752,11 @@ async function onBuscar(e){
 function bind(){
   ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
     .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
+// [ajuste] esconder e desativar o botão 'Navegar: Resultados/Código'
+if (appEls.btnScope) { 
+  appEls.btnScope.style.display = 'none'; 
+  appEls.btnScope.disabled = true; 
+}
 
   // busca
   appEls.btnBuscar.addEventListener('click', onBuscar);
@@ -789,12 +795,13 @@ function bind(){
   appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
   appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
   appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
-  appEls.btnScope.addEventListener('click', ()=>{
-    state.navScope = state.navScope==='results' ? 'all' : 'results';
-    appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
-    const curr = state.navArray[state.navIndex];
-    openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
-  });
+ if (appEls.btnScope && !appEls.btnScope.disabled) appEls.btnScope.addEventListener('click', ()=>{
+  state.navScope = state.navScope==='results' ? 'all' : 'results';
+  appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
+  const curr = state.navArray[state.navIndex];
+  openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
+});
+
   appEls.btnFav && appEls.btnFav.addEventListener('click', toggleFavorite);
 
   // vídeos
