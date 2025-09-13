@@ -337,10 +337,18 @@ function openArticleModalByIndex(idx){
   return openArticleModalByIndexVia(getScopeArray(), idx);
 }
 function openArticleModalByNode(node, fromSearch=false){
-  if (fromSearch && state.lastHits.length){ state.navScope='results'; }
+  if (!node) return;
+  if (fromSearch && state.lastHits.length){ 
+    state.navScope = 'results'; 
+  }
   const scopeArr = getScopeArray();
   const idx = scopeArr.findIndex(n=>n.titulo===node.titulo);
-  if (idx>=0) openArticleModalByIndexVia(scopeArr, idx);
+  if (idx >= 0) {
+    openArticleModalByIndexVia(scopeArr, idx);
+  } else {
+    // fallback: abre na posição 0 para evitar navIndex -1
+    openArticleModalByIndexVia(scopeArr, 0);
+  }
 }
 
 /* ====== Favoritos ====== */
@@ -462,14 +470,46 @@ function renderAIButtons(){
     b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app));
   });
 }
+// Detecta plataforma de forma simples
+function isAndroid(){ return /Android/i.test(navigator.userAgent || navigator.vendor || ''); }
+function isiOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent || navigator.vendor || ''); }
+
 function openAIAppOrWeb(app){
+  // URLs padrão (web)
   const urls = {
     gpt: 'https://chatgpt.com/',
     gemini: 'https://gemini.google.com/app',
     copilot: 'https://copilot.microsoft.com/'
   };
-  window.open(urls[app] || urls.gpt, '_blank','noopener');
+
+  if (app === 'gemini'){
+    // ANDROID: tenta Intent (abre app se instalado; senão, cai no browser_fallback_url)
+    if (isAndroid()){
+      const fallback = encodeURIComponent(urls.gemini);
+      const intentUrl =
+        'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
+        + `S.browser_fallback_url=${fallback};end`;
+      // usar mesma aba evita bloqueio de pop-up em mobile
+      window.location.href = intentUrl;
+      return;
+    }
+    // iOS: universal link abre o app se instalado; se não, web
+    if (isiOS()){
+      window.location.href = urls.gemini; // mesma aba, menos bloqueios
+      return;
+    }
+    // Desktop: manter em nova aba
+    window.open(urls.gemini, '_blank');
+    return;
+  }
+
+  // Demais apps continuam como estavam
+  const url = urls[app] || urls.gpt;
+  // Em mobile, abrir na mesma aba reduz bloqueios
+  if (isAndroid() || isiOS()) { window.location.href = url; }
+  else { window.open(url, '_blank'); }
 }
+
 
 /* ====== Vídeos ====== */
 function renderVideosModal(data){
@@ -742,6 +782,7 @@ async function onBuscar(e){
     await ensureCodeLoaded(codeId);
     const hits = await searchArticles(codeId, entrada);
     state.lastHits = hits;
+    state.navIndex = hits.length ? 0 : -1;
     state.navScope='results';
     if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
     renderResultChips(hits);
@@ -894,10 +935,11 @@ function bindSwipe(){
   el.addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-x0, dy=e.clientY-y0; if(Math.abs(dx)>20 && Math.abs(dx)>Math.abs(dy)) moved=true; },{passive:true});
   el.addEventListener('pointerup',e=>{
     if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
-    if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
-    const arr=getScopeArray();
-    if (dx<0 && state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
-    else if (dx>0 && state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1);
+if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
+const arr=getScopeArray();
+if (!arr.length || state.navIndex < 0) return;
+if (dx<0 && state.navIndex < arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
+else if (dx>0 && state.navIndex > 0) openArticleModalByIndexVia(arr, state.navIndex-1);
   },{passive:true});
   el.addEventListener('pointercancel',()=>{ down=false; moved=false; el.style.userSelect=''; },{passive:true});
 }
