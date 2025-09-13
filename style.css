@@ -294,3 +294,57 @@ mark{background:rgba(255, 238, 128,.7)}
   gap: 14px; /* ajuste o valor conforme o visual */
   background: pink;
 }
+/* ====== Modal Vídeos ====== */
+.videos-modal .vd-top{
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+}
+.videos-modal .vd-title{
+  font-weight:600; text-align:center; color:var(--brand); font-size:1.1rem;
+}
+.videos-modal .vd-body{
+  padding:12px 16px; overflow:auto; flex:1;
+}
+.videos-modal .vd-actions{
+  display:flex; justify-content:flex-end; gap:8px;
+  border-top:1px solid var(--border); padding:10px 12px; background:var(--surface-2);
+}
+
+/* Lista de vídeos */
+.vd-lista{
+  list-style:none; margin:0; padding:0;
+  display:flex; flex-direction:column; gap:10px;
+}
+.vd-lista li{
+  border:1px solid var(--border); border-radius:12px;
+  background:#fff; overflow:hidden;
+}
+
+/* Itens (flexível: funciona com <a>, <div> ou direto no <li>) */
+.vd-lista li > a,
+.vd-lista li > div,
+.vd-lista li > article{
+  display:grid;
+  grid-template-columns: 140px 1fr;
+  gap:10px; align-items:center; padding:10px; text-decoration:none; color:inherit;
+}
+
+/* Thumb (aceita <img> ou <iframe> do YouTube) */
+.vd-lista img, .vd-lista iframe{
+  width:100%; height:100%; border:0; display:block; border-radius:8px; aspect-ratio:16/9; object-fit:cover;
+}
+
+/* Info à direita */
+.vd-lista .vd-info{ display:flex; flex-direction:column; gap:4px; }
+.vd-lista .vd-title-sm{ font-weight:600; color:#0f1430; line-height:1.3; }
+.vd-lista .vd-meta{ font-size:.86rem; color:var(--muted); }
+
+@media (max-width:600px){
+  .vd-lista li > a,
+  .vd-lista li > div,
+  .vd-lista li > article{
+    grid-template-columns: 1fr;
+  }
+}
+
