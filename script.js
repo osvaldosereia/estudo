@@ -14,34 +14,40 @@ const state = {
   codigo: null,
   termoBusca: '',
   artigoAtualIdx: -1,
-  artigosIndex: [],
-  artigosData: null,
+
+  artigosIndex: [],       // [{ titulo, texto, numero, id}, ...]
+  artigosData: null,      // texto bruto (quando aplicável)
+  lastHits: [],           // resultados da última busca (array de nodes)
+  navScope: 'results',    // 'results' | 'all'
+  navArray: [],           // array vigente para navegação no modal
+  navIndex: 0,            // posição atual no navArray
+
+  ac: {                   // autocomplete
+    open: false,
+    items: [],
+    activeIndex: -1
+  },
+
   prompt: '',
-  lastHits: [],
-  viewMode: 'chips', // 'chips' | 'list'
-  searchMode: 'precise', // 'precise' | 'flex'
-  navScope: 'results', // 'results' | 'all'
-  navArray: [],
-  navIndex: -1,
-  catalogs: { videos: {} },
-  vocab: { data: [], selected: [] },
-  princ: { data: [], selected: [] },
-  news: { data: [] },
-  ac: { open:false, items:[], activeIndex:-1 }
+
+  favs: [],
+
+  videos: {},             // { "Art. X": [ {title, url}, ...] }
+
 };
 
 const appEls = {
-  // busca
+  // topbar
   selCodigo: document.getElementById('selCodigo'),
   inpArtigo: document.getElementById('inpArtigo'),
   btnBuscar: document.getElementById('btnBuscar'),
-  btnClear: document.getElementById('btnClear'),
-  resultArea: document.getElementById('resultArea'),
   resultChips: document.getElementById('resultChips'),
   resultList: document.getElementById('resultList'),
+  viewToggle: document.getElementById('viewToggle'),
+  vtButtons: Array.from(document.querySelectorAll('[data-view]')),
   resultMsg: document.getElementById('resultMsg'),
-  vtButtons: document.querySelectorAll('.vt-btn'),
-  modeRadios: document.querySelectorAll('input[name="mode"]'),
+
+  // autocomplete
   acPanel: document.getElementById('acPanel'),
   toast: document.getElementById('toast'),
 
@@ -71,18 +77,14 @@ const appEls = {
 
   // sidebar
   btnSidebar: document.getElementById('btnSidebar'),
-  btnSideClose: document.getElementById('btnSideClose'),
   sidebar: document.getElementById('sidebar'),
-  sideBackdrop: document.getElementById('sideBackdrop'),
+  btnSideClose: document.getElementById('btnSideClose'),
+  sbLinks: Array.from(document.querySelectorAll('[data-modal]')),
 
-  // side modals
-  modalCursos: document.getElementById('modalCursos'),
-  cursosBody: document.getElementById('cursosBody'),
+  // clear / reset
+  btnClear: document.getElementById('btnClear'),
 
-  modalNoticias: document.getElementById('modalNoticias'),
-  newsSearch: document.getElementById('newsSearch'),
-  newsList: document.getElementById('newsList'),
-
+  // modais extras (vocabulário e princípios)
   modalVocab: document.getElementById('modalVocab'),
   vocabSearch: document.getElementById('vocabSearch'),
   vocabList: document.getElementById('vocabList'),
@@ -102,212 +104,228 @@ const appEls = {
 /* ====== Utils ====== */
 const escapeHTML = s => (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
-const words = s => { const n=norm(s); return n?n.split(' ').filter(Boolean):[]; };
-const onlyDigits = s => { const m=String(s||'').match(/\d{1,4}/); return m?m[0]:null; };
-const codeKeyFromId = id => String(id||'').replace(/^codigo_/,'').trim();
-function articleKeyFromTitulo(t){
-  const m=(t||'').toLowerCase().match(/art\.?\s*(\d{1,4})(?:[\s\-]*([a-z]))?/i);
-  return m?`art${m[1]}${m[2]||''}`:null;
-}
-function showToast(msg){ if(!appEls.toast) return; appEls.toast.textContent=msg; appEls.toast.classList.add('show'); setTimeout(()=>appEls.toast.classList.remove('show'), 1600); }
+const words = s => (s||'').split(/\s+/).filter(Boolean);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
-async function getJSON(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  const r = await fetch(url, { cache:'no-store' });
-  if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
-  return r.json();
-}
-async function getHTML(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  const r = await fetch(url, { cache:'no-store' });
-  if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
-  return r.text();
-}
-async function fileExists(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  try{ const r=await fetch(url,{method:'HEAD',cache:'no-store'}); return r.ok; }catch{ return false; }
+function showToast(msg='Copiado!'){
+  const el = appEls.toast;
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 1300);
 }
 
-/* ====== Códigos ====== */
-async function tryLoadCodeData(codeId){
-  const paths=[`data/${codeId}_vademecum.json`,`data/${codeId}.json`];
-  for (const p of paths){ try{ return await getJSON(p);}catch{} }
-  throw new Error('Arquivo JSON não encontrado.');
-}
-async function ensureCodeLoaded(codeId){
-  if (state.codigo===codeId && state.artigosData) return;
-  state.codigo = codeId;
-  state.artigosData = await tryLoadCodeData(codeId);
-  state.artigosIndex = Object.values(state.artigosData);
-  // pré-computa títulos normalizados para autocomplete
-  state.artigosIndex.forEach(n=>{ n._nt = norm(n.titulo||''); });
-}
-async function autoDiscoverCodes(){
-  const candidates=['codigo_civil','codigo_penal','codigo_cpc','codigo_cpp','codigo_ctn','codigo_consumidor'];
-  const found=[];
-  for (const id of candidates){
-    const has = await fileExists(`data/${id}_vademecum.json`) || await fileExists(`data/${id}.json`);
-    if (has) found.push({ id, label: id.replace(/^codigo_/,'Código ').replace(/_/g,' ') });
-  }
-  if (!found.length && await fileExists('data/codigo_civil.json')) return [{id:'codigo_civil',label:'Código Civil'}];
-  return found;
-}
-function renderCodeSelect(codes){
-  const el = appEls.selCodigo;
-  const last = localStorage.getItem('dl_last_code');
-  const opts = (codes||[]).map(c=>`<option value="${c.id}" ${last===c.id?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-  el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
-}
+/* ====== Storage ====== */
+function lastCodeKey(){ return 'dl_last_code'; }
+function saveLastCode(id){ try{ localStorage.setItem(lastCodeKey(), id||''); }catch{} }
+function getLastCode(){ try{ return localStorage.getItem(lastCodeKey()) || ''; }catch{ return '' } }
 
-/* ====== Catálogo de Vídeos ====== */
-async function loadVideosCatalog(codeKey){
-  if (state.catalogs.videos[codeKey]!==undefined) return state.catalogs.videos[codeKey];
-  const tries=[`videos/${codeKey}_videos.json`,`videos/${codeKey}.json`,`videos/${codeKey}_video.json`];
-  for (const p of tries){ try{ const d=await getJSON(p); state.catalogs.videos[codeKey]=d; return d; }catch{} }
-  state.catalogs.videos[codeKey]=null; return null;
-}
+/* ====== Data Loaders ====== */
+async function loadCodigo(id){
+  if (!id) return;
+  // data filename pattern: codigo_*.json
+  const url = `data/${id}.json`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Erro ao carregar código: '+id);
+  const json = await resp.json();
 
-/* ====== Busca ====== */
-function nodeHasAllWholeWords(node, entrada){
-  const toks = words(entrada).filter(w => w.length>=2 && !/^\d+$/.test(w));
-  if (!toks.length) return false;
-  const textoWords = new Set(words(node.texto || ''));
-  return toks.every(t => textoWords.has(t));
-}
-function nodeContainsAny(node, entrada){
-  const toks = words(entrada).filter(w => w.length>=3);
-  if (!toks.length) return false;
-  const texto = norm(node.texto||'') + ' ' + norm(node.titulo||'');
-  return toks.some(t => texto.includes(t));
-}
-async function searchArticles(codeId, entrada){
-  await ensureCodeLoaded(codeId);
-  const nodes = state.artigosIndex.slice();
-  const raw = entrada.trim();
-
-  // tentativa direta por número/título
-  const soNumero = /^\d{1,4}([A-Za-z])?$/.test(raw);
-  const misto = /\d/.test(raw) && /[A-Za-z]/.test(raw);
-  const soLetras = /^[A-Za-zÀ-ÿ\s]+$/.test(raw);
-
-  if (soNumero || misto){
-    const num = onlyDigits(raw);
-    if (num){
-      const hitNum = nodes.find(n => norm(n.titulo||'').includes(`art${num}`));
-      if (hitNum) return [hitNum];
-    }
-    const en = norm(raw).replace(/\s+/g,'');
-    const hitT = nodes.find(n => {
-      const t = norm(n.titulo||'').replace(/\s+/g,'');
-      return en===t || en===t.replace(/^art/,'');
-    });
-    if (hitT) return [hitT];
-  }
-
-  // busca textual
-  if (state.searchMode==='precise' || soLetras){
-    const precise = nodes.filter(n => nodeHasAllWholeWords(n, raw));
-    if (precise.length) return precise;
-  }
-  // flexível (contain/OR)
-  const flex = nodes.filter(n => nodeContainsAny(n, raw));
-  return flex;
-}
-
-/* ====== Resultados ====== */
-function highlight(text, query){
-  const toks = words(query).filter(w=>w.length>=3);
-  if (!toks.length) return escapeHTML(text);
-  let html = escapeHTML(text);
-  toks.forEach(t=>{
-    const re = new RegExp(`(${t})`,'gi');
-    html = html.replace(re, '<mark>$1</mark>');
+  // json no formato:
+  // { art1: {titulo, texto}, art2: {...}, ... }
+  state.artigosIndex = Object.entries(json).map(([key, val])=>{
+    const titulo = val.titulo || key;
+    const texto = val.texto || '';
+    const numero = (titulo.match(/Art\.\s*([\dA-Za-z\.\-]+)/i)||[])[1] || '';
+    return { id:key, titulo, texto, numero };
   });
-  return html;
-}
-function buildSnippet(node, query, len=220){
-  const txt = node.texto || '';
-  if (!query) return escapeHTML(txt.slice(0,len)) + (txt.length>len?'…':'');
-  const toks = words(query).filter(w=>w.length>=3);
-  if (!toks.length) return escapeHTML(txt.slice(0,len)) + (txt.length>len?'…':'');
-  const lower = norm(txt);
-  let pos = -1;
-  for (const t of toks){ const i = lower.indexOf(t); if (i>=0){ pos=i; break; } }
-  if (pos<0) return escapeHTML(txt.slice(0,len)) + (txt.length>len?'…':'');
-  const start = Math.max(0, pos-40);
-  const end = Math.min(txt.length, pos+len-40);
-  const seg = txt.slice(start,end);
-  return (start>0?'…':'') + highlight(seg, query) + (end<txt.length?'…':'');
+
+  // construir autocomplete
+  buildAutocompleteIndex();
+
+  // limpar resultados e status
+  state.lastHits = [];
+  appEls.resultChips.innerHTML = '';
+  appEls.resultList.innerHTML = '';
+  appEls.resultMsg.textContent = '';
+
+  renderResultsMessage([]);
 }
 
-function renderResultChips(hits){
-  appEls.resultChips.innerHTML='';
-  hits.forEach(node=>{
-    const btn=document.createElement('button');
-    btn.className='chip';
-    btn.type='button';
-    btn.innerHTML = escapeHTML(node.titulo);
-    btn.addEventListener('click',e=>{ e.preventDefault(); openArticleModalByNode(node, /*fromSearch*/true); });
-    appEls.resultChips.appendChild(btn);
-  });
-}
-function renderResultList(hits, query){
-  const list = document.createElement('div');
-  list.className='list';
-  hits.forEach(node=>{
-    const row = document.createElement('div'); row.className='list-item';
-    const title = document.createElement('div'); title.className='li-title'; title.textContent = node.titulo;
-    const body  = document.createElement('div'); body.className='li-text'; body.innerHTML = buildSnippet(node, query);
-    const actions = document.createElement('div'); actions.className='li-actions';
-    const bt = document.createElement('button'); bt.className='btn btn-outline btn-small'; bt.type='button'; bt.textContent='Abrir';
-    bt.addEventListener('click',()=> openArticleModalByNode(node, /*fromSearch*/true));
-    actions.appendChild(bt);
-    row.appendChild(title); row.appendChild(actions); row.appendChild(body);
-    list.appendChild(row);
-  });
-  appEls.resultList.innerHTML=''; appEls.resultList.appendChild(list);
+function buildAutocompleteIndex(){
+  const items = state.artigosIndex.map((n, i)=>({
+    label: n.titulo,
+    index: i,
+    key: norm(n.titulo)
+  }));
+  state.ac.items = items;
 }
 
+/* ====== Views: chips / list ====== */
 function switchView(view){
-  state.viewMode=view;
   appEls.vtButtons.forEach(b=>{
-    const active = b.dataset.view===view;
-    b.classList.toggle('is-active', active);
-    b.setAttribute('aria-selected', active?'true':'false');
+    if (b.dataset.view===view) b.classList.add('active'); else b.classList.remove('active');
   });
   if (view==='chips'){
-    appEls.resultChips.hidden=false;
-    appEls.resultList.hidden=true;
-  }else{
-    appEls.resultChips.hidden=true;
-    appEls.resultList.hidden=false;
+    appEls.resultChips.style.display='block';
+    appEls.resultList.style.display='none';
+  } else {
+    appEls.resultChips.style.display='none';
+    appEls.resultList.style.display='block';
   }
 }
-
-/* ====== Modal Artigo ====== */
-const renderArticleHTML = node => `<div class="article"><div class="art-title">${escapeHTML(node.titulo)}</div><pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.texto)}</pre></div>`;
-
-async function buildExtrasForArticle(node){
-  const codeKey = codeKeyFromId(state.codigo);
-  const artKey  = articleKeyFromTitulo(node.titulo);
-  appEls.amExtras.innerHTML=''; appEls.amExtras.hidden=true;
-  if (!codeKey || !artKey) return;
-
-  const vidCat = await loadVideosCatalog(codeKey);
-  if (vidCat && vidCat[artKey] && Array.isArray(vidCat[artKey].videos) && vidCat[artKey].videos.length){
-    const b=document.createElement('button');
-    b.className='btn btn-outline'; b.type='button'; b.textContent='Vídeo aula';
-    b.onclick = ()=> renderVideosModal(vidCat[artKey]);
-    appEls.amExtras.appendChild(b);
-  }
-  const favBtn = appEls.btnFav;
-  if (favBtn){
-    const fav = isFavorite(node);
-    favBtn.textContent = fav ? '★ Favorito' : '☆ Favoritar';
-  }
-  appEls.amExtras.hidden = appEls.amExtras.children.length===0;
+function renderResultsMessage(hits){
+  const extra = hits && hits.length ? (state.navScope==='results' ? ` — mostrando 200/${hits.length})` : '') : '';
+  appEls.resultMsg.textContent = `${(hits && hits.length) || 0} artigo(s) encontrado(s)${extra}. Clique para abrir.`;
 }
 
+/* ====== Search ====== */
+function preciseMatch(node, terms){
+  // todas as palavras inteiras
+  const txt = ' ' + norm(node.titulo+' '+node.texto) + ' ';
+  return terms.every(t=>{
+    const w = ' '+norm(t)+' ';
+    return txt.includes(w);
+  });
+}
+function flexibleMatch(node, q){
+  const W = words(norm(q));
+  if (!W.length) return false;
+  const txt = norm(node.titulo+' '+node.texto);
+  return W.every(w => txt.includes(w));
+}
+function computeHits(q){
+  if (!q || !q.trim()) return [];
+  const terms = words(q);
+  // precisa ser inteiro? privilegia preciseMatch
+  const hits = state.artigosIndex.filter(n=> preciseMatch(n, terms));
+  if (hits.length) return hits;
+  // fallback para flexível
+  return state.artigosIndex.filter(n=> flexibleMatch(n, q));
+}
+
+function renderHitsChips(hits){
+  const container = appEls.resultChips;
+  container.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  hits.slice(0,200).forEach((n, i)=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.type = 'button';
+    chip.textContent = n.titulo;
+    chip.addEventListener('click', ()=> openArticleModalByNode(n, /*fromSearch*/true));
+    frag.appendChild(chip);
+  });
+  container.appendChild(frag);
+}
+function highlightSnippet(text, q){
+  const t = escapeHTML(text);
+  const w = words(q).map(escapeHTML);
+  let out = t;
+  for (const k of w){
+    const re = new RegExp(`(${k})`, 'ig');
+    out = out.replace(re, '<mark>$1</mark>');
+  }
+  return out;
+}
+function renderHitsList(hits, q){
+  const container = appEls.resultList;
+  container.innerHTML = '';
+  const ul = document.createElement('div');
+  ul.className = 'list';
+  hits.slice(0,200).forEach((n)=>{
+    const row = document.createElement('div');
+    row.className = 'list-row';
+
+    const title = document.createElement('div');
+    title.className = 'list-title';
+    title.innerHTML = escapeHTML(n.titulo);
+
+    const snippet = document.createElement('div');
+    snippet.className = 'list-snippet';
+    const sample = n.texto.slice(0, 260);
+    snippet.innerHTML = highlightSnippet(sample, q);
+
+    const actions = document.createElement('div');
+    actions.className = 'list-actions';
+    const btnOpen = document.createElement('button');
+    btnOpen.type = 'button';
+    btnOpen.className = 'btn btn-outline';
+    btnOpen.textContent = 'Abrir';
+    btnOpen.addEventListener('click', ()=> openArticleModalByNode(n, /*fromSearch*/true));
+    actions.appendChild(btnOpen);
+
+    const meta = document.createElement('div');
+    meta.className = 'list-meta';
+    meta.textContent = n.numero ? `#${n.numero}` : '';
+
+    row.appendChild(title); row.appendChild(snippet); row.appendChild(actions); row.appendChild(meta);
+    ul.appendChild(row);
+  });
+
+  container.appendChild(ul);
+}
+
+/* ====== Prompt ====== */
+function renderCopyButton(){
+  appEls.amPromptWrap.innerHTML = '<button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>';
+  const btn = appEls.amPromptWrap.querySelector('#btnCopiarPrompt');
+  btn.addEventListener('click', onCopiarPrompt);
+}
+function buildSinglePrompt(node){
+  const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
+  const presets = appEls.presetWrap ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value) : [];
+  const extras = [];
+  if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
+  if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
+  if (presets.includes('juris')) extras.push('(c) referências de jurisprudência majoritária (STJ/STF) em linguagem simples');
+  const extraTxt = extras.length ? ` Além disso, inclua ${extras.join(', ')}.` : '';
+  return `Assuma a persona de um professor de Direito experiente e didático. Explique o artigo abaixo de forma clara, organizada e com exemplos práticos, focando em aprendizado rápido, sem enrolação. Estruture em: Conceito direto; Exemplos práticos; Doutrina (brevíssima); Jurisprudência majoritária; Erros comuns; Revisão final em tópicos.${extraTxt}\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
+}
+async function onCopiarPrompt(){
+  const scopeArr = getScopeArray();
+  const node = scopeArr[state.navIndex];
+  if (!node) return;
+  const prompt = buildSinglePrompt(node);
+  state.prompt = prompt;
+  try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{ showToast('Copiado (tente colar)'); }
+  renderAIButtons();
+}
+function renderAIButtons(){
+  appEls.amPromptWrap.innerHTML = `
+    <div class="ai-buttons">
+      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
+      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
+      <button class="btn btn-outline btn-ia" data-app="perplexity" type="button">PERPLEXITY</button>
+    </div>
+    <div class="ai-tip">Cole o prompt na IA escolhida.</div>
+  `;
+  appEls.amPromptWrap.querySelectorAll('.btn-ia').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const app = b.dataset.app;
+      // apenas abre a IA em outra aba (ou deixa para o usuário)
+      if (app==='gpt') window.open('https://chat.openai.com/', '_blank');
+      if (app==='gemini') window.open('https://gemini.google.com/app', '_blank');
+      if (app==='perplexity') window.open('https://www.perplexity.ai/', '_blank');
+    });
+  });
+}
+
+/* ====== Modal render ====== */
+function renderArticleHTML(node){
+  const texto = escapeHTML(node.texto).replace(/\n/g, '<br>');
+  return `<div class="artigo-texto">${texto}</div>`;
+}
+function renderExtras(node){
+  const favActive = isFavorite(node) ? 'active' : '';
+  appEls.amExtras.innerHTML = `
+    <div class="extra-row">
+      <button id="btnVtText" class="btn btn-sm btn-ghost" type="button" disabled>Texto</button>
+      <button id="btnVtQuiz" class="btn btn-sm btn-ghost" type="button" disabled>Quiz</button>
+      <button id="btnVtVideos" class="btn btn-sm btn-ghost" type="button" disabled>Vídeos</button>
+      <span class="spacer"></span>
+      <button id="btnFav" class="btn btn-sm btn-fav ${favActive}" type="button" title="Favoritar">★</button>
+    </div>
+  `;
+}
 function getScopeArray(){
   if (state.navScope==='results' && state.lastHits.length) return state.lastHits;
   return state.artigosIndex;
@@ -322,19 +340,19 @@ function openArticleModalByIndexVia(scopeArr, idx){
 
   appEls.amTitle.textContent = node.titulo;
   appEls.amBody.innerHTML = renderArticleHTML(node);
-  appEls.amExtras.hidden = true;
-  buildExtrasForArticle(node);
-
-  appEls.btnPrev.disabled = (idx<=0);
-  appEls.btnNext.disabled = (idx>=scopeArr.length-1);
-
+  renderExtras(node);
   renderCopyButton();
 
-  showDialog(appEls.modalArtigo);
-  appEls.amBody.focus({preventScroll:true});
-}
-function openArticleModalByIndex(idx){
-  return openArticleModalByIndexVia(getScopeArray(), idx);
+  // atualizar botões Prev/Next
+  appEls.btnPrev.disabled = state.navIndex<=0;
+  appEls.btnNext.disabled = state.navIndex>=scopeArr.length-1;
+
+  // escopo label
+  if (appEls.btnScope){
+    appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
+  }
+
+  openDialog(appEls.modalArtigo);
 }
 function openArticleModalByNode(node, fromSearch=false){
   if (fromSearch && state.lastHits.length){ state.navScope='results'; }
@@ -356,393 +374,183 @@ function toggleFavorite(){
   const node = scopeArr[state.navIndex];
   if (!node) return;
   let favs = getFavs();
-  const i = favs.indexOf(node.titulo);
-  if (i>=0) favs.splice(i,1); else favs.unshift(node.titulo);
-  favs = favs.slice(0,200);
-  localStorage.setItem(favStoreKey(), JSON.stringify(favs));
-  appEls.btnFav.textContent = isFavorite(node) ? '★ Favorito' : '☆ Favoritar';
-  showToast(isFavorite(node) ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
-}
-function openFavoritesModal(){
-  if (!appEls.modalFavs) return;
-  renderFavList();
-  showDialog(appEls.modalFavs);
-}
-function renderFavList(){
-  const scope = appEls.favScope?.value || 'current';
-  const container = appEls.favList;
-  container.classList.remove('skeleton');
-  container.innerHTML='';
-
-  const ul = document.createElement('div'); ul.className='list';
-
-  const codes = scope==='all'
-    ? Array.from({length:localStorage.length}).map((_,i)=>localStorage.key(i)).filter(k=>k&&k.startsWith('dl_favs_')).map(k=>k.replace('dl_favs_',''))
-    : [state.codigo];
-
-  const entries = [];
-  codes.forEach(codeId=>{
-    const favs = getFavsRaw(codeId);
-    favs.forEach(titulo=> entries.push({ codeId, titulo }));
-  });
-
-  if (!entries.length){
-    container.innerHTML = '<div class="empty pad">Sem favoritos.</div>';
-    return;
+  if (isFavorite(node)){
+    favs = favs.filter(t=>t!==node.titulo);
+  } else {
+    favs.push(node.titulo);
   }
-
-  // ordenar por código e título
-  entries.sort((a,b)=> (a.codeId||'').localeCompare(b.codeId||'') || (a.titulo||'').localeCompare(b.titulo||''));
-
-  entries.forEach(entry=>{
-    const row = document.createElement('div'); row.className='list-item';
-    const title = document.createElement('div'); title.className='li-title'; title.textContent = entry.titulo;
-    const meta  = document.createElement('div'); meta.className='li-meta'; meta.textContent = (entry.codeId||'').replace(/^codigo_/,'Código ').replace(/_/g,' ');
-    const actions = document.createElement('div'); actions.className='li-actions';
-    const btnOpen = document.createElement('button'); btnOpen.className='btn btn-outline btn-small'; btnOpen.type='button'; btnOpen.textContent='Abrir';
-    const btnDel  = document.createElement('button'); btnDel.className='btn btn-outline btn-small'; btnDel.type='button'; btnDel.textContent='Remover';
-    btnOpen.addEventListener('click', async ()=>{
-      if (state.codigo!==entry.codeId){ await ensureCodeLoaded(entry.codeId); appEls.selCodigo.value = entry.codeId; localStorage.setItem('dl_last_code', entry.codeId); }
-      const node = state.artigosIndex.find(n=>n.titulo===entry.titulo);
-      state.lastHits = node?[node]:[]; state.navScope='results';
-      openArticleModalByNode(node||{}, true);
-    });
-    btnDel.addEventListener('click', ()=>{
-      const arr = getFavsRaw(entry.codeId);
-      const idx = arr.indexOf(entry.titulo);
-      if (idx>=0){ arr.splice(idx,1); localStorage.setItem(favStoreKeyFor(entry.codeId), JSON.stringify(arr)); renderFavList(); }
-    });
-    actions.appendChild(btnOpen); actions.appendChild(btnDel);
-    row.appendChild(title); row.appendChild(actions); row.appendChild(meta);
-    ul.appendChild(row);
-  });
-
-  container.appendChild(ul);
+  try{ localStorage.setItem(favStoreKey(), JSON.stringify(favs)); }catch{}
+  renderExtras(node);
 }
-
-/* ====== Prompt ====== */
-function renderCopyButton(){
-  appEls.amPromptWrap.innerHTML = '<button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>';
-  const btn = appEls.amPromptWrap.querySelector('#btnCopiarPrompt');
-  btn.addEventListener('click', onCopiarPrompt);
-}
-function buildSinglePrompt(node){
-  const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  const presets = Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
-  const extras = [];
-  if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
-  if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
-  if (presets.includes('juris')) extras.push('(c) referências de jurisprudência majoritária (STJ/STF) em linguagem simples');
-  const extraTxt = extras.length ? ` Além disso, inclua ${extras.join(', ')}.` : '';
-  return `Assuma a persona de um professor de Direito experiente (direito.love) e gere um material de estudo rápido, direto e completo sobre o artigo abaixo, cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) nota comparativa se houver artigos correlatos.${extraTxt} Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
-}
-async function onCopiarPrompt(){
-  const scopeArr = getScopeArray();
-  const node = scopeArr[state.navIndex];
-  if (!node) return;
-  const prompt = buildSinglePrompt(node);
-  state.prompt = prompt;
-  try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{ showToast('Copiado (tente colar)'); }
-  renderAIButtons();
-}
-function renderAIButtons(){
-  appEls.amPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>
-  `;
-  appEls.amPromptWrap.querySelectorAll('.btn-ia').forEach(b=>{
-    b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app));
-  });
-}
-function openAIAppOrWeb(app){
-  const urls = {
-    gpt: 'https://chatgpt.com/',
-    gemini: 'https://gemini.google.com/app',
-    copilot: 'https://copilot.microsoft.com/'
-  };
-  window.open(urls[app] || urls.gpt, '_blank','noopener');
-}
-
-/* ====== Vídeos ====== */
-function renderVideosModal(data){
-  appEls.vdTitle.textContent=data.titulo||'Vídeo aula'; appEls.vdLista.innerHTML='';
-  (data.videos||[]).forEach(v=>{ const li=document.createElement('li'); const a=document.createElement('a'); a.href=v.url; a.target='_blank'; a.rel='noopener'; a.textContent=v.title||v.url; li.appendChild(a); appEls.vdLista.appendChild(li); });
-  showDialog(appEls.modalVideos);
-}
-
-/* ====== Cursos (HTML externo) ====== */
-let cursosLoaded=false;
-async function loadCursosHTML(){
-  if (cursosLoaded) return;
-  try{
-    const html = await getHTML('content/cursos.html');
-    appEls.cursosBody.innerHTML = html;
-  }catch{
-    appEls.cursosBody.textContent = 'Não foi possível carregar o conteúdo (content/cursos.html).';
-  }finally{
-    cursosLoaded=true;
-  }
-}
-
-/* ====== Notícias & Artigos (JSON) ====== */
-async function ensureNewsLoaded(){
-  if (state.news.data.length) return;
-  try{
-    const data = await getJSON('content/news.json');
-    state.news.data = Array.isArray(data) ? data : (data.items || []);
-  }catch{
-    state.news.data = [];
-  }finally{
-    appEls.newsList.classList.remove('skeleton');
-  }
-}
-function renderNewsList(){
-  const q = norm(appEls.newsSearch.value||'');
+function openFavsModal(scope='all'){
   const list = document.createElement('div');
-  list.className='list';
-  const items = state.news.data.slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
-  const filtered = q ? items.filter(it=> norm(`${it.title||''} ${it.source||''} ${it.tags||''}`).includes(q) ) : items;
-  if (!filtered.length){
-    appEls.newsList.innerHTML = '<div class="empty">Sem itens.</div>'; return;
-  }
-  filtered.forEach(it=>{
-    const row = document.createElement('div');
-    row.className='list-item';
-    const title = document.createElement('div');
-    title.className = 'li-title';
-    title.textContent = it.title || 'Sem título';
-    const meta = document.createElement('div');
-    meta.className = 'li-meta';
-    meta.textContent = (it.type ? `[${it.type}] ` : '') + (it.source||'') + (it.date?` — ${it.date}`:'');
-    const actions = document.createElement('div');
-    actions.className = 'li-actions';
-    const a = document.createElement('a');
-    a.href = it.url || '#'; a.target='_blank'; a.rel='noopener'; a.className='btn btn-outline btn-small'; a.textContent='Ler';
-    actions.appendChild(a);
-    row.appendChild(title); row.appendChild(actions); row.appendChild(meta);
-    list.appendChild(row);
-  });
-  appEls.newsList.innerHTML=''; appEls.newsList.appendChild(list);
-}
-if (appEls.newsSearch) appEls.newsSearch.addEventListener('input', renderNewsList);
-
-/* ====== Vocabulário Jurídico (JSON) ====== */
-async function ensureVocabLoaded(){
-  if (state.vocab.data.length) return;
-  try{
-    const data = await getJSON('content/vocabulario.json');
-    state.vocab.data = Array.isArray(data) ? data : (data.items || []);
-    state.vocab.data = state.vocab.data.map(x=>({ titulo: x.titulo||'', texto: x.texto||'', temas: Array.isArray(x.temas)?x.temas.slice(0,3):[] }));
-  }catch{
-    state.vocab.data = [];
-  }finally{
-    appEls.vocabList.classList.remove('skeleton');
-  }
-}
-function renderVocabList(){
-  const q = norm(appEls.vocabSearch.value||'');
-  const items = state.vocab.data.slice().sort((a,b)=>String(a.titulo||'').localeCompare(String(b.titulo||'')));
-  const filtered = q ? items.filter(it=> norm(`${it.titulo} ${it.texto}`).includes(q) ) : items;
-  const wrap = document.createElement('div'); wrap.className='list';
-  if (!filtered.length){
-    appEls.vocabList.innerHTML = '<div class="empty">Sem termos.</div>'; return;
-  }
-  filtered.forEach((it, idx)=>{
-    const row = document.createElement('div'); row.className='list-item';
-    const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
-    const body  = document.createElement('div'); body.className='li-text'; body.textContent = it.texto;
-    const temas = document.createElement('div'); temas.className='li-actions';
-    it.temas.forEach((t,i)=>{
-      const id = `v_${idx}_${i}`;
-      const label = document.createElement('label');
-      label.className='seg small';
-      label.innerHTML = `<input type="checkbox" id="${id}" data-titulo="${escapeHTML(it.titulo)}" data-tema="${escapeHTML(t)}"> <span>${escapeHTML(t)}</span>`;
-      temas.appendChild(label);
+  list.className = 'fav-list';
+  const favs = getFavs();
+  const arr = scope==='all' ? state.artigosIndex : state.lastHits;
+  const nodes = arr.filter(n=> favs.includes(n.titulo));
+  if (!nodes.length){
+    list.innerHTML = '<div class="empty">Nenhum favorito encontrado.</div>';
+  } else {
+    nodes.forEach(n=>{
+      const item = document.createElement('div');
+      item.className = 'fav-item';
+      item.textContent = n.titulo;
+      item.addEventListener('click', ()=> openArticleModalByNode(n, /*fromSearch*/scope!=='all'));
+      list.appendChild(item);
     });
-    row.appendChild(title); row.appendChild(temas); row.appendChild(body);
-    wrap.appendChild(row);
+  }
+  appEls.favList.innerHTML = '';
+  appEls.favList.appendChild(list);
+  openDialog(appEls.modalFavs);
+}
+
+/* ====== Videos ====== */
+function loadVideos(){
+  // estrutura opcional; se não houver, manter vazio
+  // videos/<codigo>_videos.json
+  const id = state.codigo;
+  if (!id) return;
+  fetch(`videos/${id}_videos.json`).then(r=>{
+    if (!r.ok) return {};
+    return r.json();
+  }).then(json=>{
+    state.videos = json || {};
+  }).catch(()=>{});
+}
+function openVideosForNode(node){
+  const items = state.videos[node.titulo] || [];
+  appEls.vdTitle.textContent = node.titulo;
+  if (!items.length){
+    appEls.vdLista.innerHTML = '<div class="empty">Sem vídeos cadastrados para este artigo.</div>';
+  } else {
+    const list = document.createElement('div');
+    list.className = 'vd-list';
+    items.forEach(v=>{
+      const row = document.createElement('a');
+      row.className = 'vd-item';
+      row.href = v.url;
+      row.target = '_blank';
+      row.rel = 'noopener';
+      row.textContent = v.title || v.url;
+      list.appendChild(row);
+    });
+    appEls.vdLista.innerHTML = '';
+    appEls.vdLista.appendChild(list);
+  }
+  openDialog(appEls.modalVideos);
+}
+
+/* ====== Sidebar ====== */
+function bindSidebar(){
+  if (!appEls.btnSidebar || !appEls.sidebar) return;
+  appEls.btnSidebar.addEventListener('click', ()=>{
+    appEls.sidebar.classList.add('open');
   });
-  appEls.vocabList.innerHTML=''; appEls.vocabList.appendChild(wrap);
-  appEls.vocabList.querySelectorAll('input[type="checkbox"]').forEach(chk=>{
-    chk.addEventListener('change', ()=>{
-      const titulo = chk.dataset.titulo, tema = chk.dataset.tema;
-      if (chk.checked){
-        state.vocab.selected.push({titulo, tema});
-      }else{
-        const i = state.vocab.selected.findIndex(x=> x.titulo===titulo && x.tema===tema );
-        if (i>=0) state.vocab.selected.splice(i,1);
-      }
-      appEls.btnVocabCopy.disabled = state.vocab.selected.length===0;
+  appEls.btnSideClose.addEventListener('click', ()=>{
+    appEls.sidebar.classList.remove('open');
+  });
+  appEls.sbLinks.forEach(link=>{
+    link.addEventListener('click', ()=>{
+      const modalId = link.dataset.modal;
+      const modal = document.getElementById(modalId);
+      if (modal) openDialog(modal);
     });
   });
 }
-function buildVocabPrompt(sel){
-  const blocos = sel.map(x=>`• Tema: ${x.tema} (termo-base: ${x.titulo})`).join('\n');
-  return `Gere um material didático rápido e profundo para revisar os temas abaixo, com foco em doutrina, jurisprudência majoritária e prática forense; inclua exemplos, checklist e pegadinhas de prova. Seja objetivo e claro.\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
-}
-function renderVocabAIButtons(){
-  appEls.vocabPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>`;
-  appEls.vocabPromptWrap.querySelectorAll('.btn-ia').forEach(b=> b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app)));
-}
-if (appEls.btnVocabCopy){
-  appEls.btnVocabCopy.addEventListener('click', async ()=>{
-    const prompt = buildVocabPrompt(state.vocab.selected);
-    state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
-    renderVocabAIButtons();
-  });
-}
 
-/* ====== Princípios do Direito (JSON) ====== */
-async function ensurePrincLoaded(){
-  if (state.princ.data.length) return;
-  try{
-    const data = await getJSON('content/principios.json');
-    const arr = Array.isArray(data) ? data : (data.items || []);
-    state.princ.data = arr.map(x=>({ titulo: x.titulo||'', texto: x.texto||'' }));
-  }catch{
-    state.princ.data = [];
-  }finally{
-    appEls.princList.classList.remove('skeleton');
+/* ====== Modal helpers ====== */
+function polyfillDialog(el){
+  if (!el.showModal){
+    el.showModal = function(){
+      el.setAttribute('open','');
+      document.body.classList.add('modal-open');
+    };
+    el.close = function(){
+      el.removeAttribute('open');
+      document.body.classList.remove('modal-open');
+    };
   }
 }
-function renderPrincList(){
-  const q = norm(appEls.princSearch.value||'');
-  const items = state.princ.data.slice().sort((a,b)=>String(a.titulo||'').localeCompare(String(b.titulo||'')));
-  const filtered = q ? items.filter(it=> norm(`${it.titulo} ${it.texto}`).includes(q) ) : items;
-  const wrap = document.createElement('div'); wrap.className='list';
-  if (!filtered.length){
-    appEls.princList.innerHTML = '<div class="empty">Sem princípios.</div>'; return;
-  }
-  filtered.forEach((it, idx)=>{
-    const row = document.createElement('div'); row.className='list-item';
-    const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
-    const body  = document.createElement('div'); body.className='li-text'; body.textContent = it.texto;
-    const actions = document.createElement('div'); actions.className='li-actions';
-    const bt = document.createElement('button'); bt.className='btn btn-outline btn-small'; bt.type='button'; bt.textContent='Selecionar';
-    bt.addEventListener('click', ()=>{
-      const i = state.princ.selected.findIndex(x=> x.titulo===it.titulo);
-      if (i>=0){ state.princ.selected.splice(i,1); bt.textContent='Selecionar'; }
-      else { state.princ.selected.push(it); bt.textContent='Selecionado ✔'; }
-      appEls.btnPrincCopy.disabled = state.princ.selected.length===0;
-    });
-    actions.appendChild(bt);
-    row.appendChild(title); row.appendChild(actions); row.appendChild(body);
-    wrap.appendChild(row);
-  });
-  appEls.princList.innerHTML=''; appEls.princList.appendChild(wrap);
-}
-if (appEls.princSearch) appEls.princSearch.addEventListener('input', renderPrincList);
-
-function buildPrincPrompt(sel){
-  const blocos = sel.map(x=>`### ${x.titulo}\n${x.texto}`).join('\n\n');
-  return `Com base nos princípios abaixo, produza um resumo didático, com: definição, base legal comum, aplicações práticas forenses, jurisprudência majoritária ilustrativa e pegadinhas de prova. Termine com 5 questões objetivas (sem gabarito visível).\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
-}
-function renderPrincAIButtons(){
-  appEls.princPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>`;
-  appEls.princPromptWrap.querySelectorAll('.btn-ia').forEach(b=> b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app)));
-}
-if (appEls.btnPrincCopy){
-  appEls.btnPrincCopy.addEventListener('click', async ()=>{
-    const prompt = buildPrincPrompt(state.princ.selected);
-    state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
-    renderPrincAIButtons();
-  });
-}
+function openDialog(el){ polyfillDialog(el); el.showModal(); }
+function closeDialog(el){ el.close(); }
 
 /* ====== Autocomplete ====== */
-function acClose(){ state.ac.open=false; state.ac.activeIndex=-1; appEls.acPanel.hidden=true; appEls.acPanel.innerHTML=''; }
-function acOpen(items){ state.ac.open=true; state.ac.activeIndex=-1; appEls.acPanel.hidden=false; renderAc(items); }
-function acSetActive(idx){
-  const max = state.ac.items.length;
-  if (max===0) return;
-  if (idx<0) idx = max-1; if (idx>=max) idx = 0;
-  state.ac.activeIndex = idx;
-  Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=> el.classList.toggle('is-active', i===idx));
+function acCompute(q){
+  const k = norm(q);
+  return state.ac.items.filter(it=> it.key.includes(k)).slice(0, 20);
 }
-function renderAc(items){
-  state.ac.items = items;
-  const q = appEls.inpArtigo.value.trim();
-  appEls.acPanel.innerHTML = items.length ? items.map(it=>{
-    const title = it.titulo;
-    const codeLabel = (appEls.selCodigo.value||'').replace(/^codigo_/,'Código ').replace(/_/g,' ');
-    return `<div class="ac-item" role="option" data-titulo="${escapeHTML(title)}">
-      <div class="ac-title">${highlight(title, q)}</div>
-      <div class="ac-action">Abrir</div>
-      <div class="ac-meta">${escapeHTML(codeLabel)}</div>
-    </div>`;
-  }).join('') : `<div class="ac-empty">Sem sugestões.</div>`;
-
-  Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=>{
-    el.addEventListener('mouseenter', ()=> acSetActive(i));
-    el.addEventListener('mousedown', e=> e.preventDefault());
-    el.addEventListener('click', async ()=>{
-      const titulo = el.dataset.titulo;
-      if (!titulo) return;
-      const node = state.artigosIndex.find(n=>n.titulo===titulo);
-      if (!node) return;
-      state.lastHits = [node]; state.navScope='results';
-      openArticleModalByNode(node, true);
+function acOpen(items){
+  appEls.acPanel.innerHTML = items.map((it, idx)=>`
+    <div class="ac-item ${idx===0?'active':''}" data-index="${it.index}">
+      ${escapeHTML(it.label)}
+    </div>
+  `).join('');
+  appEls.acPanel.style.display = 'block';
+  state.ac.open = true;
+  state.ac.activeIndex = 0;
+}
+function acClose(){
+  appEls.acPanel.style.display = 'none';
+  appEls.acPanel.innerHTML = '';
+  state.ac.open = false;
+  state.ac.activeIndex = -1;
+}
+function acSetActive(idx){
+  const items = appEls.acPanel.querySelectorAll('.ac-item');
+  if (!items.length) return;
+  if (idx<0) idx = 0;
+  if (idx>=items.length) idx = items.length-1;
+  items.forEach(i=> i.classList.remove('active'));
+  items[idx].classList.add('active');
+  state.ac.activeIndex = idx;
+}
+function acBind(){
+  appEls.inpArtigo.addEventListener('input', ()=>{
+    const q = appEls.inpArtigo.value;
+    if (q.trim().length<1){ acClose(); return; }
+    const items = acCompute(q);
+    if (!items.length){ acClose(); return; }
+    acOpen(items);
+  });
+  appEls.inpArtigo.addEventListener('blur', ()=> setTimeout(acClose, 150));
+  appEls.acPanel.addEventListener('mousedown', (e)=>{
+    const item = e.target.closest('.ac-item');
+    if (!item) return;
+    const idx = parseInt(item.dataset.index, 10);
+    const node = state.artigosIndex[idx];
+    if (node){
+      openArticleModalByNode(node, /*fromSearch*/false);
       acClose();
-    });
+    }
   });
 }
-function acCompute(q){
-  const codeId = appEls.selCodigo.value;
-  if (!codeId || !state.artigosIndex.length) return [];
-  const nq = norm(q);
-  if (!nq) return [];
-  // se digitou padrão tipo "121" ou "121a", priorize match por número
-  const m = nq.match(/^(\d{1,4})([a-z])?$/i);
-  const byNum = m ? state.artigosIndex.filter(n=> n._nt.includes(`art${m[1]}${m[2]||''}`)).slice(0,10) : [];
-  const others = state.artigosIndex.filter(n=> n._nt.includes(nq)).slice(0,10);
-  // mescla removendo duplicados mantendo ordem
-  const map = new Map();
-  [...byNum, ...others].forEach(n=>{ if(!map.has(n.titulo)) map.set(n.titulo,n); });
-  return Array.from(map.values()).slice(0,10);
-}
 
-/* ====== Navegação, eventos e acessibilidade ====== */
-function resetAll(){
-  state.prompt='';
-  state.lastHits=[];
-  appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML='';
-  appEls.resultMsg.textContent='';
-  appEls.inpArtigo.value='';
-  acClose();
-}
-async function onBuscar(e){
-  if (e){ e.preventDefault(); }
-  const codeId = appEls.selCodigo.value;
-  const entrada = appEls.inpArtigo.value.trim();
-  if (!codeId){ appEls.resultMsg.textContent='Selecione um código antes.'; return; }
-  if (!entrada){ appEls.resultMsg.textContent='Digite um número de artigo ou palavras inteiras.'; return; }
-
-  appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML=''; appEls.resultMsg.textContent='Buscando...';
+/* ====== Busca ====== */
+async function onBuscar(){
+  const q = appEls.inpArtigo.value || '';
+  state.termoBusca = q;
+  if (!state.codigo){
+    appEls.resultMsg.textContent = 'Selecione um Código primeiro.';
+    return;
+  }
+  if (!q.trim()){
+    appEls.resultMsg.textContent = 'Digite um número de artigo ou palavras inteiras.';
+    return;
+  }
   try{
-    await ensureCodeLoaded(codeId);
-    const hits = await searchArticles(codeId, entrada);
+    appEls.resultMsg.textContent = 'Procurando...';
+    await sleep(50);
+    const hits = computeHits(q);
     state.lastHits = hits;
-    state.navScope='results';
-    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
-    renderResultChips(hits);
-    renderResultList(hits, entrada);
-    const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
-    appEls.resultMsg.textContent = `${hits.length} artigo(s) encontrado(s)${extra}. Clique para abrir.`;
+    renderResultsMessage(hits);
+    if (document.querySelector('[data-view].active')?.dataset.view==='list'){
+      renderHitsList(hits, q);
+    } else {
+      renderHitsChips(hits);
+    }
+    if (hits.length===1){
+      openArticleModalByNode(hits[0], /*fromSearch*/true);
+    }
   }catch(err){
     console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.';
   }
@@ -751,6 +559,9 @@ async function onBuscar(e){
 function bind(){
   ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
     .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
+
+  // [ajuste] esconder e desativar o botão 'Navegar: Resultados/Código'
+  if (appEls.btnScope) { appEls.btnScope.style.display = 'none'; appEls.btnScope.disabled = true; }
 
   // busca
   appEls.btnBuscar.addEventListener('click', onBuscar);
@@ -773,14 +584,12 @@ function bind(){
     const q = appEls.inpArtigo.value;
     if (q.trim().length<1){ acClose(); return; }
     const items = acCompute(q);
-    if (items.length){ acOpen(items); } else { acClose(); }
-  });
-  document.addEventListener('click', (e)=>{
-    if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); }
+    if (!items.length){ acClose(); return; }
+    acOpen(items);
   });
 
-  if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
-  appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{ state.searchMode = r.value; }));
+  // autocomplete panel (já tem mousedown)
+  acBind();
 
   // view toggle
   appEls.vtButtons.forEach(b=> b.addEventListener('click', ()=> switchView(b.dataset.view)));
@@ -789,7 +598,7 @@ function bind(){
   appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
   appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
   appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
-  appEls.btnScope.addEventListener('click', ()=>{
+  if (appEls.btnScope && !appEls.btnScope.disabled) appEls.btnScope.addEventListener('click', ()=>{
     state.navScope = state.navScope==='results' ? 'all' : 'results';
     appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
     const curr = state.navArray[state.navIndex];
@@ -802,109 +611,162 @@ function bind(){
 
   // sidebar
   bindSidebar();
-  bindSwipe();
 
-  // reset topbar
-  appEls.btnReset && appEls.btnReset.addEventListener('click', resetAll);
-
-  // teclado no modal
-  appEls.modalArtigo.addEventListener('keydown', e=>{
-    if (e.key==='ArrowLeft'){ e.preventDefault(); appEls.btnPrev.click(); }
-    if (e.key==='ArrowRight'){ e.preventDefault(); appEls.btnNext.click(); }
-    if (e.key==='Escape'){ e.preventDefault(); appEls.btnFechar.click(); }
+  // limpar
+  appEls.btnClear && appEls.btnClear.addEventListener('click', ()=>{
+    appEls.inpArtigo.value = '';
+    appEls.resultChips.innerHTML='';
+    appEls.resultList.innerHTML='';
+    renderResultsMessage([]);
+    acClose();
+    appEls.inpArtigo.focus();
   });
 
-  // lembrar último código
+  // reset (recarregar UI limpa, mantendo último código)
+  appEls.btnReset && appEls.btnReset.addEventListener('click', ()=>{
+    appEls.inpArtigo.value = '';
+    appEls.resultChips.innerHTML='';
+    appEls.resultList.innerHTML='';
+    renderResultsMessage([]);
+    acClose();
+    state.lastHits = [];
+    state.navScope = 'results';
+    showToast('Pronto!');
+  });
+
+  // select de código
   appEls.selCodigo.addEventListener('change', async ()=>{
-    const v = appEls.selCodigo.value;
-    if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); }
+    const id = appEls.selCodigo.value;
+    if (!id) return;
+    state.codigo = id;
+    saveLastCode(id);
+    appEls.resultMsg.textContent = 'Carregando código...';
+    try{
+      await loadCodigo(id);
+      loadVideos();
+      appEls.resultMsg.textContent = 'Código carregado. Digite o artigo ou palavras inteiras.';
+    }catch(err){
+      console.error(err);
+      appEls.resultMsg.textContent = 'Erro ao carregar o código selecionado.';
+    }
   });
 
-  // favoritos (modal)
-  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
+  // favoritos modal
+  appEls.favScope && appEls.favScope.addEventListener('change', ()=>{
+    const scope = appEls.favScope.value || 'all';
+    openFavsModal(scope);
   });
-  appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
+
+  // extras (vocabulário / princípios)
+  bindVocab();
+  bindPrincipios();
 }
 
-/* ====== Sidebar & modais ====== */
-function openSidebar(){ appEls.sidebar.classList.add('open'); appEls.sideBackdrop.hidden=false; appEls.sidebar.setAttribute('aria-hidden','false'); }
-function closeSidebar(){ appEls.sidebar.classList.remove('open'); appEls.sideBackdrop.hidden=true; appEls.sidebar.setAttribute('aria-hidden','true'); }
-function openModalById(id){ const d=document.getElementById(id); if (d) showDialog(d); }
-
-async function onSideNavClick(a){
-  const target = a.dataset.target;
-  const isHome = !!a.dataset.home;
-  closeSidebar();
-  if (isHome){ window.scrollTo({top:0,behavior:'smooth'}); return; }
-  if (!target) return;
-  if (target==='modalCursos'){ await loadCursosHTML(); }
-  if (target==='modalNoticias'){ await ensureNewsLoaded(); renderNewsList(); }
-  if (target==='modalVocab'){ await ensureVocabLoaded(); renderVocabList(); }
-  if (target==='modalPrincipios'){ await ensurePrincLoaded(); renderPrincList(); }
-  if (target==='modalFavs'){ renderFavList(); }
-  openModalById(target);
+/* ====== Vocabulário (extra) ====== */
+function vocabData(){
+  // simples demonstrativo; pode ser expandido
+  return [
+    { termo: 'Dano moral', explicacao: 'Prejuízo de ordem não patrimonial, atingindo direitos da personalidade.' },
+    { termo: 'Dano estético', explicacao: 'Deformidade ou alteração permanente da aparência física.' },
+    { termo: 'Culpa', explicacao: 'Conduta imprudente, negligente ou imperita, sem intenção de causar o resultado.' },
+    { termo: 'Dolo', explicacao: 'Vontade livre e consciente de realizar a conduta e produzir o resultado.' }
+  ];
 }
-
-function bindSidebar(){
-  if (appEls.btnSidebar) appEls.btnSidebar.addEventListener('click', e=>{ e.preventDefault(); openSidebar(); });
-  if (appEls.btnSideClose) appEls.btnSideClose.addEventListener('click', e=>{ e.preventDefault(); closeSidebar(); });
-  if (appEls.sideBackdrop) appEls.sideBackdrop.addEventListener('click', closeSidebar);
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSidebar(); });
-
-  document.querySelectorAll('.side-link').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); onSideNavClick(a); });
+function renderVocabList(list){
+  const frag = document.createDocumentFragment();
+  list.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'kv-row';
+    const t = document.createElement('div');
+    t.className = 'kv-term';
+    t.textContent = item.termo;
+    const v = document.createElement('div');
+    v.className = 'kv-exp';
+    v.textContent = item.explicacao;
+    row.appendChild(t); row.appendChild(v);
+    frag.appendChild(row);
+  });
+  appEls.vocabList.innerHTML = '';
+  appEls.vocabList.appendChild(frag);
+}
+function bindVocab(){
+  if (!appEls.modalVocab) return;
+  renderVocabList(vocabData());
+  appEls.vocabSearch.addEventListener('input', ()=>{
+    const q = norm(appEls.vocabSearch.value);
+    const base = vocabData();
+    const list = base.filter(it=> norm(it.termo+' '+it.explicacao).includes(q));
+    renderVocabList(list);
+  });
+  appEls.btnVocabCopy && appEls.btnVocabCopy.addEventListener('click', async ()=>{
+    const list = vocabData().map(it=>`- **${it.termo}**: ${it.explicacao}`).join('\n');
+    const txt = `Vocabulário-chave jurídico (resumo pessoal):\n\n${list}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
+    try{ await navigator.clipboard.writeText(txt); showToast('Copiado!'); }catch{ showToast('Copiado (tente colar)'); }
   });
 }
 
-/* ====== Dialog polyfill básico ====== */
-function supportsDialog(){ return typeof HTMLDialogElement !== 'undefined' && typeof document.createElement('dialog').showModal === 'function'; }
-function showDialog(dlg){
-  if (supportsDialog()){ if (!dlg.open) dlg.showModal(); return; }
-  dlg.classList.add('fallback-open');
-  let bd = document.querySelector('.modal.fallback-backdrop');
-  if (!bd){ bd = document.createElement('div'); bd.className='modal fallback-backdrop'; document.body.appendChild(bd); }
-  bd.addEventListener('click', ()=> closeDialog(dlg), { once:true });
-  document.body.style.overflow='hidden';
+/* ====== Princípios (extra) ====== */
+function principiosData(){
+  return [
+    { nome: 'Legalidade', desc: 'Só há obrigação e sanção quando houver lei anterior que as defina.' },
+    { nome: 'Contraditório e Ampla Defesa', desc: 'Direito de ser ouvido e de contrariar alegações em processo.' },
+    { nome: 'Proporcionalidade', desc: 'Medidas devem ser adequadas, necessárias e proporcionais ao fim.' },
+    { nome: 'Dignidade da Pessoa Humana', desc: 'Valor-fonte da ordem jurídica, orientando interpretação e aplicação do direito.' }
+  ];
 }
-function closeDialog(dlg){
-  if (supportsDialog()){ if (dlg.open) dlg.close(); return; }
-  dlg.classList.remove('fallback-open');
-  const bd = document.querySelector('.modal.fallback-backdrop');
-  if (bd) bd.remove();
-  document.body.style.overflow='';
+function renderPrincipiosList(list){
+  const frag = document.createDocumentFragment();
+  list.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'kv-row';
+    const t = document.createElement('div');
+    t.className = 'kv-term';
+    t.textContent = item.nome;
+    const v = document.createElement('div');
+    v.className = 'kv-exp';
+    v.textContent = item.desc;
+    row.appendChild(t); row.appendChild(v);
+    frag.appendChild(row);
+  });
+  appEls.princList.innerHTML = '';
+  appEls.princList.appendChild(frag);
 }
-
-/* ====== Swipe ====== */
-function bindSwipe(){
-  const el = appEls.amBody; if (!el) return;
-  let down=false, x0=0, y0=0, moved=false;
-  el.addEventListener('pointerdown',e=>{ down=true; moved=false; x0=e.clientX; y0=e.clientY; el.style.userSelect='none'; },{passive:true});
-  el.addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-x0, dy=e.clientY-y0; if(Math.abs(dx)>20 && Math.abs(dx)>Math.abs(dy)) moved=true; },{passive:true});
-  el.addEventListener('pointerup',e=>{
-    if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
-    if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
-    const arr=getScopeArray();
-    if (dx<0 && state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
-    else if (dx>0 && state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1);
-  },{passive:true});
-  el.addEventListener('pointercancel',()=>{ down=false; moved=false; el.style.userSelect=''; },{passive:true});
+function bindPrincipios(){
+  if (!appEls.modalPrincipios) return;
+  renderPrincipiosList(principiosData());
+  appEls.princSearch.addEventListener('input', ()=>{
+    const q = norm(appEls.princSearch.value);
+    const base = principiosData();
+    const list = base.filter(it=> norm(it.nome+' '+it.desc).includes(q));
+    renderPrincipiosList(list);
+  });
+  appEls.btnPrincCopy && appEls.btnPrincCopy.addEventListener('click', async ()=>{
+    const list = principiosData().map(it=>`- **${it.nome}**: ${it.desc}`).join('\n');
+    const txt = `Princípios essenciais (resumo pessoal):\n\n${list}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
+    try{ await navigator.clipboard.writeText(txt); showToast('Copiado!'); }catch{ showToast('Copiado (tente colar)'); }
+  });
 }
 
 /* ====== Init ====== */
-async function initCodes(){
-  try{
-    const codes = await autoDiscoverCodes();
-    renderCodeSelect(codes);
-    const last = localStorage.getItem('dl_last_code');
-    if (last){ await ensureCodeLoaded(last); }
-  }catch(e){
-    console.warn('Falha ao descobrir códigos', e);
+async function init(){
+  // restaura o último código
+  const last = getLastCode();
+  if (last){
+    appEls.selCodigo.value = last;
+    state.codigo = last;
+    try{
+      await loadCodigo(last);
+      loadVideos();
+      appEls.resultMsg.textContent = 'Código carregado. Digite o artigo ou palavras inteiras.';
+    }catch{
+      appEls.resultMsg.textContent = 'Selecione um Código.';
+    }
   }
-}
-function start(){
-  bind();
-  initCodes();
+
+  // view padrão
   switchView('chips');
+
+  bind();
 }
-document.addEventListener('DOMContentLoaded', start);
+
+document.addEventListener('DOMContentLoaded', init);
