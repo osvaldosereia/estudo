@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vade Mecum — Códigos e Leis</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#212842"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar" role="banner">
+    <div class="inner">
+      <div class="brand" aria-label="Vade Mecum Digital">
+        <span class="logo-text"><b>direito</b>.love</span>
+      </div>
+      <nav class="actions">
+        <button id="btnReset" class="icon-btn" title="Limpar busca" aria-label="Limpar busca" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="#fff" d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 1 1-5-5zm0 12a7 7 0 1 0 0-14v2a5 5 0 1 1 0 10z"/>
+          </svg>
+        </button>
+        <button id="btnSidebar" class="icon-btn" title="Abrir menu" aria-label="Abrir menu" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="#fff"></path>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar" aria-hidden="true" aria-label="Menu lateral">
+    <div class="side-header">
+      <span class="side-title">Menu</span>
+      <button id="btnSideClose" class="icon-btn ghost" title="Fechar menu" aria-label="Fechar menu" type="button">×</button>
+    </div>
+    <nav class="side-nav">
+      <a href="#" class="side-link" data-home="true">Códigos e Leis</a>
+      <a href="#" class="side-link" data-target="modalFavs">Favoritos</a>
+      <a href="#" class="side-link" data-target="modalCursos">Dicas de Cursos</a>
+      <a href="#" class="side-link" data-target="modalNoticias">Notícias e Artigos</a>
+      <a href="#" class="side-link" data-target="modalVocab">Vocabulário Jurídico</a>
+      <a href="#" class="side-link" data-target="modalPrincipios">Princípios do Direito</a>
+      <a href="#" class="side-link" data-target="modalSobre">Sobre</a>
+    </nav>
+    <div class="side-footer small">
+      <span>💚 direito.love</span>
+    </div>
+  </aside>
+  <div id="sideBackdrop" class="backdrop" hidden></div>
+
+  <main class="page" role="main">
+    <section class="controls" aria-label="Busca de Artigos">
+      <div class="grid">
+        <div class="field" data-area="code">
+          <label for="selCodigo">Código/Lei</label>
+          <select id="selCodigo" class="input select" aria-label="Selecione o Código ou Lei"></select>
+        </div>
+        <div class="field" data-area="article">
+          <label for="inpArtigo">Número do Artigo ou Palavras</label>
+          <div class="ac-field">
+            <input id="inpArtigo" class="input" placeholder="Ex.: 121 | 121-A | homicídio qualificado" aria-label="Entrada de busca" autocomplete="off" />
+            <div id="acPanel" class="ac-panel" role="listbox" hidden></div>
+          </div>
+        </div>
+        <div class="field button-cell" data-area="go">
+          <button id="btnBuscar" class="btn btn-primary" type="button">Buscar</button>
+        </div>
+      </div>
+      <p class="hint">Aceita número (ex.: 121, 121-A) ou <b>palavras inteiras</b>. Use o alternador para modo <b>Preciso</b> ou <b>Flexível</b>.</p>
+      <div class="search-options">
+        <label class="seg">
+          <input type="radio" name="mode" value="precise" checked>
+          <span>Preciso</span>
+        </label>
+        <label class="seg">
+          <input type="radio" name="mode" value="flex">
+          <span>Flexível</span>
+        </label>
+        <button id="btnClear" class="btn btn-outline" type="button">Limpar</button>
+      </div>
+    </section>
+
+    <section class="results" aria-label="Resultados">
+      <div class="results-head">
+        <h3 class="section-title">Resultados</h3>
+        <div class="view-toggle" role="tablist" aria-label="Modo de visualização">
+          <button class="vt-btn is-active" data-view="chips" role="tab" aria-selected="true">Chips</button>
+          <button class="vt-btn" data-view="list" role="tab" aria-selected="false">Lista</button>
+        </div>
+      </div>
+      <div id="resultArea">
+        <div id="resultChips" class="group"></div>
+        <div id="resultList" class="list-wrap" hidden></div>
+      </div>
+      <div id="resultMsg" class="small"></div>
+    </section>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal Artigo -->
+  <dialog id="modalArtigo" class="modal article-modal" aria-label="Leitura de Artigo">
+    <form method="dialog" class="modal-content">
+      <header class="am-top">
+        <button id="btnPrev" class="btn btn-outline btn-square" title="Artigo anterior" aria-label="Artigo anterior" type="button">←</button>
+        <div class="am-title" id="amTitle">Artigo</div>
+        <button id="btnNext" class="btn btn-outline btn-square" title="Próximo artigo" aria-label="Próximo artigo" type="button">→</button>
+      </header>
+      <div class="am-subtop">
+        <button id="btnScope" class="btn btn-outline btn-small" type="button" title="Alternar navegação">Navegar: Resultados</button>
+        <button id="btnFav" class="btn btn-outline btn-small" type="button" title="Favoritar">☆ Favoritar</button>
+      </div>
+      <div class="am-body" id="amBody" tabindex="0"></div>
+      <div class="am-extras" id="amExtras" hidden></div>
+      <footer class="am-actions">
+        <button id="btnFechar" class="btn btn-outline btn-square" title="Fechar" aria-label="Fechar" type="button">×</button>
+        <div class="am-flexgap"></div>
+        
+        <div id="amPromptWrap" class="am-prompt-wrap">
+          <button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Modal Favoritos -->
+  <dialog id="modalFavs" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Favoritos</h3>
+      <div class="modal-search">
+        <select id="favScope" class="input select" aria-label="Filtrar por código">
+          <option value="current">Somente do código atual</option>
+          <option value="all">Todos os códigos</option>
+        </select>
+      </div>
+      <div id="favList" class="list-wrap skeleton"></div>
+      <menu class="modal-actions">
+        <button class="btn btn-primary">Fechar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Modal Vídeos (opcional) -->
+  <dialog id="modalVideos" class="modal videos-modal">
+    <form method="dialog" class="modal-content">
+      <header class="vd-top"><div class="vd-title" id="vdTitle">Vídeo aula</div></header>
+      <div class="vd-body"><ul id="vdLista" class="vd-lista"></ul></div>
+      <footer class="vd-actions"><button id="btnVdFechar" value="cancel" class="btn btn-primary" type="button">Fechar</button></footer>
+    </form>
+  </dialog>
+
+  <!-- Modais da Sidebar -->
+  <dialog id="modalCursos" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Dicas de Cursos</h3>
+      <div id="cursosBody" class="pad">Carregando…</div>
+      <menu class="modal-actions">
+        <button class="btn btn-primary">Fechar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="modalNoticias" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Notícias e Artigos Acadêmicos</h3>
+      <div class="modal-search">
+        <input id="newsSearch" class="input" placeholder="Buscar por título, fonte ou palavra-chave" aria-label="Buscar notícias e artigos">
+      </div>
+      <div id="newsList" class="list-wrap skeleton"></div>
+      <menu class="modal-actions">
+        <button class="btn btn-primary">Fechar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="modalVocab" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Vocabulário Jurídico</h3>
+      <div class="modal-search">
+        <input id="vocabSearch" class="input" placeholder="Buscar termo" aria-label="Buscar no vocabulário">
+      </div>
+      <div id="vocabList" class="list-wrap skeleton"></div>
+      <footer class="assist-actions">
+        <div id="vocabPromptWrap" class="am-prompt-wrap">
+          <button id="btnVocabCopy" class="btn btn-primary" type="button" disabled>Copiar Prompt</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="modalPrincipios" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Princípios do Direito</h3>
+      <div class="modal-search">
+        <input id="princSearch" class="input" placeholder="Buscar princípio" aria-label="Buscar princípios">
+      </div>
+      <div id="princList" class="list-wrap skeleton"></div>
+      <footer class="assist-actions">
+        <div id="princPromptWrap" class="am-prompt-wrap">
+          <button id="btnPrincCopy" class="btn btn-primary" type="button" disabled>Copiar Prompt</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="modalSobre" class="modal">
+    <form method="dialog" class="modal-content">
+      <h3 style="margin:14px 16px">Sobre</h3>
+      <div class="pad">Informações do projeto direito.love.</div>
+      <menu class="modal-actions">
+        <button class="btn btn-primary">Fechar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="script.js?v=uxui-favs-ac-1"></script>
+</body>
+</html>
