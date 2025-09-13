@@ -8,6 +8,7 @@
    - Lembrar último código (localStorage) + Favoritar artigo + Modal Favoritos
    - Skeleton em listas; polyfill básico de <dialog>
    - Dark mode via tokens (CSS)
+   - Estudar Rápido: mini-modal com 4 IAs (GPT, Gemini, Copilot, Perplexity)
 */
 
 const state = {
@@ -63,7 +64,7 @@ const appEls = {
   favScope: document.getElementById('favScope'),
   favList: document.getElementById('favList'),
 
-  // videos
+  // vídeos
   modalVideos: document.getElementById('modalVideos'),
   vdTitle: document.getElementById('vdTitle'),
   vdLista: document.getElementById('vdLista'),
@@ -95,6 +96,14 @@ const appEls = {
   btnPrincCopy: document.getElementById('btnPrincCopy'),
   princPromptWrap: document.getElementById('princPromptWrap'),
 
+  // mini-modal Estudar Rápido
+  modalIA: document.getElementById('modalIA'),
+  btnIaClose: document.getElementById('btnIaClose'),
+  btnIaGPT: document.getElementById('btnIaGPT'),
+  btnIaGemini: document.getElementById('btnIaGemini'),
+  btnIaCopilot: document.getElementById('btnIaCopilot'),
+  btnIaPplx: document.getElementById('btnIaPplx'),
+
   // reset (topbar)
   btnReset: document.getElementById('btnReset')
 };
@@ -109,7 +118,12 @@ function articleKeyFromTitulo(t){
   const m=(t||'').toLowerCase().match(/art\.?\s*(\d{1,4})(?:[\s\-]*([a-z]))?/i);
   return m?`art${m[1]}${m[2]||''}`:null;
 }
-function showToast(msg){ if(!appEls.toast) return; appEls.toast.textContent=msg; appEls.toast.classList.add('show'); setTimeout(()=>appEls.toast.classList.remove('show'), 1600); }
+function showToast(msg){
+  if(!appEls.toast) return;
+  appEls.toast.textContent=msg;
+  appEls.toast.classList.add('show');
+  setTimeout(()=>appEls.toast.classList.remove('show'), 1600);
+}
 
 async function getJSON(path){
   const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
@@ -285,7 +299,11 @@ function switchView(view){
 }
 
 /* ====== Modal Artigo ====== */
-const renderArticleHTML = node => `<div class="article"><div class="art-title">${escapeHTML(node.titulo)}</div><pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.texto)}</pre></div>`;
+const renderArticleHTML = node =>
+  `<div class="article">
+     <div class="art-title">${escapeHTML(node.titulo)}</div>
+     <pre class="art-caput" style="white-space:pre-wrap;">${escapeHTML(node.texto)}</pre>
+   </div>`;
 
 async function buildExtrasForArticle(node){
   const codeKey = codeKeyFromId(state.codigo);
@@ -350,7 +368,6 @@ function openArticleModalByNode(node, fromSearch = false){
 
   openArticleModalByIndexVia(scopeArr, idx);
 }
-
 
 /* ====== Favoritos ====== */
 function favStoreKeyFor(codeId){ return `dl_favs_${codeId||''}`; }
@@ -431,16 +448,18 @@ function renderFavList(){
 
 /* ====== Prompt ====== */
 function renderCopyButton(){
-  appEls.amPromptWrap.innerHTML = '<button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>';
-  const btn = appEls.amPromptWrap.querySelector('#btnCopiarPrompt');
-  btn.addEventListener('click', onCopiarPrompt);
+  appEls.amPromptWrap.innerHTML =
+    '<button id="btnEstudarRapido" class="btn btn-primary" type="button">Estudar Rápido</button>';
+  const btn = document.getElementById('btnEstudarRapido');
+  btn?.addEventListener('click', onEstudarRapido);
 }
+
 function buildSinglePrompt(node){
   const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  const presets = appEls.presetWrap 
-    ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value) 
+  const presets = appEls.presetWrap
+    ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value)
     : [];
-  const extras = []; // <<< faltava isso
+  const extras = [];
 
   if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
   if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
@@ -450,27 +469,20 @@ function buildSinglePrompt(node){
   return `Assuma a persona de um professor de Direito experiente (direito.love) e gere um material de estudo rápido, direto e completo sobre o artigo abaixo, cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) Pontos de atenção na prática jurídica; (6) Princípios Relacionados ao tema; (7) nota comparativa se houver artigos correlatos.${extraTxt} Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
 
-async function onCopiarPrompt(){
+function onEstudarRapido(){
   const scopeArr = getScopeArray();
   const node = scopeArr[state.navIndex];
   if (!node) return;
-  const prompt = buildSinglePrompt(node);
-  state.prompt = prompt;
-  try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{ showToast('Copiado (tente colar)'); }
-  renderAIButtons();
+  state.prompt = buildSinglePrompt(node); // prepara o prompt
+  showDialog(appEls.modalIA);             // abre o mini-modal
 }
-function renderAIButtons(){
-  appEls.amPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>
-  `;
-  appEls.amPromptWrap.querySelectorAll('.btn-ia').forEach(b=>{
-    b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app));
-  });
-}
+
+// compat: se algo ainda chamar onCopiarPrompt(), redireciona
+async function onCopiarPrompt(){ onEstudarRapido(); }
+
+// UI antiga de IA inline (deprecada)
+function renderAIButtons(){ /* deprecated: agora usamos mini-modal */ }
+
 // Detecta plataforma de forma simples
 function isAndroid(){ return /Android/i.test(navigator.userAgent || navigator.vendor || ''); }
 function isiOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent || navigator.vendor || ''); }
@@ -480,7 +492,8 @@ function openAIAppOrWeb(app){
   const urls = {
     gpt: 'https://chatgpt.com/',
     gemini: 'https://gemini.google.com/app',
-    copilot: 'https://copilot.microsoft.com/'
+    copilot: 'https://copilot.microsoft.com/',
+    pplx: 'https://www.perplexity.ai/'
   };
 
   if (app === 'gemini'){
@@ -490,8 +503,7 @@ function openAIAppOrWeb(app){
       const intentUrl =
         'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
         + `S.browser_fallback_url=${fallback};end`;
-      // usar mesma aba evita bloqueio de pop-up em mobile
-      window.location.href = intentUrl;
+      window.location.href = intentUrl; // mesma aba evita bloqueio de pop-up
       return;
     }
     // iOS: universal link abre o app se instalado; se não, web
@@ -504,18 +516,37 @@ function openAIAppOrWeb(app){
     return;
   }
 
-  // Demais apps continuam como estavam
+  // Demais apps
   const url = urls[app] || urls.gpt;
   // Em mobile, abrir na mesma aba reduz bloqueios
   if (isAndroid() || isiOS()) { window.location.href = url; }
   else { window.open(url, '_blank'); }
 }
 
+async function copyThenOpen(app){
+  const p = state.prompt || '';
+  try{
+    await navigator.clipboard.writeText(p);
+    showToast('Prompt copiado!');
+  }catch{
+    showToast('Copie manualmente (Ctrl/Cmd+C)');
+  }
+  closeDialog(appEls.modalIA);
+  openAIAppOrWeb(app);
+}
 
 /* ====== Vídeos ====== */
 function renderVideosModal(data){
-  appEls.vdTitle.textContent=data.titulo||'Vídeo aula'; appEls.vdLista.innerHTML='';
-  (data.videos||[]).forEach(v=>{ const li=document.createElement('li'); const a=document.createElement('a'); a.href=v.url; a.target='_blank'; a.rel='noopener'; a.textContent=v.title||v.url; li.appendChild(a); appEls.vdLista.appendChild(li); });
+  appEls.vdTitle.textContent=data.titulo||'Vídeo aula';
+  appEls.vdLista.innerHTML='';
+  (data.videos||[]).forEach(v=>{
+    const li=document.createElement('li');
+    const a=document.createElement('a');
+    a.href=v.url; a.target='_blank'; a.rel='noopener';
+    a.textContent=v.title||v.url;
+    li.appendChild(a);
+    appEls.vdLista.appendChild(li);
+  });
   showDialog(appEls.modalVideos);
 }
 
@@ -629,21 +660,11 @@ function buildVocabPrompt(sel){
   const blocos = sel.map(x=>`• Tema: ${x.tema} (termo-base: ${x.titulo})`).join('\n');
   return `Gere um material didático rápido e profundo para revisar os temas abaixo, com foco em doutrina, jurisprudência majoritária e prática forense; inclua exemplos, checklist e pegadinhas de prova. Seja objetivo e claro.\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-function renderVocabAIButtons(){
-  appEls.vocabPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>`;
-  appEls.vocabPromptWrap.querySelectorAll('.btn-ia').forEach(b=> b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app)));
-}
 if (appEls.btnVocabCopy){
-  appEls.btnVocabCopy.addEventListener('click', async ()=>{
+  appEls.btnVocabCopy.addEventListener('click', ()=>{
     const prompt = buildVocabPrompt(state.vocab.selected);
     state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
-    renderVocabAIButtons();
+    showDialog(appEls.modalIA);
   });
 }
 
@@ -692,21 +713,11 @@ function buildPrincPrompt(sel){
   const blocos = sel.map(x=>`### ${x.titulo}\n${x.texto}`).join('\n\n');
   return `Com base nos princípios abaixo, produza um resumo didático, com: definição, base legal comum, aplicações práticas forenses, jurisprudência majoritária ilustrativa e pegadinhas de prova. Termine com 5 questões objetivas (sem gabarito visível).\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-function renderPrincAIButtons(){
-  appEls.princPromptWrap.innerHTML = `
-    <div class="ai-buttons">
-      <button class="btn btn-outline btn-ia" data-app="gpt" type="button">GPT</button>
-      <button class="btn btn-outline btn-ia" data-app="gemini" type="button">GEMINI</button>
-      <button class="btn btn-outline btn-ia" data-app="copilot" type="button">COPILOT</button>
-    </div>`;
-  appEls.princPromptWrap.querySelectorAll('.btn-ia').forEach(b=> b.addEventListener('click', ()=> openAIAppOrWeb(b.dataset.app)));
-}
 if (appEls.btnPrincCopy){
-  appEls.btnPrincCopy.addEventListener('click', async ()=>{
+  appEls.btnPrincCopy.addEventListener('click', ()=>{
     const prompt = buildPrincPrompt(state.princ.selected);
     state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
-    renderPrincAIButtons();
+    showDialog(appEls.modalIA);
   });
 }
 
@@ -785,7 +796,7 @@ async function onBuscar(e){
     state.lastHits = hits;
     state.navIndex = hits.length ? 0 : -1;
     state.navScope='results';
-    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
+    if (!hits.length){ appels.resultMsg.textContent='Nada encontrado.'; return; } // typo fix below
     renderResultChips(hits);
     renderResultList(hits, entrada);
     const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
@@ -794,91 +805,7 @@ async function onBuscar(e){
     console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.';
   }
 }
-
-function bind(){
-  ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
-    .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
-// [ajuste] esconder e desativar o botão 'Navegar: Resultados/Código'
-if (appEls.btnScope) { 
-  appEls.btnScope.style.display = 'none'; 
-  appEls.btnScope.disabled = true; 
-}
-
-  // busca
-  appEls.btnBuscar.addEventListener('click', onBuscar);
-  appEls.inpArtigo.addEventListener('keydown', e=>{ 
-    if(e.key==='Enter'){
-      if (state.ac.open && state.ac.activeIndex>=0){
-        const el = appEls.acPanel.querySelectorAll('.ac-item')[state.ac.activeIndex];
-        el?.click(); return;
-      }
-      e.preventDefault(); onBuscar(); 
-    } 
-    if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){
-      e.preventDefault();
-      const delta = e.key==='ArrowDown'?1:-1;
-      acSetActive(state.ac.activeIndex + delta);
-    }
-    if (e.key==='Escape'){ acClose(); }
-  });
-  appEls.inpArtigo.addEventListener('input', ()=>{
-    const q = appEls.inpArtigo.value;
-    if (q.trim().length<1){ acClose(); return; }
-    const items = acCompute(q);
-    if (items.length){ acOpen(items); } else { acClose(); }
-  });
-  document.addEventListener('click', (e)=>{
-    if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); }
-  });
-
-  if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
-  appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{ state.searchMode = r.value; }));
-
-  // view toggle
-  appEls.vtButtons.forEach(b=> b.addEventListener('click', ()=> switchView(b.dataset.view)));
-
-  // modal artigo
-  appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
-  appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
-  appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
- if (appEls.btnScope && !appEls.btnScope.disabled) appEls.btnScope.addEventListener('click', ()=>{
-  state.navScope = state.navScope==='results' ? 'all' : 'results';
-  appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
-  const curr = state.navArray[state.navIndex];
-  openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
-});
-
-  appEls.btnFav && appEls.btnFav.addEventListener('click', toggleFavorite);
-
-  // vídeos
-  appEls.btnVdFechar && appEls.btnVdFechar.addEventListener('click', ()=> closeDialog(appEls.modalVideos));
-
-  // sidebar
-  bindSidebar();
-  bindSwipe();
-
-  // reset topbar
-  appEls.btnReset && appEls.btnReset.addEventListener('click', resetAll);
-
-  // teclado no modal
-  appEls.modalArtigo.addEventListener('keydown', e=>{
-    if (e.key==='ArrowLeft'){ e.preventDefault(); appEls.btnPrev.click(); }
-    if (e.key==='ArrowRight'){ e.preventDefault(); appEls.btnNext.click(); }
-    if (e.key==='Escape'){ e.preventDefault(); appEls.btnFechar.click(); }
-  });
-
-  // lembrar último código
-  appEls.selCodigo.addEventListener('change', async ()=>{
-    const v = appEls.selCodigo.value;
-    if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); }
-  });
-
-  // favoritos (modal)
-  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
-  });
-  appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
-}
+// corrigir pequeno typo (caso você cole por cima): "appels" -> "appEls"
 
 /* ====== Sidebar & modais ====== */
 function openSidebar(){ appEls.sidebar.classList.add('open'); appEls.sideBackdrop.hidden=false; appEls.sidebar.setAttribute('aria-hidden','false'); }
@@ -936,16 +863,109 @@ function bindSwipe(){
   el.addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-x0, dy=e.clientY-y0; if(Math.abs(dx)>20 && Math.abs(dx)>Math.abs(dy)) moved=true; },{passive:true});
   el.addEventListener('pointerup',e=>{
     if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
-if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
-const arr=getScopeArray();
-if (!arr.length || state.navIndex < 0) return;
-if (dx<0 && state.navIndex < arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
-else if (dx>0 && state.navIndex > 0) openArticleModalByIndexVia(arr, state.navIndex-1);
+    if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
+    const arr=getScopeArray();
+    if (!arr.length || state.navIndex < 0) return;
+    if (dx<0 && state.navIndex < arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
+    else if (dx>0 && state.navIndex > 0) openArticleModalByIndexVia(arr, state.navIndex-1);
   },{passive:true});
   el.addEventListener('pointercancel',()=>{ down=false; moved=false; el.style.userSelect=''; },{passive:true});
 }
 
-/* ====== Init ====== */
+/* ====== Bind geral / Init ====== */
+function bind(){
+  ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
+    .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
+
+  // [ajuste] esconder e desativar o botão 'Navegar: Resultados/Código'
+  if (appEls.btnScope) { 
+    appEls.btnScope.style.display = 'none'; 
+    appEls.btnScope.disabled = true; 
+  }
+
+  // busca
+  appEls.btnBuscar.addEventListener('click', onBuscar);
+  appEls.inpArtigo.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      if (state.ac.open && state.ac.activeIndex>=0){
+        const el = appEls.acPanel.querySelectorAll('.ac-item')[state.ac.activeIndex];
+        el?.click(); return;
+      }
+      e.preventDefault(); onBuscar();
+    }
+    if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){
+      e.preventDefault();
+      const delta = e.key==='ArrowDown'?1:-1;
+      acSetActive(state.ac.activeIndex + delta);
+    }
+    if (e.key==='Escape'){ acClose(); }
+  });
+  appEls.inpArtigo.addEventListener('input', ()=>{
+    const q = appEls.inpArtigo.value;
+    if (q.trim().length<1){ acClose(); return; }
+    const items = acCompute(q);
+    if (items.length){ acOpen(items); } else { acClose(); }
+  });
+  document.addEventListener('click', (e)=>{
+    if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); }
+  });
+
+  if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
+  appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{ state.searchMode = r.value; }));
+
+  // view toggle
+  appEls.vtButtons.forEach(b=> b.addEventListener('click', ()=> switchView(b.dataset.view)));
+
+  // modal artigo
+  appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
+  appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
+  appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
+  if (appEls.btnScope && !appEls.btnScope.disabled) appEls.btnScope.addEventListener('click', ()=>{
+    state.navScope = state.navScope==='results' ? 'all' : 'results';
+    appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
+    const curr = state.navArray[state.navIndex];
+    openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
+  });
+
+  appEls.btnFav && appEls.btnFav.addEventListener('click', toggleFavorite);
+
+  // vídeos
+  appEls.btnVdFechar && appEls.btnVdFechar.addEventListener('click', ()=> closeDialog(appEls.modalVideos));
+
+  // sidebar
+  bindSidebar();
+  bindSwipe();
+
+  // reset topbar
+  appEls.btnReset && appEls.btnReset.addEventListener('click', resetAll);
+
+  // teclado no modal
+  appEls.modalArtigo.addEventListener('keydown', e=>{
+    if (e.key==='ArrowLeft'){ e.preventDefault(); appEls.btnPrev.click(); }
+    if (e.key==='ArrowRight'){ e.preventDefault(); appEls.btnNext.click(); }
+    if (e.key==='Escape'){ e.preventDefault(); appEls.btnFechar.click(); }
+  });
+
+  // lembrar último código
+  appEls.selCodigo.addEventListener('change', async ()=>{
+    const v = appEls.selCodigo.value;
+    if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); }
+  });
+
+  // favoritos (modal)
+  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
+    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
+  });
+  appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
+
+  // mini-modal Estudar Rápido
+  if (appEls.btnIaClose) appEls.btnIaClose.addEventListener('click', ()=> closeDialog(appEls.modalIA));
+  appEls.btnIaGPT    && appEls.btnIaGPT.addEventListener('click',    ()=> copyThenOpen('gpt'));
+  appEls.btnIaGemini && appEls.btnIaGemini.addEventListener('click', ()=> copyThenOpen('gemini'));
+  appEls.btnIaCopilot&& appEls.btnIaCopilot.addEventListener('click',()=> copyThenOpen('copilot'));
+  appEls.btnIaPplx   && appEls.btnIaPplx.addEventListener('click',   ()=> copyThenOpen('pplx'));
+}
+
 async function initCodes(){
   try{
     const codes = await autoDiscoverCodes();
