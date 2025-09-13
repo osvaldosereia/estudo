@@ -309,8 +309,8 @@ async function buildExtrasForArticle(node){
 }
 
 function getScopeArray(){
-  if (state.navScope==='results' && state.lastHits.length) return state.lastHits;
-  return state.artigosIndex;
+  // Navegação SEMPRE pelo código completo
+  return state.artigosIndex || [];
 }
 
 function openArticleModalByIndexVia(scopeArr, idx){
@@ -336,20 +336,21 @@ function openArticleModalByIndexVia(scopeArr, idx){
 function openArticleModalByIndex(idx){
   return openArticleModalByIndexVia(getScopeArray(), idx);
 }
-function openArticleModalByNode(node, fromSearch=false){
+function openArticleModalByNode(node, fromSearch = false){
   if (!node) return;
-  if (fromSearch && state.lastHits.length){ 
-    state.navScope = 'results'; 
-  }
-  const scopeArr = getScopeArray();
-  const idx = scopeArr.findIndex(n=>n.titulo===node.titulo);
-  if (idx >= 0) {
-    openArticleModalByIndexVia(scopeArr, idx);
-  } else {
-    // fallback: abre na posição 0 para evitar navIndex -1
-    openArticleModalByIndexVia(scopeArr, 0);
-  }
+
+  // Sempre navegar pelo CÓDIGO TODO, não pelos hits
+  state.navScope = 'all';
+  const scopeArr = state.artigosIndex || [];
+
+  // achar posição do artigo no array do código
+  let idx = scopeArr.findIndex(n => n.titulo === node.titulo);
+  if (idx < 0 && node.id) idx = scopeArr.findIndex(n => n.id === node.id);
+  if (idx < 0) idx = 0; // fallback seguro
+
+  openArticleModalByIndexVia(scopeArr, idx);
 }
+
 
 /* ====== Favoritos ====== */
 function favStoreKeyFor(codeId){ return `dl_favs_${codeId||''}`; }
