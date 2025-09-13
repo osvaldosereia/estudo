@@ -292,4 +292,5 @@ mark{background:rgba(255, 238, 128,.7)}
   display: flex;
   align-items: center;
   gap: 14px; /* ajuste o valor conforme o visual */
+  background: pink;
 }
