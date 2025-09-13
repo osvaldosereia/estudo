@@ -142,12 +142,118 @@ async function fileExists(path){
   try{ const r=await fetch(url,{method:'HEAD',cache:'no-store'}); return r.ok; }catch{ return false; }
 }
 
-/* ====== Códigos ====== */
+/* ====== Códigos (TXT-first) ============================================= */
+/* Esta versão prioriza .txt (como no Planalto) e mantém JSON como fallback. */
+
+async function getText(path){
+  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
+  const r = await fetch(url, { cache:'no-store' });
+  if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
+  return r.text();
+}
+
+function normalizeNewlines(s){ return String(s||'').replace(/\r\n?/g, '\n'); }
+
+/** 
+ * Parser de TXT → objeto de artigos.
+ * Divide por cabeçalhos "Art.", "Art", "Artigo", aceita 121-A ou 121A e 121º.
+ * Retorna objeto no formato { art121: {titulo, texto}, ... } para compatibilidade.
+ */
+function parseTxtToArtigos(txt){
+  const text = normalizeNewlines(txt);
+
+  // Regex de cabeçalho de artigo (linha inicial). Captura número e sufixo (ex.: 121-A ou 121a).
+  const reHeader = /(^|\n)\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?/gi;
+
+  const matches = [];
+  let m;
+  while ((m = reHeader.exec(text)) !== null) {
+    const newlineLen = m[1] ? m[1].length : 0;
+    const headerStart = m.index + newlineLen;
+    matches.push({ headerStart, m });
+  }
+  if (!matches.length) return {};
+
+  const data = {};
+  for (let i = 0; i < matches.length; i++) {
+    const { headerStart, m } = matches[i];
+    const nextStart = i < matches.length - 1 ? matches[i+1].headerStart : text.length;
+
+    // Encontrar fim exato do cabeçalho para separar o "título" do "texto"
+    const headerSlice = text.slice(headerStart, Math.min(headerStart + 200, nextStart));
+    const headerLineMatch = headerSlice.match(/^\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?\s*/i);
+    if (!headerLineMatch) continue;
+
+    const headerEnd = headerStart + headerLineMatch[0].length;
+
+    const num = headerLineMatch[2];
+    const suf = (headerLineMatch[3] || '').toUpperCase(); // ex.: 'A'
+    const titulo = `Art. ${num}${suf ? '-' + suf : ''}`;
+    const key = `art${num}${(suf || '').toLowerCase()}`;
+
+    // Texto do artigo (do fim do cabeçalho até antes do próximo cabeçalho)
+    let body = text.slice(headerEnd, nextStart);
+    // Limpeza leve nas bordas; preserva quebras internas
+    body = body.replace(/^\s+/, '').replace(/\s+$/, '');
+
+    data[key] = { id: key, titulo, texto: body };
+  }
+
+  return data;
+}
+
+/* Descoberta automática de códigos disponíveis.
+   Aqui priorizamos .txt; se não houver, caímos para JSON (compat). */
+async function autoDiscoverCodes(){
+  const candidates = [
+    // Você pode expandir depois (Civil, CPC etc.). Por agora, foco no Penal:
+    { id:'codigo_Penal', label:'Código Penal', txt:['data/codigo_penal.txt','data/codigo_Penal.txt'], json:['data/codigo_Penal_vademecum.json','data/codigo_Penal.json'] },
+  ];
+
+  const found = [];
+  state.codePaths = {}; // mapeia id -> { type:'txt'|'json', path:string }
+
+  for (const c of candidates){
+    // tenta .txt primeiro
+    let chosen = null;
+    for (const p of (c.txt || [])){
+      try { if (await fileExists(p)) { chosen = { type:'txt', path:p }; break; } } catch {}
+    }
+    // fallback para JSON
+    if (!chosen) {
+      for (const p of (c.json || [])){
+        try { if (await fileExists(p)) { chosen = { type:'json', path:p }; break; } } catch {}
+      }
+    }
+    if (chosen){
+      state.codePaths[c.id] = chosen;
+      found.push({ id:c.id, label:c.label });
+    }
+  }
+
+  return found;
+}
+
+function renderCodeSelect(codes){
+  const el = appEls.selCodigo;
+  const last = localStorage.getItem('dl_last_code');
+  const opts = (codes||[]).map(c=>`<option value="${c.id}" ${last===c.id?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
+  el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
+}
+
+/* Carrega o código selecionado, parseando TXT se for o caso. */
 async function tryLoadCodeData(codeId){
+  const mapping = state.codePaths && state.codePaths[codeId];
+  if (mapping && mapping.type === 'txt'){
+    const raw = await getText(mapping.path);
+    return parseTxtToArtigos(raw);
+  }
+  // Fallback antigo para JSON (mantido por compatibilidade)
   const paths=[`data/${codeId}_vademecum.json`,`data/${codeId}.json`];
   for (const p of paths){ try{ return await getJSON(p);}catch{} }
-  throw new Error('Arquivo JSON não encontrado.');
+  throw new Error('Nenhum arquivo de código encontrado (.txt ou .json).');
 }
+
 async function ensureCodeLoaded(codeId){
   if (state.codigo===codeId && state.artigosData) return;
   state.codigo = codeId;
@@ -156,22 +262,7 @@ async function ensureCodeLoaded(codeId){
   // pré-computa títulos normalizados para autocomplete
   state.artigosIndex.forEach(n=>{ n._nt = norm(n.titulo||''); });
 }
-async function autoDiscoverCodes(){
-  const candidates=['codigo_Civil','codigo_Penal','codigo_Processo_Civil','codigo_Processo_Penal','codigo_Processo_Militar','codigo_Consumidor'];
-  const found=[];
-  for (const id of candidates){
-    const has = await fileExists(`data/${id}_vademecum.json`) || await fileExists(`data/${id}.json`);
-    if (has) found.push({ id, label: id.replace(/^codigo_/,'Código ').replace(/_/g,' ') });
-  }
-  if (!found.length && await fileExists('data/codigo_civil.json')) return [{id:'codigo_civil',label:'Código Civil'}];
-  return found;
-}
-function renderCodeSelect(codes){
-  const el = appEls.selCodigo;
-  const last = localStorage.getItem('dl_last_code');
-  const opts = (codes||[]).map(c=>`<option value="${c.id}" ${last===c.id?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-  el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
-}
+
 
 /* ====== Catálogo de Vídeos ====== */
 async function loadVideosCatalog(codeKey){
