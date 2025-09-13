@@ -887,7 +887,7 @@ async function onBuscar(e){
     state.lastHits = hits;
     state.navIndex = hits.length ? 0 : -1;
     state.navScope='results';
-    if (!hits.length){ appels.resultMsg.textContent='Nada encontrado.'; return; } // typo fix below
+    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; } // typo fix below
     renderResultChips(hits);
     renderResultList(hits, entrada);
     const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
