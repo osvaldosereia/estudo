@@ -429,14 +429,18 @@ function renderCopyButton(){
 function buildSinglePrompt(node){
   const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
   const presets = appEls.presetWrap 
-  ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value) 
-  : [];
+    ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value) 
+    : [];
+  const extras = []; // <<< faltava isso
+
   if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
   if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
   if (presets.includes('juris')) extras.push('(c) referências de jurisprudência majoritária (STJ/STF) em linguagem simples');
+
   const extraTxt = extras.length ? ` Além disso, inclua ${extras.join(', ')}.` : '';
   return `Assuma a persona de um professor de Direito experiente (direito.love) e gere um material de estudo rápido, direto e completo sobre o artigo abaixo, cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) nota comparativa se houver artigos correlatos.${extraTxt} Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
+
 async function onCopiarPrompt(){
   const scopeArr = getScopeArray();
   const node = scopeArr[state.navIndex];
