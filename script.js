@@ -7,7 +7,8 @@
    - Autocomplete de títulos de artigos (Enter/Setas/Click)
    - Lembrar último código (localStorage) + Favoritar artigo + Modal Favoritos
    - Skeleton em listas; polyfill básico de <dialog>
-   - Dark mode via tokens (CSS)
+   - (NOVO) Toggle "Navegar: Resultados/Código" só aparece quando a busca tiver > 1 resultado
+   - (NOVO) Copiar Prompt com fallback + tolerância a ausência de "presets rápidos"
 */
 
 const state = {
@@ -56,7 +57,7 @@ const appEls = {
   amPromptWrap: document.getElementById('amPromptWrap'),
   btnScope: document.getElementById('btnScope'),
   btnFav: document.getElementById('btnFav'),
-  presetWrap: document.getElementById('presetWrap'),
+  presetWrap: document.getElementById('presetWrap'), // pode inexistir (quando presets forem removidos)
 
   // favoritos
   modalFavs: document.getElementById('modalFavs'),
@@ -308,10 +309,20 @@ async function buildExtrasForArticle(node){
   appEls.amExtras.hidden = appEls.amExtras.children.length===0;
 }
 
+/* --- Escopo de navegação (Resultados | Código) --- */
 function getScopeArray(){
   if (state.navScope==='results' && state.lastHits.length) return state.lastHits;
   return state.artigosIndex;
 }
+function setScopeButtonVisible(visible){
+  if (!appEls.btnScope) return;
+  appEls.btnScope.hidden = !visible;
+}
+function refreshScopeButton(){
+  if (!appEls.btnScope) return;
+  appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
+}
+/* -------------------------------------------------- */
 
 function openArticleModalByIndexVia(scopeArr, idx){
   if (idx<0 || idx>=scopeArr.length) return;
@@ -330,6 +341,9 @@ function openArticleModalByIndexVia(scopeArr, idx){
 
   renderCopyButton();
 
+  // Atualiza label do toggle (se visível)
+  refreshScopeButton();
+
   showDialog(appEls.modalArtigo);
   appEls.amBody.focus({preventScroll:true});
 }
@@ -337,7 +351,11 @@ function openArticleModalByIndex(idx){
   return openArticleModalByIndexVia(getScopeArray(), idx);
 }
 function openArticleModalByNode(node, fromSearch=false){
-  if (fromSearch && state.lastHits.length){ state.navScope='results'; }
+  const multiResults = !!(fromSearch && Array.isArray(state.lastHits) && state.lastHits.length > 1);
+  state.navScope = multiResults ? 'results' : 'all';
+  setScopeButtonVisible(multiResults); // só mostra se >1 resultado na busca
+  refreshScopeButton();
+
   const scopeArr = getScopeArray();
   const idx = scopeArr.findIndex(n=>n.titulo===node.titulo);
   if (idx>=0) openArticleModalByIndexVia(scopeArr, idx);
@@ -404,8 +422,12 @@ function renderFavList(){
     btnOpen.addEventListener('click', async ()=>{
       if (state.codigo!==entry.codeId){ await ensureCodeLoaded(entry.codeId); appEls.selCodigo.value = entry.codeId; localStorage.setItem('dl_last_code', entry.codeId); }
       const node = state.artigosIndex.find(n=>n.titulo===entry.titulo);
-      state.lastHits = node?[node]:[]; state.navScope='results';
-      openArticleModalByNode(node||{}, true);
+      // Ao abrir de favoritos: NUNCA mostrar toggle; navegação pelo código
+      state.lastHits = node ? [node] : [];
+      state.navScope = 'all';
+      setScopeButtonVisible(false);
+      refreshScopeButton();
+      openArticleModalByNode(node||{}, /*fromSearch*/false);
     });
     btnDel.addEventListener('click', ()=>{
       const arr = getFavsRaw(entry.codeId);
@@ -426,9 +448,18 @@ function renderCopyButton(){
   const btn = appEls.amPromptWrap.querySelector('#btnCopiarPrompt');
   btn.addEventListener('click', onCopiarPrompt);
 }
+
+// Tolerante à ausência de presets no HTML
+function getSelectedPresets(){
+  if (!appEls.presetWrap) return [];
+  try{
+    return Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
+  }catch{ return []; }
+}
+
 function buildSinglePrompt(node){
   const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  const presets = Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
+  const presets = getSelectedPresets(); // tolerante
   const extras = [];
   if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
   if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
@@ -436,13 +467,32 @@ function buildSinglePrompt(node){
   const extraTxt = extras.length ? ` Além disso, inclua ${extras.join(', ')}.` : '';
   return `Assuma a persona de um professor de Direito experiente (direito.love) e gere um material de estudo rápido, direto e completo sobre o artigo abaixo, cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) nota comparativa se houver artigos correlatos.${extraTxt} Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
+
+// Copiar com fallback (clipboard API -> execCommand)
+async function writeClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch{
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; ta.setAttribute('readonly','');
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch{ return false; }
+  }
+}
+
 async function onCopiarPrompt(){
   const scopeArr = getScopeArray();
   const node = scopeArr[state.navIndex];
   if (!node) return;
   const prompt = buildSinglePrompt(node);
   state.prompt = prompt;
-  try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{ showToast('Copiado (tente colar)'); }
+  const ok = await writeClipboard(prompt);
+  showToast(ok ? 'Prompt copiado!' : 'Copiado (tente colar)');
   renderAIButtons();
 }
 function renderAIButtons(){
@@ -596,7 +646,8 @@ if (appEls.btnVocabCopy){
   appEls.btnVocabCopy.addEventListener('click', async ()=>{
     const prompt = buildVocabPrompt(state.vocab.selected);
     state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
+    const ok = await writeClipboard(prompt);
+    showToast(ok ? 'Prompt copiado!' : 'Copiado (tente colar)');
     renderVocabAIButtons();
   });
 }
@@ -622,7 +673,7 @@ function renderPrincList(){
   if (!filtered.length){
     appEls.princList.innerHTML = '<div class="empty">Sem princípios.</div>'; return;
   }
-  filtered.forEach((it, idx)=>{
+  filtered.forEach((it)=>{
     const row = document.createElement('div'); row.className='list-item';
     const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
     const body  = document.createElement('div'); body.className='li-text'; body.textContent = it.texto;
@@ -659,7 +710,8 @@ if (appEls.btnPrincCopy){
   appEls.btnPrincCopy.addEventListener('click', async ()=>{
     const prompt = buildPrincPrompt(state.princ.selected);
     state.prompt = prompt;
-    try{ await navigator.clipboard.writeText(prompt); showToast('Prompt copiado!'); }catch{}
+    const ok = await writeClipboard(prompt);
+    showToast(ok ? 'Prompt copiado!' : 'Copiado (tente colar)');
     renderPrincAIButtons();
   });
 }
@@ -677,234 +729,197 @@ function acSetActive(idx){
 function renderAc(items){
   state.ac.items = items;
   const q = appEls.inpArtigo.value.trim();
-  appEls.acPanel.innerHTML = items.length ? items.map(it=>{
-    const title = it.titulo;
-    const codeLabel = (appEls.selCodigo.value||'').replace(/^codigo_/,'Código ').replace(/_/g,' ');
-    return `<div class="ac-item" role="option" data-titulo="${escapeHTML(title)}">
-      <div class="ac-title">${highlight(title, q)}</div>
-      <div class="ac-action">Abrir</div>
-      <div class="ac-meta">${escapeHTML(codeLabel)}</div>
-    </div>`;
-  }).join('') : `<div class="ac-empty">Sem sugestões.</div>`;
-
-  Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=>{
-    el.addEventListener('mouseenter', ()=> acSetActive(i));
-    el.addEventListener('mousedown', e=> e.preventDefault());
-    el.addEventListener('click', async ()=>{
-      const titulo = el.dataset.titulo;
-      if (!titulo) return;
-      const node = state.artigosIndex.find(n=>n.titulo===titulo);
-      if (!node) return;
-      state.lastHits = [node]; state.navScope='results';
-      openArticleModalByNode(node, true);
+  appEls.acPanel.innerHTML = items.length ? items.map((it,i)=>`
+    <div class="ac-item ${i===state.ac.activeIndex?'is-active':''}" data-titulo="${escapeHTML(it.titulo)}">
+      ${highlight(escapeHTML(it.titulo), q)}
+    </div>`).join('') : '<div class="ac-empty">Sem sugestões</div>';
+  appEls.acPanel.querySelectorAll('.ac-item').forEach((el,i)=>{
+    el.addEventListener('mousedown', (e)=>{ e.preventDefault(); });
+    el.addEventListener('click', ()=>{
+      appEls.inpArtigo.value = el.dataset.titulo;
       acClose();
+      appEls.btnBuscar.click();
     });
   });
 }
-function acCompute(q){
-  const codeId = appEls.selCodigo.value;
-  if (!codeId || !state.artigosIndex.length) return [];
-  const nq = norm(q);
-  if (!nq) return [];
-  // se digitou padrão tipo "121" ou "121a", priorize match por número
-  const m = nq.match(/^(\d{1,4})([a-z])?$/i);
-  const byNum = m ? state.artigosIndex.filter(n=> n._nt.includes(`art${m[1]}${m[2]||''}`)).slice(0,10) : [];
-  const others = state.artigosIndex.filter(n=> n._nt.includes(nq)).slice(0,10);
-  // mescla removendo duplicados mantendo ordem
-  const map = new Map();
-  [...byNum, ...others].forEach(n=>{ if(!map.has(n.titulo)) map.set(n.titulo,n); });
-  return Array.from(map.values()).slice(0,10);
+function rebuildAutocomplete(){
+  const q = norm(appEls.inpArtigo.value||'');
+  if (!q){ acClose(); return; }
+  const items = state.artigosIndex
+    .filter(n=>n._nt.includes(q))
+    .slice(0,12);
+  if (!items.length){ acClose(); return; }
+  acOpen(items);
 }
 
-/* ====== Navegação, eventos e acessibilidade ====== */
-function resetAll(){
-  state.prompt='';
-  state.lastHits=[];
-  appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML='';
-  appEls.resultMsg.textContent='';
-  appEls.inpArtigo.value='';
-  acClose();
-}
-async function onBuscar(e){
-  if (e){ e.preventDefault(); }
-  const codeId = appEls.selCodigo.value;
-  const entrada = appEls.inpArtigo.value.trim();
-  if (!codeId){ appEls.resultMsg.textContent='Selecione um código antes.'; return; }
-  if (!entrada){ appEls.resultMsg.textContent='Digite um número de artigo ou palavras inteiras.'; return; }
-
-  appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML=''; appEls.resultMsg.textContent='Buscando...';
-  try{
-    await ensureCodeLoaded(codeId);
-    const hits = await searchArticles(codeId, entrada);
-    state.lastHits = hits;
-    state.navScope='results';
-    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
-    renderResultChips(hits);
-    renderResultList(hits, entrada);
-    const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
-    appEls.resultMsg.textContent = `${hits.length} artigo(s) encontrado(s)${extra}. Clique para abrir.`;
-  }catch(err){
-    console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.';
-  }
-}
-
-function bind(){
-  ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
-    .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
-
-  // busca
-  appEls.btnBuscar.addEventListener('click', onBuscar);
-  appEls.inpArtigo.addEventListener('keydown', e=>{ 
-    if(e.key==='Enter'){
-      if (state.ac.open && state.ac.activeIndex>=0){
-        const el = appEls.acPanel.querySelectorAll('.ac-item')[state.ac.activeIndex];
-        el?.click(); return;
-      }
-      e.preventDefault(); onBuscar(); 
-    } 
-    if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){
-      e.preventDefault();
-      const delta = e.key==='ArrowDown'?1:-1;
-      acSetActive(state.ac.activeIndex + delta);
-    }
-    if (e.key==='Escape'){ acClose(); }
-  });
-  appEls.inpArtigo.addEventListener('input', ()=>{
-    const q = appEls.inpArtigo.value;
-    if (q.trim().length<1){ acClose(); return; }
-    const items = acCompute(q);
-    if (items.length){ acOpen(items); } else { acClose(); }
-  });
-  document.addEventListener('click', (e)=>{
-    if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); }
-  });
-
-  if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
-  appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{ state.searchMode = r.value; }));
-
-  // view toggle
-  appEls.vtButtons.forEach(b=> b.addEventListener('click', ()=> switchView(b.dataset.view)));
-
-  // modal artigo
-  appEls.btnFechar.addEventListener('click', ()=>{ closeDialog(appEls.modalArtigo); });
-  appEls.btnPrev.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1); });
-  appEls.btnNext.addEventListener('click', ()=>{ const arr=getScopeArray(); if(state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1); });
-  appEls.btnScope.addEventListener('click', ()=>{
-    state.navScope = state.navScope==='results' ? 'all' : 'results';
-    appEls.btnScope.textContent = state.navScope==='results' ? 'Navegar: Resultados' : 'Navegar: Código';
-    const curr = state.navArray[state.navIndex];
-    openArticleModalByNode(curr, /*fromSearch*/state.navScope==='results');
-  });
-  appEls.btnFav && appEls.btnFav.addEventListener('click', toggleFavorite);
-
-  // vídeos
-  appEls.btnVdFechar && appEls.btnVdFechar.addEventListener('click', ()=> closeDialog(appEls.modalVideos));
-
-  // sidebar
-  bindSidebar();
-  bindSwipe();
-
-  // reset topbar
-  appEls.btnReset && appEls.btnReset.addEventListener('click', resetAll);
-
-  // teclado no modal
-  appEls.modalArtigo.addEventListener('keydown', e=>{
-    if (e.key==='ArrowLeft'){ e.preventDefault(); appEls.btnPrev.click(); }
-    if (e.key==='ArrowRight'){ e.preventDefault(); appEls.btnNext.click(); }
-    if (e.key==='Escape'){ e.preventDefault(); appEls.btnFechar.click(); }
-  });
-
-  // lembrar último código
-  appEls.selCodigo.addEventListener('change', async ()=>{
-    const v = appEls.selCodigo.value;
-    if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); }
-  });
-
-  // favoritos (modal)
-  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
-  });
-  appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
-}
-
-/* ====== Sidebar & modais ====== */
-function openSidebar(){ appEls.sidebar.classList.add('open'); appEls.sideBackdrop.hidden=false; appEls.sidebar.setAttribute('aria-hidden','false'); }
-function closeSidebar(){ appEls.sidebar.classList.remove('open'); appEls.sideBackdrop.hidden=true; appEls.sidebar.setAttribute('aria-hidden','true'); }
-function openModalById(id){ const d=document.getElementById(id); if (d) showDialog(d); }
-
-async function onSideNavClick(a){
-  const target = a.dataset.target;
-  const isHome = !!a.dataset.home;
-  closeSidebar();
-  if (isHome){ window.scrollTo({top:0,behavior:'smooth'}); return; }
-  if (!target) return;
-  if (target==='modalCursos'){ await loadCursosHTML(); }
-  if (target==='modalNoticias'){ await ensureNewsLoaded(); renderNewsList(); }
-  if (target==='modalVocab'){ await ensureVocabLoaded(); renderVocabList(); }
-  if (target==='modalPrincipios'){ await ensurePrincLoaded(); renderPrincList(); }
-  if (target==='modalFavs'){ renderFavList(); }
-  openModalById(target);
-}
-
-function bindSidebar(){
-  if (appEls.btnSidebar) appEls.btnSidebar.addEventListener('click', e=>{ e.preventDefault(); openSidebar(); });
-  if (appEls.btnSideClose) appEls.btnSideClose.addEventListener('click', e=>{ e.preventDefault(); closeSidebar(); });
-  if (appEls.sideBackdrop) appEls.sideBackdrop.addEventListener('click', closeSidebar);
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSidebar(); });
-
-  document.querySelectorAll('.side-link').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); onSideNavClick(a); });
-  });
-}
-
-/* ====== Dialog polyfill básico ====== */
-function supportsDialog(){ return typeof HTMLDialogElement !== 'undefined' && typeof document.createElement('dialog').showModal === 'function'; }
+/* ====== Dialog polyfill ====== */
 function showDialog(dlg){
-  if (supportsDialog()){ if (!dlg.open) dlg.showModal(); return; }
-  dlg.classList.add('fallback-open');
-  let bd = document.querySelector('.modal.fallback-backdrop');
-  if (!bd){ bd = document.createElement('div'); bd.className='modal fallback-backdrop'; document.body.appendChild(bd); }
-  bd.addEventListener('click', ()=> closeDialog(dlg), { once:true });
-  document.body.style.overflow='hidden';
+  if (!dlg) return;
+  if (typeof dlg.showModal==='function'){ dlg.showModal(); }
+  else { dlg.setAttribute('open',''); }
 }
 function closeDialog(dlg){
-  if (supportsDialog()){ if (dlg.open) dlg.close(); return; }
-  dlg.classList.remove('fallback-open');
-  const bd = document.querySelector('.modal.fallback-backdrop');
-  if (bd) bd.remove();
-  document.body.style.overflow='';
+  if (!dlg) return;
+  if (typeof dlg.close==='function'){ dlg.close(); }
+  else { dlg.removeAttribute('open'); }
 }
 
-/* ====== Swipe ====== */
-function bindSwipe(){
-  const el = appEls.amBody; if (!el) return;
-  let down=false, x0=0, y0=0, moved=false;
-  el.addEventListener('pointerdown',e=>{ down=true; moved=false; x0=e.clientX; y0=e.clientY; el.style.userSelect='none'; },{passive:true});
-  el.addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-x0, dy=e.clientY-y0; if(Math.abs(dx)>20 && Math.abs(dx)>Math.abs(dy)) moved=true; },{passive:true});
-  el.addEventListener('pointerup',e=>{
-    if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
-    if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
-    const arr=getScopeArray();
-    if (dx<0 && state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
-    else if (dx>0 && state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1);
-  },{passive:true});
-  el.addEventListener('pointercancel',()=>{ down=false; moved=false; el.style.userSelect=''; },{passive:true});
-}
-
-/* ====== Init ====== */
-async function initCodes(){
+/* ====== Eventos ====== */
+document.addEventListener('DOMContentLoaded', async ()=>{
   try{
+    // códigos
     const codes = await autoDiscoverCodes();
     renderCodeSelect(codes);
     const last = localStorage.getItem('dl_last_code');
-    if (last){ await ensureCodeLoaded(last); }
-  }catch(e){
-    console.warn('Falha ao descobrir códigos', e);
+    const preferred = last && codes.some(c=>c.id===last) ? last : (codes[0]?.id||'');
+    if (preferred){ appEls.selCodigo.value = preferred; await ensureCodeLoaded(preferred); }
+
+    // listeners gerais
+    appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{
+      state.searchMode = (document.querySelector('input[name="mode"]:checked')?.value==='flex') ? 'flex' : 'precise';
+    }));
+
+    appEls.vtButtons.forEach(b=>{
+      b.addEventListener('click', ()=> switchView(b.dataset.view));
+    });
+
+    if (appEls.btnClear){
+      appEls.btnClear.addEventListener('click', ()=>{
+        appEls.inpArtigo.value=''; state.termoBusca=''; state.lastHits=[]; state.navScope='all';
+        appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML=''; appEls.resultMsg.textContent='';
+        setScopeButtonVisible(false);
+        refreshScopeButton();
+        acClose();
+        appEls.inpArtigo.focus();
+      });
+    }
+
+    if (appEls.btnBuscar){
+      appEls.btnBuscar.addEventListener('click', async ()=>{
+        const codeId = appEls.selCodigo.value;
+        const entrada = appEls.inpArtigo.value||'';
+        if (!codeId || !entrada.trim()){ appEls.resultMsg.textContent='Digite um número (ex.: 121, 121-A) ou palavras-chave.'; return; }
+
+        localStorage.setItem('dl_last_code', codeId);
+        state.termoBusca = entrada;
+
+        appEls.resultMsg.textContent='Buscando…';
+        const hits = await searchArticles(codeId, entrada);
+
+        state.lastHits = hits.slice();
+        appEls.resultMsg.textContent = hits.length ? `${hits.length} resultado(s)` : 'Nada encontrado';
+
+        if (state.viewMode==='chips') renderResultChips(hits);
+        else renderResultList(hits, entrada);
+
+        // Se tiver apenas 1 resultado, abrir direto e ocultar toggle
+        if (hits.length===1){
+          setScopeButtonVisible(false);
+          state.navScope='all';
+          openArticleModalByNode(hits[0], /*fromSearch*/true);
+        }else{
+          // Com 2+ resultados, mostrar toggle (Resultados)
+          setScopeButtonVisible(hits.length>1);
+          state.navScope = hits.length>1 ? 'results' : 'all';
+          refreshScopeButton();
+        }
+      });
+    }
+
+    // input + autocomplete
+    if (appEls.inpArtigo){
+      appEls.inpArtigo.addEventListener('input', rebuildAutocomplete);
+      appEls.inpArtigo.addEventListener('keydown', (e)=>{
+        if (!state.ac.open){
+          if (e.key==='Enter'){ e.preventDefault(); appEls.btnBuscar.click(); }
+          return;
+        }
+        if (e.key==='ArrowDown'){ e.preventDefault(); acSetActive(state.ac.activeIndex+1); }
+        else if (e.key==='ArrowUp'){ e.preventDefault(); acSetActive(state.ac.activeIndex-1); }
+        else if (e.key==='Enter'){
+          e.preventDefault();
+          const it = state.ac.items[state.ac.activeIndex] || state.ac.items[0];
+          if (it){ appEls.inpArtigo.value = it.titulo; acClose(); appEls.btnBuscar.click(); }
+        }else if (e.key==='Escape'){ acClose(); }
+      });
+      appEls.inpArtigo.addEventListener('blur', ()=> setTimeout(acClose, 120));
+    }
+
+    // modal artigo — navegação
+    if (appEls.btnPrev) appEls.btnPrev.addEventListener('click', ()=> openArticleModalByIndex(state.navIndex-1));
+    if (appEls.btnNext) appEls.btnNext.addEventListener('click', ()=> openArticleModalByIndex(state.navIndex+1));
+    if (appEls.btnFechar) appEls.btnFechar.addEventListener('click', ()=> closeDialog(appEls.modalArtigo));
+
+    // toggle de escopo (Resultados/Código)
+    if (appEls.btnScope){
+      setScopeButtonVisible(false); // oculto por padrão
+      appEls.btnScope.addEventListener('click', ()=>{
+        // só opera se estiver visível (isto garante a regra “só quando busca com >1 resultado”)
+        if (appEls.btnScope.hidden) return;
+        const curNode = getScopeArray()[state.navIndex];
+        state.navScope = (state.navScope==='results') ? 'all' : 'results';
+        refreshScopeButton();
+        const newArr = getScopeArray();
+        const idx = curNode ? newArr.findIndex(n=>n.titulo===curNode.titulo) : -1;
+        openArticleModalByIndexVia(newArr, idx>=0?idx:0);
+      });
+    }
+
+    // favoritos
+    if (appEls.btnFav) appEls.btnFav.addEventListener('click', toggleFavorite);
+    document.querySelectorAll('[data-open="favs"]').forEach(el=> el.addEventListener('click', openFavoritesModal));
+
+    // vídeos
+    if (appEls.btnVdFechar) appEls.btnVdFechar.addEventListener('click', ()=> closeDialog(appEls.modalVideos));
+
+    // sidebar
+    if (appEls.btnSidebar) appEls.btnSidebar.addEventListener('click', ()=>{
+      appEls.sidebar.classList.add('open'); appEls.sideBackdrop.classList.add('show');
+    });
+    if (appEls.btnSideClose) appEls.btnSideClose.addEventListener('click', ()=>{
+      appEls.sidebar.classList.remove('open'); appEls.sideBackdrop.classList.remove('show');
+    });
+    if (appEls.sideBackdrop) appEls.sideBackdrop.addEventListener('click', ()=>{
+      appEls.sidebar.classList.remove('open'); appEls.sideBackdrop.classList.remove('show');
+    });
+
+    // cursos/notícias/vocab/princ
+    document.querySelectorAll('[data-open="cursos"]').forEach(el=> el.addEventListener('click', async ()=>{
+      await loadCursosHTML(); showDialog(appEls.modalCursos);
+    }));
+    document.querySelectorAll('[data-open="news"]').forEach(el=> el.addEventListener('click', async ()=>{
+      appEls.newsList.classList.add('skeleton'); await ensureNewsLoaded(); renderNewsList(); showDialog(appEls.modalNoticias);
+    }));
+    document.querySelectorAll('[data-open="vocab"]').forEach(el=> el.addEventListener('click', async ()=>{
+      appEls.vocabList.classList.add('skeleton'); await ensureVocabLoaded(); renderVocabList(); showDialog(appEls.modalVocab);
+    }));
+    document.querySelectorAll('[data-open="princ"]').forEach(el=> el.addEventListener('click', async ()=>{
+      appEls.princList.classList.add('skeleton'); await ensurePrincLoaded(); renderPrincList(); showDialog(appEls.modalPrincipios);
+    }));
+
+    // reset app (topbar)
+    if (appEls.btnReset){
+      appEls.btnReset.addEventListener('click', ()=>{
+        appEls.inpArtigo.value=''; state.termoBusca=''; state.lastHits=[]; state.navScope='all';
+        appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML=''; appEls.resultMsg.textContent='';
+        setScopeButtonVisible(false);
+        refreshScopeButton();
+        acClose();
+        appEls.inpArtigo.focus();
+      });
+    }
+
+    // acessibilidade/atalhos do modal
+    if (appEls.modalArtigo){
+      appEls.modalArtigo.addEventListener('keydown', (e)=>{
+        if (e.key==='ArrowLeft'){ e.preventDefault(); if (!appEls.btnPrev.disabled) appEls.btnPrev.click(); }
+        else if (e.key==='ArrowRight'){ e.preventDefault(); if (!appEls.btnNext.disabled) appEls.btnNext.click(); }
+        else if (e.key==='Escape'){ closeDialog(appEls.modalArtigo); }
+      });
+    }
+
+  }catch(err){
+    console.error(err);
+    showToast('Erro ao iniciar o app.');
   }
-}
-function start(){
-  bind();
-  initCodes();
-  switchView('chips');
-}
-document.addEventListener('DOMContentLoaded', start);
+});
