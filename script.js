@@ -1,3 +1,16 @@
+/* =========================================================================
+   Vade Mecum Digital — script.js (TXT-first)
+   Regras:
+   - Fonte primária: .txt (como no Planalto). JSON só como fallback.
+   - Parser de artigos (linha começa com ART/Art/Artigo):
+       * Título: "Art. N" (+ sufixo A/B/C se houver)
+       * Corpo: do fim do cabeçalho até **o ÚLTIMO '.'** antes do próximo "Art"
+         (case-insensitive), sem “comer” o cabeçalho seguinte.
+   - Busca por número ou palavra → abre modal do artigo
+   - “Estudar Rápido” gera o mesmo prompt de sempre (sem seleção de estratégia)
+   - UX: favoritos, autocomplete, chips/lista, mini-modal IA, sidebar, etc.
+   ========================================================================= */
+
 /* UX + UI upgrades (incl. Favoritos + Autocomplete):
    - Fechar modal NÃO limpa busca; botão "Limpar" separado
    - Prev/Next percorre resultados quando aberto da busca (toggle Resultados/Código)
@@ -154,47 +167,61 @@ async function getText(path){
 
 function normalizeNewlines(s){ return String(s||'').replace(/\r\n?/g, '\n'); }
 
-/** 
- * Parser de TXT → objeto de artigos.
- * Divide por cabeçalhos "Art.", "Art", "Artigo", aceita 121-A ou 121A e 121º.
- * Retorna objeto no formato { art121: {titulo, texto}, ... } para compatibilidade.
+/**
+ * Parser TXT → artigos
+ * - Cabeçalho: início de linha contendo "Art", "ART" ou "Artigo" + número (+ sufixo A/B/C)
+ * - Corpo: do fim do cabeçalho até o **ÚLTIMO ponto final ('.')** que ocorra
+ *          antes do próximo cabeçalho "Art" (case-insensitive).
+ *   -> Isso evita que títulos/subtítulos do código vazem para dentro do artigo.
+ *
+ * Retorna: { art121: { id, titulo, texto }, ... }
  */
 function parseTxtToArtigos(txt){
   const text = normalizeNewlines(txt);
 
-  // Regex de cabeçalho de artigo (linha inicial). Captura número e sufixo (ex.: 121-A ou 121a).
+  // Cabeçalhos em início de linha. Case-insensitive. Aceita "Art", "ART", "Artigo".
+  // Captura: número (1-4 dígitos) + sufixo opcional (A-Z) + sinais tipo º, o, pontuação final
   const reHeader = /(^|\n)\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?/gi;
 
-  const matches = [];
+  const headers = [];
   let m;
   while ((m = reHeader.exec(text)) !== null) {
     const newlineLen = m[1] ? m[1].length : 0;
     const headerStart = m.index + newlineLen;
-    matches.push({ headerStart, m });
+    headers.push({ headerStart });
   }
-  if (!matches.length) return {};
+  if (!headers.length) return {};
 
   const data = {};
-  for (let i = 0; i < matches.length; i++) {
-    const { headerStart, m } = matches[i];
-    const nextStart = i < matches.length - 1 ? matches[i+1].headerStart : text.length;
+  for (let i = 0; i < headers.length; i++) {
+    const start = headers[i].headerStart;
+    const nextStart = i < headers.length - 1 ? headers[i+1].headerStart : text.length;
 
-    // Encontrar fim exato do cabeçalho para separar o "título" do "texto"
-    const headerSlice = text.slice(headerStart, Math.min(headerStart + 200, nextStart));
+    // Isola a linha do cabeçalho (até no máx. 200 chars) para montar título e achar o fim do header
+    const headerSlice = text.slice(start, Math.min(start + 200, nextStart));
     const headerLineMatch = headerSlice.match(/^\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?\s*/i);
     if (!headerLineMatch) continue;
 
-    const headerEnd = headerStart + headerLineMatch[0].length;
+    const headerEnd = start + headerLineMatch[0].length;
 
     const num = headerLineMatch[2];
     const suf = (headerLineMatch[3] || '').toUpperCase(); // ex.: 'A'
     const titulo = `Art. ${num}${suf ? '-' + suf : ''}`;
     const key = `art${num}${(suf || '').toLowerCase()}`;
 
-    // Texto do artigo (do fim do cabeçalho até antes do próximo cabeçalho)
-    let body = text.slice(headerEnd, nextStart);
-    // Limpeza leve nas bordas; preserva quebras internas
-    body = body.replace(/^\s+/, '').replace(/\s+$/, '');
+    // Segmento bruto entre este header e o próximo header
+    let segment = text.slice(headerEnd, nextStart);
+
+    // === Regra pedida: cortar no ÚLTIMO '.' antes do próximo "Art" ===
+    // 1) Se existir pelo menos um '.', cortamos no último ponto.
+    // 2) Se não houver '.', fica o segmento inteiro (pode acontecer em alguns textos).
+    const relLastDot = segment.lastIndexOf('.');
+    if (relLastDot >= 0) {
+      segment = segment.slice(0, relLastDot + 1);
+    }
+
+    // Limpeza leve nas bordas; preservar quebras internas e acentos
+    let body = segment.replace(/^\s+/, '').replace(/\s+$/, '');
 
     data[key] = { id: key, titulo, texto: body };
   }
@@ -202,24 +229,23 @@ function parseTxtToArtigos(txt){
   return data;
 }
 
-/* Descoberta automática de códigos disponíveis.
-   Aqui priorizamos .txt; se não houver, caímos para JSON (compat). */
+/* Descoberta automática de códigos disponíveis: TXT primeiro, JSON fallback */
 async function autoDiscoverCodes(){
   const candidates = [
-    // Você pode expandir depois (Civil, CPC etc.). Por agora, foco no Penal:
-    { id:'codigo_Penal', label:'Código Penal', txt:['data/codigo_penal.txt','data/codigo_Penal.txt'], json:['data/codigo_Penal_vademecum.json','data/codigo_Penal.json'] },
+    // Começamos com o Penal (você pode adicionar Civil/CPC depois)
+    { id:'codigo_Penal', label:'Código Penal',
+      txt:['data/codigo_penal.txt','data/codigo_Penal.txt'],
+      json:['data/codigo_Penal_vademecum.json','data/codigo_Penal.json'] },
   ];
 
   const found = [];
-  state.codePaths = {}; // mapeia id -> { type:'txt'|'json', path:string }
+  state.codePaths = {}; // id -> { type:'txt'|'json', path:string }
 
   for (const c of candidates){
-    // tenta .txt primeiro
     let chosen = null;
     for (const p of (c.txt || [])){
       try { if (await fileExists(p)) { chosen = { type:'txt', path:p }; break; } } catch {}
     }
-    // fallback para JSON
     if (!chosen) {
       for (const p of (c.json || [])){
         try { if (await fileExists(p)) { chosen = { type:'json', path:p }; break; } } catch {}
@@ -241,13 +267,13 @@ function renderCodeSelect(codes){
   el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
 }
 
-/* Carrega o código selecionado, parseando TXT se for o caso. */
+/* Carrega o código selecionado, parseando TXT se for o caso */
 async function tryLoadCodeData(codeId){
   const mapping = state.codePaths && state.codePaths[codeId];
   if (mapping && mapping.type === 'txt'){
     const raw = await getText(mapping.path);
     return parseTxtToArtigos(raw);
-  }
+    }
   // Fallback antigo para JSON (mantido por compatibilidade)
   const paths=[`data/${codeId}_vademecum.json`,`data/${codeId}.json`];
   for (const p of paths){ try{ return await getJSON(p);}catch{} }
@@ -262,7 +288,6 @@ async function ensureCodeLoaded(codeId){
   // pré-computa títulos normalizados para autocomplete
   state.artigosIndex.forEach(n=>{ n._nt = norm(n.titulo||''); });
 }
-
 
 /* ====== Catálogo de Vídeos ====== */
 async function loadVideosCatalog(codeKey){
@@ -418,7 +443,7 @@ async function buildExtrasForArticle(node){
 }
 
 function getScopeArray(){
-  // Navegação SEMPRE pelo código completo
+  // Navegação pelo código completo
   return state.artigosIndex || [];
 }
 
@@ -448,7 +473,7 @@ function openArticleModalByIndex(idx){
 function openArticleModalByNode(node, fromSearch = false){
   if (!node) return;
 
-  // Sempre navegar pelo CÓDIGO TODO, não pelos hits
+  // Sempre navegar pelo CÓDIGO TODO
   state.navScope = 'all';
   const scopeArr = state.artigosIndex || [];
 
@@ -547,17 +572,8 @@ function renderCopyButton(){
 
 function buildSinglePrompt(node){
   const bloco = `### ${node.titulo}\nTexto integral:\n${node.texto}`;
-  const presets = appEls.presetWrap
-    ? Array.from(appEls.presetWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value)
-    : [];
-  const extras = [];
-
-  if (presets.includes('resumo')) extras.push('(a) um resumo doutrinário claro e direto');
-  if (presets.includes('checklist')) extras.push('(b) um checklist prático de estudo e revisão');
-  if (presets.includes('juris')) extras.push('(c) referências de jurisprudência majoritária (STJ/STF) em linguagem simples');
-
-  const extraTxt = extras.length ? ` Além disso, inclua ${extras.join(', ')}.` : '';
-  return `Assuma a persona de um professor de Direito experiente convidado pelo direito.love e gere um material de estudo rápido. Analise detalhadamente todo o artigo abaixo (caput, paragrafos, incisos e alineas), cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) Pontos de atenção na prática jurídica; (6) Princípios Relacionados ao tema; (7) nota comparativa se houver artigos correlatos.${extraTxt} Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
+  // sem seleção de estratégia (mantido simples)
+  return `Assuma a persona de um professor de Direito experiente convidado pelo direito.love e gere um material de estudo rápido. Analise detalhadamente todo o artigo abaixo (caput, paragrafos, incisos e alineas), cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) Pontos de atenção na prática jurídica; (6) Princípios Relacionados ao tema; (7) nota comparativa se houver artigos correlatos. Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
 
 function onEstudarRapido(){
@@ -571,15 +587,11 @@ function onEstudarRapido(){
 // compat: se algo ainda chamar onCopiarPrompt(), redireciona
 async function onCopiarPrompt(){ onEstudarRapido(); }
 
-// UI antiga de IA inline (deprecada)
-function renderAIButtons(){ /* deprecated: agora usamos mini-modal */ }
-
-// Detecta plataforma de forma simples
+// Detecta plataforma simples
 function isAndroid(){ return /Android/i.test(navigator.userAgent || navigator.vendor || ''); }
 function isiOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent || navigator.vendor || ''); }
 
 function openAIAppOrWeb(app){
-  // URLs padrão (web)
   const urls = {
     gpt: 'https://chatgpt.com/',
     gemini: 'https://gemini.google.com/app',
@@ -588,28 +600,23 @@ function openAIAppOrWeb(app){
   };
 
   if (app === 'gemini'){
-    // ANDROID: tenta Intent (abre app se instalado; senão, cai no browser_fallback_url)
     if (isAndroid()){
       const fallback = encodeURIComponent(urls.gemini);
       const intentUrl =
         'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
         + `S.browser_fallback_url=${fallback};end`;
-      window.location.href = intentUrl; // mesma aba evita bloqueio de pop-up
+      window.location.href = intentUrl;
       return;
     }
-    // iOS: universal link abre o app se instalado; se não, web
     if (isiOS()){
-      window.location.href = urls.gemini; // mesma aba, menos bloqueios
+      window.location.href = urls.gemini;
       return;
     }
-    // Desktop: manter em nova aba
     window.open(urls.gemini, '_blank');
     return;
   }
 
-  // Demais apps
   const url = urls[app] || urls.gpt;
-  // Em mobile, abrir na mesma aba reduz bloqueios
   if (isAndroid() || isiOS()) { window.location.href = url; }
   else { window.open(url, '_blank'); }
 }
@@ -887,7 +894,7 @@ async function onBuscar(e){
     state.lastHits = hits;
     state.navIndex = hits.length ? 0 : -1;
     state.navScope='results';
-    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; } // typo fix below
+    if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
     renderResultChips(hits);
     renderResultList(hits, entrada);
     const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
@@ -896,7 +903,6 @@ async function onBuscar(e){
     console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.';
   }
 }
-// corrigir pequeno typo (caso você cole por cima): "appels" -> "appEls"
 
 /* ====== Sidebar & modais ====== */
 function openSidebar(){ appEls.sidebar.classList.add('open'); appEls.sideBackdrop.hidden=false; appEls.sidebar.setAttribute('aria-hidden','false'); }
@@ -968,7 +974,7 @@ function bind(){
   ['btnPrev','btnNext','btnFechar','btnBuscar','btnSidebar','btnSideClose','btnVdFechar','btnReset','btnClear','btnScope','btnFav']
     .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
 
-  // [ajuste] esconder e desativar o botão 'Navegar: Resultados/Código'
+  // esconder e desativar o botão 'Navegar: Resultados/Código' (escopo sempre código inteiro)
   if (appEls.btnScope) { 
     appEls.btnScope.style.display = 'none'; 
     appEls.btnScope.disabled = true; 
