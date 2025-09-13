@@ -118,8 +118,8 @@
         <div class="am-flexgap"></div>
         
         <div id="amPromptWrap" class="am-prompt-wrap">
-          <button id="btnCopiarPrompt" class="btn btn-primary" type="button">Copiar Prompt</button>
-        </div>
+  <button id="btnCopiarPrompt" class="btn btn-primary" type="button">Estudar Rápido</button>
+</div>
       </footer>
     </form>
   </dialog>
@@ -140,6 +140,7 @@
       </menu>
     </form>
   </dialog>
+
 
   <!-- Modal Vídeos (opcional) -->
   <dialog id="modalVideos" class="modal videos-modal">
@@ -183,7 +184,7 @@
       <div id="vocabList" class="list-wrap skeleton"></div>
       <footer class="assist-actions">
         <div id="vocabPromptWrap" class="am-prompt-wrap">
-          <button id="btnVocabCopy" class="btn btn-primary" type="button" disabled>Copiar Prompt</button>
+      <button id="btnVocabCopy" class="btn btn-primary" type="button" disabled>Estudar Rápido</button>
         </div>
       </footer>
     </form>
@@ -198,7 +199,7 @@
       <div id="princList" class="list-wrap skeleton"></div>
       <footer class="assist-actions">
         <div id="princPromptWrap" class="am-prompt-wrap">
-          <button id="btnPrincCopy" class="btn btn-primary" type="button" disabled>Copiar Prompt</button>
+      <button id="btnPrincCopy" class="btn btn-primary" type="button" disabled>Estudar Rápido</button>
         </div>
       </footer>
     </form>
@@ -213,6 +214,27 @@
       </menu>
     </form>
   </dialog>
+
+<!-- Mini-modal: Estudar Rápido -->
+<dialog id="modalIA" class="modal ia-modal">
+  <form method="dialog" class="modal-content">
+    <header class="ia-top">
+      <div class="ia-title">Estudar Rápido</div>
+      <button id="btnIaClose" class="icon-btn ghost" aria-label="Fechar" type="button">×</button>
+    </header>
+
+    <div class="ia-body">
+      <p class="ia-text">Abra sua I.A. favorita e cole o prompt que preparamos para você.</p>
+      <div class="ia-grid">
+        <button id="btnIaGPT" class="btn btn-outline" type="button">GPT</button>
+        <button id="btnIaGemini" class="btn btn-outline" type="button">Gemini</button>
+        <button id="btnIaCopilot" class="btn btn-outline" type="button">Copilot</button>
+        <button id="btnIaPplx" class="btn btn-outline" type="button">Perplexity</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 
   <script src="script.js?v=uxui-favs-ac-1"></script>
 </body>
