@@ -292,7 +292,7 @@ mark{background:rgba(255, 238, 128,.7)}
   display: flex;
   align-items: center;
   gap: 14px; /* ajuste o valor conforme o visual */
-  background: pink;
+  
 }
 /* ====== Modal Vídeos ====== */
 .videos-modal .vd-top{
@@ -348,3 +348,19 @@ mark{background:rgba(255, 238, 128,.7)}
   }
 }
 
+/* ==== Mini-modal: Estudar Rápido ==== */
+.ia-modal { width: clamp(300px, 92vw, 420px); }
+.ia-modal .modal-content { height: auto; }
+
+.ia-top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface-2);
+}
+.ia-title{ font-weight:600; color:var(--brand); }
+
+.ia-body{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
+.ia-text{ margin:0; color:#1a1f30; }
+
+.ia-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+}
