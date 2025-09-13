@@ -883,7 +883,7 @@ function bindSwipe(){
   el.addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-x0, dy=e.clientY-y0; if(Math.abs(dx)>20 && Math.abs(dx)>Math.abs(dy)) moved=true; },{passive:true});
   el.addEventListener('pointerup',e=>{
     if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
-    if(!moved || Math.abs(dx)<50 || Math.abs(dx)<=Math.abs(dy)) return;
+    if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
     const arr=getScopeArray();
     if (dx<0 && state.navIndex<arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
     else if (dx>0 && state.navIndex>0) openArticleModalByIndexVia(arr, state.navIndex-1);
