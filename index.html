@@ -1,243 +1,242 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vade Mecum — Códigos e Leis</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png">
-  <meta name="theme-color" content="#212842"/>
-  <link rel="stylesheet" href="style.css">
+  <title>direito.love — Vade Mecum Digital</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar" role="banner">
-    <div class="inner">
-      <div class="brand" aria-label="Vade Mecum Digital">
-        <span class="logo-text"><b>direito</b>.love</span>
-      </div>
-      <nav class="actions">
-        <button id="btnReset" class="icon-btn" title="Limpar busca" aria-label="Limpar busca" type="button">
-  <img src="icons/reset.svg" alt="Reset" width="18" height="18">
-</button>
-        <button id="btnSidebar" class="icon-btn" title="Abrir menu" aria-label="Abrir menu" type="button">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="#fff"></path>
-          </svg>
-        </button>
-      </nav>
+  <!-- ===== Topbar ===== -->
+  <header class="topbar" style="padding:12px 16px; display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;">
+    <div style="display:flex; gap:10px; align-items:center;">
+      <strong style="font-weight:900;">💚 direito.love</strong>
+      <span style="color:var(--muted)">Vade Mecum Digital</span>
+    </div>
+
+    <!-- Select de Códigos -->
+    <div style="display:flex; gap:8px; align-items:center;">
+      <label for="selCodigo" class="sr-only" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">Códigos/Leis</label>
+      <select id="selCodigo" aria-busy="true">
+        <option value="" selected disabled>Códigos/Leis</option>
+      </select>
+      <button id="btnReset" class="btn btn-outline" type="button" title="Limpar busca">Reset</button>
+    </div>
+
+    <!-- Sidebar (menu) -->
+    <div style="display:flex; gap:8px;">
+      <button id="btnSidebar" class="btn" type="button" title="Abrir menu">Menu</button>
     </div>
   </header>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="sidebar" aria-hidden="true" aria-label="Menu lateral">
-    <div class="side-header">
-      <span class="side-title">Menu</span>
-      <button id="btnSideClose" class="icon-btn ghost" title="Fechar menu" aria-label="Fechar menu" type="button">×</button>
-    </div>
-    <nav class="side-nav">
-      <a href="#" class="side-link" data-home="true">Códigos e Leis</a>
-      <a href="#" class="side-link" data-target="modalFavs">Favoritos</a>
-      <a href="#" class="side-link" data-target="modalCursos">Dicas de Cursos</a>
-      <a href="#" class="side-link" data-target="modalNoticias">Notícias e Artigos</a>
-      <a href="#" class="side-link" data-target="modalVocab">Vocabulário Jurídico</a>
-      <a href="#" class="side-link" data-target="modalPrincipios">Princípios do Direito</a>
-      <a href="#" class="side-link" data-target="modalSobre">Sobre</a>
-    </nav>
-    <div class="side-footer small">
-      <span>💚 direito.love</span>
-    </div>
-  </aside>
-  <div id="sideBackdrop" class="backdrop" hidden></div>
+  <!-- ===== Conteúdo principal ===== -->
+  <main style="padding: 16px; display:grid; gap:16px; max-width:1200px; margin:0 auto;">
+    <!-- Busca -->
+    <section aria-label="Busca por artigo" style="display:grid; gap:10px;">
+      <form id="searchForm" onsubmit="return false;" style="display:grid; gap:10px;">
+        <div class="searchbox" style="position:relative; display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center;">
+          <label for="inpArtigo" class="sr-only" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">Número do artigo ou palavras</label>
+          <input id="inpArtigo" type="text" placeholder="Ex.: 121-A ou 'homicídio qualificado'…" autocomplete="off" />
+          <button id="btnBuscar" class="btn btn-primary" type="button">Buscar</button>
+          <button id="btnClear" class="btn btn-outline" type="button" title="Limpar">Limpar</button>
 
-  <main class="page" role="main">
-    <section class="controls" aria-label="Busca de Artigos">
-      <div class="grid">
-        <div class="field" data-area="code">
-          <label for="selCodigo">Códigos/Leis</label>
-          <select id="selCodigo" class="input select" aria-label="Selecione Códigos/Leis">
-+   <option value="" selected disabled>Carregando Códigos…</option>
-+ </select>
+          <!-- Painel Autocomplete -->
+          <div id="acPanel" role="listbox" hidden></div>
         </div>
-        <div class="field" data-area="article">
-          <label for="inpArtigo">Número do Artigo ou Palavras</label>
-          <div class="ac-field">
-            <input id="inpArtigo" class="input" placeholder="Ex.: 121 | 121-A | homicídio qualificado" aria-label="Entrada de busca" autocomplete="off" />
-            <div id="acPanel" class="ac-panel" role="listbox" hidden></div>
+
+        <!-- Modos de busca e visualização -->
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+          <fieldset style="border:0; display:flex; gap:8px; align-items:center;">
+            <legend class="sr-only" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">Modo de busca</legend>
+            <label class="seg">
+              <input type="radio" name="mode" value="precise" checked />
+              <span>Precisão</span>
+            </label>
+            <label class="seg">
+              <input type="radio" name="mode" value="flex" />
+              <span>Flexível</span>
+            </label>
+          </fieldset>
+
+          <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+            <button class="vt-btn is-active" type="button" data-view="chips" aria-pressed="true" aria-label="Ver como chips">Chips</button>
+            <button class="vt-btn" type="button" data-view="list" aria-pressed="false" aria-label="Ver como lista">Lista</button>
           </div>
         </div>
-        <div class="field button-cell" data-area="go">
-          <button id="btnBuscar" class="btn btn-primary" type="button">Buscar</button>
-        </div>
-      </div>
-          </section>
+      </form>
+    </section>
 
-    <section class="results" aria-label="Resultados">
-      <div class="results-head">
-        <h3 class="section-title">Resultados</h3>
-        <div class="view-toggle" role="tablist" aria-label="Modo de visualização">
-          <button class="vt-btn is-active" data-view="chips" role="tab" aria-selected="true">Chips</button>
-          <button class="vt-btn" data-view="list" role="tab" aria-selected="false">Lista</button>
-        </div>
-      </div>
-      <div id="resultArea">
-        <div id="resultChips" class="group"></div>
-        <div id="resultList" class="list-wrap" hidden></div>
-      </div>
-      <div id="resultMsg" class="small"></div>
+    <!-- Resultados -->
+    <section id="resultArea" aria-label="Resultados" style="display:grid; gap:10px;">
+      <div id="resultChips" class="chips" role="navigation" aria-label="Artigos em chips"></div>
+      <div id="resultList"></div>
+      <div id="resultMsg" role="status" aria-live="polite"></div>
     </section>
   </main>
 
-  <!-- Toast -->
-  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <!-- ===== Sidebar ===== -->
+  <aside id="sidebar" class="side-drawer" aria-hidden="true" style="position:fixed; top:0; right:0; width:min(360px, 92vw); height:100%; background:var(--panel); border-left:1px solid rgba(127,141,163,.28); box-shadow: var(--shadow-2); transform: translateX(102%); transition: transform .18s ease; z-index:1001; display:grid; grid-template-rows:auto 1fr; gap:0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid rgba(127,141,163,.28);">
+      <strong>Menu</strong>
+      <button id="btnSideClose" class="btn btn-outline" type="button">Fechar</button>
+    </div>
+    <nav style="padding:12px; display:grid; gap:8px;">
+      <a href="#" class="side-link" data-home="1">🏠 Início</a>
+      <a href="#" class="side-link" data-target="modalFavs">⭐ Favoritos</a>
+      <a href="#" class="side-link" data-target="modalNoticias">📰 Notícias</a>
+      <a href="#" class="side-link" data-target="modalVocab">📘 Vocabulário</a>
+      <a href="#" class="side-link" data-target="modalPrincipios">⚖️ Princípios</a>
+      <a href="#" class="side-link" data-target="modalCursos">🎓 Cursos</a>
+    </nav>
+  </aside>
+  <div id="sideBackdrop" class="modal fallback-backdrop" hidden></div>
 
-  <!-- Modal Artigo -->
-  <dialog id="modalArtigo" class="modal article-modal" aria-label="Leitura de Artigo">
-    <form method="dialog" class="modal-content">
-      <header class="am-top">
-        <button id="btnPrev" class="btn btn-outline btn-square" title="Artigo anterior" aria-label="Artigo anterior" type="button">
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-</button>
-
-<div class="am-title" id="amTitle">Artigo</div>
-
-<button id="btnNext" class="btn btn-outline btn-square" title="Próximo artigo" aria-label="Próximo artigo" type="button">
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="9 18 15 12 9 6"/>
-  </svg>
-</button>
-
-      </header>
-      <div class="am-subtop">
-        <button id="btnScope" class="btn btn-outline btn-small" type="button" title="Alternar navegação">Navegar: Resultados</button>
-        <button id="btnFav" class="btn btn-outline btn-small" type="button" title="Favoritar">☆ Favoritar</button>
+  <!-- ===== Modal: Artigo ===== -->
+  <dialog id="modalArtigo" aria-labelledby="amTitle" aria-describedby="amBody">
+    <div class="am-wrap">
+      <div class="am-actions">
+        <button id="btnPrev" class="btn btn-outline" type="button" title="Anterior">◀</button>
+        <button id="btnNext" class="btn btn-outline" type="button" title="Próximo">▶</button>
+        <button id="btnFechar" class="btn" type="button" title="Fechar">✕</button>
       </div>
-      <div class="am-body" id="amBody" tabindex="0"></div>
-      <div class="am-extras" id="amExtras" hidden></div>
-      <footer class="am-actions">
-        <button id="btnFechar" class="btn btn-outline btn-square" title="Fechar" aria-label="Fechar" type="button">×</button>
-        <div class="am-flexgap"></div>
-        
-        <div id="amPromptWrap" class="am-prompt-wrap">
-  <button id="btnCopiarPrompt" class="btn btn-primary" type="button">Estudar Rápido</button>
-</div>
-      </footer>
-    </form>
+
+      <h2 id="amTitle">Artigo</h2>
+      <div id="amMeta" hidden></div>
+
+      <div id="amBody" tabindex="0" style="outline:0;"></div>
+
+      <div id="amExtras">
+        <button id="btnFav" class="btn btn-outline" type="button">☆ Favoritar</button>
+        <!-- botões dinâmicos (modo leitura, foco, copiar link/citação, vídeo) entram aqui via JS -->
+      </div>
+
+      <div id="amPromptWrap">
+        <!-- botão "Estudar Rápido" é inserido via JS -->
+      </div>
+    </div>
   </dialog>
 
-  <!-- Modal Favoritos -->
-  <dialog id="modalFavs" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Favoritos</h3>
-      <div class="modal-search">
-        <select id="favScope" class="input select" aria-label="Filtrar por código">
-          <option value="current">Somente do código atual</option>
+  <!-- ===== Modal: Favoritos ===== -->
+  <dialog id="modalFavs" aria-label="Favoritos">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto auto 1fr; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>⭐ Favoritos</strong>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button>
+      </div>
+      <div style="padding:0 14px 6px;">
+        <label for="favScope" style="margin-right:8px;">Escopo:</label>
+        <select id="favScope">
+          <option value="current" selected>Somente deste código</option>
           <option value="all">Todos os códigos</option>
         </select>
       </div>
-      <div id="favList" class="list-wrap skeleton"></div>
-      <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
-      </menu>
-    </form>
+      <div id="favList" style="padding:0 14px 14px;" class="skeleton"></div>
+    </div>
   </dialog>
 
-
-  <!-- Modal Vídeos (opcional) -->
-  <dialog id="modalVideos" class="modal videos-modal">
-    <form method="dialog" class="modal-content">
-      <header class="vd-top"><div class="vd-title" id="vdTitle">Vídeo aula</div></header>
-      <div class="vd-body"><ul id="vdLista" class="vd-lista"></ul></div>
-      <footer class="vd-actions"><button id="btnVdFechar" value="cancel" class="btn btn-primary" type="button">Fechar</button></footer>
-    </form>
-  </dialog>
-
-  <!-- Modais da Sidebar -->
-  <dialog id="modalCursos" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Dicas de Cursos</h3>
-      <div id="cursosBody" class="pad">Carregando…</div>
-      <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
-      </menu>
-    </form>
-  </dialog>
-
-  <dialog id="modalNoticias" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Notícias e Artigos Acadêmicos</h3>
-      <div class="modal-search">
-        <input id="newsSearch" class="input" placeholder="Buscar por título, fonte ou palavra-chave" aria-label="Buscar notícias e artigos">
+  <!-- ===== Modal: Vídeos ===== -->
+  <dialog id="modalVideos" aria-label="Vídeos">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto 1fr auto; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong id="vdTitle">Vídeo aula</strong>
+        <button id="btnVdFechar" class="btn" type="button">Fechar</button>
       </div>
-      <div id="newsList" class="list-wrap skeleton"></div>
-      <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
-      </menu>
-    </form>
-  </dialog>
-
-  <dialog id="modalVocab" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Vocabulário Jurídico</h3>
-      <div class="modal-search">
-        <input id="vocabSearch" class="input" placeholder="Buscar termo" aria-label="Buscar no vocabulário">
-      </div>
-      <div id="vocabList" class="list-wrap skeleton"></div>
-      <footer class="assist-actions">
-        <div id="vocabPromptWrap" class="am-prompt-wrap">
-      <button id="btnVocabCopy" class="btn btn-primary" type="button" disabled>Estudar Rápido</button>
-        </div>
-      </footer>
-    </form>
-  </dialog>
-
-  <dialog id="modalPrincipios" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Princípios do Direito</h3>
-      <div class="modal-search">
-        <input id="princSearch" class="input" placeholder="Buscar princípio" aria-label="Buscar princípios">
-      </div>
-      <div id="princList" class="list-wrap skeleton"></div>
-      <footer class="assist-actions">
-        <div id="princPromptWrap" class="am-prompt-wrap">
-      <button id="btnPrincCopy" class="btn btn-primary" type="button" disabled>Estudar Rápido</button>
-        </div>
-      </footer>
-    </form>
-  </dialog>
-
-  <dialog id="modalSobre" class="modal">
-    <form method="dialog" class="modal-content">
-      <h3 style="margin:14px 16px">Sobre</h3>
-      <div class="pad">Informações do projeto direito.love.</div>
-      <menu class="modal-actions">
-        <button class="btn btn-primary">Fechar</button>
-      </menu>
-    </form>
-  </dialog>
-
-<!-- Mini-modal: Estudar Rápido -->
-<dialog id="modalIA" class="modal ia-modal">
-  <form method="dialog" class="modal-content">
-    <header class="ia-top">
-      <div class="ia-title">Estudar Rápido</div>
-      <button id="btnIaClose" class="icon-btn ghost" aria-label="Fechar" type="button">×</button>
-    </header>
-
-    <div class="ia-body">
-      <p class="ia-text">Abra sua I.A. favorita e cole o prompt que preparamos para você.</p>
-      <div class="ia-grid">
-        <button id="btnIaGPT" class="btn btn-outline" type="button">GPT</button>
-        <button id="btnIaGemini" class="btn btn-outline" type="button">Gemini</button>
-        <button id="btnIaCopilot" class="btn btn-outline" type="button">Copilot</button>
-        <button id="btnIaPplx" class="btn btn-outline" type="button">Perplexity</button>
+      <div style="padding:0 14px 14px; overflow:auto;">
+        <ul id="vdLista" style="display:grid; gap:8px; padding-left:18px;"></ul>
       </div>
     </div>
-  </form>
-</dialog>
+  </dialog>
 
+  <!-- ===== Modal: Cursos ===== -->
+  <dialog id="modalCursos" aria-label="Cursos e conteúdos">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto 1fr; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>🎓 Cursos</strong>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button>
+      </div>
+      <div id="cursosBody" class="skeleton" style="padding:0 14px 14px; overflow:auto;">
+        <!-- HTML externo é injetado aqui -->
+      </div>
+    </div>
+  </dialog>
 
-  <script src="script.js?v=uxui-favs-ac-1"></script>
+  <!-- ===== Modal: Notícias ===== -->
+  <dialog id="modalNoticias" aria-label="Notícias">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto auto 1fr; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>📰 Notícias</strong>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button>
+      </div>
+      <div style="padding:0 14px;">
+        <input id="newsSearch" type="text" placeholder="Filtrar por título/fonte…" />
+      </div>
+      <div id="newsList" class="skeleton" style="padding:0 14px 14px; overflow:auto;"></div>
+    </div>
+  </dialog>
+
+  <!-- ===== Modal: Vocabulário ===== -->
+  <dialog id="modalVocab" aria-label="Vocabulário">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto auto 1fr auto; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>📘 Vocabulário</strong>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button>
+      </div>
+      <div style="padding:0 14px;">
+        <input id="vocabSearch" type="text" placeholder="Filtrar termos…" />
+      </div>
+      <div id="vocabList" class="skeleton" style="padding:0 14px 0 14px; overflow:auto;"></div>
+      <div id="vocabPromptWrap" style="display:flex; justify-content:flex-end; gap:8px; padding:0 14px 14px 14px;">
+        <button id="btnVocabCopy" class="btn btn-primary" type="button" disabled>Estudar (IA)</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Modal: Princípios ===== -->
+  <dialog id="modalPrincipios" aria-label="Princípios">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto auto 1fr auto; gap:10px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>⚖️ Princípios</strong>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button>
+      </div>
+      <div style="padding:0 14px;">
+        <input id="princSearch" type="text" placeholder="Filtrar princípios…" />
+      </div>
+      <div id="princList" class="skeleton" style="padding:0 14px 0 14px; overflow:auto;"></div>
+      <div id="princPromptWrap" style="display:flex; justify-content:flex-end; gap:8px; padding:0 14px 14px 14px;">
+        <button id="btnPrincCopy" class="btn btn-primary" type="button" disabled>Estudar (IA)</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Mini-modal Estudar Rápido (IA) ===== -->
+  <dialog id="modalIA" aria-label="Estudar Rápido (IA)">
+    <div class="am-wrap" style="display:grid; grid-template-rows:auto auto 1fr; gap:12px; max-height:86vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px;">
+        <strong>Estudar Rápido</strong>
+        <button id="btnIaClose" class="btn" type="button">Fechar</button>
+      </div>
+      <div style="padding:0 14px; color:var(--muted);">
+        Seu prompt foi copiado ao abrir o app. Escolha a IA:
+      </div>
+      <div style="padding:0 14px 14px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button id="btnIaGPT" class="btn btn-primary" type="button">Abrir ChatGPT</button>
+        <button id="btnIaGemini" class="btn btn-outline" type="button">Abrir Gemini</button>
+        <button id="btnIaCopilot" class="btn btn-outline" type="button">Abrir Copilot</button>
+        <button id="btnIaPplx" class="btn btn-outline" type="button">Abrir Perplexity</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+
+  <!-- Acessibilidade: helper "sr-only" -->
+  <style>
+    .sr-only{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
+    /* efeito abrir/fechar sidebar */
+    #sidebar.open{ transform: translateX(0); }
+  </style>
 </body>
 </html>
