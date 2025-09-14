@@ -53,8 +53,10 @@
     <section class="controls" aria-label="Busca de Artigos">
       <div class="grid">
         <div class="field" data-area="code">
-          <label for="selCodigo">Código/Lei</label>
-          <select id="selCodigo" class="input select" aria-label="Selecione o Código ou Lei"></select>
+          <label for="selCodigo">Códigos/Leis</label>
+          + <select id="selCodigo" class="input select" aria-label="Selecione Códigos/Leis">
++   <option value="" selected disabled>Carregando Códigos…</option>
++ </select>
         </div>
         <div class="field" data-area="article">
           <label for="inpArtigo">Número do Artigo ou Palavras</label>
