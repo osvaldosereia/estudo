@@ -219,7 +219,7 @@ async function autoDiscoverCodes(){
     { id:'codigo_Civil',       label:'Código Civil',                         txt:['data/codigo_civil.txt','data/codigo_Civil.txt'] },
     { id:'codigo_Proceso_Penal',         label:'Código de Processo Penal',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Penal.txt'] },
     { id:'codigo_Processo_Civil',         label:'Código de Processo Civl',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Civil.txt'] },
-    { id:'codigo_Consumidor',  label:'CDC — Código de Defesa do Consumidor', txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
+    { id:'codigo_Consumidor',  label:'Código Defesa do Consumidor', txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
     // adicione novos códigos aqui no mesmo formato
   ];
 
