@@ -1,13 +1,12 @@
 /* =========================================================================
-   Vade Mecum Digital — script.js (TXT-first, fixes de parsing e busca)
-   - Fonte primária: .txt (Planalto). JSON só como fallback.
-   - Parser:
+   Vade Mecum Digital — script.js (TXT-first, sem JSON para códigos)
+   - Fonte primária: .txt (Planalto) para os CÓDIGOS. (Outros módulos podem usar JSON: news/vocab/princípios/vídeos.)
+   - Parser de artigos:
        * Artigo começa em linha com "Art"/"ART"/"Artigo" + número (+ sufixo A-Z opcional)
        * Artigo termina no ÚLTIMO '.' OU ')' antes do próximo "Art"
-       * Título vira "Art. N" ou "Art. N-A" SOMENTE se existir também "Art. N"
-         (senão, a letra capturada é devolvida ao texto: "A pena…")
-   - Modal mostra o BLOCO DO TXT exatamente como está no arquivo (sem quebrar)
-   - Busca por número e palavras ajustada
+       * Sufixo ("-A", "-B"...) só é mantido no título se existir também o número puro (ex.: 121-A só vira artigo se existir 121)
+       * Modal exibe o BLOCO do TXT exatamente como está (sem quebrar)
+   - Busca por número e por palavras ajustada (normalização, autocomplete e highlight)
    ========================================================================= */
 
 const state = {
@@ -23,6 +22,7 @@ const state = {
   navScope: 'results', // 'results' | 'all'
   navArray: [],
   navIndex: -1,
+  codePaths: {}, // id -> path .txt
   catalogs: { videos: {} },
   vocab: { data: [], selected: [] },
   princ: { data: [], selected: [] },
@@ -108,7 +108,7 @@ const appEls = {
 };
 
 /* ====== Utils ====== */
-const escapeHTML = s => (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const escapeHTML = s => (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
 const norm = s => (s||'').toLowerCase().normalize('NFD')
   .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ')
   .replace(/\s+/g,' ').trim();
@@ -153,13 +153,13 @@ async function getText(path){
 function normalizeNewlines(s){ return String(s||'').replace(/\r\n?/g, '\n'); }
 
 /**
- * Parser TXT → artigos (com pós-processamento para sufixos "A/B/C")
+ * Parser TXT → artigos (com pós-processamento para sufixos "A/B/C").
  * - O bloco completo do artigo é guardado em `full` (igual ao TXT, cortado no último '.' ou ')').
  * - `titulo`: "Art. N" ou "Art. N-A" SOMENTE se existir "Art. N" no conjunto.
- * - `texto`: corpo sem o cabeçalho (útil para snippet/busca); mas no modal e no prompt usamos `full`.
+ * - `texto`: corpo sem o cabeçalho; no modal e no prompt usamos `full`.
  */
 function parseTxtToArtigos(txt){
-  const text = normalizeNewlines(txt);
+  const text = normalizeNewlines(txt).replace(/<[^>]+>/g, ''); // remove tags HTML residuais
 
   // 1) Detectar todos os cabeçalhos
   const reHeader = /(^|\n)\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?/gi;
@@ -167,35 +167,23 @@ function parseTxtToArtigos(txt){
   let m;
   while ((m = reHeader.exec(text)) !== null) {
     const newlineLen = m[1] ? m[1].length : 0;
-    headers.push({
-      start: m.index + newlineLen,
-      raw: m[0],
-      word: m[2],         // "Art" ou "Artigo"
-      num: m[3],          // número
-      suf: (m[4]||'').toUpperCase(), // sufixo capturado (A-Z) opcional
-    });
+    headers.push({ start: m.index + newlineLen, word: m[2], num: m[3], suf: (m[4]||'').toUpperCase() });
   }
   if (!headers.length) return {};
 
-  // 2) Montar blocos brutos (start..nextStart), cortando no último '.' ou ')'
+  // 2) Montar blocos e cortar no último '.' ou ')'
   const blocks = headers.map((h, i) => {
     const nextStart = i < headers.length - 1 ? headers[i+1].start : text.length;
     let block = text.slice(h.start, nextStart);
-
-    // Cortar no último '.' OU ')' antes do próximo "Art"
     const lastDot  = block.lastIndexOf('.');
     const lastParen= block.lastIndexOf(')');
     const lastPos = Math.max(lastDot, lastParen);
     if (lastPos >= 0) block = block.slice(0, lastPos + 1);
 
-    // Encontrar fim do cabeçalho dentro do bloco para separar texto sem header
     const headerLineMatch = block.match(/^\s*(Art(?:\.|igo)?)\s*([0-9]{1,4})\s*(?:[-–—]?\s*([A-Za-z]))?\s*(?:º|o)?\s*(?:\.|:)?\s*/i);
-    let headerEnd = 0;
-    if (headerLineMatch) headerEnd = headerLineMatch[0].length;
-
+    const headerEnd = headerLineMatch ? headerLineMatch[0].length : 0;
     const body = block.slice(headerEnd).replace(/^\s+/, '');
-
-    return { ...h, nextStart, block, headerEnd, body };
+    return { ...h, block, body };
   });
 
   // 3) Pré-títulos com sufixo (provisório)
@@ -205,24 +193,15 @@ function parseTxtToArtigos(txt){
     return { id:key, num:b.num, suf:b.suf, titulo, full:b.block, texto:b.body };
   });
 
-  // 4) Desambiguar sufixos: só vira "N-A" se existir também "N" puro
+  // 4) Desambiguar sufixos
   const byNum = new Map();
-  prelim.forEach(n => {
-    const arr = byNum.get(n.num) || [];
-    arr.push(n);
-    byNum.set(n.num, arr);
-  });
-
-  const hasPlain = new Map(); // num -> bool
-  byNum.forEach((arr, num) => {
-    hasPlain.set(num, arr.some(n => !n.suf)); // existe N sem sufixo?
-  });
+  prelim.forEach(n => { const arr = byNum.get(n.num) || []; arr.push(n); byNum.set(n.num, arr); });
+  const hasPlain = new Map();
+  byNum.forEach((arr, num) => { hasPlain.set(num, arr.some(n => !n.suf)); });
 
   const data = {};
   prelim.forEach(n => {
-    if (n.suf && !hasPlain.get(n.num)) {
-      // sufixo foi um falso-positivo (ex.: "Art. 312 A pena…")
-      // -> título vira "Art. 312" e a letra já está no `full`/`texto` porque veio do TXT
+    if (n.suf && !hasPlain.get(n.num)) { // falso 121-A -> vira 121
       n.titulo = `Art. ${n.num}`;
       n.id = `art${n.num}`;
     }
@@ -232,31 +211,24 @@ function parseTxtToArtigos(txt){
   return data;
 }
 
-/* Descoberta automática de códigos disponíveis (TXT primeiro, JSON fallback) */
+/* ====== Descoberta automática de códigos (SOMENTE TXT) ====== */
 async function autoDiscoverCodes(){
   const candidates = [
-    { id:'codigo_Penal', label:'Código Penal',
-      txt:['data/codigo_penal.txt','data/codigo_Penal.txt'],
-      json:['data/codigo_Penal_vademecum.json','data/codigo_Penal.json'] },
+    { id:'codigo_Penal',       label:'Código Penal',                         txt:['data/codigo_penal.txt','data/codigo_Penal.txt'] },
+    { id:'codigo_Civil',       label:'Código Civil',                         txt:['data/codigo_civil.txt','data/codigo_Civil.txt'] },
+    { id:'codigo_CPP',         label:'Código de Processo Penal',             txt:['data/codigo_cpp.txt','data/codigo_CPP.txt'] },
+    { id:'codigo_Consumidor',  label:'CDC — Código de Defesa do Consumidor', txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
+    // adicione novos códigos aqui no mesmo formato
   ];
 
   const found = [];
   state.codePaths = {};
-
   for (const c of candidates){
     let chosen = null;
     for (const p of (c.txt || [])){
-      try { if (await fileExists(p)) { chosen = { type:'txt', path:p }; break; } } catch {}
+      try { if (await fileExists(p)) { chosen = p; break; } } catch {}
     }
-    if (!chosen) {
-      for (const p of (c.json || [])){
-        try { if (await fileExists(p)) { chosen = { type:'json', path:p }; break; } } catch {}
-      }
-    }
-    if (chosen){
-      state.codePaths[c.id] = chosen;
-      found.push({ id:c.id, label:c.label });
-    }
+    if (chosen){ state.codePaths[c.id] = chosen; found.push({ id:c.id, label:c.label }); }
   }
   return found;
 }
@@ -268,27 +240,23 @@ function renderCodeSelect(codes){
   el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
 }
 
-async function tryLoadCodeData(codeId){
-  const mapping = state.codePaths && state.codePaths[codeId];
-  if (mapping && mapping.type === 'txt'){
-    const raw = await getText(mapping.path);
-    return parseTxtToArtigos(raw);
-  }
-  const paths=[`data/${codeId}_vademecum.json`,`data/${codeId}.json`];
-  for (const p of paths){ try{ return await getJSON(p);}catch{} }
-  throw new Error('Nenhum arquivo de código encontrado (.txt ou .json).');
+async function tryLoadCodeTxt(codeId){
+  const path = state.codePaths && state.codePaths[codeId];
+  if (!path) throw new Error('Arquivo .txt do código não encontrado.');
+  const raw = await getText(path);
+  return parseTxtToArtigos(raw);
 }
 
 async function ensureCodeLoaded(codeId){
   if (state.codigo===codeId && state.artigosData) return;
   state.codigo = codeId;
-  state.artigosData = await tryLoadCodeData(codeId);
+  state.artigosData = await tryLoadCodeTxt(codeId);
   state.artigosIndex = Object.values(state.artigosData);
 
   // índices normalizados para autocomplete/busca
   state.artigosIndex.forEach(n=>{
-    n._nt = norm(n.titulo||'');         // ex.: "art 121 a"
-    n._ns = n._nt.replace(/\s+/g,'');   // ex.: "art121a"
+    n._nt = norm(n.titulo||'');           // ex.: "art 121 a"
+    n._ns = n._nt.replace(/[\s\-]+/g,''); // ex.: "art121a" (remove hífens também)
   });
 }
 
@@ -346,10 +314,7 @@ function highlight(text, query){
   const toks = words(query).filter(w=>w.length>=3);
   if (!toks.length) return escapeHTML(text);
   let html = escapeHTML(text);
-  toks.forEach(t=>{
-    const re = new RegExp(`(${t})`,'gi');
-    html = html.replace(re, '<mark>$1</mark>');
-  });
+  toks.forEach(t=>{ const re = new RegExp(`(${t})`,'gi'); html = html.replace(re, '<mark>$1</mark>'); });
   return html;
 }
 function buildSnippet(node, query, len=240){
@@ -484,11 +449,7 @@ function toggleFavorite(){
   appEls.btnFav.textContent = isFavorite(node) ? '★ Favorito' : '☆ Favoritar';
   showToast(isFavorite(node) ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
 }
-function openFavoritesModal(){
-  if (!appEls.modalFavs) return;
-  renderFavList();
-  showDialog(appEls.modalFavs);
-}
+function openFavoritesModal(){ if (!appEls.modalFavs) return; renderFavList(); showDialog(appEls.modalFavs); }
 function renderFavList(){
   const scope = appEls.favScope?.value || 'current';
   const container = appEls.favList;
@@ -502,15 +463,9 @@ function renderFavList(){
     : [state.codigo];
 
   const entries = [];
-  codes.forEach(codeId=>{
-    const favs = getFavsRaw(codeId);
-    favs.forEach(titulo=> entries.push({ codeId, titulo }));
-  });
+  codes.forEach(codeId=>{ const favs = getFavsRaw(codeId); favs.forEach(titulo=> entries.push({ codeId, titulo })); });
 
-  if (!entries.length){
-    container.innerHTML = '<div class="empty pad">Sem favoritos.</div>';
-    return;
-  }
+  if (!entries.length){ container.innerHTML = '<div class="empty pad">Sem favoritos.</div>'; return; }
 
   entries.sort((a,b)=> (a.codeId||'').localeCompare(b.codeId||'') || (a.titulo||'').localeCompare(b.titulo||''));
 
@@ -550,12 +505,7 @@ function buildSinglePrompt(node){
   const bloco = node.full || node.texto || '';
   return `Assuma a persona de um professor de Direito experiente convidado pelo direito.love e gere um material de estudo rápido. Analise detalhadamente todo o artigo abaixo (caput, paragrafos, incisos e alineas), cobrindo: (1) conceito com visão doutrinária, jurisprudência majoritária e prática; (2) mini exemplo prático; (3) checklist essencial; (4) erros comuns e pegadinhas de prova; (5) Pontos de atenção na prática jurídica; (6) Princípios Relacionados ao tema; (7) nota comparativa se houver artigos correlatos. Responda em português claro, sem enrolação, objetivo e didático.\n\n${bloco}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-function onEstudarRapido(){
-  const node = getScopeArray()[state.navIndex];
-  if (!node) return;
-  state.prompt = buildSinglePrompt(node);
-  showDialog(appEls.modalIA);
-}
+function onEstudarRapido(){ const node = getScopeArray()[state.navIndex]; if (!node) return; state.prompt = buildSinglePrompt(node); showDialog(appEls.modalIA); }
 // compat
 async function onCopiarPrompt(){ onEstudarRapido(); }
 
@@ -563,17 +513,11 @@ async function onCopiarPrompt(){ onEstudarRapido(); }
 function isAndroid(){ return /Android/i.test(navigator.userAgent || navigator.vendor || ''); }
 function isiOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent || navigator.vendor || ''); }
 function openAIAppOrWeb(app){
-  const urls = {
-    gpt: 'https://chatgpt.com/',
-    gemini: 'https://gemini.google.com/app',
-    copilot: 'https://copilot.microsoft.com/',
-    pplx: 'https://www.perplexity.ai/'
-  };
+  const urls = { gpt: 'https://chatgpt.com/', gemini: 'https://gemini.google.com/app', copilot: 'https://copilot.microsoft.com/', pplx: 'https://www.perplexity.ai/' };
   if (app === 'gemini'){
     if (isAndroid()){
       const fallback = encodeURIComponent(urls.gemini);
-      const intentUrl = 'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;'
-        + `S.browser_fallback_url=${fallback};end`;
+      const intentUrl = 'intent://gemini.google.com/app#Intent;scheme=https;package=com.google.android.apps.bard;' + `S.browser_fallback_url=${fallback};end`;
       window.location.href = intentUrl; return;
     }
     if (isiOS()){ window.location.href = urls.gemini; return; }
@@ -610,27 +554,17 @@ function renderVideosModal(data){
 let cursosLoaded=false;
 async function loadCursosHTML(){
   if (cursosLoaded) return;
-  try{
-    const html = await getHTML('content/cursos.html');
-    appEls.cursosBody.innerHTML = html;
-  }catch{
-    appEls.cursosBody.textContent = 'Não foi possível carregar o conteúdo (content/cursos.html).';
-  }finally{
-    cursosLoaded=true;
-  }
+  try{ const html = await getHTML('content/cursos.html'); appEls.cursosBody.innerHTML = html; }
+  catch{ appEls.cursosBody.textContent = 'Não foi possível carregar o conteúdo (content/cursos.html).'; }
+  finally{ cursosLoaded=true; }
 }
 
-/* ====== Notícias & Vocabulário & Princípios (sem mudanças de lógica) ====== */
+/* ====== Notícias & Vocabulário & Princípios (podem usar JSON) ====== */
 async function ensureNewsLoaded(){
   if (state.news.data.length) return;
-  try{
-    const data = await getJSON('content/news.json');
-    state.news.data = Array.isArray(data) ? data : (data.items || []);
-  }catch{
-    state.news.data = [];
-  }finally{
-    appEls.newsList.classList.remove('skeleton');
-  }
+  try{ const data = await getJSON('content/news.json'); state.news.data = Array.isArray(data) ? data : (data.items || []); }
+  catch{ state.news.data = []; }
+  finally{ appEls.newsList.classList.remove('skeleton'); }
 }
 function renderNewsList(){
   const q = norm(appEls.newsSearch.value||'');
@@ -641,11 +575,9 @@ function renderNewsList(){
   filtered.forEach(it=>{
     const row = document.createElement('div'); row.className='list-item';
     const title = document.createElement('div'); title.className='li-title'; title.textContent = it.title || 'Sem título';
-    const meta = document.createElement('div'); meta.className='li-meta';
-    meta.textContent = (it.type ? `[${it.type}] ` : '') + (it.source||'') + (it.date?` — ${it.date}`:'');
+    const meta = document.createElement('div'); meta.className='li-meta'; meta.textContent = (it.type ? `[${it.type}] ` : '') + (it.source||'') + (it.date?` — ${it.date}`:'');
     const actions = document.createElement('div'); actions.className='li-actions';
-    const a = document.createElement('a');
-    a.href = it.url || '#'; a.target='_blank'; a.rel='noopener'; a.className='btn btn-outline btn-small'; a.textContent='Ler';
+    const a = document.createElement('a'); a.href = it.url || '#'; a.target='_blank'; a.rel='noopener'; a.className='btn btn-outline btn-small'; a.textContent='Ler';
     actions.appendChild(a);
     row.appendChild(title); row.appendChild(actions); row.appendChild(meta);
     list.appendChild(row);
@@ -656,15 +588,9 @@ if (appEls.newsSearch) appEls.newsSearch.addEventListener('input', renderNewsLis
 
 async function ensureVocabLoaded(){
   if (state.vocab.data.length) return;
-  try{
-    const data = await getJSON('content/vocabulario.json');
-    state.vocab.data = Array.isArray(data) ? data : (data.items || []);
-    state.vocab.data = state.vocab.data.map(x=>({ titulo: x.titulo||'', texto: x.texto||'', temas: Array.isArray(x.temas)?x.temas.slice(0,3):[] }));
-  }catch{
-    state.vocab.data = [];
-  }finally{
-    appEls.vocabList.classList.remove('skeleton');
-  }
+  try{ const data = await getJSON('content/vocabulario.json'); state.vocab.data = Array.isArray(data) ? data : (data.items || []); state.vocab.data = state.vocab.data.map(x=>({ titulo: x.titulo||'', texto: x.texto||'', temas: Array.isArray(x.temas)?x.temas.slice(0,3):[] })); }
+  catch{ state.vocab.data = []; }
+  finally{ appEls.vocabList.classList.remove('skeleton'); }
 }
 function renderVocabList(){
   const q = norm(appEls.vocabSearch.value||'');
@@ -692,10 +618,7 @@ function renderVocabList(){
     chk.addEventListener('change', ()=>{
       const titulo = chk.dataset.titulo, tema = chk.dataset.tema;
       if (chk.checked){ state.vocab.selected.push({titulo, tema}); }
-      else{
-        const i = state.vocab.selected.findIndex(x=> x.titulo===titulo && x.tema===tema );
-        if (i>=0) state.vocab.selected.splice(i,1);
-      }
+      else{ const i = state.vocab.selected.findIndex(x=> x.titulo===titulo && x.tema===tema ); if (i>=0) state.vocab.selected.splice(i,1); }
       appEls.btnVocabCopy.disabled = state.vocab.selected.length===0;
     });
   });
@@ -705,33 +628,21 @@ function buildVocabPrompt(sel){
   return `Gere um material didático rápido e profundo para revisar os temas abaixo, com foco em doutrina, jurisprudência majoritária e prática forense; inclua exemplos, checklist e pegadinhas de prova. Seja objetivo e claro.\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
 if (appEls.btnVocabCopy){
-  appEls.btnVocabCopy.addEventListener('click', ()=>{
-    const prompt = buildVocabPrompt(state.vocab.selected);
-    state.prompt = prompt;
-    showDialog(appEls.modalIA);
-  });
+  appEls.btnVocabCopy.addEventListener('click', ()=>{ const prompt = buildVocabPrompt(state.vocab.selected); state.prompt = prompt; showDialog(appEls.modalIA); });
 }
 
 async function ensurePrincLoaded(){
   if (state.princ.data.length) return;
-  try{
-    const data = await getJSON('content/principios.json');
-    const arr = Array.isArray(data) ? data : (data.items || []);
-    state.princ.data = arr.map(x=>({ titulo: x.titulo||'', texto: x.texto||'' }));
-  }catch{
-    state.princ.data = [];
-  }finally{
-    appEls.princList.classList.remove('skeleton');
-  }
+  try{ const data = await getJSON('content/principios.json'); const arr = Array.isArray(data) ? data : (data.items || []); state.princ.data = arr.map(x=>({ titulo: x.titulo||'', texto: x.texto||'' })); }
+  catch{ state.princ.data = []; }
+  finally{ appEls.princList.classList.remove('skeleton'); }
 }
 function renderPrincList(){
   const q = norm(appEls.princSearch.value||'');
   const items = state.princ.data.slice().sort((a,b)=>String(a.titulo||'').localeCompare(String(b.titulo||'')));
   const filtered = q ? items.filter(it=> norm(`${it.titulo} ${it.texto}`).includes(q) ) : items;
   const wrap = document.createElement('div'); wrap.className='list';
-  if (!filtered.length){
-    appEls.princList.innerHTML = '<div class="empty">Sem princípios.</div>'; return;
-  }
+  if (!filtered.length){ appEls.princList.innerHTML = '<div class="empty">Sem princípios.</div>'; return; }
   filtered.forEach((it, idx)=>{
     const row = document.createElement('div'); row.className='list-item';
     const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
@@ -754,73 +665,50 @@ function buildPrincPrompt(sel){
   const blocos = sel.map(x=>`### ${x.titulo}\n${x.texto}`).join('\n\n');
   return `Com base nos princípios abaixo, produza um resumo didático, com: definição, base legal comum, aplicações práticas forenses, jurisprudência majoritária ilustrativa e pegadinhas de prova. Termine com 5 questões objetivas (sem gabarito visível).\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-if (appEls.btnPrincCopy){
-  appEls.btnPrincCopy.addEventListener('click', ()=>{
-    const prompt = buildPrincPrompt(state.princ.selected);
-    state.prompt = prompt;
-    showDialog(appEls.modalIA);
-  });
-}
+if (appEls.btnPrincCopy){ appEls.btnPrincCopy.addEventListener('click', ()=>{ const prompt = buildPrincPrompt(state.princ.selected); state.prompt = prompt; showDialog(appEls.modalIA); }); }
 
 /* ====== Autocomplete ====== */
 function acClose(){ state.ac.open=false; state.ac.activeIndex=-1; appEls.acPanel.hidden=true; appEls.acPanel.innerHTML=''; }
 function acOpen(items){ state.ac.open=true; state.ac.activeIndex=-1; appEls.acPanel.hidden=false; renderAc(items); }
-function acSetActive(idx){
-  const max = state.ac.items.length;
-  if (max===0) return;
-  if (idx<0) idx = max-1; if (idx>=max) idx = 0;
-  state.ac.activeIndex = idx;
-  Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=> el.classList.toggle('is-active', i===idx));
-}
+function acSetActive(idx){ const max = state.ac.items.length; if (max===0) return; if (idx<0) idx = max-1; if (idx>=max) idx = 0; state.ac.activeIndex = idx; Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=> el.classList.toggle('is-active', i===idx)); }
 function renderAc(items){
   state.ac.items = items;
   const q = appEls.inpArtigo.value.trim();
   appEls.acPanel.innerHTML = items.length ? items.map(it=>{
-    const title = it.titulo;
-    const codeLabel = (appEls.selCodigo.value||'').replace(/^codigo_/,'Código ').replace(/_/g,' ');
+    const title = it.titulo; const codeLabel = (appEls.selCodigo.value||'').replace(/^codigo_/,'Código ').replace(/_/g,' ');
     return `<div class="ac-item" role="option" data-titulo="${escapeHTML(title)}">
       <div class="ac-title">${highlight(title, q)}</div>
       <div class="ac-action">Abrir</div>
       <div class="ac-meta">${escapeHTML(codeLabel)}</div>
-    </div>`;
-  }).join('') : `<div class="ac-empty">Sem sugestões.</div>`;
+    </div>`; }).join('') : `<div class="ac-empty">Sem sugestões.</div>`;
 
   Array.from(appEls.acPanel.querySelectorAll('.ac-item')).forEach((el,i)=>{
     el.addEventListener('mouseenter', ()=> acSetActive(i));
     el.addEventListener('mousedown', e=> e.preventDefault());
     el.addEventListener('click', async ()=>{
-      const titulo = el.dataset.titulo;
-      if (!titulo) return;
-      const node = state.artigosIndex.find(n=>n.titulo===titulo);
-      if (!node) return;
+      const titulo = el.dataset.titulo; if (!titulo) return;
+      const node = state.artigosIndex.find(n=>n.titulo===titulo); if (!node) return;
       state.lastHits = [node]; state.navScope='results';
-      openArticleModalByNode(node, true);
-      acClose();
+      openArticleModalByNode(node, true); acClose();
     });
   });
 }
 function acCompute(q){
-  const codeId = appEls.selCodigo.value;
-  if (!codeId || !state.artigosIndex.length) return [];
-  const nq = norm(q);
-  if (!nq) return [];
+  const codeId = appEls.selCodigo.value; if (!codeId || !state.artigosIndex.length) return [];
+  const nq = norm(q); if (!nq) return [];
   // prioriza numeração exata (art121a)
   const m = nq.match(/^(\d{1,4})([a-z])?$/i);
   const byNum = m ? state.artigosIndex.filter(n=> (n._ns||'').startsWith(`art${m[1]}${(m[2]||'').toLowerCase()}`)).slice(0,10) : [];
   const others = state.artigosIndex.filter(n=> (n._nt||'').includes(nq)).slice(0,10);
-  const map = new Map();
-  [...byNum, ...others].forEach(n=>{ if(!map.has(n.titulo)) map.set(n.titulo,n); });
+  const map = new Map(); [...byNum, ...others].forEach(n=>{ if(!map.has(n.titulo)) map.set(n.titulo,n); });
   return Array.from(map.values()).slice(0,10);
 }
 
 /* ====== Navegação, eventos e acessibilidade ====== */
 function resetAll(){
-  state.prompt='';
-  state.lastHits=[];
+  state.prompt=''; state.lastHits=[];
   appEls.resultChips.innerHTML=''; appEls.resultList.innerHTML='';
-  appEls.resultMsg.textContent='';
-  appEls.inpArtigo.value='';
-  acClose();
+  appEls.resultMsg.textContent=''; appEls.inpArtigo.value=''; acClose();
 }
 async function onBuscar(e){
   if (e){ e.preventDefault(); }
@@ -833,17 +721,12 @@ async function onBuscar(e){
   try{
     await ensureCodeLoaded(codeId);
     const hits = await searchArticles(codeId, entrada);
-    state.lastHits = hits;
-    state.navIndex = hits.length ? 0 : -1;
-    state.navScope='results';
+    state.lastHits = hits; state.navIndex = hits.length ? 0 : -1; state.navScope='results';
     if (!hits.length){ appEls.resultMsg.textContent='Nada encontrado.'; return; }
-    renderResultChips(hits);
-    renderResultList(hits, entrada);
+    renderResultChips(hits); renderResultList(hits, entrada);
     const extra = hits.length>200 ? ` (mostrando 200/${hits.length})` : '';
     appEls.resultMsg.textContent = `${hits.length} artigo(s) encontrado(s)${extra}. Clique para abrir.`;
-  }catch(err){
-    console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.';
-  }
+  }catch(err){ console.error(err); appEls.resultMsg.textContent='Erro ao carregar os dados.'; }
 }
 
 /* ====== Sidebar & modais ====== */
@@ -852,10 +735,7 @@ function closeSidebar(){ appEls.sidebar.classList.remove('open'); appEls.sideBac
 function openModalById(id){ const d=document.getElementById(id); if (d) showDialog(d); }
 
 async function onSideNavClick(a){
-  const target = a.dataset.target;
-  const isHome = !!a.dataset.home;
-  closeSidebar();
-  if (isHome){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+  const target = a.dataset.target; const isHome = !!a.dataset.home; closeSidebar(); if (isHome){ window.scrollTo({top:0,behavior:'smooth'}); return; }
   if (!target) return;
   if (target==='modalCursos'){ await loadCursosHTML(); }
   if (target==='modalNoticias'){ await ensureNewsLoaded(); renderNewsList(); }
@@ -870,10 +750,7 @@ function bindSidebar(){
   if (appEls.btnSideClose) appEls.btnSideClose.addEventListener('click', e=>{ e.preventDefault(); closeSidebar(); });
   if (appEls.sideBackdrop) appEls.sideBackdrop.addEventListener('click', closeSidebar);
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSidebar(); });
-
-  document.querySelectorAll('.side-link').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); onSideNavClick(a); });
-  });
+  document.querySelectorAll('.side-link').forEach(a=>{ a.addEventListener('click', (e)=>{ e.preventDefault(); onSideNavClick(a); }); });
 }
 
 /* ====== Dialog polyfill básico ====== */
@@ -889,8 +766,7 @@ function showDialog(dlg){
 function closeDialog(dlg){
   if (supportsDialog()){ if (dlg.open) dlg.close(); return; }
   dlg.classList.remove('fallback-open');
-  const bd = document.querySelector('.modal.fallback-backdrop');
-  if (bd) bd.remove();
+  const bd = document.querySelector('.modal.fallback-backdrop'); if (bd) bd.remove();
   document.body.style.overflow='';
 }
 
@@ -903,8 +779,7 @@ function bindSwipe(){
   el.addEventListener('pointerup',e=>{
     if(!down) return; el.style.userSelect=''; const dx=e.clientX-x0, dy=e.clientY-y0; down=false;
     if(!moved || Math.abs(dx)<30 || Math.abs(dx)<=Math.abs(dy)) return;
-    const arr=getScopeArray();
-    if (!arr.length || state.navIndex < 0) return;
+    const arr=getScopeArray(); if (!arr.length || state.navIndex < 0) return;
     if (dx<0 && state.navIndex < arr.length-1) openArticleModalByIndexVia(arr, state.navIndex+1);
     else if (dx>0 && state.navIndex > 0) openArticleModalByIndexVia(arr, state.navIndex-1);
   },{passive:true});
@@ -917,37 +792,20 @@ function bind(){
     .forEach(k=>appEls[k] && appEls[k].setAttribute('type','button'));
 
   // botão de escopo desativado (sempre navega pelo código completo)
-  if (appEls.btnScope) { 
-    appEls.btnScope.style.display = 'none'; 
-    appEls.btnScope.disabled = true; 
-  }
+  if (appEls.btnScope) { appEls.btnScope.style.display = 'none'; appEls.btnScope.disabled = true; }
 
   // busca
   appEls.btnBuscar.addEventListener('click', onBuscar);
   appEls.inpArtigo.addEventListener('keydown', e=>{
     if(e.key==='Enter'){
-      if (state.ac.open && state.ac.activeIndex>=0){
-        const el = appEls.acPanel.querySelectorAll('.ac-item')[state.ac.activeIndex];
-        el?.click(); return;
-      }
+      if (state.ac.open && state.ac.activeIndex>=0){ const el = appEls.acPanel.querySelectorAll('.ac-item')[state.ac.activeIndex]; el?.click(); return; }
       e.preventDefault(); onBuscar();
     }
-    if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){
-      e.preventDefault();
-      const delta = e.key==='ArrowDown'?1:-1;
-      acSetActive(state.ac.activeIndex + delta);
-    }
+    if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){ e.preventDefault(); const delta = e.key==='ArrowDown'?1:-1; acSetActive(state.ac.activeIndex + delta); }
     if (e.key==='Escape'){ acClose(); }
   });
-  appEls.inpArtigo.addEventListener('input', ()=>{
-    const q = appEls.inpArtigo.value;
-    if (q.trim().length<1){ acClose(); return; }
-    const items = acCompute(q);
-    if (items.length){ acOpen(items); } else { acClose(); }
-  });
-  document.addEventListener('click', (e)=>{
-    if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); }
-  });
+  appEls.inpArtigo.addEventListener('input', ()=>{ const q = appEls.inpArtigo.value; if (q.trim().length<1){ acClose(); return; } const items = acCompute(q); if (items.length){ acOpen(items); } else { acClose(); } });
+  document.addEventListener('click', (e)=>{ if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); } });
 
   if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
   appEls.modeRadios.forEach(r=> r.addEventListener('change', ()=>{ state.searchMode = r.value; }));
@@ -979,15 +837,10 @@ function bind(){
   });
 
   // lembrar último código
-  appEls.selCodigo.addEventListener('change', async ()=>{
-    const v = appEls.selCodigo.value;
-    if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); }
-  });
+  appEls.selCodigo.addEventListener('change', async ()=>{ const v = appEls.selCodigo.value; if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); } });
 
   // favoritos (modal)
-  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
-    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
-  });
+  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{ a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); }); });
   appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
 
   // mini-modal Estudar Rápido
@@ -1004,13 +857,7 @@ async function initCodes(){
     renderCodeSelect(codes);
     const last = localStorage.getItem('dl_last_code');
     if (last){ await ensureCodeLoaded(last); }
-  }catch(e){
-    console.warn('Falha ao descobrir códigos', e);
-  }
+  }catch(e){ console.warn('Falha ao descobrir códigos', e); }
 }
-function start(){
-  bind();
-  initCodes();
-  switchView('chips');
-}
+function start(){ bind(); initCodes(); switchView('chips'); }
 document.addEventListener('DOMContentLoaded', start);
