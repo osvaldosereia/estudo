@@ -1,37 +1,3 @@
-
-Brastra.gif (4376 bytes)
-
-Presidência da República
-Casa Civil
-Subchefia para Assuntos Jurídicos
-
-LEI Nº 10.406, DE 10 DE JANEIRO DE 2002
-
-ÍNDICE
-
-Vigência
-
-Lei de Introdução às normas do Direito Brasileiro
-
-(Vide Lei nº 14.195, de 2021)
-
-Vide Lei nº 14.451, de 2022   Vigência
-
-Institui o Código Civil.
-
-O PRESIDENTE DA REPÚBLICA Faço saber que o Congresso Nacional decreta e eu sanciono a seguinte Lei:
-
-P A R T E    G E R A L
-
-LIVRO I
-DAS PESSOAS
-
-TÍTULO I
-DAS PESSOAS NATURAIS
-
-CAPÍTULO I
-Da Personalidade e da Capacidade
-
 Art. 1 o Toda pessoa é capaz de direitos e deveres na ordem civil.
 
 Art. 2 o A personalidade civil da pessoa começa do nascimento com vida; mas a lei põe a salvo, desde a concepção, os direitos do nascituro.
@@ -9030,4 +8996,5 @@ Art. 2.044. Este Código entrará em vigor 1 (um) ano após a sua publicação.
 Art. 2.045. Revogam-se a Lei n o 3.071, de 1 o de janeiro de 1916 - Código Civil e a Parte Primeira do Código Comercial, Lei n o 556, de 25 de junho de 1850.
 
 Art. 2.046. Todas as remissões, em diplomas legislativos, aos Códigos referidos no artigo antecedente, consideram-se feitas às disposições correspondentes deste Código.
+
 
