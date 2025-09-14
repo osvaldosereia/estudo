@@ -214,9 +214,11 @@ function parseTxtToArtigos(txt){
 /* ====== Descoberta automática de códigos (SOMENTE TXT) ====== */
 async function autoDiscoverCodes(){
   const candidates = [
+    { id:'Constituicao_Federal_88',         label:'Constituição Federal 88',             txt:['data/codigo_cpp.txt','data/Constituicao_Federal_88.txt'] },
     { id:'codigo_Penal',       label:'Código Penal',                         txt:['data/codigo_penal.txt','data/codigo_Penal.txt'] },
     { id:'codigo_Civil',       label:'Código Civil',                         txt:['data/codigo_civil.txt','data/codigo_Civil.txt'] },
-    { id:'codigo_CPP',         label:'Código de Processo Penal',             txt:['data/codigo_cpp.txt','data/codigo_CPP.txt'] },
+    { id:'codigo_Proceso_Penal',         label:'Código de Processo Penal',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Penal.txt'] },
+    { id:'codigo_Processo_Civil',         label:'Código de Processo Civl',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Civil.txt'] },
     { id:'codigo_Consumidor',  label:'CDC — Código de Defesa do Consumidor', txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
     // adicione novos códigos aqui no mesmo formato
   ];
