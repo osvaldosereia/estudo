@@ -7,6 +7,10 @@
        * Sufixo ("-A", "-B"...) só é mantido no título se existir também o número puro (ex.: 121-A só vira artigo se existir 121)
        * Modal exibe o BLOCO do TXT exatamente como está (sem quebrar)
    - Busca por número e por palavras ajustada (normalização, autocomplete e highlight)
+   - Performance:
+       * Descoberta de códigos em paralelo (Promises) com HEAD "cache-friendly"
+       * Placeholder do <select>: "Carregando Códigos…" → "Códigos/Leis"
+       * Cache de sessão do parse (sessionStorage) por código
    ========================================================================= */
 
 const state = {
@@ -126,27 +130,40 @@ function showToast(msg){
   setTimeout(()=>appEls.toast.classList.remove('show'), 1600);
 }
 
+/* ------- fetch helpers com cache normal (sem cache-buster) ------- */
 async function getJSON(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  const r = await fetch(url, { cache:'no-store' });
+  const r = await fetch(path, { cache:'default' });
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.json();
 }
 async function getHTML(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  const r = await fetch(url, { cache:'no-store' });
+  const r = await fetch(path, { cache:'default' });
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.text();
 }
-async function fileExists(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  try{ const r=await fetch(url,{method:'HEAD',cache:'no-store'}); return r.ok; }catch{ return false; }
+/** HEAD "cache-friendly" + timeout + fallback GET parcial se HEAD não for aceito */
+async function fileExists(path, { timeoutMs = 4000 } = {}){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    const r = await fetch(path, { method:'HEAD', cache:'default', signal: ctrl.signal });
+    if (r.ok) return true;
+    if (r.status===405 || r.status===501){ // fallback: alguns hosts não suportam HEAD
+      const r2 = await fetch(path, { method:'GET', headers:{'Range':'bytes=0-0'}, cache:'default', signal: ctrl.signal });
+      return r2.ok || r2.status===206;
+    }
+    return false;
+  }catch{
+    return false;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 /* ====== TXT-first loader ================================================= */
 async function getText(path){
-  const url = path + (path.includes('?')?'&':'?') + 'v=' + Date.now();
-  const r = await fetch(url, { cache:'no-store' });
+  // Mantemos cache padrão para não travar rede; se quiser forçar, troque para 'reload'
+  const r = await fetch(path, { cache:'default' });
   if (!r.ok) throw new Error(`Erro ${r.status} ao carregar ${path}`);
   return r.text();
 }
@@ -211,37 +228,96 @@ function parseTxtToArtigos(txt){
   return data;
 }
 
-/* ====== Descoberta automática de códigos (SOMENTE TXT) ====== */
+/* ================= Descoberta automática de códigos (SOMENTE TXT) ================ */
+
+/** Opção incremental no <select> */
+function ensureSelectPlaceholder(){
+  const sel = appEls.selCodigo;
+  if (!sel) return;
+  // garante opção placeholder
+  const hasPh = !!sel.querySelector('option[value=""]');
+  if (!hasPh){
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.disabled = true;
+    opt.selected = true;
+    opt.textContent = 'Carregando Códigos…';
+    sel.appendChild(opt);
+  }else{
+    const ph = sel.querySelector('option[value=""]');
+    if (ph) { ph.disabled = true; ph.selected = true; ph.textContent='Carregando Códigos…'; }
+  }
+  sel.setAttribute('disabled','true');
+  sel.setAttribute('aria-busy','true');
+}
+
+function addCodeOption(c){
+  const opt = document.createElement('option');
+  opt.value = c.id;
+  opt.textContent = c.label;
+  appEls.selCodigo.appendChild(opt);
+}
+
+function finalizeSelectPlaceholder(){
+  const ph = appEls.selCodigo.querySelector('option[value=""]');
+  if (ph) ph.textContent = 'Códigos/Leis';
+  appEls.selCodigo.removeAttribute('disabled');
+  appEls.selCodigo.removeAttribute('aria-busy');
+}
+
 async function autoDiscoverCodes(){
+  // Ajuste os caminhos conforme sua pasta /data/.
   const candidates = [
-    { id:'Constituicao_Federal_88',         label:'Constituição Federal 88',             txt:['data/codigo_cpp.txt','data/Constituicao_Federal_88.txt'] },
-    { id:'codigo_Penal',       label:'Código Penal',                         txt:['data/codigo_penal.txt','data/codigo_Penal.txt'] },
-    { id:'codigo_Civil',       label:'Código Civil',                         txt:['data/codigo_civil.txt','data/codigo_Civil.txt'] },
-    { id:'codigo_Proceso_Penal',         label:'Código de Processo Penal',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Penal.txt'] },
-    { id:'codigo_Processo_Civil',         label:'Código de Processo Civl',             txt:['data/codigo_cpp.txt','data/codigo_Processo_Civil.txt'] },
-    { id:'codigo_Consumidor',  label:'Código Defesa do Consumidor', txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
+    { id:'Constituicao_Federal_88', label:'Constituição Federal 88',                  txt:['data/Constituicao_Federal_88.txt','data/constituicao_federal_88.txt'] },
+    { id:'codigo_Penal',            label:'Código Penal',                              txt:['data/codigo_penal.txt','data/codigo_Penal.txt'] },
+    { id:'codigo_Civil',            label:'Código Civil',                              txt:['data/codigo_civil.txt','data/codigo_Civil.txt'] },
+    { id:'codigo_Processo_Penal',   label:'Código de Processo Penal',                  txt:['data/codigo_processo_penal.txt','data/codigo_Processo_Penal.txt','data/codigo_cpp.txt'] },
+    { id:'codigo_Processo_Civil',   label:'Código de Processo Civil',                  txt:['data/codigo_processo_civil.txt','data/codigo_Processo_Civil.txt'] },
+    { id:'codigo_Consumidor',       label:'CDC — Código de Defesa do Consumidor',      txt:['data/codigo_consumidor.txt','data/codigo_Consumidor.txt'] }
     // adicione novos códigos aqui no mesmo formato
   ];
 
-  const found = [];
   state.codePaths = {};
-  for (const c of candidates){
+  const found = [];
+
+  ensureSelectPlaceholder();
+
+  // dispara verificações em paralelo e já vai inserindo as opções
+  const tasks = candidates.map(async (c) => {
     let chosen = null;
     for (const p of (c.txt || [])){
-      try { if (await fileExists(p)) { chosen = p; break; } } catch {}
+      if (await fileExists(p)) { chosen = p; break; }
     }
-    if (chosen){ state.codePaths[c.id] = chosen; found.push({ id:c.id, label:c.label }); }
-  }
+    if (chosen){
+      state.codePaths[c.id] = chosen;
+      found.push({ id:c.id, label:c.label });
+      addCodeOption({ id:c.id, label:c.label }); // feedback imediato
+    }
+  });
+
+  await Promise.allSettled(tasks);
+  finalizeSelectPlaceholder();
   return found;
 }
 
+// compat antigo (não é mais usado, mas mantido se alguém chamar)
 function renderCodeSelect(codes){
   const el = appEls.selCodigo;
   const last = localStorage.getItem('dl_last_code');
   const opts = (codes||[]).map(c=>`<option value="${c.id}" ${last===c.id?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-  el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Selecione…</option>${opts}`;
+  el.innerHTML = `<option value="" ${last?'':'selected'} disabled>Códigos/Leis</option>${opts}`;
 }
 
+/* =================== Cache de sessão do parse =================== */
+function cacheKey(codeId){ return 'dl_cache_v1_' + codeId; }
+function tryLoadFromCache(codeId){
+  try{ const s = sessionStorage.getItem(cacheKey(codeId)); return s ? JSON.parse(s) : null; }catch{ return null; }
+}
+function saveToCache(codeId, data){
+  try{ sessionStorage.setItem(cacheKey(codeId), JSON.stringify(data)); }catch{}
+}
+
+/* =================== Load de código TXT =================== */
 async function tryLoadCodeTxt(codeId){
   const path = state.codePaths && state.codePaths[codeId];
   if (!path) throw new Error('Arquivo .txt do código não encontrado.');
@@ -252,9 +328,16 @@ async function tryLoadCodeTxt(codeId){
 async function ensureCodeLoaded(codeId){
   if (state.codigo===codeId && state.artigosData) return;
   state.codigo = codeId;
-  state.artigosData = await tryLoadCodeTxt(codeId);
-  state.artigosIndex = Object.values(state.artigosData);
 
+  const cached = tryLoadFromCache(codeId);
+  if (cached){
+    state.artigosData = cached;
+  }else{
+    state.artigosData = await tryLoadCodeTxt(codeId);
+    saveToCache(codeId, state.artigosData);
+  }
+
+  state.artigosIndex = Object.values(state.artigosData);
   // índices normalizados para autocomplete/busca
   state.artigosIndex.forEach(n=>{
     n._nt = norm(n.titulo||'');           // ex.: "art 121 a"
@@ -590,9 +673,15 @@ if (appEls.newsSearch) appEls.newsSearch.addEventListener('input', renderNewsLis
 
 async function ensureVocabLoaded(){
   if (state.vocab.data.length) return;
-  try{ const data = await getJSON('content/vocabulario.json'); state.vocab.data = Array.isArray(data) ? data : (data.items || []); state.vocab.data = state.vocab.data.map(x=>({ titulo: x.titulo||'', texto: x.texto||'', temas: Array.isArray(x.temas)?x.temas.slice(0,3):[] })); }
-  catch{ state.vocab.data = []; }
-  finally{ appEls.vocabList.classList.remove('skeleton'); }
+  try{
+    const data = await getJSON('content/vocabulario.json');
+    state.vocab.data = Array.isArray(data) ? data : (data.items || []);
+    state.vocab.data = state.vocab.data.map(x=>({ titulo: x.titulo||'', texto: x.texto||'', temas: Array.isArray(x.temas)?x.temas.slice(0,3):[] }));
+  }catch{
+    state.vocab.data = [];
+  }finally{
+    appEls.vocabList.classList.remove('skeleton');
+  }
 }
 function renderVocabList(){
   const q = norm(appEls.vocabSearch.value||'');
@@ -630,14 +719,24 @@ function buildVocabPrompt(sel){
   return `Gere um material didático rápido e profundo para revisar os temas abaixo, com foco em doutrina, jurisprudência majoritária e prática forense; inclua exemplos, checklist e pegadinhas de prova. Seja objetivo e claro.\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
 if (appEls.btnVocabCopy){
-  appEls.btnVocabCopy.addEventListener('click', ()=>{ const prompt = buildVocabPrompt(state.vocab.selected); state.prompt = prompt; showDialog(appEls.modalIA); });
+  appEls.btnVocabCopy.addEventListener('click', ()=>{
+    const prompt = buildVocabPrompt(state.vocab.selected);
+    state.prompt = prompt;
+    showDialog(appEls.modalIA);
+  });
 }
 
 async function ensurePrincLoaded(){
   if (state.princ.data.length) return;
-  try{ const data = await getJSON('content/principios.json'); const arr = Array.isArray(data) ? data : (data.items || []); state.princ.data = arr.map(x=>({ titulo: x.titulo||'', texto: x.texto||'' })); }
-  catch{ state.princ.data = []; }
-  finally{ appEls.princList.classList.remove('skeleton'); }
+  try{
+    const data = await getJSON('content/principios.json');
+    const arr = Array.isArray(data) ? data : (data.items || []);
+    state.princ.data = arr.map(x=>({ titulo: x.titulo||'', texto: x.texto||'' }));
+  }catch{
+    state.princ.data = [];
+  }finally{
+    appEls.princList.classList.remove('skeleton');
+  }
 }
 function renderPrincList(){
   const q = norm(appEls.princSearch.value||'');
@@ -645,7 +744,7 @@ function renderPrincList(){
   const filtered = q ? items.filter(it=> norm(`${it.titulo} ${it.texto}`).includes(q) ) : items;
   const wrap = document.createElement('div'); wrap.className='list';
   if (!filtered.length){ appEls.princList.innerHTML = '<div class="empty">Sem princípios.</div>'; return; }
-  filtered.forEach((it, idx)=>{
+  filtered.forEach((it)=>{
     const row = document.createElement('div'); row.className='list-item';
     const title = document.createElement('div'); title.className='li-title'; title.textContent = it.titulo;
     const body  = document.createElement('div'); body.className='li-text'; body.textContent = it.texto;
@@ -667,7 +766,13 @@ function buildPrincPrompt(sel){
   const blocos = sel.map(x=>`### ${x.titulo}\n${x.texto}`).join('\n\n');
   return `Com base nos princípios abaixo, produza um resumo didático, com: definição, base legal comum, aplicações práticas forenses, jurisprudência majoritária ilustrativa e pegadinhas de prova. Termine com 5 questões objetivas (sem gabarito visível).\n\n${blocos}\n\n💚 direito.love — Gere um novo prompt em https://direito.love`;
 }
-if (appEls.btnPrincCopy){ appEls.btnPrincCopy.addEventListener('click', ()=>{ const prompt = buildPrincPrompt(state.princ.selected); state.prompt = prompt; showDialog(appEls.modalIA); }); }
+if (appEls.btnPrincCopy){
+  appEls.btnPrincCopy.addEventListener('click', ()=>{
+    const prompt = buildPrincPrompt(state.princ.selected);
+    state.prompt = prompt;
+    showDialog(appEls.modalIA);
+  });
+}
 
 /* ====== Autocomplete ====== */
 function acClose(){ state.ac.open=false; state.ac.activeIndex=-1; appEls.acPanel.hidden=true; appEls.acPanel.innerHTML=''; }
@@ -806,7 +911,12 @@ function bind(){
     if (state.ac.open && (e.key==='ArrowDown' || e.key==='ArrowUp')){ e.preventDefault(); const delta = e.key==='ArrowDown'?1:-1; acSetActive(state.ac.activeIndex + delta); }
     if (e.key==='Escape'){ acClose(); }
   });
-  appEls.inpArtigo.addEventListener('input', ()=>{ const q = appEls.inpArtigo.value; if (q.trim().length<1){ acClose(); return; } const items = acCompute(q); if (items.length){ acOpen(items); } else { acClose(); } });
+  appEls.inpArtigo.addEventListener('input', ()=>{
+    const q = appEls.inpArtigo.value;
+    if (q.trim().length<1){ acClose(); return; }
+    const items = acCompute(q);
+    if (items.length){ acOpen(items); } else { acClose(); }
+  });
   document.addEventListener('click', (e)=>{ if (!appEls.acPanel.contains(e.target) && e.target!==appEls.inpArtigo){ acClose(); } });
 
   if (appEls.btnClear) appEls.btnClear.addEventListener('click', resetAll);
@@ -838,11 +948,19 @@ function bind(){
     if (e.key==='Escape'){ e.preventDefault(); appEls.btnFechar.click(); }
   });
 
-  // lembrar último código
-  appEls.selCodigo.addEventListener('change', async ()=>{ const v = appEls.selCodigo.value; if (v){ localStorage.setItem('dl_last_code', v); await ensureCodeLoaded(v); } });
+  // lembrar último código + carregamento
+  appEls.selCodigo.addEventListener('change', async ()=>{
+    const v = appEls.selCodigo.value;
+    if (v){
+      localStorage.setItem('dl_last_code', v);
+      await ensureCodeLoaded(v);
+    }
+  });
 
   // favoritos (modal)
-  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{ a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); }); });
+  document.querySelectorAll('.side-link[data-target="modalFavs"]').forEach(a=>{
+    a.addEventListener('click', (e)=>{ e.preventDefault(); openFavoritesModal(); });
+  });
   appEls.favScope && appEls.favScope.addEventListener('change', renderFavList);
 
   // mini-modal Estudar Rápido
@@ -855,11 +973,23 @@ function bind(){
 
 async function initCodes(){
   try{
-    const codes = await autoDiscoverCodes();
-    renderCodeSelect(codes);
+    ensureSelectPlaceholder();            // "Carregando Códigos…" + disable
+    await autoDiscoverCodes();            // adiciona opções conforme encontra
+    finalizeSelectPlaceholder();          // troca para "Códigos/Leis" + enable
+
     const last = localStorage.getItem('dl_last_code');
-    if (last){ await ensureCodeLoaded(last); }
-  }catch(e){ console.warn('Falha ao descobrir códigos', e); }
+    if (last){
+      appEls.selCodigo.value = last;
+      await ensureCodeLoaded(last);
+    }
+  }catch(e){
+    console.warn('Falha ao descobrir códigos', e);
+    const ph = appEls.selCodigo.querySelector('option[value=""]');
+    if (ph) ph.textContent = 'Não foi possível carregar';
+    appEls.selCodigo.removeAttribute('aria-busy');
+    appEls.selCodigo.removeAttribute('disabled');
+  }
 }
+
 function start(){ bind(); initCodes(); switchView('chips'); }
 document.addEventListener('DOMContentLoaded', start);
