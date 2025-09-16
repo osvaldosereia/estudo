@@ -31,6 +31,8 @@
       --soft:#f6f7fb;
 
       --wrap-max: 860px;   /* largura máxima no desktop */
+
+      --yellow:#f5c518;    /* amarelo da estrela */
     }
 
     *{box-sizing:border-box}
@@ -49,6 +51,7 @@
       display:flex; align-items:center; justify-content:center;
       background:var(--soft); color:#111; z-index:100; box-shadow:0 1px 0 var(--line);
     }
+    .topbar[hidden]{display:none;}
     .topbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; justify-content:space-between;
@@ -72,6 +75,7 @@
       background:#fff; z-index:99; box-shadow:0 1px 0 var(--line);
       display:flex; align-items:center; justify-content:center;
     }
+    .searchbar[hidden]{display:none;}
     .searchbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; gap:8px; padding:6px 10px;
@@ -83,7 +87,8 @@
     }
     .iconbtn:hover{ transform:translateY(-1px); }
     .iconbtn:active{ transform:translateY(0); }
-    .iconbtn.danger{ color:#a33; }
+    .iconbtn[disabled]{opacity:.5; cursor:not-allowed;}
+    .iconbtn.on{ color:var(--yellow); border-color:#edd87a; }
 
     .search{flex:1; display:flex; align-items:center; gap:8px; min-width:0}
     .search input{
@@ -114,7 +119,7 @@
 
     /* Placeholder inicial — só logo + botão central */
     .hero{
-      min-height:calc(100dvh - var(--topbar-h)); 
+      min-height:100dvh; 
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     }
     .hero .hero-logo{ height:56px; }
@@ -150,6 +155,7 @@
       cursor:pointer; font-size:13px; line-height:1;
     }
     .act-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .act-btn.star.on{ color:var(--yellow); border-color:#edd87a; }
 
     .art-body { font-size:12px; line-height:1.45; }
     article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
@@ -197,8 +203,8 @@
   </style>
 </head>
 <body>
-  <!-- TOP BAR -->
-  <header class="topbar">
+  <!-- TOP BAR (oculta na home) -->
+  <header class="topbar" id="topbar" hidden>
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Clique para reiniciar">
       <div class="top-actions">
@@ -217,7 +223,8 @@
         <div class="spinner" id="spinner" hidden></div>
       </div>
       <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
-      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
+      <!-- ⭐ Favoritos globais -->
+      <button class="iconbtn" id="favViewBtn" title="Favoritos" aria-label="Favoritos">☆</button>
     </div>
   </div>
 
@@ -276,7 +283,7 @@
   <!-- TOAST -->
   <div class="toast" id="toast">✅ Copiado!</div>
 
-  <!-- MODAL DE I.A. (mesmo de sempre) -->
+  <!-- MODAL: Seletor de Arquivos -->
   <div class="sheet" id="pickerSheet" hidden aria-hidden="true" role="dialog" aria-modal="true">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-panel" role="document">
@@ -318,22 +325,22 @@
       });
     }
 
-    /* =================== PWA Install Button (sem botão visível) =================== */
+    /* =================== PWA Install Prompt (sem botão visível) =================== */
     let deferredPrompt;
     window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
 
     /* =================== Refs =================== */
     const els = {
-      brandBtn: document.getElementById('brandBtn'),
-
       // topo e busca
+      topbar: document.getElementById('topbar'),
+      brandBtn: document.getElementById('brandBtn'),
       topSearch: document.getElementById('topSearch'),
       searchInput: document.getElementById('searchInput'),
       prevBtn: document.getElementById('prevBtn'),
       nextBtn: document.getElementById('nextBtn'),
       spinner: document.getElementById('spinner'),
       count: document.getElementById('count'),
-      resetBtn: document.getElementById('resetBtn'),
+      favViewBtn: document.getElementById('favViewBtn'),
 
       // layout central
       articles: document.getElementById('articles'),
@@ -363,7 +370,7 @@
       articles: [],
       currentArticleIdx: -1,
 
-      currentMode: 'idle',
+      currentMode: 'idle',       // 'idle' | 'file' | 'favs'
       currentList: [],
       currentTokens: [],
 
@@ -372,7 +379,11 @@
 
       cache: new Map(),
       urlToLabel: new Map(),
+
+      favs: new Map(), // key => fav object
     };
+
+    const FAVS_KEY = 'dl_favs_v1';
 
     /* =================== Utils UI =================== */
     function showToast(msg='✅ Pronto!'){
@@ -394,6 +405,52 @@
       els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
     }
 
+    function updateFavStarUI(){
+      const has = state.favs.size > 0;
+      els.favViewBtn.disabled = !has;
+      els.favViewBtn.classList.toggle('on', has);
+      els.favViewBtn.textContent = has ? '★' : '☆';
+    }
+
+    /* =================== Favoritos (LocalStorage) =================== */
+    function favKey(fileUrl, htmlId){ return `${fileUrl}|${htmlId}`; }
+    function loadFavs(){
+      try{
+        const raw = localStorage.getItem(FAVS_KEY);
+        const obj = raw ? JSON.parse(raw) : {};
+        state.favs = new Map(Object.entries(obj));
+      }catch{ state.favs = new Map(); }
+      updateFavStarUI();
+    }
+    function saveFavs(){
+      const obj = Object.fromEntries(state.favs);
+      localStorage.setItem(FAVS_KEY, JSON.stringify(obj));
+      updateFavStarUI();
+    }
+    function isFav(fileUrl, htmlId){
+      return state.favs.has(favKey(fileUrl, htmlId));
+    }
+    function toggleFav(a){
+      const key = favKey(a._fileUrl, a.htmlId);
+      if (state.favs.has(key)){
+        state.favs.delete(key);
+      } else {
+        // Guardamos texto e título para poder renderizar sem reabrir arquivo
+        const split = a._split || splitBlockSupraTitleBody(a.text || '');
+        state.favs.set(key, {
+          fileUrl: a._fileUrl,
+          fileLabel: a._fileLabel || state.currentFileLabel || 'Documento',
+          htmlId: a.htmlId,
+          title: split.titleText || a.title || 'Artigo',
+          text: a.text || '',
+        });
+      }
+      saveFavs();
+
+      // Se estiver na tela de favoritos, recarrega a visão
+      if (state.currentMode === 'favs') openFavoritesView();
+    }
+
     /* =================== Normalização =================== */
     function norm(s){
       return (s||'')
@@ -407,7 +464,7 @@
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
 
-    /* =================== Parser (inalterado) =================== */
+    /* =================== Parser (inalterado, com correção) =================== */
     function splitBlockSupraTitleBody(raw){
       const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
       const artIdx = lines.findIndex(line =>
@@ -480,7 +537,7 @@
         let chunk = txt.slice(from, to).trimEnd();
 
         const endDot = chunk.lastIndexOf('.');
-               const endPar = chunk.lastIndexOf(')');
+        const endPar = chunk.lastIndexOf(')');
         const end    = Math.max(endDot, endPar);
         if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
@@ -510,7 +567,7 @@
     }
     function parsePrincipios(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean); // ← correção
       const out = [];
       parts.forEach((block, i)=>{
         const lines = block.split('\n').map(l=>l.trim());
@@ -538,7 +595,7 @@
           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
     }
 
-    /* =================== Render (layout + dois botões) =================== */
+    /* =================== Render =================== */
     function renderArticles(list, {globalMode=false}={}){
       const frag = document.createDocumentFragment();
       list.forEach((a, i)=>{
@@ -574,11 +631,28 @@
 
         const actions = document.createElement('div');
         actions.className = 'art-actions';
+
         const copyBtn = document.createElement('button');
-        copyBtn.className = 'act-btn'; copyBtn.title = 'Copiar artigo'; copyBtn.dataset.action = 'copy'; copyBtn.textContent = '📋';
+        copyBtn.className = 'act-btn'; 
+        copyBtn.title = 'Copiar artigo'; 
+        copyBtn.dataset.action = 'copy'; 
+        copyBtn.textContent = '📋';
+
         const iaBtn = document.createElement('button');
-        iaBtn.className = 'act-btn'; iaBtn.title = 'Estudar com I.A.'; iaBtn.dataset.action = 'study'; iaBtn.textContent = '✨';
-        actions.append(copyBtn, iaBtn);
+        iaBtn.className = 'act-btn'; 
+        iaBtn.title = 'Estudar com I.A.'; 
+        iaBtn.dataset.action = 'study'; 
+        iaBtn.textContent = '✨';
+
+        const starBtn = document.createElement('button');
+        starBtn.className = 'act-btn star';
+        starBtn.title = 'Favoritar';
+        starBtn.dataset.action = 'fav';
+        const favOn = isFav(a._fileUrl || state.currentFileUrl || '', a.htmlId);
+        starBtn.classList.toggle('on', favOn);
+        starBtn.textContent = favOn ? '★' : '☆';
+
+        actions.append(copyBtn, iaBtn, starBtn);
 
         head.append(titleSpan, actions);
         el.appendChild(head);
@@ -605,7 +679,7 @@
 
       els.articles.innerHTML = '';
       if (list.length){ els.articles.appendChild(frag); }
-      else { els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</div>'; }
+      else { els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos.</div>'; }
 
       state.currentList = list;
       updateCurrentOutline();
@@ -616,10 +690,10 @@
     }
 
     function clearMarksAndRerender(){
-      renderArticles(state.currentList || [], { globalMode: false });
+      renderArticles(state.currentList || [], { globalMode: state.currentMode === 'favs' });
     }
 
-    /* =================== Destaque (inalterado) =================== */
+    /* =================== Destaque =================== */
     function highlightTokens(art, tokens){
       const parts = ['.art-title', '.art-body', '.supra > div'];
       parts.forEach(sel=>{
@@ -705,7 +779,12 @@
       try{
         const txt = await fetchTextCached(url);
         state.rawText = txt;
-        const list = parseByUrl(url, txt);
+        const list = parseByUrl(url, txt).map((a,i)=>({
+          ...a,
+          _fileUrl: url,
+          _fileLabel: state.urlToLabel.get(url) || 'Documento',
+          htmlId: a.htmlId || `art-${i}`
+        }));
         state.currentFileUrl = url;
         state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
         state.articles = list;
@@ -713,7 +792,8 @@
 
         // liga UI de “modo arquivo”
         els.hero?.remove();
-        document.getElementById('topSearch').hidden = false;
+        els.topbar.hidden = false;
+        els.topSearch.hidden = false;
         els.openPickerTop.hidden = false;
 
         renderArticles(list, {globalMode:false});
@@ -723,6 +803,55 @@
         els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
       }
       setBusy(false);
+    }
+
+    /* =================== FAVORITOS: visão global =================== */
+    function buildArticlesFromFavs(){
+      const items = Array.from(state.favs.values());
+      // Agrupa por arquivo
+      const byFile = new Map();
+      for (const it of items){
+        if (!byFile.has(it.fileUrl)) byFile.set(it.fileUrl, { label: it.fileLabel, items: [] });
+        byFile.get(it.fileUrl).items.push(it);
+      }
+      // Monta lista final
+      const list = [];
+      Array.from(byFile.entries()).sort((a,b)=> a[1].label.localeCompare(b[1].label,'pt-BR')).forEach(([fileUrl, group])=>{
+        group.items.forEach((it, idx)=>{
+          const text = it.text || '';
+          const split = splitBlockSupraTitleBody(text);
+          list.push({
+            title: it.title || split.titleText || 'Artigo',
+            text,
+            htmlId: `fav-${fileUrl}-${idx}`,
+            _split: split,
+            _fileUrl: fileUrl,
+            _fileLabel: group.label
+          });
+        });
+      });
+      return list;
+    }
+
+    function openFavoritesView(){
+      if (state.favs.size === 0){
+        showToast('Nenhum favorito ainda.');
+        return;
+      }
+      els.topbar.hidden = false;
+      els.topSearch.hidden = false;
+      els.openPickerTop.hidden = false;
+
+      // Reset "arquivo atual" (como solicitado)
+      state.currentFileUrl = null;
+      state.currentFileLabel = 'Escolher código';
+
+      const list = buildArticlesFromFavs();
+      state.articles = list;
+      state.currentMode = 'favs';
+
+      renderArticles(list, {globalMode:true});
+      window.scrollTo({top:0, behavior:'instant'});
     }
 
     /* =================== Busca Local (lógica preservada) =================== */
@@ -735,7 +864,7 @@
 
       setBusy(true);
 
-      renderArticles(state.articles, { globalMode: false });
+      renderArticles(state.articles, { globalMode: state.currentMode === 'favs' });
 
       state.matchArticles = [];
       const articles = document.querySelectorAll('article');
@@ -824,12 +953,12 @@
       document.removeEventListener('keydown', onPickerKey);
     }
     function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
-    document.getElementById('pickerSheet').addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
+    els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
     els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
 
     // Ações abrir picker
-    document.getElementById('openPickerTop').addEventListener('click', openPicker);
-    document.getElementById('openPickerHero').addEventListener('click', openPicker);
+    els.openPickerTop.addEventListener('click', openPicker);
+    els.openPickerHero.addEventListener('click', openPicker);
 
     /* =================== IA prompt =================== */
     function buildPrompt(a){
@@ -856,14 +985,14 @@
 
     function openModal(title){
       els.modalTitle.textContent = `Estude o ${title} com I.A.`;
-      document.getElementById('modalBackdrop').hidden = false;
-      document.getElementById('modalBackdrop').setAttribute('aria-hidden','false');
+      els.modalBackdrop.hidden = false;
+      els.modalBackdrop.setAttribute('aria-hidden','false');
     }
-    function closeModalSheet(){ document.getElementById('modalBackdrop').hidden = true; document.getElementById('modalBackdrop').setAttribute('aria-hidden','true'); }
+    function closeModalSheet(){ els.modalBackdrop.hidden = true; els.modalBackdrop.setAttribute('aria-hidden','true'); }
     els.closeModal.addEventListener('click', closeModalSheet);
-    document.getElementById('modalBackdrop').addEventListener('click', (e)=>{ if (e.target === e.currentTarget || e.target.hasAttribute('data-close')) closeModalSheet(); });
+    els.modalBackdrop.addEventListener('click', (e)=>{ if (e.target === e.currentTarget || e.target.hasAttribute('data-close')) closeModalSheet(); });
 
-    /* =================== Controles busca & navegação (sem botão Buscar) =================== */
+    /* =================== Controles busca & navegação =================== */
     els.searchInput.addEventListener('keydown', (e)=>{
       if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
       else if (e.key === 'Escape'){ e.preventDefault(); resetAll(); }
@@ -885,8 +1014,8 @@
       updateCount();
     });
 
-    els.resetBtn.addEventListener('click', resetAll);
-    els.brandBtn.addEventListener('click', resetAll);
+    // Estrela da barra: abre Favoritos
+    els.favViewBtn.addEventListener('click', openFavoritesView);
 
     // Delegação de eventos dos botões de cada artigo
     els.articles.addEventListener('click', async (e)=>{
@@ -908,9 +1037,18 @@
         document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
         artEl.classList.add('highlight-study');
       }
+      if (btn.dataset.action === 'fav'){
+        // alterna favorito
+        toggleFav(a);
+        // atualiza ícone do próprio botão
+        const on = isFav(a._fileUrl || '', a.htmlId);
+        btn.classList.toggle('on', on);
+        btn.textContent = on ? '★' : '☆';
+        showToast(on ? '⭐ Adicionado aos favoritos' : '⭐ Removido dos favoritos');
+      }
     });
 
-    /* =================== Reset =================== */
+    /* =================== Reset (volta para home limpa) =================== */
     function resetAll(){
       state.currentFileUrl = null;
       state.rawText = '';
@@ -924,8 +1062,9 @@
       els.searchInput.value = '';
       updateCount();
 
-      // volta UI inicial
-      document.getElementById('topSearch').hidden = true;
+      // volta UI inicial (sem topbar e sem barra de busca)
+      els.topbar.hidden = true;
+      els.topSearch.hidden = true;
       els.openPickerTop.hidden = true;
 
       els.articles.innerHTML = `
@@ -941,8 +1080,12 @@
     /* =================== Boot =================== */
     document.addEventListener('DOMContentLoaded', ()=>{
       buildCatalogMaps();
+      loadFavs();
       resetAll();
     });
+
+    // Logo volta para a home
+    els.brandBtn.addEventListener('click', resetAll);
   </script>
 </body>
 </html>
