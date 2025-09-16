@@ -5,107 +5,1141 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
 
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#142B6F">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
   <style>
     :root{
+      --white:#FFFFFF;
       --navy:#142B6F;
+      --yellow:#FFD601;
       --muted:#5f6470;
-      --focus:#9bb6ff;
+
       --bg:#f4f6f8;
       --fg:#101418;
-      --radius:10px;
-      --shadow:0 2px 8px rgba(0,0,0,.08);
+
+      --bar-info-bg:#f0f1f5;
+      --bar-bg:#ffffff;
+      --bar-bg-2:#142B6F;
+
+      --topbar-h: 54px;
+      --progress-h: 8px;
+      --bottom-info-h: 44px;
+      --bottom-search-h: 52px;
+      --bottom-study-h: 56px;
+
+      --focus:#9bb6ff;
+      --radius:12px;
+      --shadow:0 2px 10px rgba(0,0,0,.06);
+      --accent: rgba(255,214,1,.2);
+
+      /* UI v2 */
+      --dock-h: 64px;
     }
 
-    body{margin:0;font:15px/1.6 system-ui;background:var(--bg);color:var(--fg);}
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      background:var(--bg); color:var(--fg);
+      font:15px/1.58 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      max-width:100%; overflow-x:hidden;
+    }
+    button,input,select{font:inherit}
 
     /* Topo */
-    header{
-      position:fixed;top:0;left:0;right:0;
-      height:54px;display:flex;align-items:center;justify-content:center;
-      background:var(--navy);color:#fff;z-index:100;box-shadow:var(--shadow);
+    .topbar{
+      position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
+      display:flex; align-items:center; justify-content:center;
+      background:var(--navy); color:#fff; z-index:100; box-shadow:var(--shadow);
     }
-    header img{height:40px;}
+    .topbar-inner{
+      width:clamp(320px, 92vw, 960px);
+      padding:0 12px; display:flex; align-items:center; justify-content:center;
+    }
+    .brand{ height:45px; width:auto; object-fit:contain; display:block; cursor:pointer; }
+    .brand:focus{outline:2px solid #fff; outline-offset:2px}
 
-    main{padding:70px 16px 90px;max-width:680px;margin:0 auto;}
+    /* Barra de progresso */
+    .progress{
+      position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--progress-h); z-index:95;
+      background:transparent;
+    }
+    .progress .bar{
+      height:100%; width:0%; background:linear-gradient(90deg, #FFD601, #E1DEE6);
+      transition:width .2s ease;
+    }
+    .progress[hidden]{display:none}
 
+    /* Conteúdo */
+    .content{
+      position:relative;
+      padding: calc(var(--topbar-h) + var(--progress-h) + 14px) 0 calc(var(--bottom-info-h) + var(--bottom-search-h) + var(--bottom-study-h) + 24px);
+      min-height:100dvh;
+    }
+    /* UI v2 ajusta o padding inferior para a dock */
+    body[data-ui="v2"] .content{
+      padding-bottom: calc(var(--dock-h) + 18px);
+    }
+
+    .container{ width:clamp(320px, 92vw, 960px); margin:0 auto; padding:0 12px }
+    .placeholder{
+      padding:24px; border:1px dashed #dcdfea; border-radius:var(--radius);
+      color:var(--muted); background:#fafbff; text-align:center;
+    }
+    .placeholder p{ font-size:1.08rem; line-height:1.65; margin:0 }
+
+    /* Artigos (aparência v1) */
     article{
-      background:#fff;margin:16px 0;padding:16px;border-radius:var(--radius);
-      box-shadow:var(--shadow);
+      white-space:pre-wrap; border-bottom:1px solid #eef0f6;
+      padding:18px 10px; scroll-margin: 92px; border-radius:10px;
+      overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
+      background:transparent;
     }
-    .art-title{font-weight:700;font-size:1rem;margin-bottom:8px;}
-    .art-body{font-size:.9rem;line-height:1.5;}
+    .supra{ color:#6c7282; font-weight:500; font-size:12px; margin-bottom:6px; }
+    .supra div{ line-height:1.35 }
+    .art-title{ display:block; font-weight:800; color:#0e1638; margin:0 0 6px; font-size:13px }
+    .art-body { font-size: 12px; line-height: 1.45; }
+    article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
+    article.highlight-study{ background:var(--accent) }
+    mark{padding:0 2px; border-radius:3px; background:#ffef99}
 
-    .actions{margin-top:12px;display:flex;gap:8px;}
-    .actions button{
-      flex:1;padding:6px 10px;font-size:.8rem;font-weight:600;
-      border:1px solid #cfd4e2;border-radius:var(--radius);
-      background:#f7f8fc;cursor:pointer;
+    /* Melhorias visuais em v2: cards para artigos */
+    body[data-ui="v2"] article{
+      background:#fff; border:1px solid #eef0f6; border-radius:12px;
+      margin:14px 0; box-shadow:var(--shadow);
     }
-    .actions button:focus{outline:2px solid var(--focus);}
+    body[data-ui="v2"] .art-title{ font-size:15px; }
+    body[data-ui="v2"] .art-body{ font-size:13px; line-height:1.6; }
 
-    /* Dock único */
+    /* Barra INFO (v1) */
+    .bottom-info{
+      position:fixed; left:0; right:0; bottom:calc(var(--bottom-search-h) + var(--bottom-study-h));
+      height:var(--bottom-info-h);
+      background:var(--bar-info-bg);
+      box-shadow:0 -2px 6px rgba(0,0,0,.08);
+      z-index:72; display:flex; align-items:center; justify-content:center;
+    }
+    .bottom-info-inner{
+      width:clamp(320px, 92vw, 960px);
+      display:flex; align-items:center; justify-content:center; padding:8px 12px;
+    }
+    .file-indicator{
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:600; color:#142B6F;
+      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb;
+      padding:6px 12px; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.05);
+      cursor:pointer; text-align:center; transition: background .2s, border .2s, transform .1s, box-shadow .2s;
+    }
+    .file-indicator:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
+    .file-indicator:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
+    .file-indicator:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+
+    /* Barra BUSCA (v1) */
+    .bottom-search{
+      position:fixed; left:0; right:0; bottom:var(--bottom-study-h);
+      height:var(--bottom-search-h);
+      background:var(--bar-bg);
+      z-index:70; display:flex; align-items:center; justify-content:center;
+    }
+    .bottom-search-inner{
+      width:clamp(320px, 92vw, 960px);
+      display:flex; align-items:center; gap:6px; padding:6px 10px;
+    }
+    .iconbtn{
+      width:28px; height:28px; display:grid; place-items:center; cursor:pointer; user-select:none;
+      font-size:13px; line-height:1; border-radius:8px;
+      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; box-shadow:0 1px 2px rgba(0,0,0,.05);
+      transition: background .2s, border .2s, transform .1s, box-shadow .2s;
+    }
+    .iconbtn:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
+    .iconbtn:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
+    .iconbtn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .iconbtn.danger{ border-color:#f5b5b5; color:#a33; }
+
+    .search{flex:1; display:flex; align-items:center; gap:8px; min-width:0}
+    .search input{
+      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:8px; padding:0 14px; background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s;
+    }
+    .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
+
+    .spinner{width:18px; height:18px; border:2px solid #e2e5f2; border-top-color:#142B6F; border-radius:50%;
+      animation:spin 1s linear infinite; flex:0 0 18px}
+    .spinner[hidden]{display:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .result-count{
+      min-width:52px; font-size:11px; color:#6c7282; border:1px solid #e2e5f2;
+      background:#f7f8fc; padding:4px 8px; border-radius:6px; text-align:center;
+    }
+
+    /* Barra ESTUDAR (v1) */
+    .bottom-study{
+      position:fixed; left:0; right:0; bottom:0; height:var(--bottom-study-h);
+      background:var(--bar-bg-2);
+      z-index:75; display:flex; align-items:center; justify-content:center; padding:8px 0;
+    }
+    .bottom-study-inner{
+      width:clamp(320px, 92vw, 960px); padding:6px 12px; display:flex; align-items:center; gap:10px;
+    }
+    .study,.do-search{
+      display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#142B6F;
+      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; padding:6px 12px; border-radius:10px;
+      box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; text-align:center; transition: background .2s, border .2s, transform .1s, box-shadow .2s;
+    }
+    .study:hover,.do-search:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
+    .study:active,.do-search:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
+    .study:focus,.do-search:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+
+    /* Modal IA */
+    .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.28); z-index:120; }
+    .modal{ background:#fff; border-radius:16px; width:clamp(320px, 60vw, 440px); max-width:90vw; padding:18px; border:1px solid #eceef7; box-shadow: var(--shadow); max-height:calc(100vh - 48px); overflow:auto; }
+    .modal h3{ margin:0 0 8px; color:#0f173a; font-size:1.05rem; font-weight:600; }
+    .modal .subtitle{ margin:0 0 14px; font-size:.92rem; color:#666; font-weight:400; }
+    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ia-btn{ display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border:1px solid #e6e8f2; background:#f6f7fb; border-radius:12px; cursor:pointer; text-decoration:none; color:#111; font-weight:500; transition: background .2s, border .2s, transform .15s; }
+    .ia-btn:hover{ background:#eef1fb; border-color:#c3cff5; transform:translateY(-2px); }
+    .ia-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .ia-btn:active{ transform:scale(0.98); }
+    .modal .foot{ margin-top:12px; display:flex; justify-content:flex-end; }
+    .modal .close-btn{ padding:8px 12px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; cursor:pointer; }
+
+    /* Toast */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:calc(var(--bottom-study-h) + var(--bottom-search-h) + var(--bottom-info-h) + 14px);
+      background:#111; color:#fff; padding:8px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:200
+    }
+    .toast.show{opacity:1}
+    /* Toast posição em v2 */
+    body[data-ui="v2"] .toast{
+      bottom:calc(var(--dock-h) + 14px);
+    }
+
+    /* Sheet (picker) */
+    .sheet{ position:fixed; inset:0; z-index:120; }
+    .sheet[hidden]{ display:none; }
+    .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.32); }
+    .sheet-panel{
+      position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0;
+      max-height:80vh; display:flex; flex-direction:column; padding-bottom:max(8px, env(safe-area-inset-bottom)); box-shadow:0 -8px 24px rgba(0,0,0,.12);
+    }
+    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eceef2; }
+    .sheet-title{ color:#0e1638; font-weight:800; }
+    .sheet-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
+    .sheet-search{ padding:10px 16px; }
+    .sheet-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
+    .sheet-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
+    .sheet-body{ overflow:auto; padding:8px 12px 12px; }
+    .list-section{ padding:6px 0; }
+    .list-section h4{ font-size:14px; letter-spacing:.4px; font-weight:700; color:#052373; margin:6px 2px 4px; text-transform:uppercase; }
+    .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; }
+    .item b{ font-weight:400; color:#0e1638; }
+    .item small{ color:#6c7282; }
+    .item:hover, .item:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .highlight{ background:#ffef99; border-radius:3px; }
+
+    /* -------- Dock (UI v2) -------- */
     .dock{
-      position:fixed;left:0;right:0;bottom:0;height:64px;
-      background:#fff;display:flex;align-items:center;gap:8px;
-      padding:8px 12px;box-shadow:0 -2px 6px rgba(0,0,0,.08);z-index:200;
-      padding-bottom:calc(8px + env(safe-area-inset-bottom));
+      position:fixed; left:0; right:0; bottom:0; height:var(--dock-h);
+      background:var(--bar-bg); z-index:120;
+      box-shadow:0 -2px 6px rgba(0,0,0,.08);
+      padding:8px 0; padding-bottom:max(8px, env(safe-area-inset-bottom));
+      display:none; /* só exibe em v2 */
     }
-    .dock .file-btn{
-      flex:0 0 auto;padding:6px 10px;border-radius:var(--radius);
-      border:1px solid #cfd4e2;background:#f7f8fc;font-size:.8rem;
+    body[data-ui="v2"] .dock{ display:block; }
+    .dock-inner{
+      width:clamp(320px, 92vw, 960px);
+      margin:0 auto; padding:0 12px;
+      display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center;
     }
-    .dock .search{flex:1;display:flex;align-items:center;}
-    .dock input{
-      flex:1;height:40px;border:1px solid #cfd4e2;border-radius:var(--radius);
-      padding:0 12px;font-size:.9rem;
+    .dock-search{
+      display:grid; grid-template-columns:20px 1fr auto auto; gap:8px; align-items:center;
+      height:40px; border:1px solid #cfd4e2; border-radius:10px; background:#fff; padding:0 10px;
     }
-    .dock input:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0 2px rgba(155,182,255,.35);}
-    .dock .nav-btn{
-      width:40px;height:40px;border-radius:var(--radius);
-      border:1px solid #cfd4e2;background:#f7f8fc;font-size:1rem;
-      display:flex;align-items:center;justify-content:center;cursor:pointer;
+    .dock-icon{font-size:14px; opacity:.7;}
+    .dock-search input{
+      border:0; height:36px; outline:none; font:inherit; width:100%;
+    }
+    .dock-search .chip{
+      font-size:11px; color:#6c7282; border:1px solid #e2e5f2; background:#f7f8fc;
+      padding:4px 8px; border-radius:6px;
+    }
+    .dock-actions{ display:flex; gap:8px; }
+    .dock .iconbtn{ width:36px; height:36px; border-radius:10px; }
+    .dock .study{
+      padding:8px 10px; border-radius:10px;
+      background:linear-gradient(#ffffff, #f3f6ff);
+      border:2px solid #b9cffb; color:#142B6F; font-size:13px; font-weight:600;
+    }
+    @media (max-width: 680px){
+      .dock-actions #doSearchBtn{ display:none; }
+    }
+
+    /* Responsivo */
+    .select-wrap, #codeSelect{ display:none !important; }
+    @media (max-width: 768px){ .brand{ height:38px; } }
+
+    @media (min-width: 1024px){
+      .file-indicator,.study,.do-search { max-width: 140px; }
+      .bottom-search-inner .search{ flex:1; }
+      .bottom-search-inner .search input{ flex:1; max-width:none; }
+      .sheet-panel{ width:min(720px,96vw); left:50%; right:auto; transform:translateX(-50%); border-radius:16px; }
+      .sheet-head,.sheet-search,.sheet-body{ padding-left:20px; padding-right:20px; }
+      .modal h3{ font-size:1rem; font-weight:500; letter-spacing:.2px; }
+      .modal .subtitle{ font-size:.85rem; color:#777; font-weight:400; }
+      .ia-btn{ font-size:.92rem; font-weight:400; padding:10px 12px; }
+    }
+
+    /* Esconde barras antigas quando UI v2 */
+    body[data-ui="v2"] #bottomInfo,
+    body[data-ui="v2"] #bottomSearch,
+    body[data-ui="v2"] #bottomStudy{ display:none !important; }
+
+    /* Botão PWA */
+    #installApp{
+      position:fixed;
+      right:20px;
+      bottom:calc(var(--bottom-study-h) + var(--bottom-search-h) + var(--bottom-info-h) + 12px);
+      padding:10px 16px; border-radius:10px; background:#142B6F; color:#fff; border:none;
+      z-index:300; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2)
+    }
+    /* Posição do botão PWA em v2 */
+    body[data-ui="v2"] #installApp{
+      bottom:calc(var(--dock-h) + 12px);
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="icons/logo.png" alt="direito.love">
+  <!-- TOPO COM LOGO CENTRALIZADA -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Clique para reiniciar">
+    </div>
   </header>
 
-  <main>
-    <article>
-      <div class="art-title">Art. 1</div>
-      <div class="art-body">
-        § 1º Texto do artigo.<br>
-        I - Primeiro inciso.<br>
-        a) Primeira alínea.
-      </div>
-      <div class="actions">
-        <button>📄 Copiar link</button>
-        <button>🧠 Estudar com IA</button>
-      </div>
-    </article>
+  <!-- PROGRESS BAR -->
+  <div class="progress" id="progress" hidden>
+    <div class="bar" id="progressBar"></div>
+  </div>
 
-    <article>
-      <div class="art-title">Art. 2</div>
-      <div class="art-body">
-        Texto do artigo 2...
+  <!-- CONTEÚDO -->
+  <main class="content">
+    <div class="container">
+      <div class="articles" id="articles">
+        <div class="placeholder">
+          <p>💚 <strong>Direito.Love</strong></p>
+          <p>Seu <em>Mini Vade Mecum</em><br>que te ajuda a estudar com <strong>I.A.</strong></p>
+        </div>
       </div>
-      <div class="actions">
-        <button>📄 Copiar link</button>
-        <button>🧠 Estudar com IA</button>
-      </div>
-    </article>
+    </div>
   </main>
 
-  <div class="dock">
-    <button class="file-btn">📂 Código</button>
-    <div class="search">
-      <input type="search" placeholder="Buscar no texto…">
+  <!-- CATÁLOGO OCULTO -->
+  <select id="codeSelect" title="Escolher arquivo" style="display:none">
+    <option value="">— selecione —</option>
+    <optgroup label="CF88">
+      <option value="data/CF88/CF88.txt">Constituição Federal 1988</option>
+    </optgroup>
+    <optgroup label="Códigos">
+      <option value="data/codigos/codigo_civil.txt">Código Civil</option>
+      <option value="data/codigos/codigo_processo_civil.txt">Código de Processo Civil</option>
+      <option value="data/codigos/codigo_penal.txt">Código Penal</option>
+      <option value="data/codigos/codigo_processo_penal.txt">Código de Processo Penal</option>
+      <option value="data/codigos/codigo_consumidor.txt">Código de Defesa do Consumidor</option>
+      <option value="data/codigos/codigo_clt.txt">CLT - Consolidação das Leis do Trabalho</option>
+      <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
+    </optgroup>
+    <optgroup label="Leis">
+      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+      <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
+      <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
+      <option value="data/leis/lei_lgpd.txt">Lei LGPD</option>
+      <option value="data/leis/marco_civil_da_internet.txt">Marco Civil da Internet</option>
+      <option value="data/leis/crimes_hediondos.txt">Lei dos Crimes Hediondos</option>
+    </optgroup>
+    <optgroup label="Estatutos">
+      <option value="data/estatutos/eca.txt">ECA - Estatuto da Criança e Adolescente</option>
+      <option value="data/estatutos/estatuto_do_desarmamento.txt">Estatuto do Desarmamento</option>
+      <option value="data/estatutos/estatuto_do_idoso.txt">Estatuto do Idoso</option>
+      <option value="data/estatutos/estatuto_da_juventude.txt">Estatuto da Juventude</option>
+      <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Estatuto da Pessoa com Deficiência</option>
+    </optgroup>
+    <optgroup label="Súmulas">
+      <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
+      <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
+    </optgroup>
+    <optgroup label="Princípios">
+      <option value="data/principios/principios_do_direito.txt">Princípios (Rol Exemplificativo)</option>
+    </optgroup>
+  </select>
+
+  <!-- BARRAS ANTIGAS (placeholders para compat) -->
+  <div class="bottom-info" id="bottomInfo" aria-hidden="true"></div>
+  <div class="bottom-search" id="bottomSearch" aria-hidden="true"></div>
+  <div class="bottom-study" id="bottomStudy" aria-hidden="true"></div>
+
+  <!-- DOCK NOVA (UI v2) -->
+  <div class="dock" id="dock">
+    <div class="dock-inner">
+      <!-- esquerda: seletor de código -->
+      <button class="file-indicator" id="openPicker" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">
+        <span id="fileIndicator">Escolher código</span>
+      </button>
+
+      <!-- centro: busca -->
+      <div class="dock-search">
+        <span class="dock-icon" aria-hidden="true">🔍</span>
+        <input id="searchInput" type="search" placeholder="Buscar…" autocomplete="off" />
+        <div class="spinner" id="spinner" hidden></div>
+        <span class="chip" id="count" title="Ocorrência atual / Total">0/0</span>
+      </div>
+
+      <!-- direita: navegação + ações -->
+      <div class="dock-actions">
+        <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
+        <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
+        <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
+        <button class="study" id="doSearchBtn" title="Executar busca">Buscar</button>
+        <button class="study" id="studyBtn" title="Estudar com I.A.">Estudar com I.A.</button>
+      </div>
     </div>
-    <button class="nav-btn">◀</button>
-    <button class="nav-btn">▶</button>
-    <button class="nav-btn">✕</button>
   </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">✅ Prompt copiado!</div>
+
+  <!-- MODAL DE I.A. -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Prompt copiado!</h3>
+      <p class="subtitle">✅ Prompt pronto! Escolha uma IA e cole para estudar:</p>
+      <div class="ia-grid">
+        <button class="ia-btn" data-url="https://chat.openai.com/">💬 ChatGPT</button>
+        <button class="ia-btn" data-url="https://gemini.google.com/">🧠 Gemini</button>
+        <button class="ia-btn" data-url="https://copilot.microsoft.com/">✨ Copilot</button>
+        <button class="ia-btn" data-url="https://www.perplexity.ai/">🔎 Perplexity</button>
+      </div>
+      <div class="foot">
+        <button class="close-btn" id="closeModal">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SELECTOR (SHEET) -->
+  <div id="pickerSheet" class="sheet" hidden aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="document">
+      <div class="sheet-head">
+        <strong class="sheet-title">Escolher código</strong>
+        <button class="sheet-close" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <div class="sheet-search">
+        <input id="pickerSearch" type="search" placeholder="Buscar…" autocomplete="off" />
+      </div>
+      <div class="sheet-body" id="pickerList" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- BOTÃO DE INSTALAÇÃO (PWA) -->
+  <button id="installApp" hidden>📲 Instalar App</button>
+
+  <script>
+    /* ========= Toggle de UI (v1/v2) ========= */
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      const ui = qs.get('ui') || localStorage.getItem('ui') || 'v2'; // v2 por padrão
+      document.body.dataset.ui = ui;
+      localStorage.setItem('ui', ui);
+    })();
+
+    /* =================== Service Worker =================== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log("✅ Service Worker registrado", reg))
+          .catch(err => console.error("❌ SW falhou", err));
+      });
+    }
+
+    /* =================== PWA Install Button =================== */
+    let deferredPrompt;
+    const installBtn = document.getElementById("installApp");
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener("click", async () => {
+      installBtn.hidden = true;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    });
+
+    /* =================== Refs =================== */
+    const els = {
+      brandBtn: document.getElementById('brandBtn'),
+      progress: document.getElementById('progress'),
+      progressBar: document.getElementById('progressBar'),
+
+      articles: document.getElementById('articles'),
+
+      bottomInfo: document.getElementById('bottomInfo'),
+      bottomSearch: document.getElementById('bottomSearch'),
+      bottomStudy: document.getElementById('bottomStudy'),
+      dock: document.getElementById('dock'),
+
+      openPicker: document.getElementById('openPicker'),
+      fileIndicator: document.getElementById('fileIndicator'),
+
+      searchInput: document.getElementById('searchInput'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      spinner: document.getElementById('spinner'),
+      count: document.getElementById('count'),
+      doSearchBtn: document.getElementById('doSearchBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+
+      studyBtn: document.getElementById('studyBtn'),
+
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      modalTitle: document.getElementById('modalTitle'),
+      closeModal: document.getElementById('closeModal'),
+      toast: document.getElementById('toast'),
+
+      codeSelect: document.getElementById('codeSelect'),
+      pickerSheet: document.getElementById('pickerSheet'),
+      pickerSearch: document.getElementById('pickerSearch'),
+      pickerList: document.getElementById('pickerList'),
+    };
+
+    /* =================== Estado =================== */
+    const state = {
+      currentFileUrl: null,
+      currentFileLabel: 'Escolher código',
+      rawText: '',
+      articles: [],
+      currentArticleIdx: -1,
+
+      currentMode: 'idle',
+      currentList: [],
+      currentTokens: [],
+
+      matchArticles: [],
+      matchIdx: -1,
+
+      progressTimer: null,
+
+      cache: new Map(),
+      urlToLabel: new Map(),
+    };
+
+    /* =================== Utils UI =================== */
+    function showToast(msg='✅ Pronto!'){
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      setTimeout(()=> els.toast.classList.remove('show'), 1000);
+    }
+    function setProgressActive(active){
+      if (active){
+        els.progress.hidden = false;
+        els.progressBar.style.width = '0%';
+        let p = 0;
+        clearInterval(state.progressTimer);
+        state.progressTimer = setInterval(()=>{
+          p = Math.min(85, p + 8 + Math.random()*7);
+          els.progressBar.style.width = p + '%';
+        }, 180);
+      } else {
+        clearInterval(state.progressTimer);
+        els.progressBar.style.width = '100%';
+        setTimeout(()=>{ els.progress.hidden = true; els.progressBar.style.width = '0%'; }, 240);
+      }
+    }
+    function setBusy(isBusy){
+      // mantém compat com v1 e também marca a dock
+      els.bottomSearch?.setAttribute('aria-busy', String(isBusy));
+      els.dock?.setAttribute('aria-busy', String(isBusy));
+      els.doSearchBtn.disabled = isBusy;
+      els.prevBtn.disabled = isBusy;
+      els.nextBtn.disabled = isBusy;
+      els.spinner.hidden = !isBusy;        // 🔥 bolinha girando
+      setProgressActive(isBusy);           // barra superior
+    }
+    function updateCount(){
+      els.count.textContent = (!state.matchArticles || state.matchArticles.length === 0)
+        ? '0/0'
+        : `${state.matchIdx+1}/${state.matchArticles.length}`;
+    }
+    function setFileIndicator(label){
+      const full = (label || 'Escolher código').trim();
+      els.fileIndicator.textContent = full;
+      els.openPicker.title = full;
+    }
+
+    /* =================== Normalização =================== */
+    function norm(s){
+      return (s||'')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/ç/g,'c')
+        .toLowerCase();
+    }
+
+    const sanitizeForLayout = (s)=> s
+      .replace(/\u00A0/g, ' ')
+      .replace(/\t/g, ' ')
+      .replace(/\s+\n/g, '\n');
+
+    /* =================== Parser =================== */
+    function splitBlockSupraTitleBody(raw){
+      const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
+      const artIdx = lines.findIndex(line =>
+        /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line)
+      );
+
+      if (artIdx >= 0){
+        const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+        const titleLine = lines[artIdx];
+
+        const mt = titleLine.match(/^\s*((?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/);
+        let titleText = mt ? mt[1].trim() : titleLine.trim();
+        titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+
+        const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
+        const rest = lines.slice(artIdx+1).join('\n').trimStart();
+        const body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+
+        return { supra, titleText, body };
+      } else {
+        const titleText = (lines[0]||'').trim();
+        const body = lines.slice(1).join('\n').trimStart();
+        return { supra:[], titleText, body };
+      }
+    }
+
+    function parseByDelimiters(txt){
+      const sepRe = /(^|\n)[^\S\r\n]*-{5,}[^\S\r\n]*(?=\n|$)/g;
+      const seps = [];
+      let m;
+      while ((m = sepRe.exec(txt)) !== null) {
+        const idx = m.index + (m[0].startsWith('\n') ? 1 : 0);
+        seps.push(idx);
+      }
+      if (seps.length < 2) return [];
+      const arts = [];
+      for (let i = 0; i + 1 < seps.length; i += 1) {
+        const startLineEnd = txt.indexOf('\n', seps[i]);
+        const from = (startLineEnd === -1) ? txt.length : startLineEnd + 1;
+        const to = seps[i + 1];
+        if (from >= to) continue;
+        const raw = txt.slice(from, to).trim();
+        if (!raw) continue;
+        const split = splitBlockSupraTitleBody(raw);
+        const title = split.titleText || `Bloco ${arts.length + 1}`;
+        arts.push({ title, text: raw, htmlId: `art-${arts.length}`, _split: split });
+      }
+      return arts;
+    }
+
+    function parseByArt(txt){
+      const re = /(^|\n)\s*((?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
+      const starts = [];
+      let m;
+      while ((m = re.exec(txt)) !== null) {
+        const idxArt = re.lastIndex - m[2].length;
+        starts.push(idxArt);
+      }
+      if (!starts.length) return [{
+        title:'Texto',
+        text: txt.trim(),
+        htmlId:'art-0',
+        _split: splitBlockSupraTitleBody(txt.trim())
+      }];
+
+      const arts = [];
+      for (let i = 0; i < starts.length; i++) {
+        const from = starts[i];
+        const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
+        let chunk = txt.slice(from, to).trimEnd();
+
+        const endDot = chunk.lastIndexOf('.');
+               const endPar = chunk.lastIndexOf(')');
+        const end    = Math.max(endDot, endPar);
+        if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
+
+        const split = splitBlockSupraTitleBody(chunk);
+        const title = split.titleText || chunk.split('\n')[0].slice(0,40);
+        arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
+      }
+      return arts;
+    }
+
+    function parseSumulas(txt){
+      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      parts.forEach((block, i)=>{
+        const lines = block.split('\n').map(l=>l.trim());
+        const header = (lines.shift() || 'Súmula').trim();
+        const body = lines.join('\n').trim();
+        out.push({
+          title: header,
+          text: header + (body ? '\n' + body : ''),
+          htmlId: `sumula-${i}`,
+          _split: { supra: [], titleText: header, body }
+        });
+      });
+      return out;
+    }
+    function parsePrincipios(txt){
+      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+      const parts = cleaned split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      parts.forEach((block, i)=>{
+        const lines = block.split('\n').map(l=>l.trim());
+        let header = (lines.shift() || 'Princípio').trim();
+        const reHeader = /^\s*Princ[ií]pio\b/i;
+        if (!reHeader.test(header)){
+          if (lines.length && reHeader.test(lines[0])) header = lines.shift();
+          else header = 'Princípio';
+        }
+        const body = lines.join('\n').trim();
+        out.push({
+          title: header,
+          text: header + (body ? '\n' + body : ''),
+          htmlId: `principio-${i}`,
+          _split: { supra: [], titleText: header, body }
+        });
+      });
+      return out;
+    }
+    function parseByUrl(url, txt){
+      const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
+      const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
+      return isSumulas ? parseSumulas(txt)
+          : isPrincipios ? parsePrincipios(txt)
+          : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
+    }
+
+    /* =================== Render =================== */
+    function renderArticles(list, {globalMode=false}={}){
+      const frag = document.createDocumentFragment();
+      list.forEach((a, i)=>{
+        const el = document.createElement('article');
+        el.dataset.idx = i;
+        el.id = a.htmlId || `art-${i}`;
+
+        const split = a._split || splitBlockSupraTitleBody(a.text);
+
+        const supraWrap = document.createElement('div');
+        supraWrap.className = 'supra';
+
+        if (globalMode && a._fileLabel){
+          const badge = document.createElement('div');
+          badge.textContent = `[${a._fileLabel}]`;
+          supraWrap.appendChild(badge);
+        }
+        if (split.supra && split.supra.length){
+          split.supra.forEach(line=>{
+            const d = document.createElement('div');
+            d.textContent = line;
+            supraWrap.appendChild(d);
+          });
+        }
+        if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'art-title';
+        titleSpan.textContent = split.titleText || a.title || 'Artigo';
+        el.appendChild(titleSpan);
+
+        const content = document.createElement('div');
+        content.className = 'art-body';
+
+        // garante quebra de linha extra antes de §, Parágrafo único, incisos e alíneas
+        let body = split.body || '';
+        body = body
+          .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
+          .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
+          .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
+
+        // converte \n\n em salto real, e o restante em quebra simples
+        content.innerHTML = body
+          .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
+          .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
+          .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
+          .replace(/\n\n/g, '<br>')
+          .replace(/\n/g, '<br>');
+
+        el.appendChild(content);
+        frag.appendChild(el);
+      });
+
+      els.articles.innerHTML = '';
+      if (list.length){
+        els.articles.appendChild(frag);
+      } else {
+        els.articles.innerHTML = '<div class="placeholder"><p>🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</p></div>';
+      }
+
+      // mantém as barras/dock visíveis
+      // (em v2 as antigas estão ocultas por CSS)
+      state.currentList = list;
+      updateCurrentOutline();
+
+      state.matchArticles = [];
+      state.matchIdx = -1;
+      updateCount();
+    }
+
+    function clearMarksAndRerender(){
+      renderArticles(state.currentList || [], { globalMode: false });
+    }
+
+    /* =================== Destaque =================== */
+    function highlightTokens(art, tokens){
+      const parts = ['.art-title', '.art-body', '.supra > div'];
+      parts.forEach(sel=>{
+        art.querySelectorAll(sel).forEach(el=>{
+          const raw = el.textContent;
+          el.innerHTML = raw.replace(/([\p{L}\p{N}]+)/gu, m=>{
+            return tokens.some(t => norm(m).includes(t))
+              ? `<mark>${m}</mark>` 
+              : m;
+          });
+        });
+      });
+    }
+
+    /* =================== Scroll / Outline =================== */
+    function getArticleInView(){
+      const nodes = document.querySelectorAll('article[data-idx]');
+      const cy = window.innerHeight / 2;
+      let hitIdx = -1;
+      for (const el of nodes){
+        const r = el.getBoundingClientRect();
+        if (r.top <= cy && r.bottom >= cy){ hitIdx = Number(el.dataset.idx); break; }
+      }
+      if (hitIdx === -1 && nodes.length){
+        for (const el of nodes){
+          const r = el.getBoundingClientRect();
+          if (r.bottom > 0 && r.top < window.innerHeight){ hitIdx = Number(el.dataset.idx); break; }
+        }
+      }
+      return hitIdx;
+    }
+    function updateCurrentOutline(){
+      const idx = getArticleInView();
+      if (idx === state.currentArticleIdx) return;
+      state.currentArticleIdx = idx;
+      document.querySelectorAll('article.current-outline').forEach(n=>n.classList.remove('current-outline'));
+      if (idx >= 0){
+        document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('current-outline');
+      }
+    }
+    window.addEventListener('scroll', ()=>{ if (state.currentList.length) updateCurrentOutline(); }, {passive:true});
+
+    /* =================== Catálogo (select oculto) =================== */
+    function buildCatalogMaps(){
+      const sel = els.codeSelect;
+      state.urlToLabel.clear();
+      sel.querySelectorAll('option').forEach(opt=>{
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) state.urlToLabel.set(url, label);
+      });
+    }
+    function getGroupsFromSelect(){
+      const sel = els.codeSelect;
+      const groups = [];
+      let current = null;
+      sel.querySelectorAll('optgroup, option').forEach(node=>{
+        if (node.tagName.toLowerCase()==='optgroup'){
+          current = { label: node.label || '', items: [] };
+          groups.push(current);
+        } else if (node.tagName.toLowerCase()==='option'){
+          const label = node.textContent.trim();
+          const value = node.value;
+          if (!label || !current) return;
+          current.items.push({ label, value });
+        }
+      });
+      return groups;
+    }
+
+    /* =================== Loader de arquivo =================== */
+    async function fetchTextCached(url){
+      if (state.cache.has(url)) return state.cache.get(url);
+      const res = await fetch(url, {cache: 'force-cache'});
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const txt = sanitizeForLayout(await res.text());
+      state.cache.set(url, txt);
+      return txt;
+    }
+    async function loadFile(url){
+      if (!url) return;
+      setBusy(true);
+      try{
+        const txt = await fetchTextCached(url);
+        state.rawText = txt;
+        const list = parseByUrl(url, txt);
+        state.currentFileUrl = url;
+        state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
+        state.articles = list;
+        state.currentMode = 'file';
+        renderArticles(list, {globalMode:false});
+        setFileIndicator(state.currentFileLabel);
+        window.scrollTo({top:0,behavior:'instant'});
+      }catch(err){
+        console.error(err);
+        els.articles.innerHTML = `<div class="placeholder"><p>Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></p></div>`;
+      }
+      setBusy(false);
+    }
+
+    /* =================== Busca Local =================== */
+    async function runLocalSearch(){
+      const q = els.searchInput.value.trim();
+      if (!q) { clearMarksAndRerender(); return; }
+
+      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+      state.currentTokens = tokens;
+
+      setBusy(true);
+
+      // Re-renderiza todos os artigos SEM filtrar
+      renderArticles(state.articles, { globalMode: false });
+
+      state.matchArticles = [];
+      const articles = document.querySelectorAll('article');
+
+      for (const art of articles){
+        const fullText = [
+          art.querySelector('.art-title')?.textContent || '',
+          art.querySelector('.art-body')?.textContent || '',
+          ...[...art.querySelectorAll('.supra > div')].map(el => el.textContent || '')
+        ].join(' ');
+        const textNorm = norm(fullText);
+
+        if (tokens.every(t => textNorm.includes(t))){
+          state.matchArticles.push(art);
+          highlightTokens(art, tokens); // destaca todas de uma vez
+        }
+      }
+
+      if (state.matchArticles.length){
+        state.matchIdx = 0;
+        state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
+      } else {
+        state.matchIdx = -1;
+      }
+
+      updateCount();
+      setBusy(false);
+    }
+
+    /* =================== Picker (sheet) =================== */
+    function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function renderPicker(filter=''){
+      const groups = getGroupsFromSelect();
+      const f = norm(filter);
+      els.pickerList.innerHTML = '';
+      let total = 0;
+
+      groups.forEach(g=>{
+        const items = g.items.filter(it => !f || norm(it.label).includes(f));
+        if (!items.length) return;
+
+        const sec = document.createElement('div'); sec.className = 'list-section';
+        const h = document.createElement('h4'); h.textContent = g.label; sec.appendChild(h);
+
+        items.forEach(it=>{
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'item';
+
+          let labelHTML = it.label;
+          if (f){
+            const label = it.label;
+            const normLabel = norm(label);
+            const idx = normLabel.indexOf(f);
+            if (idx >= 0){
+              const a = label.slice(0, idx);
+              const b = label.slice(idx, idx + filter.length);
+              const c = label.slice(idx + filter.length);
+              labelHTML = `${a}<span class="highlight">${b}</span>${c}`;
+            }
+          }
+
+          btn.innerHTML = `<b>${labelHTML}</b>`;
+          btn.addEventListener('click', async ()=>{
+            await loadFile(it.value);
+            closePicker();
+          });
+          sec.appendChild(btn);
+          total++;
+        });
+
+        els.pickerList.appendChild(sec);
+      });
+
+      if (!total){
+        els.pickerList.innerHTML = '<div class="placeholder" style="margin:8px">Nada encontrado.</div>';
+      }
+    }
+    function openPicker(){
+      els.pickerSheet.hidden = false;
+      els.pickerSheet.setAttribute('aria-hidden', 'false');
+      els.pickerSearch.value = '';
+      renderPicker('');
+      document.addEventListener('keydown', onPickerKey);
+    }
+    function closePicker(){
+      els.pickerSheet.hidden = true;
+      els.pickerSheet.setAttribute('aria-hidden', 'true');
+      document.removeEventListener('keydown', onPickerKey);
+    }
+    function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
+    els.openPicker.addEventListener('click', openPicker);
+    els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
+    els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
+
+    /* =================== IA prompt =================== */
+    function buildPrompt(a){
+      const split = a._split || splitBlockSupraTitleBody(a.text);
+      const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
+      const artigo = (split.titleText ? split.titleText + ' ' : '') + (split.body || '');
+      const tema = split.titleText || (a.title || 'Artigo');
+      return [
+        'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo. ',
+        'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
+        '(1) conceito detalhado, explicando separadamente caput, parágrafos, incisos e alíneas, com apoio em doutrina e jurisprudência majoritária; ',
+        '(2) checklist para provas; ',
+        '(3) mini exemplo prático; ',
+        '(4) princípios constitucionais ou jurídicos relacionados; ',
+        '(5) pontos de atenção na prática forense; ',
+        '(6) erros comuns e pegadinhas em provas ou prática; ',
+        '(7) artigos correlatos e possíveis relações processuais, com notas comparativas. ',
+        'Responda em português claro, objetivo e didático.\n\n',
+        `Tema: "${tema}"\n\n`,
+        supraText + artigo,
+        '\n\n💚 direito.love'
+      ].join('');
+    }
+    function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+    function openIA(url){
+      showToast('Abrindo…');
+      if (isStandalone()) location.href = url;
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    document.querySelectorAll('.ia-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> openIA(btn.dataset.url));
+    });
+    function openModal(title){
+      els.modalTitle.textContent = `Estude o ${title} com I.A.`;
+      els.modalBackdrop.style.display = 'flex';
+      els.modalBackdrop.setAttribute('aria-hidden','false');
+      els.modalBackdrop.querySelector('.ia-btn')?.focus();
+    }
+    function closeModal(){ els.modalBackdrop.style.display = 'none'; els.modalBackdrop.setAttribute('aria-hidden','true'); }
+    els.closeModal.addEventListener('click', closeModal);
+    els.modalBackdrop.addEventListener('click', (e)=>{ if (e.target === els.modalBackdrop) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if (els.modalBackdrop.style.display === 'flex' && e.key === 'Escape') closeModal(); });
+
+    els.studyBtn.addEventListener('click', async ()=>{
+      if (state.currentMode !== 'file' || !state.articles.length){
+        showToast('Abra um código para estudar.');
+        return;
+      }
+      const idx = state.currentArticleIdx >= 0 ? state.currentArticleIdx : 0;
+      const a = state.articles[idx] || state.articles[0];
+      document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
+      document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('highlight-study');
+
+      const prompt = buildPrompt(a);
+      try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }
+      catch{ showToast('Copie manualmente no próximo passo.'); }
+
+      const title = (a._split?.titleText) || a.title || 'Artigo';
+      openModal(title);
+    });
+
+    /* =================== Controles busca & navegação =================== */
+    els.doSearchBtn.addEventListener('click', runLocalSearch);
+    els.searchInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
+      else if (e.key === 'Escape'){ e.preventDefault(); resetAll(); }
+    });
+
+    els.nextBtn.addEventListener('click', ()=>{
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount();
+    });
+
+    els.prevBtn.addEventListener('click', ()=>{
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount();
+    });
+
+    els.resetBtn.addEventListener('click', resetAll);
+    els.brandBtn.addEventListener('click', resetAll);
+
+    /* =================== Reset =================== */
+    function resetAll(){
+      state.currentFileUrl = null;
+      state.currentFileLabel = 'Escolher código';
+      state.rawText = '';
+      state.articles = [];
+      state.currentArticleIdx = -1;
+      state.currentList = [];
+      state.currentMode = 'idle';
+      state.currentTokens = [];
+      state.matchArticles = [];
+      state.matchIdx = -1;
+      els.searchInput.value = '';
+      updateCount();
+
+      setFileIndicator('Escolher código');
+
+      els.articles.innerHTML = `
+        <div class="placeholder">
+          <p>💚 <strong>Direito.Love</strong></p>
+          <p>Seu <em>Mini Vade Mecum</em><br>que te ajuda a estudar com <strong>I.A.</strong></p>
+        </div>`;
+
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
+    /* =================== Boot =================== */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      buildCatalogMaps();
+      setFileIndicator('Escolher código');
+      resetAll();
+
+      // atalho: "/" foca busca
+      window.addEventListener('keydown', (e)=>{
+        if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey){
+          const t = e.target;
+          const isInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+          if (!isInput){
+            e.preventDefault();
+            els.searchInput?.focus();
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
