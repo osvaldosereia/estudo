@@ -581,6 +581,10 @@
       els.fileIndicator.textContent = full;
       els.openPicker.title = full;
     }
+// Conectar o botão da dock (openPicker) ao mesmo handler antigo
+document.getElementById("openPicker").addEventListener("click", ()=>{
+  showPicker(); // função que você já usa para abrir a sheet de códigos
+});
 
     /* =================== Normalização =================== */
     function norm(s){
