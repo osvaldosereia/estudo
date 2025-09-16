@@ -13,6 +13,7 @@
 
   <style>
     :root{
+      --white:#FFFFFF;
       --navy:#142B6F;
       --muted:#5f6470;
 
@@ -30,7 +31,16 @@
       --soft:#f6f7fb;
 
       --wrap-max: 860px;
-      --yellow:#FFD54A;
+
+      /* Destaques dos ícones (bem visíveis) */
+      --star-bg:#fff7cc;
+      --star-bd:#ffd84d;
+
+      --note-bg:#efe6ff;
+      --note-bd:#bda6ff;
+
+      --study-bg:#e6f0ff;
+      --study-bd:#9fc2ff;
     }
 
     *{box-sizing:border-box}
@@ -41,15 +51,18 @@
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
       max-width:100%; overflow-x:hidden;
     }
+    body.hero-mode{ overflow:hidden; } /* sem rolagem no hero */
+
     button,input,select{font:inherit}
 
     /* ======== TOP BAR ======== */
     .topbar{
       position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
-      display:flex; align-items:center; justify-content:center;
+      display:none; /* escondida no hero */
+      align-items:center; justify-content:center;
       background:var(--soft); color:#111; z-index:100; box-shadow:0 1px 0 var(--line);
     }
-    .topbar[hidden]{ display:none; }
+    .topbar.show{ display:flex; }
     .topbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; justify-content:space-between;
@@ -65,15 +78,14 @@
       font-weight:600; color:#1b2554; cursor:pointer;
     }
     .picker-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-    .picker-btn[hidden]{ display:none; }
 
-    /* ======== BARRA DE BUSCA ======== */
+    /* ======== BARRA DE BUSCA (colada) ======== */
     .searchbar{
       position:fixed; left:0; right:0; top:var(--topbar-h); height:var(--search-h);
       background:#fff; z-index:99; box-shadow:0 1px 0 var(--line);
-      display:flex; align-items:center; justify-content:center;
+      display:none; align-items:center; justify-content:center;
     }
-    .searchbar[hidden]{ display:none; }
+    .searchbar.show{ display:flex; }
     .searchbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; gap:8px; padding:6px 10px;
@@ -85,10 +97,7 @@
     }
     .iconbtn:hover{ transform:translateY(-1px); }
     .iconbtn:active{ transform:translateY(0); }
-
-    .iconbtn.star.active{
-      background: #fff7cc; border-color:#e9d37a;
-    }
+    .iconbtn.danger{ color:#a33; }
 
     .search{flex:1; display:flex; align-items:center; gap:8px; min-width:0}
     .search input{
@@ -112,16 +121,14 @@
     /* ======== CONTEÚDO ======== */
     .content{
       position:relative;
-      padding: calc(var(--topbar-h) + var(--search-h) + 14px) 0 32px;
+      padding: 0 0 32px; /* ajustado dinamicamente conforme modo */
       min-height:100dvh;
     }
-    body[data-mode="initial"] .content{ padding-top:0; }
     .container{ width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 10px }
 
-    /* Tela inicial sem scroll */
-    body[data-mode="initial"]{ overflow:hidden; }
+    /* HERO inicial — só logo + botão central, sem rolagem */
     .hero{
-      height:100dvh; 
+      height:100dvh;
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     }
     .hero .hero-logo{ height:56px; }
@@ -131,10 +138,10 @@
       font-weight:600; color:#1b2554; cursor:pointer;
     }
 
-    /* ======== Agrupadores ======== */
-    .group-label{
-      margin:18px 4px 2px; font-weight:800; color:#0e1638;
-      border-left:4px solid #dfe5fb; padding-left:8px;
+    /* ======== Agrupador ======== */
+    .group-title{
+      margin:18px 4px 8px; font-weight:800; color:#0e1638; font-size:13px;
+      padding-top:8px; border-top:1px dashed #e7ebf3;
     }
 
     /* ======== Artigos ======== */
@@ -144,7 +151,6 @@
       overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
       position:relative;
     }
-    /* linha 90% sob cada artigo */
     article::after{
       content:""; display:block; width:90%; height:1px; background:var(--line);
       position:absolute; left:5%; bottom:0;
@@ -157,61 +163,68 @@
       display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px;
     }
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
-    .art-actions{ display:flex; align-items:center; gap:6px }
+    .art-actions{ display:flex; align-items:center; gap:6px; }
     .act-btn{
       width:26px; height:26px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; display:grid; place-items:center;
       cursor:pointer; font-size:13px; line-height:1;
     }
     .act-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-    .act-btn.star.active{ background:#fff7cc; border-color:#e9d37a; }
-    .act-btn.note.active{ background:#eef7ff; border-color:#b8d6ff; }
+    /* estados ativos bem visíveis */
+    .act-btn.star.active{ background:var(--star-bg); border-color:var(--star-bd); box-shadow:0 0 0 3px rgba(255,216,77,.25) inset; }
+    .act-btn.note.active{ background:var(--note-bg); border-color:var(--note-bd); box-shadow:0 0 0 3px rgba(189,166,255,.25) inset; }
+    .act-btn.study.active{ background:var(--study-bg); border-color:var(--study-bd); box-shadow:0 0 0 3px rgba(159,194,255,.25) inset; }
 
     .art-body { font-size:12px; line-height:1.45; }
     article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
     article.highlight-study{ background:rgba(255,214,1,.12) }
     mark{padding:0 2px; border-radius:3px; background:#ffef99}
 
-    /* Notas rápidas */
+    /* Nota rápida (colapsável) */
     .note-box{
-      margin-top:10px; border:1px solid #dfe5fb; background:#f9fbff; border-radius:12px; padding:8px;
+      margin:8px 0 0; padding:8px; border:1px dashed #dcd7f7; border-radius:10px; background:#fbfaff;
       display:none;
     }
-    .note-box.visible{ display:block; }
+    .note-box.show{ display:block; }
     .note-box textarea{
-      width:100%; min-height:90px; border:1px solid #cfd4e2; border-radius:8px; padding:8px; resize:vertical;
-      background:#fff; outline:none;
+      width:100%; min-height:68px; border:1px solid #ded9fb; border-radius:10px; padding:8px; resize:vertical;
+      background:#fff;
     }
-    .note-hint{ font-size:11px; color:#6c7282; margin-top:6px; }
+    .note-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .btn{
+      padding:6px 10px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer; font-size:13px;
+    }
+    .btn.primary{ border-color:#9bb6ff; background:#eef3ff; }
+    .btn.danger{ border-color:#f0bcbc; background:#fff1f1; color:#a33; }
 
-    /* ======== Sheet (picker) ======== */
+    /* ======== Modal genérico central ======== */
     .sheet{ position:fixed; inset:0; z-index:120; }
     .sheet[hidden]{ display:none; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.26); }
     .sheet-panel{
-      position:absolute; left:50%; transform:translateX(-50%);
-      bottom:0; background:#fff; border-radius:16px 16px 0 0;
-      max-height:80vh; display:flex; flex-direction:column;
-      width:min(var(--wrap-max), 92vw);
-      box-shadow:0 -8px 24px rgba(0,0,0,.12);
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:#fff; border-radius:16px; width:min(var(--wrap-max), 92vw);
+      max-height:90vh; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.16);
       padding-bottom:max(8px, env(safe-area-inset-bottom));
     }
-
-    .sheet-menu{
-      display:flex; gap:10px; padding:10px 16px 4px; align-items:center; justify-content:flex-start;
-    }
-    .pillbtn{
-      width:34px; height:34px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; display:grid; place-items:center; cursor:pointer;
-      font-size:15px; line-height:1;
-    }
-    .pillbtn.active{ outline:2px solid var(--focus); }
-
-    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:8px 16px; border-bottom:1px solid #eceef2; }
-    .sheet-title{ color:#0e1638; font-weight:800; }
+    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eceef2; }
+    .sheet-title{ color:#0e1638; font-weight:700; font-size:16px; }
     .sheet-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
+    .sheet-body{ overflow:auto; padding:12px 16px 16px; }
+
+    /* Menu de emojis (topo do seletor) */
+    .emoji-menu{ display:flex; gap:10px; padding:8px 16px 0; }
+    .emoji-btn{
+      width:36px; height:36px; border-radius:999px; display:grid; place-items:center; cursor:pointer;
+      border:1px solid #d6dbeb; background:#fff; font-size:16px;
+    }
+    .emoji-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .emoji-btn.star.active{ background:var(--star-bg); border-color:var(--star-bd); box-shadow:0 0 0 3px rgba(255,216,77,.25) inset; }
+    .emoji-btn.study.active{ background:var(--study-bg); border-color:var(--study-bd); box-shadow:0 0 0 3px rgba(159,194,255,.25) inset; }
+    .emoji-btn.note.active{ background:var(--note-bg); border-color:var(--note-bd); box-shadow:0 0 0 3px rgba(189,166,255,.25) inset; }
+
     .sheet-search{ padding:10px 16px; }
     .sheet-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
     .sheet-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
-    .sheet-body{ overflow:auto; padding:8px 12px 12px; }
     .list-section{ padding:6px 0; }
     .list-section h4{ font-size:14px; letter-spacing:.4px; font-weight:700; color:#052373; margin:6px 2px 4px; text-transform:uppercase; }
     .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; }
@@ -219,20 +232,6 @@
     .item small{ color:#6c7282; }
     .item:hover, .item:focus{ outline:2px solid var(--focus); outline-offset:2px; }
     .highlight{ background:#ffef99; border-radius:3px; }
-
-    /* ======== Modal IA (central) ======== */
-    .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.28); z-index:140; }
-    .modal{ background:#fff; border-radius:16px; width:clamp(320px, 60vw, 560px); max-width:90vw; border:1px solid #eceef7; box-shadow: var(--shadow); max-height:calc(100vh - 48px); overflow:auto; }
-    .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #eceef2; }
-    .modal-title{ margin:0; color:#0f173a; font-size:1rem; font-weight:600; }
-    .modal-sub{ margin:0; font-size:.9rem; color:#666; font-weight:400; padding:0 16px 10px; }
-    .modal-body{ padding:0 16px 16px; }
-    .prompt-box{ border:1px solid #e4e8f5; background:#f8f9fd; border-radius:10px; padding:10px; max-height:180px; overflow:auto; white-space:pre-wrap; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; }
-    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-    .ia-btn{ display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border:1px solid #e6e8f2; background:#f6f7fb; border-radius:12px; cursor:pointer; text-decoration:none; color:#111; font-weight:500; transition: background .2s, border .2s, transform .15s; }
-    .ia-btn:hover{ background:#eef1fb; border-color:#c3cff5; transform:translateY(-2px); }
-    .modal-foot{ padding:12px 16px; border-top:1px solid #eceef2; display:flex; justify-content:flex-end; }
-    .close-btn{ padding:8px 12px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; cursor:pointer; }
 
     /* Toast */
     .toast{
@@ -242,24 +241,37 @@
     }
     .toast.show{opacity:1}
 
+    /* ======== Modal IA ======== */
+    .subtitle{ margin:0; font-size:13px; color:#666; }
+    .prompt-view{
+      width:100%; height:140px; border:1px solid #e2e5f2; border-radius:10px; padding:10px; overflow:auto; white-space:pre-wrap; background:#fbfbfe;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px;
+    }
+    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+    .ia-btn{ display:flex; align-items:center; justify-content:center; padding:10px 12px; border:1px solid #e6e8f2; background:#f6f7fb; border-radius:12px; cursor:pointer; }
+    .copy-prompt{
+      margin-top:10px; display:flex; justify-content:center;
+    }
+    .copy-prompt .btn{ padding:8px 16px; font-weight:600; }
+
     /* Responsivo */
     .select-wrap, #codeSelect{ display:none !important; }
-    @media (max-width: 768px){ .brand{ height:36px; } .ia-grid{ grid-template-columns:1fr; } }
+    @media (max-width: 768px){ .brand{ height:36px; } }
   </style>
 </head>
-<body data-mode="initial">
+<body class="hero-mode">
   <!-- TOP BAR -->
-  <header class="topbar" id="topbar" hidden>
+  <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Clique para reiniciar">
       <div class="top-actions">
-        <button class="picker-btn" id="openPickerTop" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código" hidden>Escolher código</button>
+        <button class="picker-btn" id="openPickerTop" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
       </div>
     </div>
   </header>
 
-  <!-- BARRA DE BUSCA -->
-  <div class="searchbar" id="topSearch" hidden>
+  <!-- BARRA DE BUSCA (colada) -->
+  <div class="searchbar" id="topSearch">
     <div class="searchbar-inner" aria-live="polite">
       <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
       <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
@@ -268,16 +280,15 @@
         <div class="spinner" id="spinner" hidden></div>
       </div>
       <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
-      <!-- ⭐ favoritos globais (substitui o X) -->
-      <button class="iconbtn star" id="favBarBtn" title="Favoritos" aria-label="Favoritos">⭐</button>
+      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
     </div>
   </div>
 
   <!-- CONTEÚDO -->
-  <main class="content">
+  <main class="content" id="content">
     <div class="container">
       <div class="articles" id="articles">
-        <!-- HERO INICIAL: só logo + seletor central (sem scroll) -->
+        <!-- HERO INICIAL: só logo + seletor central (sem rolagem) -->
         <div class="hero" id="hero">
           <img src="icons/logo.png" alt="direito.love" class="hero-logo">
           <button class="hero-btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
@@ -328,19 +339,22 @@
   <!-- TOAST -->
   <div class="toast" id="toast">✅ Copiado!</div>
 
-  <!-- MODAL: Seletor de arquivos + menu (⭐ 📖 📝) -->
+  <!-- MODAL SELETOR (central, com emojis no topo) -->
   <div class="sheet" id="pickerSheet" hidden aria-hidden="true" role="dialog" aria-modal="true">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-panel" role="document">
-      <div class="sheet-menu">
-        <button class="pillbtn" id="menuFav" title="Favoritos">⭐</button>
-        <button class="pillbtn" id="menuRecent" title="Últimos estudados">📖</button>
-        <button class="pillbtn" id="menuNotes" title="Notas rápidas">📝</button>
-      </div>
       <div class="sheet-head">
         <strong class="sheet-title">Escolher código</strong>
         <button class="sheet-close" type="button" data-close aria-label="Fechar">✕</button>
       </div>
+
+      <!-- menu de emojis -->
+      <div class="emoji-menu">
+        <button class="emoji-btn star" id="btnFavs" title="Favoritos ⭐">⭐</button>
+        <button class="emoji-btn study" id="btnStudied" title="Últimos estudados 📘">📘</button>
+        <button class="emoji-btn note" id="btnNotes" title="Notas rápidas 📝">📝</button>
+      </div>
+
       <div class="sheet-search">
         <input id="pickerSearch" type="search" placeholder="Buscar…" autocomplete="off" />
       </div>
@@ -348,25 +362,30 @@
     </div>
   </div>
 
-  <!-- MODAL IA (central, com preview de prompt) -->
-  <div class="modal-backdrop" id="iaModal" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="iaTitle">
-      <div class="modal-head">
-        <h3 id="iaTitle" class="modal-title">Estude com I.A.</h3>
-        <button class="close-btn" id="iaClose" aria-label="Fechar">Fechar</button>
+  <!-- MODAL IA (central, com visor de prompt e botão copiar) -->
+  <div class="sheet" id="modalIA" hidden aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="document">
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title" id="modalTitle">Estudar com I.A.</div>
+          <p class="subtitle" id="modalSubtitle">Revise o prompt abaixo e escolha uma IA para abrir.</p>
+        </div>
+        <button class="sheet-close" type="button" id="closeModal" aria-label="Fechar">✕</button>
       </div>
-      <p class="modal-sub">Revise o prompt gerado e escolha a IA para abrir em nova aba.</p>
-      <div class="modal-body">
-        <div class="prompt-box" id="promptPreview"></div>
+      <div class="sheet-body">
+        <div id="promptView" class="prompt-view"></div>
+
         <div class="ia-grid">
           <button class="ia-btn" data-url="https://chat.openai.com/">ChatGPT</button>
           <button class="ia-btn" data-url="https://gemini.google.com/">Gemini</button>
           <button class="ia-btn" data-url="https://copilot.microsoft.com/">Copilot</button>
           <button class="ia-btn" data-url="https://www.perplexity.ai/">Perplexity</button>
         </div>
-      </div>
-      <div class="modal-foot">
-        <button class="close-btn" id="iaClose2">OK</button>
+
+        <div class="copy-prompt">
+          <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
+        </div>
       </div>
     </div>
   </div>
@@ -380,13 +399,15 @@
           .catch(err => console.error("❌ SW falhou", err));
       });
     }
+
+    /* =================== PWA Install (sem botão visível) =================== */
     let deferredPrompt;
     window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
 
     /* =================== Refs =================== */
     const els = {
+      body: document.body,
       topbar: document.getElementById('topbar'),
-      brandBtn: document.getElementById('brandBtn'),
 
       // topo e busca
       topSearch: document.getElementById('topSearch'),
@@ -395,10 +416,10 @@
       nextBtn: document.getElementById('nextBtn'),
       spinner: document.getElementById('spinner'),
       count: document.getElementById('count'),
-      favBarBtn: document.getElementById('favBarBtn'),
+      resetBtn: document.getElementById('resetBtn'),
 
       // layout central
-      articles: document.getElementById('articles'),
+      articlesWrap: document.getElementById('articles'),
       hero: document.getElementById('hero'),
 
       // picker
@@ -408,73 +429,71 @@
       pickerSheet: document.getElementById('pickerSheet'),
       pickerSearch: document.getElementById('pickerSearch'),
       pickerList: document.getElementById('pickerList'),
-      menuFav: document.getElementById('menuFav'),
-      menuRecent: document.getElementById('menuRecent'),
-      menuNotes: document.getElementById('menuNotes'),
+      btnFavs: document.getElementById('btnFavs'),
+      btnStudied: document.getElementById('btnStudied'),
+      btnNotes: document.getElementById('btnNotes'),
 
       // IA modal
-      iaModal: document.getElementById('iaModal'),
-      iaTitle: document.getElementById('iaTitle'),
-      promptPreview: document.getElementById('promptPreview'),
-      iaClose: document.getElementById('iaClose'),
-      iaClose2: document.getElementById('iaClose2'),
+      modalIA: document.getElementById('modalIA'),
+      modalTitle: document.getElementById('modalTitle'),
+      modalSubtitle: document.getElementById('modalSubtitle'),
+      promptView: document.getElementById('promptView'),
+      closeModal: document.getElementById('closeModal'),
+      copyPromptBtn: document.getElementById('copyPromptBtn'),
 
+      brandBtn: document.getElementById('brandBtn'),
       toast: document.getElementById('toast'),
     };
 
     /* =================== Estado =================== */
     const state = {
       currentFileUrl: null,
-      currentFileLabel: 'Escolher código',
+      currentFileLabel: null,
       rawText: '',
-      articles: [],
+      articles: [],            // lista "ativa" na tela (arquivo, favoritos, notas, estudados)
       currentArticleIdx: -1,
 
-      currentMode: 'initial', // initial | file | favorites | recents | notes
-      currentList: [],
+      currentMode: 'hero',     // 'hero' | 'file' | 'favorites' | 'notes' | 'studied'
       currentTokens: [],
 
       matchArticles: [],
       matchIdx: -1,
 
-      cache: new Map(),
+      cache: new Map(),        // url -> texto
       urlToLabel: new Map(),
 
-      favSet: new Set(),  // para pintar estrelas rápido
-      notesMap: {},       // key -> texto
+      // persistência
+      favs: new Set(),         // keys
+      studied: [],             // array de keys (mais recente primeiro, máx 50)
+      notes: new Map(),        // key -> string
     };
 
-    /* =================== Storage =================== */
-    const LS_FAV = 'dl_fav';
-    const LS_RECENT = 'dl_recent';
-    const LS_NOTES = 'dl_notes';
+    const STORAGE = {
+      favs: 'dlove.favs.v1',
+      studied: 'dlove.studied.v1',
+      notes: 'dlove.notes.v1'
+    };
 
-    function loadLS(key, fallback){
-      try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-      catch{ return fallback; }
+    /* =================== Persistência =================== */
+    function loadPersist(){
+      try{
+        const f = JSON.parse(localStorage.getItem(STORAGE.favs) || '[]');
+        state.favs = new Set(Array.isArray(f)? f: []);
+      }catch{}
+      try{
+        const s = JSON.parse(localStorage.getItem(STORAGE.studied) || '[]');
+        state.studied = Array.isArray(s)? s: [];
+      }catch{}
+      try{
+        const n = JSON.parse(localStorage.getItem(STORAGE.notes) || '{}');
+        state.notes = new Map(Object.entries(n));
+      }catch{}
     }
-    function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+    function saveFavs(){ localStorage.setItem(STORAGE.favs, JSON.stringify([...state.favs])); }
+    function saveStudied(){ localStorage.setItem(STORAGE.studied, JSON.stringify(state.studied)); }
+    function saveNotes(){ localStorage.setItem(STORAGE.notes, JSON.stringify(Object.fromEntries(state.notes))); }
 
-    function keyFor(fileUrl, htmlId){ return `${fileUrl}#${htmlId}`; }
-
-    function readFavorites(){
-      const arr = loadLS(LS_FAV, []);
-      state.favSet = new Set(arr.map(it => it.key));
-      return arr;
-    }
-    function writeFavorites(arr){
-      saveLS(LS_FAV, arr);
-      state.favSet = new Set(arr.map(it => it.key));
-      updateFavBarState();
-    }
-
-    function readRecents(){ return loadLS(LS_RECENT, []); }
-    function writeRecents(arr){ saveLS(LS_RECENT, arr.slice(0,50)); }
-
-    function readNotes(){ state.notesMap = loadLS(LS_NOTES, {}); return state.notesMap; }
-    function writeNotes(map){ saveLS(LS_NOTES, map); state.notesMap = map; }
-
-    /* =================== UI Utils =================== */
+    /* =================== Utils =================== */
     function showToast(msg='✅ Pronto!'){
       els.toast.textContent = msg;
       els.toast.classList.add('show');
@@ -484,7 +503,7 @@
       els.topSearch.setAttribute('aria-busy', String(isBusy));
       els.prevBtn.disabled = isBusy;
       els.nextBtn.disabled = isBusy;
-      els.spinner.hidden = !isBusy;   // bolinha girando
+      els.spinner.hidden = !isBusy;
     }
     function updateCount(){
       if (!state.matchArticles || state.matchArticles.length === 0){
@@ -493,12 +512,7 @@
       }
       els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
     }
-    function updateFavBarState(){
-      const hasFav = readFavorites().length > 0;
-      els.favBarBtn.classList.toggle('active', hasFav || state.currentMode === 'favorites');
-    }
 
-    /* =================== Normalização (busca intacta) =================== */
     function norm(s){
       return (s||'')
         .normalize('NFD')
@@ -510,6 +524,8 @@
       .replace(/\u00A0/g, ' ')
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
+
+    const keyOf = (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`;
 
     /* =================== Parser (inalterado na lógica) =================== */
     function splitBlockSupraTitleBody(raw){
@@ -614,7 +630,7 @@
     }
     function parsePrincipios(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean); /* <- corrigido .split */
       const out = [];
       parts.forEach((block, i)=>{
         const lines = block.split('\n').map(l=>l.trim());
@@ -642,17 +658,18 @@
           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
     }
 
-    /* =================== Render Helpers =================== */
-    function buildArticleNode(a, i, {globalMode=false}={}){
+    /* =================== Render =================== */
+    function createArticleNode(a, idx){
       const el = document.createElement('article');
-      el.dataset.idx = i;
-      el.id = a.htmlId || `art-${i}`;
+      el.dataset.idx = idx;
+      el.id = a.htmlId || `art-${idx}`;
 
       const split = a._split || splitBlockSupraTitleBody(a.text);
 
       const supraWrap = document.createElement('div');
       supraWrap.className = 'supra';
-      if (globalMode && a._fileLabel){
+
+      if (a._fileLabel){
         const badge = document.createElement('div');
         badge.textContent = `[${a._fileLabel}]`;
         supraWrap.appendChild(badge);
@@ -676,24 +693,15 @@
       const actions = document.createElement('div');
       actions.className = 'art-actions';
 
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'act-btn'; copyBtn.title = 'Copiar artigo'; copyBtn.dataset.action = 'copy'; copyBtn.textContent = '📋';
+      const copyBtn  = document.createElement('button'); copyBtn.className  = 'act-btn copy';  copyBtn.title='Copiar artigo';        copyBtn.dataset.action='copy';  copyBtn.textContent='📋';
 
-      const studyBtn = document.createElement('button');
-      studyBtn.className = 'act-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study'; studyBtn.textContent = '📘';
+      const studyBtn = document.createElement('button'); studyBtn.className = 'act-btn study'; studyBtn.title='Estudar com I.A.';    studyBtn.dataset.action='study'; studyBtn.textContent='📘';
 
-      const favBtn = document.createElement('button');
-      favBtn.className = 'act-btn star'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav'; favBtn.textContent = '⭐';
+      const noteBtn  = document.createElement('button'); noteBtn.className  = 'act-btn note';  noteBtn.title='Nota rápida';          noteBtn.dataset.action='note';  noteBtn.textContent='📝';
 
-      const noteBtn = document.createElement('button');
-      noteBtn.className = 'act-btn note'; noteBtn.title = 'Notas rápidas'; noteBtn.dataset.action = 'note'; noteBtn.textContent = '📝';
+      const starBtn  = document.createElement('button'); starBtn.className  = 'act-btn star';  starBtn.title='Adicionar aos favoritos'; starBtn.dataset.action='favorite'; starBtn.textContent='⭐';
 
-      // estado inicial dos ícones
-      const k = keyFor(a._fileUrl || state.currentFileUrl || '', a.htmlId || `art-${i}`);
-      if (state.favSet.has(k)) favBtn.classList.add('active');
-      if (state.notesMap[k]) noteBtn.classList.add('active');
-
-      actions.append(copyBtn, studyBtn, favBtn, noteBtn);
+      actions.append(copyBtn, studyBtn, noteBtn, starBtn);
       head.append(titleSpan, actions);
       el.appendChild(head);
 
@@ -715,76 +723,69 @@
 
       el.appendChild(content);
 
-      // box de nota
+      // caixa de notas (oculta por padrão)
       const noteBox = document.createElement('div');
       noteBox.className = 'note-box';
       noteBox.innerHTML = `
-        <textarea placeholder="Escreva sua nota rápida aqui..."></textarea>
-        <div class="note-hint">Salvamento automático.</div>
-      `;
-      const existing = state.notesMap[k];
-      if (existing){ noteBox.classList.add('visible'); noteBox.querySelector('textarea').value = existing; }
+        <textarea placeholder="Escreva uma nota rápida (ela ficará salva neste artigo)"></textarea>
+        <div class="note-actions">
+          <button class="btn" data-note="save">Salvar</button>
+          <button class="btn danger" data-note="clear">Apagar</button>
+        </div>`;
       el.appendChild(noteBox);
+
+      // definir estados ativos
+      const k = keyOf(a._fileUrl, a.htmlId);
+      if (state.favs.has(k)){ starBtn.classList.add('active'); starBtn.setAttribute('aria-pressed','true'); starBtn.title='Remover dos favoritos'; }
+      if (state.notes.has(k)){ noteBtn.classList.add('active'); noteBtn.setAttribute('aria-pressed','true'); }
+      if (state.studied.includes(k)){ studyBtn.classList.add('active'); studyBtn.setAttribute('aria-pressed','true'); }
 
       return el;
     }
 
-    function renderArticles(list, {globalMode=false}={}){
+    function renderList(list){
       const frag = document.createDocumentFragment();
-      list.forEach((a, i)=> frag.appendChild(buildArticleNode(a, i, {globalMode})));
+      list.forEach((a,i)=> frag.appendChild(createArticleNode(a,i)));
+      els.articlesWrap.innerHTML = '';
+      if (list.length){ els.articlesWrap.appendChild(frag); }
+      else { els.articlesWrap.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</div>'; }
 
-      els.articles.innerHTML = '';
-      if (list.length){ els.articles.appendChild(frag); }
-      else { els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</div>'; }
-
-      state.currentList = list;
-      updateCurrentOutline();
-
+      state.currentArticleIdx = -1;
       state.matchArticles = [];
       state.matchIdx = -1;
       updateCount();
     }
 
-    function renderGroupedByFile(items){
-      // items: array com {_fileUrl,_fileLabel, htmlId, title, text, _split}
-      const byLabel = new Map();
-      items.forEach(a => {
-        const label = a._fileLabel || 'Documento';
-        if (!byLabel.has(label)) byLabel.set(label, []);
-        byLabel.get(label).push(a);
+    function renderGroupedByFile(list){
+      // monta grupos preservando ordem por rótulo
+      const groupsMap = new Map();
+      list.forEach(a=>{
+        const g = a._fileLabel || 'Documento';
+        if (!groupsMap.has(g)) groupsMap.set(g, []);
+        groupsMap.get(g).push(a);
       });
 
-      els.articles.innerHTML = '';
       const frag = document.createDocumentFragment();
       let idx = 0;
-      [...byLabel.entries()].forEach(([label, arr])=>{
+      for (const [label, items] of groupsMap.entries()){
         const h = document.createElement('div');
-        h.className = 'group-label';
+        h.className = 'group-title';
         h.textContent = label;
         frag.appendChild(h);
-        arr.forEach(a=>{
-          const el = buildArticleNode(a, idx++, {globalMode:false});
-          frag.appendChild(el);
+        items.forEach(a=>{
+          frag.appendChild(createArticleNode(a, idx++));
         });
-      });
-      els.articles.appendChild(frag);
+      }
+      els.articlesWrap.innerHTML = '';
+      if (idx){ els.articlesWrap.appendChild(frag); }
+      else { els.articlesWrap.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">Nada aqui ainda.</div>'; }
 
-      state.currentList = items;
-      updateCurrentOutline();
+      state.currentArticleIdx = -1;
       state.matchArticles = [];
       state.matchIdx = -1;
       updateCount();
     }
 
-    function clearMarksAndRerender(){
-      if (state.currentMode === 'favorites' || state.currentMode === 'recents' || state.currentMode === 'notes'){
-        renderGroupedByFile(state.currentList || []);
-      } else {
-        renderArticles(state.currentList || [], { globalMode: false });
-      }
-    }
-
-    /* =================== Destaque (busca intacta) =================== */
     function highlightTokens(art, tokens){
       const parts = ['.art-title', '.art-body', '.supra > div'];
       parts.forEach(sel=>{
@@ -825,7 +826,7 @@
         document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('current-outline');
       }
     }
-    window.addEventListener('scroll', ()=>{ if (state.currentList.length) updateCurrentOutline(); }, {passive:true});
+    window.addEventListener('scroll', ()=>{ if (state.articles.length) updateCurrentOutline(); }, {passive:true});
 
     /* =================== Catálogo (select oculto) =================== */
     function buildCatalogMaps(){
@@ -870,24 +871,18 @@
       try{
         const txt = await fetchTextCached(url);
         state.rawText = txt;
-        const list = parseByUrl(url, txt).map(a => ({...a, _fileUrl:url}));
+        const list = parseByUrl(url, txt).map(a => ({...a, _fileUrl:url, _fileLabel: state.urlToLabel.get(url) || 'Documento'}));
         state.currentFileUrl = url;
         state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
         state.articles = list;
         state.currentMode = 'file';
 
-        // liga UI de “modo arquivo”
-        els.hero?.remove();
-        els.topbar.hidden = false;
-        els.topSearch.hidden = false;
-        els.openPickerTop.hidden = false;
-        document.body.dataset.mode = 'app';
-
-        renderArticles(list, {globalMode:false});
+        showMainShell();
+        renderList(list);
         window.scrollTo({top:0,behavior:'instant'});
       }catch(err){
         console.error(err);
-        els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
+        els.articlesWrap.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
       }
       setBusy(false);
     }
@@ -895,15 +890,19 @@
     /* =================== Busca Local (lógica preservada) =================== */
     async function runLocalSearch(){
       const q = els.searchInput.value.trim();
-      if (!q) { clearMarksAndRerender(); return; }
+      if (!q) {
+        // volta a lista ativa sem filtro
+        renderList(state.articles);
+        return;
+      }
 
       const tokens = q.split(/\s+/).filter(Boolean).map(norm);
       state.currentTokens = tokens;
 
       setBusy(true);
 
-      // re-render (sem filtro) e vamos marcar só os hits
-      clearMarksAndRerender();
+      // re-renderiza a lista ativa SEM filtrar
+      renderList(state.articles);
 
       state.matchArticles = [];
       const articles = document.querySelectorAll('article');
@@ -933,14 +932,74 @@
       setBusy(false);
     }
 
-    /* =================== Picker (sheet) =================== */
-    function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-    function renderPicker(filter=''){
-      // modo lista de arquivos
-      els.menuFav.classList.remove('active');
-      els.menuRecent.classList.remove('active');
-      els.menuNotes.classList.remove('active');
+    /* =================== Mostrar modos especiais (Favoritos / Notas / Estudados) =================== */
+    async function materializeKeys(keys){
+      const out = [];
+      // mapeia por arquivo para carregar 1x
+      const byUrl = new Map();
+      keys.forEach(k=>{
+        const [u, id] = k.split('::');
+        if (!byUrl.has(u)) byUrl.set(u, []);
+        byUrl.get(u).push(id);
+      });
 
+      for (const [url, ids] of byUrl.entries()){
+        try{
+          const txt = await fetchTextCached(url);
+          const parsed = parseByUrl(url, txt);
+          const label = state.urlToLabel.get(url) || 'Documento';
+          const want = new Set(ids);
+          parsed.forEach(a=>{
+            if (want.has(a.htmlId)){
+              out.push({...a, _fileUrl:url, _fileLabel:label});
+            }
+          });
+        }catch(err){
+          console.error('Falha ao materializar', url, err);
+        }
+      }
+      return out;
+    }
+
+    async function showFavorites(){
+      const keys = [...state.favs];
+      const list = await materializeKeys(keys);
+      state.currentMode = 'favorites';
+      state.articles = list;
+      showMainShell();
+      renderGroupedByFile(list);
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
+    async function showNotes(){
+      const keys = [...state.notes.keys()];
+      const list = await materializeKeys(keys);
+      state.currentMode = 'notes';
+      state.articles = list;
+      showMainShell();
+      renderGroupedByFile(list);
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
+    async function showStudied(){
+      const keys = state.studied.slice(); // já em ordem (mais recente primeiro)
+      const list = await materializeKeys(keys);
+      state.currentMode = 'studied';
+      state.articles = list;
+      showMainShell();
+      renderGroupedByFile(list);
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
+    /* =================== Picker (modal seletor) =================== */
+    function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function setEmojiMenuHighlights(){
+      // ativa highlight quando existir ao menos 1 item em cada categoria
+      els.btnFavs.classList.toggle('active', state.favs.size > 0);
+      els.btnStudied.classList.toggle('active', state.studied.length > 0);
+      els.btnNotes.classList.toggle('active', state.notes.size > 0);
+    }
+    function renderPicker(filter=''){
       const groups = getGroupsFromSelect();
       const f = norm(filter);
       els.pickerList.innerHTML = '';
@@ -985,50 +1044,8 @@
         els.pickerList.innerHTML = '<div style="padding:12px; color:#6c7282">Nada encontrado.</div>';
       }
     }
-
-    function renderPickerListFrom(items, titleEmoji){
-      els.menuFav.classList.toggle('active', titleEmoji==='⭐');
-      els.menuRecent.classList.toggle('active', titleEmoji==='📖');
-      els.menuNotes.classList.toggle('active', titleEmoji==='📝');
-
-      els.pickerList.innerHTML = '';
-      if (!items.length){
-        els.pickerList.innerHTML = '<div style="padding:12px; color:#6c7282">Nada aqui ainda.</div>';
-        return;
-      }
-
-      // agrupar por arquivo e listar artigos completos
-      const byFile = new Map();
-      items.forEach(a=>{
-        const label = a._fileLabel || 'Documento';
-        if (!byFile.has(label)) byFile.set(label, []);
-        byFile.get(label).push(a);
-      });
-
-      const frag = document.createDocumentFragment();
-      [...byFile.entries()].forEach(([label, arr])=>{
-        const sec = document.createElement('div'); sec.className = 'list-section';
-        const h = document.createElement('h4'); h.textContent = label; sec.appendChild(h);
-        arr.forEach(a=>{
-          const card = document.createElement('div');
-          card.className = 'item';
-          // Mostra título e primeiras linhas (mas regra pede artigo completo → usamos <pre> abaixo)
-          card.innerHTML = `<b>${a._split?.titleText || a.title || 'Artigo'}</b>`;
-          // bloco completo
-          const pre = document.createElement('pre');
-          pre.style.whiteSpace = 'pre-wrap';
-          pre.style.margin = '8px 0 0';
-          pre.textContent = a.text;
-          card.appendChild(pre);
-          sec.appendChild(card);
-        });
-        frag.appendChild(sec);
-      });
-
-      els.pickerList.appendChild(frag);
-    }
-
     function openPicker(){
+      setEmojiMenuHighlights();
       els.pickerSheet.hidden = false;
       els.pickerSheet.setAttribute('aria-hidden', 'false');
       els.pickerSearch.value = '';
@@ -1043,32 +1060,15 @@
     function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
     els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
     els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
-    els.openPickerTop.addEventListener('click', openPicker);
-    els.openPickerHero.addEventListener('click', openPicker);
 
-    // Menu do picker → listas salvas
-    els.menuFav.addEventListener('click', ()=>{
-      const favs = readFavorites();
-      renderPickerListFrom(favs, '⭐');
-    });
-    els.menuRecent.addEventListener('click', ()=>{
-      const rec = readRecents();
-      renderPickerListFrom(rec, '📖');
-    });
-    els.menuNotes.addEventListener('click', ()=>{
-      const notesMap = readNotes();
-      // montar lista dos que têm nota
-      const list = [];
-      for (const k in notesMap){
-        const [fileUrl, htmlId] = k.split('#');
-        // não temos o texto original? salvaremos junto quando criar a nota (garantido adiante)
-        // aqui reconstruímos a partir do storage de notas salvas
-        // vamos salvar metadados no momento da primeira nota (feito mais abaixo)
-      }
-      // Em vez de reconstruir aqui, usamos um índice salvo junto no storage de notas
-      const favLike = loadLS(LS_NOTES + '_index', []); // [{key,_fileUrl,_fileLabel,htmlId,title,text,_split}]
-      renderPickerListFrom(favLike, '📝');
-    });
+    // Atalhos no topo do modal: fecham o modal e mostram as listas na PÁGINA
+    els.btnFavs.addEventListener('click', async ()=> { closePicker(); await showFavorites(); });
+    els.btnStudied.addEventListener('click', async ()=> { closePicker(); await showStudied(); });
+    els.btnNotes.addEventListener('click', async ()=> { closePicker(); await showNotes(); });
+
+    // Ações abrir picker
+    document.getElementById('openPickerTop').addEventListener('click', openPicker);
+    document.getElementById('openPickerHero').addEventListener('click', openPicker);
 
     /* =================== IA prompt =================== */
     function buildPrompt(a){
@@ -1087,83 +1087,29 @@
         '\n\n💚 direito.love'
       ].join('');
     }
+    function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
     function openIA(url){
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) location.href = url;
+      if (isStandalone()) location.href = url;
       else window.open(url, '_blank', 'noopener,noreferrer');
     }
-    document.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.ia-btn');
-      if (!btn) return;
-      openIA(btn.dataset.url);
-    });
+    document.querySelectorAll('.ia-btn').forEach(btn=>{ btn.addEventListener('click', ()=> openIA(btn.dataset.url)); });
 
-    function showIaModal(title, prompt){
-      els.iaTitle.textContent = `Estude ${title} com I.A.`;
-      els.promptPreview.textContent = prompt;
-      els.iaModal.style.display = 'flex';
-      els.iaModal.setAttribute('aria-hidden','false');
-    }
-    function closeIaModal(){
-      els.iaModal.style.display = 'none';
-      els.iaModal.setAttribute('aria-hidden','true');
-    }
-    els.iaClose.addEventListener('click', closeIaModal);
-    els.iaClose2.addEventListener('click', closeIaModal);
-    els.iaModal.addEventListener('click', (e)=>{ if (e.target === els.iaModal) closeIaModal(); });
+    function openIAModalForArticle(a){
+      const prompt = buildPrompt(a);
+      els.modalTitle.textContent = `Estude o ${a._split?.titleText || a.title || 'Artigo'} com I.A.`;
+      els.promptView.textContent = prompt;
+      els.modalIA.hidden = false;
+      els.modalIA.setAttribute('aria-hidden','false');
 
-    /* =================== Favoritos / Recentes / Notas =================== */
-    function ensureArticleMeta(a){
-      return {
-        key: keyFor(a._fileUrl || state.currentFileUrl || '', a.htmlId),
-        _fileUrl: a._fileUrl || state.currentFileUrl || '',
-        _fileLabel: state.urlToLabel.get(a._fileUrl || state.currentFileUrl || '') || state.currentFileLabel || 'Documento',
-        htmlId: a.htmlId,
-        title: a.title,
-        text: a.text,
-        _split: a._split || splitBlockSupraTitleBody(a.text)
+      // Copiar via botão dedicado
+      els.copyPromptBtn.onclick = async ()=>{
+        try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }
+        catch{ showToast('Copie manualmente.'); }
       };
     }
-
-    function toggleFavorite(a){
-      const meta = ensureArticleMeta(a);
-      const favs = readFavorites();
-      const idx = favs.findIndex(x => x.key === meta.key);
-      if (idx >= 0){ favs.splice(idx,1); writeFavorites(favs); return false; }
-      favs.unshift(meta); writeFavorites(favs); return true;
-    }
-
-    function pushRecent(a){
-      const meta = ensureArticleMeta(a);
-      const rec = readRecents();
-      const i = rec.findIndex(x => x.key === meta.key);
-      if (i >= 0) rec.splice(i,1);
-      rec.unshift(meta);
-      writeRecents(rec);
-    }
-
-    function saveNote(a, text){
-      const meta = ensureArticleMeta(a);
-      const notes = readNotes();
-      const k = meta.key;
-      if (text && text.trim()){
-        notes[k] = text.trim();
-      } else {
-        delete notes[k];
-      }
-      writeNotes(notes);
-
-      // mantemos um índice tipo favoritos para o modal de notas
-      const idxKey = LS_NOTES + '_index';
-      let idxArr = loadLS(idxKey, []);
-      const existing = idxArr.findIndex(x => x.key === meta.key);
-      if (text && text.trim()){
-        if (existing >= 0) idxArr.splice(existing,1);
-        idxArr.unshift(meta);
-      } else {
-        if (existing >= 0) idxArr.splice(existing,1);
-      }
-      saveLS(idxKey, idxArr);
-    }
+    function closeIAModal(){ els.modalIA.hidden = true; els.modalIA.setAttribute('aria-hidden','true'); }
+    els.closeModal.addEventListener('click', closeIAModal);
+    els.modalIA.addEventListener('click', (e)=>{ if (e.target.closest('[data-close]')) closeIAModal(); });
 
     /* =================== Controles busca & navegação =================== */
     els.searchInput.addEventListener('keydown', (e)=>{
@@ -1187,125 +1133,164 @@
       updateCount();
     });
 
-    // Botão ⭐ da barra → abre visão geral de favoritos
-    els.favBarBtn.addEventListener('click', ()=>{
-      const favs = readFavorites();
-      // troca para modo favoritos no corpo
-      state.currentMode = 'favorites';
-      state.currentFileUrl = null;
-      state.currentFileLabel = 'Escolher código';
-      els.topbar.hidden = false;
-      els.topSearch.hidden = false;
-      els.openPickerTop.hidden = false;
-      document.body.dataset.mode = 'app';
-      // agrupa e renderiza
-      renderGroupedByFile(favs);
-      updateFavBarState();
-      window.scrollTo({top:0,behavior:'instant'});
-    });
-
+    els.resetBtn.addEventListener('click', resetAll);
     els.brandBtn.addEventListener('click', resetAll);
 
-    // Delegação de eventos dos botões de cada artigo
-    els.articles.addEventListener('click', async (e)=>{
+    // Delegação dos botões dos cards
+    els.articlesWrap.addEventListener('click', async (e)=>{
       const btn = e.target.closest('.act-btn');
-      if (!btn) return;
       const artEl = e.target.closest('article');
-      const idx = Number(artEl?.dataset.idx);
-      const a = state.currentList[idx]; // importante: usa a lista atual (arquivo, favoritos, etc.)
+      if (!btn || !artEl) return;
+
+      const idx = Number(artEl.dataset.idx);
+      const a = state.articles[idx];
       if (!a) return;
+
+      const k = keyOf(a._fileUrl, a.htmlId);
 
       if (btn.dataset.action === 'copy'){
-        try{ await navigator.clipboard.writeText(a.text); showToast('✅ Artigo copiado!'); }catch{ showToast('Copie manualmente.'); }
+        try{
+          await navigator.clipboard.writeText(a.text);
+          btn.classList.add('active');
+          showToast('✅ Artigo copiado!');
+          setTimeout(()=> btn.classList.remove('active'), 1200);
+        }catch{
+          showToast('Copie manualmente.');
+        }
+        return;
       }
+
       if (btn.dataset.action === 'study'){
-        const prompt = buildPrompt(a);
-        try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }catch{ showToast('Copie manualmente.'); }
-        const title = (a._split?.titleText) || a.title || 'Artigo';
-        // marca visual no card atual
+        // marca como estudado (persistente) e abre modal
+        const pos = state.studied.indexOf(k);
+        if (pos !== -1) state.studied.splice(pos,1);
+        state.studied.unshift(k);
+        if (state.studied.length > 50) state.studied.length = 50;
+        saveStudied();
+
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed','true');
+
+        openIAModalForArticle(a);
         document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
         artEl.classList.add('highlight-study');
-        // salva em "últimos estudados"
-        pushRecent(a);
-        // abre modal IA central com preview
-        showIaModal(title, prompt);
+        return;
       }
-      if (btn.dataset.action === 'fav'){
-        const nowActive = toggleFavorite(a);
-        btn.classList.toggle('active', nowActive);
-        // se estiver na visão de favoritos, atualiza a tela
-        if (state.currentMode === 'favorites'){
-          renderGroupedByFile(readFavorites());
+
+      if (btn.dataset.action === 'favorite'){
+        if (state.favs.has(k)){
+          state.favs.delete(k);
+          saveFavs();
+          btn.classList.remove('active');
+          btn.setAttribute('aria-pressed','false');
+          btn.title = 'Adicionar aos favoritos';
+          // se estiver na visão favoritos, atualiza lista
+          if (state.currentMode === 'favorites'){ await showFavorites(); }
+        }else{
+          state.favs.add(k);
+          saveFavs();
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed','true');
+          btn.title = 'Remover dos favoritos';
         }
+        return;
       }
+
       if (btn.dataset.action === 'note'){
-        // toggle box
         const box = artEl.querySelector('.note-box');
-        box.classList.toggle('visible');
-        btn.classList.toggle('active', box.classList.contains('visible') || !!state.notesMap[keyFor(a._fileUrl||state.currentFileUrl||'', a.htmlId)]);
+        const ta = box.querySelector('textarea');
+        // carregar nota salva
+        ta.value = state.notes.get(k) || '';
+        box.classList.toggle('show');
+
+        // salvar / apagar
+        box.onclick = async (ev)=>{
+          const nbtn = ev.target.closest('[data-note]');
+          if (!nbtn) return;
+          if (nbtn.dataset.note === 'save'){
+            const val = ta.value.trim();
+            if (val){
+              state.notes.set(k, val);
+              saveNotes();
+              // liga destaque
+              const noteIcon = artEl.querySelector('.act-btn.note');
+              noteIcon.classList.add('active');
+              noteIcon.setAttribute('aria-pressed','true');
+              showToast('📝 Nota salva!');
+            }else{
+              // vazio => apaga
+              state.notes.delete(k);
+              saveNotes();
+              const noteIcon = artEl.querySelector('.act-btn.note');
+              noteIcon.classList.remove('active');
+              noteIcon.setAttribute('aria-pressed','false');
+              showToast('🗑️ Nota apagada.');
+              // se estiver na visão notas, atualiza
+              if (state.currentMode === 'notes'){ await showNotes(); }
+            }
+          }
+          if (nbtn.dataset.note === 'clear'){
+            ta.value = '';
+            state.notes.delete(k);
+            saveNotes();
+            const noteIcon = artEl.querySelector('.act-btn.note');
+            noteIcon.classList.remove('active');
+            noteIcon.setAttribute('aria-pressed','false');
+            showToast('🗑️ Nota apagada.');
+            if (state.currentMode === 'notes'){ await showNotes(); }
+          }
+        };
+        return;
       }
     });
 
-    // Autosave de notas (delegado)
-    els.articles.addEventListener('input', (e)=>{
-      const ta = e.target.closest('.note-box textarea');
-      if (!ta) return;
-      const artEl = e.target.closest('article');
-      const idx = Number(artEl?.dataset.idx);
-      const a = state.currentList[idx];
-      if (!a) return;
-      saveNote(a, ta.value);
-      // atualizar estado visual do ícone
-      const btn = artEl.querySelector('.act-btn.note');
-      const has = !!(ta.value && ta.value.trim());
-      btn.classList.toggle('active', has);
-      if (state.currentMode === 'notes' && !has){
-        // se removeu a nota na visão de notas, recarrega a lista
-        const idxKey = LS_NOTES + '_index';
-        const indexArr = loadLS(idxKey, []).filter(x => !!state.notesMap[x.key]);
-        saveLS(idxKey, indexArr);
-        // transformar para render
-        renderGroupedByFile(indexArr);
-      }
-    });
+    /* =================== UI helpers =================== */
+    function showMainShell(){
+      // exibe topbar e searchbar e ajusta padding do conteúdo
+      els.topbar.classList.add('show');
+      els.topSearch.classList.add('show');
+      // tira hero e rolagem liberada
+      if (els.hero) els.hero.remove();
+      els.body.classList.remove('hero-mode');
+      document.getElementById('content').style.paddingTop = `calc(var(--topbar-h) + var(--search-h) + 14px)`;
+    }
 
-    /* =================== Reset / Boot =================== */
+    /* =================== Reset para HERO =================== */
     function resetAll(){
       state.currentFileUrl = null;
+      state.currentFileLabel = null;
       state.rawText = '';
       state.articles = [];
       state.currentArticleIdx = -1;
-      state.currentList = [];
-      state.currentMode = 'initial';
+      state.currentMode = 'hero';
       state.currentTokens = [];
       state.matchArticles = [];
       state.matchIdx = -1;
       els.searchInput.value = '';
       updateCount();
 
-      els.topbar.hidden = true;
-      els.topSearch.hidden = true;
-      els.openPickerTop.hidden = true;
+      // volta UI inicial: esconde topbar e searchbar, sem rolagem
+      els.topbar.classList.remove('show');
+      els.topSearch.classList.remove('show');
+      els.body.classList.add('hero-mode');
+      document.getElementById('content').style.paddingTop = `0`;
 
-      els.articles.innerHTML = `
+      els.articlesWrap.innerHTML = `
         <div class="hero" id="hero">
           <img src="icons/logo.png" alt="direito.love" class="hero-logo">
           <button class="hero-btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
         </div>`;
       document.getElementById('openPickerHero').addEventListener('click', openPicker);
 
-      document.body.dataset.mode = 'initial';
       window.scrollTo({top:0,behavior:'instant'});
-      updateFavBarState();
     }
 
+    /* =================== Boot =================== */
     document.addEventListener('DOMContentLoaded', ()=>{
       buildCatalogMaps();
-      readFavorites(); readNotes(); // popula set/map
-      updateFavBarState();
+      loadPersist();
       resetAll();
     });
-
   </script>
 </body>
 </html>
