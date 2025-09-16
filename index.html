@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
 
+  <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#f6f7fb">
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
@@ -32,15 +33,8 @@
 
       --wrap-max: 860px;
 
-      /* Destaques dos ícones (bem visíveis) */
-      --star-bg:#fff7cc;
-      --star-bd:#ffd84d;
-
-      --note-bg:#efe6ff;
-      --note-bd:#bda6ff;
-
-      --study-bg:#e6f0ff;
-      --study-bd:#9fc2ff;
+      --active-bg:#eef3ff;   /* destaque real para ícones ativos */
+      --active-br:#9bb6ff;
     }
 
     *{box-sizing:border-box}
@@ -51,18 +45,18 @@
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
       max-width:100%; overflow-x:hidden;
     }
-    body.hero-mode{ overflow:hidden; } /* sem rolagem no hero */
-
     button,input,select{font:inherit}
 
-    /* ======== TOP BAR ======== */
+    /* Utilitários */
+    .hidden{display:none !important;}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* ======== TOP BAR (cinza claro, minimalista) ======== */
     .topbar{
       position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
-      display:none; /* escondida no hero */
-      align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:center;
       background:var(--soft); color:#111; z-index:100; box-shadow:0 1px 0 var(--line);
     }
-    .topbar.show{ display:flex; }
     .topbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; justify-content:space-between;
@@ -75,17 +69,17 @@
     .picker-btn{
       display:inline-flex; align-items:center; justify-content:center;
       padding:6px 12px; border-radius:999px; border:1px solid #d6dbeb; background:#fff;
-      font-weight:600; color:#1b2554; cursor:pointer;
+      font-weight:600; color:#1b2554; cursor:pointer; max-width:380px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      position:relative;
     }
     .picker-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
 
-    /* ======== BARRA DE BUSCA (colada) ======== */
+    /* ======== BARRA DE BUSCA (colada na topbar) ======== */
     .searchbar{
       position:fixed; left:0; right:0; top:var(--topbar-h); height:var(--search-h);
       background:#fff; z-index:99; box-shadow:0 1px 0 var(--line);
-      display:none; align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:center;
     }
-    .searchbar.show{ display:flex; }
     .searchbar-inner{
       width:min(var(--wrap-max), 92vw);
       display:flex; align-items:center; gap:8px; padding:6px 10px;
@@ -93,11 +87,10 @@
     .iconbtn{
       width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; cursor:pointer; user-select:none;
       font-size:13px; line-height:1; border-radius:999px; border:1px solid #d6dbeb; background:#fff;
-      transition:transform .1s;
+      transition:transform .1s; position:relative;
     }
     .iconbtn:hover{ transform:translateY(-1px); }
     .iconbtn:active{ transform:translateY(0); }
-    .iconbtn.danger{ color:#a33; }
 
     .search{flex:1; display:flex; align-items:center; gap:8px; min-width:0}
     .search input{
@@ -118,36 +111,50 @@
       background:#f7f8fc; padding:4px 8px; border-radius:999px; text-align:center;
     }
 
+    /* ======== Breadcrumb (navbar discreta) ======== */
+    .breadcrumb{
+      position:fixed; left:0; right:0; top:calc(var(--topbar-h) + var(--search-h));
+      background:#fff; z-index:98; box-shadow:0 1px 0 var(--line);
+      display:flex; align-items:center; justify-content:center;
+      height:36px;
+    }
+    .breadcrumb-inner{
+      width:min(var(--wrap-max), 92vw);
+      font-size:12px; color:#6c7282; padding:0 10px;
+      display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .breadcrumb a{ color:#4d5a8f; text-decoration:none; }
+    .breadcrumb a:hover{ text-decoration:underline; }
+
     /* ======== CONTEÚDO ======== */
     .content{
       position:relative;
-      padding: 0 0 32px; /* ajustado dinamicamente conforme modo */
+      padding: calc(var(--topbar-h) + var(--search-h) + 36px + 14px) 0 32px;
       min-height:100dvh;
     }
     .container{ width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 10px }
 
-    /* HERO inicial — só logo + botão central, sem rolagem */
+    /* HOME (somente logo + botão) */
+    body.home .topbar,
+    body.home .searchbar,
+    body.home .breadcrumb{ display:none !important; }
+    body.home .content{ padding:0; }
     .hero{
       height:100dvh;
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+      display:grid; place-items:center; text-align:center;
     }
-    .hero .hero-logo{ height:56px; }
+    .hero .hero-inner{ display:flex; flex-direction:column; align-items:center; gap:18px }
+    .hero .hero-logo{ height:62px; cursor:pointer; }
     .hero .hero-btn{
       display:inline-flex; align-items:center; justify-content:center;
       padding:10px 14px; border-radius:999px; border:1px solid #d6dbeb; background:#fff;
-      font-weight:600; color:#1b2554; cursor:pointer;
-    }
-
-    /* ======== Agrupador ======== */
-    .group-title{
-      margin:18px 4px 8px; font-weight:800; color:#0e1638; font-size:13px;
-      padding-top:8px; border-top:1px dashed #e7ebf3;
+      font-weight:600; color:#1b2554; cursor:pointer; position:relative;
     }
 
     /* ======== Artigos ======== */
     article{
       white-space:pre-wrap;
-      padding:16px 4px 18px; scroll-margin: calc(var(--topbar-h) + var(--search-h) + 20px);
+      padding:16px 4px 18px; scroll-margin: calc(var(--topbar-h) + var(--search-h) + 36px + 20px);
       overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
       position:relative;
     }
@@ -163,71 +170,70 @@
       display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px;
     }
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
-    .art-actions{ display:flex; align-items:center; gap:6px; }
+    .art-actions{ display:flex; align-items:center; gap:6px }
     .act-btn{
-      width:26px; height:26px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; display:grid; place-items:center;
-      cursor:pointer; font-size:13px; line-height:1;
+      width:28px; height:28px; border-radius:999px; border:1px solid transparent; background:#fff; display:grid; place-items:center;
+      cursor:pointer; font-size:14px; line-height:1; position:relative;
+    }
+    .act-btn.active{
+      background:var(--active-bg); border-color:var(--active-br);
+      box-shadow:0 0 0 2px rgba(155,182,255,.25);
     }
     .act-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-    /* estados ativos bem visíveis */
-    .act-btn.star.active{ background:var(--star-bg); border-color:var(--star-bd); box-shadow:0 0 0 3px rgba(255,216,77,.25) inset; }
-    .act-btn.note.active{ background:var(--note-bg); border-color:var(--note-bd); box-shadow:0 0 0 3px rgba(189,166,255,.25) inset; }
-    .act-btn.study.active{ background:var(--study-bg); border-color:var(--study-bd); box-shadow:0 0 0 3px rgba(159,194,255,.25) inset; }
 
     .art-body { font-size:12px; line-height:1.45; }
     article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
     article.highlight-study{ background:rgba(255,214,1,.12) }
     mark{padding:0 2px; border-radius:3px; background:#ffef99}
 
-    /* Nota rápida (colapsável) */
-    .note-box{
-      margin:8px 0 0; padding:8px; border:1px dashed #dcd7f7; border-radius:10px; background:#fbfaff;
+    /* Área de notas rápidas (oculta por padrão) */
+    .note-pad{
+      margin-top:8px; padding:10px; border:1px solid #e7eaf3; border-radius:10px; background:#f9fbff;
       display:none;
     }
-    .note-box.show{ display:block; }
-    .note-box textarea{
-      width:100%; min-height:68px; border:1px solid #ded9fb; border-radius:10px; padding:8px; resize:vertical;
-      background:#fff;
+    .note-pad textarea{
+      width:100%; min-height:90px; resize:vertical; border:1px solid #cfd4e2; border-radius:8px; padding:8px; background:#fff;
+      outline:none;
     }
-    .note-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
-    .btn{
-      padding:6px 10px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer; font-size:13px;
+    .note-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+    .btn{ position:relative; }
+    .btn, .note-actions button{
+      padding:8px 12px; border-radius:10px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
     }
-    .btn.primary{ border-color:#9bb6ff; background:#eef3ff; }
-    .btn.danger{ border-color:#f0bcbc; background:#fff1f1; color:#a33; }
 
-    /* ======== Modal genérico central ======== */
-    .sheet{ position:fixed; inset:0; z-index:120; }
-    .sheet[hidden]{ display:none; }
-    .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.26); }
-    .sheet-panel{
-      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      background:#fff; border-radius:16px; width:min(var(--wrap-max), 92vw);
-      max-height:90vh; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.16);
-      padding-bottom:max(8px, env(safe-area-inset-bottom));
-    }
-    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eceef2; }
-    .sheet-title{ color:#0e1638; font-weight:700; font-size:16px; }
-    .sheet-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
-    .sheet-body{ overflow:auto; padding:12px 16px 16px; }
+    /* ======== MODAIS (CENTRO DA TELA) ======== */
+    .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.28); z-index:120; }
+    .modal{ background:#fff; border-radius:16px; width:min(var(--wrap-max), 92vw); padding:0; border:1px solid #eceef7; box-shadow: var(--shadow); max-height:calc(100vh - 48px); overflow:auto; }
 
-    /* Menu de emojis (topo do seletor) */
-    .emoji-menu{ display:flex; gap:10px; padding:8px 16px 0; }
+    /* MODAL ESTUDAR */
+    .study-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #eceef2; }
+    .study-title{ margin:0; color:#0f173a; font-size:16px; font-weight:600; letter-spacing:.2px; }
+    .study-sub{ margin:0; font-size:13px; color:#666; font-weight:400; padding:0 16px 12px; border-bottom:1px solid #f0f2f7; }
+    .prompt-box{ margin:12px 16px; border:1px solid #e2e5f2; background:#f6f7fb; border-radius:12px; padding:10px; max-height:180px; overflow:auto; font-size:12px; line-height:1.45; white-space:pre-wrap; }
+    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px; }
+    .ia-btn{ display:flex; align-items:center; justify-content:center; padding:12px; border:1px solid #e6e8f2; background:#fff; border-radius:12px; cursor:pointer; text-decoration:none; color:#111; font-weight:500; transition: background .2s, border .15s, transform .12s; position:relative; }
+    .ia-btn:hover{ background:#f7f8ff; border-color:#c3cff5; transform:translateY(-1px); }
+    .copy-prompt{ margin:0 16px 16px; display:flex; justify-content:center; }
+    .copy-prompt button{ padding:10px 16px; border-radius:999px; background:#142B6F; color:#fff; border:1px solid #142B6F; font-weight:600; cursor:pointer; }
+    .study-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
+
+    /* MODAL PICKER (SELETOR DE ARQUIVOS) */
+    .picker-head{ padding:12px 16px; border-bottom:1px solid #eceef2; display:flex; align-items:center; justify-content:space-between; }
+    .picker-actions{ display:flex; align-items:center; gap:8px; }
+    .emoji-menu{ display:flex; gap:8px; }
     .emoji-btn{
-      width:36px; height:36px; border-radius:999px; display:grid; place-items:center; cursor:pointer;
-      border:1px solid #d6dbeb; background:#fff; font-size:16px;
+      width:36px; height:36px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; display:grid; place-items:center; cursor:pointer; font-size:18px; position:relative;
     }
-    .emoji-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-    .emoji-btn.star.active{ background:var(--star-bg); border-color:var(--star-bd); box-shadow:0 0 0 3px rgba(255,216,77,.25) inset; }
-    .emoji-btn.study.active{ background:var(--study-bg); border-color:var(--study-bd); box-shadow:0 0 0 3px rgba(159,194,255,.25) inset; }
-    .emoji-btn.note.active{ background:var(--note-bg); border-color:var(--note-bd); box-shadow:0 0 0 3px rgba(189,166,255,.25) inset; }
-
-    .sheet-search{ padding:10px 16px; }
-    .sheet-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
-    .sheet-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
+    .emoji-btn.active{ background:var(--active-bg); border-color:var(--active-br); box-shadow:0 0 0 2px rgba(155,182,255,.25); }
+    .picker-body{ padding:0 16px 16px; }
+    .picker-spacer{ height:12px; } /* respiro abaixo dos emojis */
+    .picker-search{ padding:10px 0; }
+    .picker-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
+    .picker-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
+    .sheet-body{ overflow:auto; padding:8px 0 0; }
     .list-section{ padding:6px 0; }
     .list-section h4{ font-size:14px; letter-spacing:.4px; font-weight:700; color:#052373; margin:6px 2px 4px; text-transform:uppercase; }
-    .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; }
+    .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; position:relative; }
     .item b{ font-weight:400; color:#0e1638; }
     .item small{ color:#6c7282; }
     .item:hover, .item:focus{ outline:2px solid var(--focus); outline-offset:2px; }
@@ -241,57 +247,64 @@
     }
     .toast.show{opacity:1}
 
-    /* ======== Modal IA ======== */
-    .subtitle{ margin:0; font-size:13px; color:#666; }
-    .prompt-view{
-      width:100%; height:140px; border:1px solid #e2e5f2; border-radius:10px; padding:10px; overflow:auto; white-space:pre-wrap; background:#fbfbfe;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px;
+    /* Spinner sobre QUALQUER botão */
+    .busy{ pointer-events:none; }
+    .busy::after{
+      content:""; position:absolute; inset:0; display:block;
+      background:rgba(255,255,255,.65); border-radius:inherit;
     }
-    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-    .ia-btn{ display:flex; align-items:center; justify-content:center; padding:10px 12px; border:1px solid #e6e8f2; background:#f6f7fb; border-radius:12px; cursor:pointer; }
-    .copy-prompt{
-      margin-top:10px; display:flex; justify-content:center;
+    .busy::before{
+      content:""; position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px;
+      border:2px solid #cfd4e2; border-top-color:#142B6F; border-radius:50%; animation:spin 1s linear infinite;
     }
-    .copy-prompt .btn{ padding:8px 16px; font-weight:600; }
 
     /* Responsivo */
     .select-wrap, #codeSelect{ display:none !important; }
-    @media (max-width: 768px){ .brand{ height:36px; } }
+    @media (max-width: 768px){
+      .brand{ height:36px; }
+      .ia-grid{ grid-template-columns:1fr; }
+    }
   </style>
 </head>
-<body class="hero-mode">
-  <!-- TOP BAR -->
-  <header class="topbar" id="topbar">
+<body class="home">
+  <!-- TOP BAR (não aparece no HOME) -->
+  <header class="topbar">
     <div class="topbar-inner">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Clique para reiniciar">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Escolher código">
       <div class="top-actions">
-        <button class="picker-btn" id="openPickerTop" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
+        <button class="picker-btn btn" id="openPickerTop" type="button" aria-haspopup="dialog" aria-controls="pickerModal" title="Escolher código">Escolher código</button>
       </div>
     </div>
   </header>
 
-  <!-- BARRA DE BUSCA (colada) -->
-  <div class="searchbar" id="topSearch">
+  <!-- BARRA DE BUSCA (sem X, colada na topbar) -->
+  <div class="searchbar" id="topSearch" hidden>
     <div class="searchbar-inner" aria-live="polite">
-      <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
-      <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
+      <button class="iconbtn btn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
+      <button class="iconbtn btn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
       <div class="search">
         <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
         <div class="spinner" id="spinner" hidden></div>
       </div>
       <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
-      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
     </div>
   </div>
 
+  <!-- BREADCRUMB (navbar discreta) -->
+  <div class="breadcrumb" id="breadcrumb" hidden>
+    <div class="breadcrumb-inner" id="breadcrumbInner">Início</div>
+  </div>
+
   <!-- CONTEÚDO -->
-  <main class="content" id="content">
+  <main class="content">
     <div class="container">
       <div class="articles" id="articles">
-        <!-- HERO INICIAL: só logo + seletor central (sem rolagem) -->
+        <!-- HOME: logo + botão centro, sem scroll extra -->
         <div class="hero" id="hero">
-          <img src="icons/logo.png" alt="direito.love" class="hero-logo">
-          <button class="hero-btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
+          <div class="hero-inner">
+            <img src="icons/logo.png" alt="direito.love" class="hero-logo" id="heroLogo" title="Escolher código">
+            <button class="hero-btn btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerModal" title="Escolher código">Escolher código</button>
+          </div>
         </div>
       </div>
     </div>
@@ -337,55 +350,48 @@
   </select>
 
   <!-- TOAST -->
-  <div class="toast" id="toast">✅ Copiado!</div>
+  <div class="toast" id="toast">Ok!</div>
 
-  <!-- MODAL SELETOR (central, com emojis no topo) -->
-  <div class="sheet" id="pickerSheet" hidden aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="sheet-backdrop" data-close></div>
-    <div class="sheet-panel" role="document">
-      <div class="sheet-head">
-        <strong class="sheet-title">Escolher código</strong>
-        <button class="sheet-close" type="button" data-close aria-label="Fechar">✕</button>
+  <!-- MODAL: ESTUDAR COM I.A. -->
+  <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="study-head">
+        <h3 id="modalTitle" class="study-title">Estude com I.A.</h3>
+        <button class="study-close btn" id="closeStudy" aria-label="Fechar">✕</button>
       </div>
-
-      <!-- menu de emojis -->
-      <div class="emoji-menu">
-        <button class="emoji-btn star" id="btnFavs" title="Favoritos ⭐">⭐</button>
-        <button class="emoji-btn study" id="btnStudied" title="Últimos estudados 📘">📘</button>
-        <button class="emoji-btn note" id="btnNotes" title="Notas rápidas 📝">📝</button>
+      <p class="study-sub" id="studySub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
+      <pre class="prompt-box" id="promptPreview"></pre>
+      <div class="ia-grid">
+        <button class="ia-btn btn" data-url="https://chat.openai.com/">ChatGPT</button>
+        <button class="ia-btn btn" data-url="https://gemini.google.com/">Gemini</button>
+        <button class="ia-btn btn" data-url="https://copilot.microsoft.com/">Copilot</button>
+        <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
       </div>
-
-      <div class="sheet-search">
-        <input id="pickerSearch" type="search" placeholder="Buscar…" autocomplete="off" />
+      <div class="copy-prompt">
+        <button class="btn" id="copyPromptBtn">Copiar prompt</button>
       </div>
-      <div class="sheet-body" id="pickerList" aria-live="polite"></div>
     </div>
   </div>
 
-  <!-- MODAL IA (central, com visor de prompt e botão copiar) -->
-  <div class="sheet" id="modalIA" hidden aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="sheet-backdrop" data-close></div>
-    <div class="sheet-panel" role="document">
-      <div class="sheet-head">
-        <div>
-          <div class="sheet-title" id="modalTitle">Estudar com I.A.</div>
-          <p class="subtitle" id="modalSubtitle">Revise o prompt abaixo e escolha uma IA para abrir.</p>
+  <!-- MODAL: PICKER (SELETOR DE ARQUIVOS) -->
+  <div class="modal-backdrop" id="pickerModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="picker-head">
+        <div class="picker-actions">
+          <div class="emoji-menu">
+            <button class="emoji-btn btn" id="emojiFav" title="Favoritos">⭐</button>
+            <button class="emoji-btn btn" id="emojiStudied" title="Últimos estudados">📘</button>
+            <button class="emoji-btn btn" id="emojiNotes" title="Notas rápidas">📝</button>
+          </div>
         </div>
-        <button class="sheet-close" type="button" id="closeModal" aria-label="Fechar">✕</button>
+        <button class="study-close btn" id="closePicker" aria-label="Fechar">✕</button>
       </div>
-      <div class="sheet-body">
-        <div id="promptView" class="prompt-view"></div>
-
-        <div class="ia-grid">
-          <button class="ia-btn" data-url="https://chat.openai.com/">ChatGPT</button>
-          <button class="ia-btn" data-url="https://gemini.google.com/">Gemini</button>
-          <button class="ia-btn" data-url="https://copilot.microsoft.com/">Copilot</button>
-          <button class="ia-btn" data-url="https://www.perplexity.ai/">Perplexity</button>
+      <div class="picker-body">
+        <div class="picker-spacer"></div>
+        <div class="picker-search">
+          <input id="pickerSearch" type="search" placeholder="Buscar…" autocomplete="off" />
         </div>
-
-        <div class="copy-prompt">
-          <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
-        </div>
+        <div class="sheet-body" id="pickerList" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -399,112 +405,183 @@
           .catch(err => console.error("❌ SW falhou", err));
       });
     }
-
-    /* =================== PWA Install (sem botão visível) =================== */
-    let deferredPrompt;
-    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); }); // sem botão visível
 
     /* =================== Refs =================== */
     const els = {
-      body: document.body,
-      topbar: document.getElementById('topbar'),
-
       // topo e busca
+      topbar: document.querySelector('.topbar'),
       topSearch: document.getElementById('topSearch'),
+      breadcrumb: document.getElementById('breadcrumb'),
+      breadcrumbInner: document.getElementById('breadcrumbInner'),
+
       searchInput: document.getElementById('searchInput'),
       prevBtn: document.getElementById('prevBtn'),
       nextBtn: document.getElementById('nextBtn'),
       spinner: document.getElementById('spinner'),
       count: document.getElementById('count'),
-      resetBtn: document.getElementById('resetBtn'),
 
       // layout central
-      articlesWrap: document.getElementById('articles'),
+      articles: document.getElementById('articles'),
       hero: document.getElementById('hero'),
+      heroLogo: document.getElementById('heroLogo'),
 
-      // picker
+      // picker (top/home)
+      brandBtn: document.getElementById('brandBtn'),
       openPickerTop: document.getElementById('openPickerTop'),
       openPickerHero: document.getElementById('openPickerHero'),
-      codeSelect: document.getElementById('codeSelect'),
-      pickerSheet: document.getElementById('pickerSheet'),
+      pickerModal: document.getElementById('pickerModal'),
       pickerSearch: document.getElementById('pickerSearch'),
       pickerList: document.getElementById('pickerList'),
-      btnFavs: document.getElementById('btnFavs'),
-      btnStudied: document.getElementById('btnStudied'),
-      btnNotes: document.getElementById('btnNotes'),
+      closePicker: document.getElementById('closePicker'),
+      emojiFav: document.getElementById('emojiFav'),
+      emojiStudied: document.getElementById('emojiStudied'),
+      emojiNotes: document.getElementById('emojiNotes'),
+      codeSelect: document.getElementById('codeSelect'),
 
-      // IA modal
-      modalIA: document.getElementById('modalIA'),
+      // modal IA
+      studyModal: document.getElementById('studyModal'),
+      closeStudy: document.getElementById('closeStudy'),
       modalTitle: document.getElementById('modalTitle'),
-      modalSubtitle: document.getElementById('modalSubtitle'),
-      promptView: document.getElementById('promptView'),
-      closeModal: document.getElementById('closeModal'),
+      studySub: document.getElementById('studySub'),
+      promptPreview: document.getElementById('promptPreview'),
       copyPromptBtn: document.getElementById('copyPromptBtn'),
 
-      brandBtn: document.getElementById('brandBtn'),
       toast: document.getElementById('toast'),
     };
 
-    /* =================== Estado =================== */
+    /* =================== Estado + Storage =================== */
     const state = {
+      mode: 'home', // home | file | favorites | notes | studied
       currentFileUrl: null,
-      currentFileLabel: null,
+      currentFileLabel: '',
       rawText: '',
-      articles: [],            // lista "ativa" na tela (arquivo, favoritos, notas, estudados)
+      articles: [],
       currentArticleIdx: -1,
 
-      currentMode: 'hero',     // 'hero' | 'file' | 'favorites' | 'notes' | 'studied'
+      currentList: [],   // lista atualmente renderizada (para re-render)
       currentTokens: [],
-
       matchArticles: [],
       matchIdx: -1,
 
-      cache: new Map(),        // url -> texto
+      cache: new Map(),
       urlToLabel: new Map(),
-
-      // persistência
-      favs: new Set(),         // keys
-      studied: [],             // array de keys (mais recente primeiro, máx 50)
-      notes: new Map(),        // key -> string
     };
 
-    const STORAGE = {
-      favs: 'dlove.favs.v1',
-      studied: 'dlove.studied.v1',
-      notes: 'dlove.notes.v1'
+    const store = {
+      get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
+      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); },
+      // chaves
+      keyFav: 'dl_favorites',
+      keyNotes: 'dl_notes',
+      keyStud: 'dl_studied',
+      makeId: (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`,
+
+      // FAVORITOS
+      listFavorites(){
+        return store.get(store.keyFav, []);
+      },
+      isFavorite(id){
+        return store.listFavorites().some(e => e.id === id);
+      },
+      addFavorite(entry){
+        const list = store.listFavorites().filter(e => e.id !== entry.id);
+        list.unshift(entry);
+        store.set(store.keyFav, list);
+      },
+      removeFavorite(id){
+        const list = store.listFavorites().filter(e => e.id !== id);
+        store.set(store.keyFav, list);
+      },
+
+      // NOTAS (map por id)
+      getNotesMap(){ return store.get(store.keyNotes, {}); },
+      getNote(id){
+        const map = store.getNotesMap();
+        return map[id]?.note || '';
+      },
+      setNote(entry, noteText){
+        const map = store.getNotesMap();
+        if (noteText && noteText.trim()){
+          map[entry.id] = { ...entry, note: noteText.trim() };
+        } else {
+          delete map[entry.id];
+        }
+        store.set(store.keyNotes, map);
+      },
+      listNotes(){
+        const map = store.getNotesMap();
+        return Object.values(map);
+      },
+      hasNote(id){ return !!store.getNotesMap()[id]; },
+
+      // ESTUDADOS (últimos 50, sem duplicar)
+      listStudied(){
+        return store.get(store.keyStud, []);
+      },
+      markStudied(entry){
+        let list = store.listStudied().filter(e => e.id !== entry.id);
+        list.unshift(entry);
+        if (list.length > 50) list = list.slice(0,50);
+        store.set(store.keyStud, list);
+      },
+      isStudied(id){
+        return store.listStudied().some(e => e.id === id);
+      }
     };
 
-    /* =================== Persistência =================== */
-    function loadPersist(){
-      try{
-        const f = JSON.parse(localStorage.getItem(STORAGE.favs) || '[]');
-        state.favs = new Set(Array.isArray(f)? f: []);
-      }catch{}
-      try{
-        const s = JSON.parse(localStorage.getItem(STORAGE.studied) || '[]');
-        state.studied = Array.isArray(s)? s: [];
-      }catch{}
-      try{
-        const n = JSON.parse(localStorage.getItem(STORAGE.notes) || '{}');
-        state.notes = new Map(Object.entries(n));
-      }catch{}
-    }
-    function saveFavs(){ localStorage.setItem(STORAGE.favs, JSON.stringify([...state.favs])); }
-    function saveStudied(){ localStorage.setItem(STORAGE.studied, JSON.stringify(state.studied)); }
-    function saveNotes(){ localStorage.setItem(STORAGE.notes, JSON.stringify(Object.fromEntries(state.notes))); }
-
-    /* =================== Utils =================== */
-    function showToast(msg='✅ Pronto!'){
+    /* =================== Toast + Busy =================== */
+    function notify(msg='Ok!'){
       els.toast.textContent = msg;
       els.toast.classList.add('show');
-      setTimeout(()=> els.toast.classList.remove('show'), 1000);
+      setTimeout(()=> els.toast.classList.remove('show'), 1200);
     }
+    async function withBusy(btn, fn){
+      if (btn) btn.classList.add('busy');
+      try{
+        const min = 280;
+        const t0 = performance.now();
+        const res = await fn();
+        const dt = performance.now() - t0;
+        if (dt < min) await new Promise(r=>setTimeout(r, min - dt));
+        return res;
+      } finally {
+        if (btn) btn.classList.remove('busy');
+      }
+    }
+
+    /* =================== Helpers UI =================== */
+    function setHome(on){
+      document.body.classList.toggle('home', !!on);
+      els.topSearch.hidden = on;
+      els.breadcrumb.hidden = on;
+      if (on){
+        // botão topo volta para "Escolher código"
+        els.openPickerTop.textContent = 'Escolher código';
+      }
+    }
+
+    function updateBreadcrumb(){
+      let path = 'Início';
+      if (state.mode === 'file' && state.currentFileLabel){
+        path += ' › ' + state.currentFileLabel;
+      } else if (state.mode === 'favorites'){
+        path += ' › Favoritos';
+      } else if (state.mode === 'notes'){
+        path += ' › Notas rápidas';
+      } else if (state.mode === 'studied'){
+        path += ' › Últimos estudados';
+      }
+      els.breadcrumbInner.textContent = path;
+    }
+
     function setBusy(isBusy){
       els.topSearch.setAttribute('aria-busy', String(isBusy));
       els.prevBtn.disabled = isBusy;
       els.nextBtn.disabled = isBusy;
-      els.spinner.hidden = !isBusy;
+      els.spinner.hidden = !isBusy; // bolinha na barra de busca
     }
+
     function updateCount(){
       if (!state.matchArticles || state.matchArticles.length === 0){
         els.count.textContent = '0/0';
@@ -525,9 +602,34 @@
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
 
-    const keyOf = (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`;
+    function buildCatalogMaps(){
+      const sel = els.codeSelect;
+      state.urlToLabel.clear();
+      sel.querySelectorAll('option').forEach(opt=>{
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) state.urlToLabel.set(url, label);
+      });
+    }
+    function getGroupsFromSelect(){
+      const sel = els.codeSelect;
+      const groups = [];
+      let current = null;
+      sel.querySelectorAll('optgroup, option').forEach(node=>{
+        if (node.tagName.toLowerCase()==='optgroup'){
+          current = { label: node.label || '', items: [] };
+          groups.push(current);
+        } else if (node.tagName.toLowerCase()==='option'){
+          const label = node.textContent.trim();
+          const value = node.value;
+          if (!label || !current) return;
+          current.items.push({ label, value });
+        }
+      });
+      return groups;
+    }
 
-    /* =================== Parser (inalterado na lógica) =================== */
+    /* =================== Parser (corrigido) =================== */
     function splitBlockSupraTitleBody(raw){
       const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
       const artIdx = lines.findIndex(line =>
@@ -630,7 +732,7 @@
     }
     function parsePrincipios(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean); /* <- corrigido .split */
+      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
       const out = [];
       parts.forEach((block, i)=>{
         const lines = block.split('\n').map(l=>l.trim());
@@ -654,138 +756,121 @@
       const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
       const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
       return isSumulas ? parseSumulas(txt)
-          : isPrincipios ? parsePrincipios(txt)
-          : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
+           : isPrincipios ? parsePrincipios(txt)
+           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
     }
 
-    /* =================== Render =================== */
-    function createArticleNode(a, idx){
-      const el = document.createElement('article');
-      el.dataset.idx = idx;
-      el.id = a.htmlId || `art-${idx}`;
-
-      const split = a._split || splitBlockSupraTitleBody(a.text);
-
-      const supraWrap = document.createElement('div');
-      supraWrap.className = 'supra';
-
-      if (a._fileLabel){
-        const badge = document.createElement('div');
-        badge.textContent = `[${a._fileLabel}]`;
-        supraWrap.appendChild(badge);
-      }
-      if (split.supra && split.supra.length){
-        split.supra.forEach(line=>{
-          const d = document.createElement('div');
-          d.textContent = line;
-          supraWrap.appendChild(d);
-        });
-      }
-      if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
-
-      const head = document.createElement('div');
-      head.className = 'art-head';
-
-      const titleSpan = document.createElement('span');
-      titleSpan.className = 'art-title';
-      titleSpan.textContent = split.titleText || a.title || 'Artigo';
-
-      const actions = document.createElement('div');
-      actions.className = 'art-actions';
-
-      const copyBtn  = document.createElement('button'); copyBtn.className  = 'act-btn copy';  copyBtn.title='Copiar artigo';        copyBtn.dataset.action='copy';  copyBtn.textContent='📋';
-
-      const studyBtn = document.createElement('button'); studyBtn.className = 'act-btn study'; studyBtn.title='Estudar com I.A.';    studyBtn.dataset.action='study'; studyBtn.textContent='📘';
-
-      const noteBtn  = document.createElement('button'); noteBtn.className  = 'act-btn note';  noteBtn.title='Nota rápida';          noteBtn.dataset.action='note';  noteBtn.textContent='📝';
-
-      const starBtn  = document.createElement('button'); starBtn.className  = 'act-btn star';  starBtn.title='Adicionar aos favoritos'; starBtn.dataset.action='favorite'; starBtn.textContent='⭐';
-
-      actions.append(copyBtn, studyBtn, noteBtn, starBtn);
-      head.append(titleSpan, actions);
-      el.appendChild(head);
-
-      const content = document.createElement('div');
-      content.className = 'art-body';
-
-      let body = split.body || '';
-      body = body
-        .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
-        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
-        .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
-
-      content.innerHTML = body
-        .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
-        .replace(/\n\n/g, '<br>')
-        .replace(/\n/g, '<br>');
-
-      el.appendChild(content);
-
-      // caixa de notas (oculta por padrão)
-      const noteBox = document.createElement('div');
-      noteBox.className = 'note-box';
-      noteBox.innerHTML = `
-        <textarea placeholder="Escreva uma nota rápida (ela ficará salva neste artigo)"></textarea>
-        <div class="note-actions">
-          <button class="btn" data-note="save">Salvar</button>
-          <button class="btn danger" data-note="clear">Apagar</button>
-        </div>`;
-      el.appendChild(noteBox);
-
-      // definir estados ativos
-      const k = keyOf(a._fileUrl, a.htmlId);
-      if (state.favs.has(k)){ starBtn.classList.add('active'); starBtn.setAttribute('aria-pressed','true'); starBtn.title='Remover dos favoritos'; }
-      if (state.notes.has(k)){ noteBtn.classList.add('active'); noteBtn.setAttribute('aria-pressed','true'); }
-      if (state.studied.includes(k)){ studyBtn.classList.add('active'); studyBtn.setAttribute('aria-pressed','true'); }
-
-      return el;
-    }
-
-    function renderList(list){
+    /* =================== Render (com 4 botões: ⭐ 📝 📘 📋) =================== */
+    function renderArticles(list, {globalMode=false}={}){
       const frag = document.createDocumentFragment();
-      list.forEach((a,i)=> frag.appendChild(createArticleNode(a,i)));
-      els.articlesWrap.innerHTML = '';
-      if (list.length){ els.articlesWrap.appendChild(frag); }
-      else { els.articlesWrap.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</div>'; }
+      list.forEach((a, i)=>{
+        const el = document.createElement('article');
+        el.dataset.idx = i;
+        el.id = a.htmlId || `art-${i}`;
+        el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || '';
+        el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
 
-      state.currentArticleIdx = -1;
-      state.matchArticles = [];
-      state.matchIdx = -1;
-      updateCount();
-    }
+        const split = a._split || splitBlockSupraTitleBody(a.text);
 
-    function renderGroupedByFile(list){
-      // monta grupos preservando ordem por rótulo
-      const groupsMap = new Map();
-      list.forEach(a=>{
-        const g = a._fileLabel || 'Documento';
-        if (!groupsMap.has(g)) groupsMap.set(g, []);
-        groupsMap.get(g).push(a);
+        const supraWrap = document.createElement('div');
+        supraWrap.className = 'supra';
+
+        if (globalMode && (a._fileLabel || a._fileUrl)){
+          const badge = document.createElement('div');
+          badge.textContent = `[${a._fileLabel || state.urlToLabel.get(a._fileUrl)||'Arquivo'}]`;
+          supraWrap.appendChild(badge);
+        }
+        if (split.supra && split.supra.length){
+          split.supra.forEach(line=>{
+            const d = document.createElement('div');
+            d.textContent = line;
+            supraWrap.appendChild(d);
+          });
+        }
+        if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
+
+        const head = document.createElement('div');
+        head.className = 'art-head';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'art-title';
+        titleSpan.textContent = split.titleText || a.title || 'Artigo';
+
+        const actions = document.createElement('div');
+        actions.className = 'art-actions';
+
+        // Ícones
+        const starBtn = document.createElement('button');
+        starBtn.className = 'act-btn btn'; starBtn.title = 'Favoritar'; starBtn.dataset.action = 'fav'; starBtn.textContent = '⭐';
+
+        const noteBtn = document.createElement('button');
+        noteBtn.className = 'act-btn btn'; noteBtn.title = 'Nota rápida'; noteBtn.dataset.action = 'note'; noteBtn.textContent = '📝';
+
+        const studyBtn = document.createElement('button');
+        studyBtn.className = 'act-btn btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study'; studyBtn.textContent = '📘';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'act-btn btn'; copyBtn.title = 'Copiar artigo'; copyBtn.dataset.action = 'copy'; copyBtn.textContent = '📋';
+
+        actions.append(starBtn, noteBtn, studyBtn, copyBtn);
+
+        head.append(titleSpan, actions);
+        el.appendChild(head);
+
+        const content = document.createElement('div');
+        content.className = 'art-body';
+
+        let body = split.body || '';
+        body = body
+          .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
+          .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
+          .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
+
+        content.innerHTML = body
+          .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
+          .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
+          .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
+          .replace(/\n\n/g, '<br>')
+          .replace(/\n/g, '<br>');
+
+        el.appendChild(content);
+
+        // Área de notas (oculta por padrão)
+        const notePad = document.createElement('div');
+        notePad.className = 'note-pad';
+        notePad.innerHTML = `
+          <textarea placeholder="Sua nota rápida aqui… (vazio para remover)"></textarea>
+          <div class="note-actions">
+            <button class="btn note-close">Fechar</button>
+          </div>`;
+        el.appendChild(notePad);
+
+        // Ativar estados (⭐/📝/📘)
+        const id = store.makeId(el.dataset.fileUrl, el.id);
+        if (store.isFavorite(id)) starBtn.classList.add('active');
+        if (store.hasNote(id)) noteBtn.classList.add('active');
+        if (store.isStudied(id)) studyBtn.classList.add('active');
+
+        frag.appendChild(el);
       });
 
-      const frag = document.createDocumentFragment();
-      let idx = 0;
-      for (const [label, items] of groupsMap.entries()){
-        const h = document.createElement('div');
-        h.className = 'group-title';
-        h.textContent = label;
-        frag.appendChild(h);
-        items.forEach(a=>{
-          frag.appendChild(createArticleNode(a, idx++));
-        });
-      }
-      els.articlesWrap.innerHTML = '';
-      if (idx){ els.articlesWrap.appendChild(frag); }
-      else { els.articlesWrap.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">Nada aqui ainda.</div>'; }
+      els.articles.innerHTML = '';
+      if (list.length){ els.articles.appendChild(frag); }
+      else { els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos.</div>'; }
 
-      state.currentArticleIdx = -1;
+      state.currentList = list;
+      updateCurrentOutline();
+
       state.matchArticles = [];
       state.matchIdx = -1;
       updateCount();
     }
 
+    function clearMarksAndRerender(){
+      renderArticles(state.currentList || [], { globalMode: state.mode !== 'file' });
+    }
+
+    /* =================== Destaque busca (inalterado) =================== */
     function highlightTokens(art, tokens){
       const parts = ['.art-title', '.art-body', '.supra > div'];
       parts.forEach(sel=>{
@@ -826,35 +911,7 @@
         document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('current-outline');
       }
     }
-    window.addEventListener('scroll', ()=>{ if (state.articles.length) updateCurrentOutline(); }, {passive:true});
-
-    /* =================== Catálogo (select oculto) =================== */
-    function buildCatalogMaps(){
-      const sel = els.codeSelect;
-      state.urlToLabel.clear();
-      sel.querySelectorAll('option').forEach(opt=>{
-        const url = opt.value?.trim();
-        const label = opt.textContent?.trim();
-        if (url) state.urlToLabel.set(url, label);
-      });
-    }
-    function getGroupsFromSelect(){
-      const sel = els.codeSelect;
-      const groups = [];
-      let current = null;
-      sel.querySelectorAll('optgroup, option').forEach(node=>{
-        if (node.tagName.toLowerCase()==='optgroup'){
-          current = { label: node.label || '', items: [] };
-          groups.push(current);
-        } else if (node.tagName.toLowerCase()==='option'){
-          const label = node.textContent.trim();
-          const value = node.value;
-          if (!label || !current) return;
-          current.items.push({ label, value });
-        }
-      });
-      return groups;
-    }
+    window.addEventListener('scroll', ()=>{ if (state.currentList.length) updateCurrentOutline(); }, {passive:true});
 
     /* =================== Loader de arquivo =================== */
     async function fetchTextCached(url){
@@ -871,18 +928,28 @@
       try{
         const txt = await fetchTextCached(url);
         state.rawText = txt;
-        const list = parseByUrl(url, txt).map(a => ({...a, _fileUrl:url, _fileLabel: state.urlToLabel.get(url) || 'Documento'}));
+        const list = parseByUrl(url, txt);
         state.currentFileUrl = url;
         state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
         state.articles = list;
-        state.currentMode = 'file';
+        state.mode = 'file';
 
-        showMainShell();
-        renderList(list);
+        // UI modo arquivo
+        setHome(false);
+        els.topSearch.hidden = false;
+        els.breadcrumb.hidden = false;
+
+        // nome do botão topo vira o arquivo atual
+        els.openPickerTop.textContent = state.currentFileLabel;
+
+        renderArticles(list, {globalMode:false});
+        updateBreadcrumb();
         window.scrollTo({top:0,behavior:'instant'});
+        notify(`Carregado: ${state.currentFileLabel}`);
       }catch(err){
         console.error(err);
-        els.articlesWrap.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
+        els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
+        notify('Erro ao carregar arquivo');
       }
       setBusy(false);
     }
@@ -890,19 +957,14 @@
     /* =================== Busca Local (lógica preservada) =================== */
     async function runLocalSearch(){
       const q = els.searchInput.value.trim();
-      if (!q) {
-        // volta a lista ativa sem filtro
-        renderList(state.articles);
-        return;
-      }
+      if (!q) { clearMarksAndRerender(); return; }
 
       const tokens = q.split(/\s+/).filter(Boolean).map(norm);
       state.currentTokens = tokens;
 
       setBusy(true);
 
-      // re-renderiza a lista ativa SEM filtrar
-      renderList(state.articles);
+      renderArticles(state.articles, { globalMode: false });
 
       state.matchArticles = [];
       const articles = document.querySelectorAll('article');
@@ -932,73 +994,8 @@
       setBusy(false);
     }
 
-    /* =================== Mostrar modos especiais (Favoritos / Notas / Estudados) =================== */
-    async function materializeKeys(keys){
-      const out = [];
-      // mapeia por arquivo para carregar 1x
-      const byUrl = new Map();
-      keys.forEach(k=>{
-        const [u, id] = k.split('::');
-        if (!byUrl.has(u)) byUrl.set(u, []);
-        byUrl.get(u).push(id);
-      });
-
-      for (const [url, ids] of byUrl.entries()){
-        try{
-          const txt = await fetchTextCached(url);
-          const parsed = parseByUrl(url, txt);
-          const label = state.urlToLabel.get(url) || 'Documento';
-          const want = new Set(ids);
-          parsed.forEach(a=>{
-            if (want.has(a.htmlId)){
-              out.push({...a, _fileUrl:url, _fileLabel:label});
-            }
-          });
-        }catch(err){
-          console.error('Falha ao materializar', url, err);
-        }
-      }
-      return out;
-    }
-
-    async function showFavorites(){
-      const keys = [...state.favs];
-      const list = await materializeKeys(keys);
-      state.currentMode = 'favorites';
-      state.articles = list;
-      showMainShell();
-      renderGroupedByFile(list);
-      window.scrollTo({top:0,behavior:'instant'});
-    }
-
-    async function showNotes(){
-      const keys = [...state.notes.keys()];
-      const list = await materializeKeys(keys);
-      state.currentMode = 'notes';
-      state.articles = list;
-      showMainShell();
-      renderGroupedByFile(list);
-      window.scrollTo({top:0,behavior:'instant'});
-    }
-
-    async function showStudied(){
-      const keys = state.studied.slice(); // já em ordem (mais recente primeiro)
-      const list = await materializeKeys(keys);
-      state.currentMode = 'studied';
-      state.articles = list;
-      showMainShell();
-      renderGroupedByFile(list);
-      window.scrollTo({top:0,behavior:'instant'});
-    }
-
-    /* =================== Picker (modal seletor) =================== */
+    /* =================== Picker (modal central) =================== */
     function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-    function setEmojiMenuHighlights(){
-      // ativa highlight quando existir ao menos 1 item em cada categoria
-      els.btnFavs.classList.toggle('active', state.favs.size > 0);
-      els.btnStudied.classList.toggle('active', state.studied.length > 0);
-      els.btnNotes.classList.toggle('active', state.notes.size > 0);
-    }
     function renderPicker(filter=''){
       const groups = getGroupsFromSelect();
       const f = norm(filter);
@@ -1014,7 +1011,7 @@
 
         items.forEach(it=>{
           const btn = document.createElement('button');
-          btn.type = 'button'; btn.className = 'item';
+          btn.type = 'button'; btn.className = 'item btn';
 
           let labelHTML = it.label;
           if (f){
@@ -1029,9 +1026,11 @@
           }
 
           btn.innerHTML = `<b>${labelHTML}</b>`;
-          btn.addEventListener('click', async ()=>{
-            await loadFile(it.value);
-            closePicker();
+          btn.addEventListener('click', async (e)=>{
+            await withBusy(e.currentTarget, async ()=>{
+              await loadFile(it.value);
+              closePicker();
+            });
           });
           sec.appendChild(btn);
           total++;
@@ -1045,30 +1044,91 @@
       }
     }
     function openPicker(){
-      setEmojiMenuHighlights();
-      els.pickerSheet.hidden = false;
-      els.pickerSheet.setAttribute('aria-hidden', 'false');
+      els.pickerModal.style.display = 'flex';
+      els.pickerModal.setAttribute('aria-hidden', 'false');
       els.pickerSearch.value = '';
+      // destacar emojis com base em quantidades
+      const hasFav = store.listFavorites().length > 0;
+      const hasStud = store.listStudied().length > 0;
+      const hasNotes = store.listNotes().length > 0;
+      els.emojiFav.classList.toggle('active', hasFav);
+      els.emojiStudied.classList.toggle('active', hasStud);
+      els.emojiNotes.classList.toggle('active', hasNotes);
       renderPicker('');
-      document.addEventListener('keydown', onPickerKey);
     }
     function closePicker(){
-      els.pickerSheet.hidden = true;
-      els.pickerSheet.setAttribute('aria-hidden', 'true');
-      document.removeEventListener('keydown', onPickerKey);
+      els.pickerModal.style.display = 'none';
+      els.pickerModal.setAttribute('aria-hidden', 'true');
     }
-    function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
-    els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
-    els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
 
-    // Atalhos no topo do modal: fecham o modal e mostram as listas na PÁGINA
-    els.btnFavs.addEventListener('click', async ()=> { closePicker(); await showFavorites(); });
-    els.btnStudied.addEventListener('click', async ()=> { closePicker(); await showStudied(); });
-    els.btnNotes.addEventListener('click', async ()=> { closePicker(); await showNotes(); });
+    // Emoji-menu: abrir visões na PÁGINA (não no modal)
+    els.emojiFav.addEventListener('click', async (e)=>{
+      await withBusy(e.currentTarget, async ()=>{
+        closePicker(); showFavorites();
+      });
+    });
+    els.emojiStudied.addEventListener('click', async (e)=>{
+      await withBusy(e.currentTarget, async ()=>{
+        closePicker(); showStudied();
+      });
+    });
+    els.emojiNotes.addEventListener('click', async (e)=>{
+      await withBusy(e.currentTarget, async ()=>{
+        closePicker(); showNotes();
+      });
+    });
 
-    // Ações abrir picker
-    document.getElementById('openPickerTop').addEventListener('click', openPicker);
-    document.getElementById('openPickerHero').addEventListener('click', openPicker);
+    /* =================== Visões especiais =================== */
+    function makeArticleFromEntry(entry){
+      return {
+        title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
+        text: entry.text,
+        htmlId: entry.htmlId,
+        _split: splitBlockSupraTitleBody(entry.text),
+        _fileUrl: entry.fileUrl,
+        _fileLabel: entry.fileLabel
+      };
+    }
+
+    function showFavorites(){
+      const favs = store.listFavorites();
+      const list = favs.map(makeArticleFromEntry);
+      state.mode = 'favorites';
+      setHome(false);
+      els.topSearch.hidden = true; // busca só no modo arquivo
+      renderArticles(list, {globalMode:true});
+      updateBreadcrumb();
+      window.scrollTo({top:0,behavior:'instant'});
+      notify('Favoritos');
+      // botão topo volta para "Escolher código"
+      els.openPickerTop.textContent = 'Escolher código';
+    }
+
+    function showNotes(){
+      const notes = store.listNotes();
+      const list = notes.map(makeArticleFromEntry);
+      state.mode = 'notes';
+      setHome(false);
+      els.topSearch.hidden = true;
+      renderArticles(list, {globalMode:true});
+      updateBreadcrumb();
+      window.scrollTo({top:0,behavior:'instant'});
+      notify('Notas rápidas');
+      els.openPickerTop.textContent = 'Escolher código';
+    }
+
+    function showStudied(){
+      const studied = store.listStudied();
+      const list = studied.map(makeArticleFromEntry);
+      state.mode = 'studied';
+      setHome(false);
+      els.topSearch.hidden = true;
+      renderArticles(list, {globalMode:true});
+      updateBreadcrumb();
+      window.scrollTo({top:0,behavior:'instant'});
+      notify('Últimos estudados');
+      els.openPickerTop.textContent = 'Escolher código';
+    }
 
     /* =================== IA prompt =================== */
     function buildPrompt(a){
@@ -1087,209 +1147,219 @@
         '\n\n💚 direito.love'
       ].join('');
     }
-    function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
     function openIA(url){
-      if (isStandalone()) location.href = url;
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) location.href = url;
       else window.open(url, '_blank', 'noopener,noreferrer');
     }
-    document.querySelectorAll('.ia-btn').forEach(btn=>{ btn.addEventListener('click', ()=> openIA(btn.dataset.url)); });
 
-    function openIAModalForArticle(a){
-      const prompt = buildPrompt(a);
-      els.modalTitle.textContent = `Estude o ${a._split?.titleText || a.title || 'Artigo'} com I.A.`;
-      els.promptView.textContent = prompt;
-      els.modalIA.hidden = false;
-      els.modalIA.setAttribute('aria-hidden','false');
-
-      // Copiar via botão dedicado
-      els.copyPromptBtn.onclick = async ()=>{
-        try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }
-        catch{ showToast('Copie manualmente.'); }
-      };
+    function openStudyModal(title, prompt){
+      els.modalTitle.textContent = `Estude o ${title} com I.A.`;
+      els.promptPreview.textContent = prompt;
+      els.studyModal.style.display = 'flex';
+      els.studyModal.setAttribute('aria-hidden','false');
     }
-    function closeIAModal(){ els.modalIA.hidden = true; els.modalIA.setAttribute('aria-hidden','true'); }
-    els.closeModal.addEventListener('click', closeIAModal);
-    els.modalIA.addEventListener('click', (e)=>{ if (e.target.closest('[data-close]')) closeIAModal(); });
+    function closeStudyModal(){
+      els.studyModal.style.display = 'none';
+      els.studyModal.setAttribute('aria-hidden','true');
+    }
 
-    /* =================== Controles busca & navegação =================== */
-    els.searchInput.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
-      else if (e.key === 'Escape'){ e.preventDefault(); resetAll(); }
+    /* =================== Eventos globais =================== */
+    // Ações abrir picker (logo e botões)
+    els.openPickerTop.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=> openPicker()));
+    els.openPickerHero.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=> openPicker()));
+    els.heroLogo.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=> openPicker()));
+    els.brandBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=> openPicker()));
+    els.closePicker.addEventListener('click', ()=> closePicker());
+    els.pickerModal.addEventListener('click', (e)=>{ if (e.target === els.pickerModal) closePicker(); });
+    els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
+
+    // Breadcrumb: clique em "Início"
+    els.breadcrumbInner.addEventListener('click', (e)=>{
+      if (e.target && e.target.nodeType === 3) return; // texto
+      // Como simplificação, clique em breadcrumb volta pro início
+      setHome(true);
+      state.mode = 'home';
+      els.articles.innerHTML = `
+        <div class="hero" id="hero">
+          <div class="hero-inner">
+            <img src="icons/logo.png" alt="direito.love" class="hero-logo" id="heroLogo" title="Escolher código">
+            <button class="hero-btn btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerModal" title="Escolher código">Escolher código</button>
+          </div>
+        </div>`;
+      // reatacha eventos
+      document.getElementById('openPickerHero').addEventListener('click', (ev)=> withBusy(ev.currentTarget, async ()=> openPicker()));
+      document.getElementById('heroLogo').addEventListener('click', (ev)=> withBusy(ev.currentTarget, async ()=> openPicker()));
+      window.scrollTo({top:0,behavior:'instant'});
+      notify('Início');
     });
 
-    els.nextBtn.addEventListener('click', ()=>{
+    // IA modal
+    els.closeStudy.addEventListener('click', closeStudyModal);
+    els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
+    document.querySelectorAll('.ia-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        withBusy(e.currentTarget, async ()=>{
+          const url = e.currentTarget.dataset.url;
+          notify('Abrindo ' + e.currentTarget.textContent + '…');
+          openIA(url);
+        });
+      });
+    });
+    els.copyPromptBtn.addEventListener('click', (e)=>{
+      withBusy(e.currentTarget, async ()=>{
+        try{ await navigator.clipboard.writeText(els.promptPreview.textContent||''); notify('✅ Prompt copiado!'); }
+        catch{ notify('Copie manualmente.'); }
+      });
+    });
+
+    // Controles busca & navegação
+    els.searchInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
+    });
+    els.nextBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
       const art = state.matchArticles[state.matchIdx];
       art.scrollIntoView({behavior:'smooth', block:'center'});
       updateCount();
-    });
-
-    els.prevBtn.addEventListener('click', ()=>{
+    }));
+    els.prevBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
       const art = state.matchArticles[state.matchIdx];
       art.scrollIntoView({behavior:'smooth', block:'center'});
       updateCount();
-    });
+    }));
 
-    els.resetBtn.addEventListener('click', resetAll);
-    els.brandBtn.addEventListener('click', resetAll);
-
-    // Delegação dos botões dos cards
-    els.articlesWrap.addEventListener('click', async (e)=>{
+    // Delegação de eventos nos cards
+    els.articles.addEventListener('click', async (e)=>{
       const btn = e.target.closest('.act-btn');
+      if (!btn) return;
       const artEl = e.target.closest('article');
-      if (!btn || !artEl) return;
+      if (!artEl) return;
 
-      const idx = Number(artEl.dataset.idx);
-      const a = state.articles[idx];
+      const idx = Number(artEl?.dataset.idx);
+      // Se estamos em visões especiais, idx ainda mapeia a currentList
+      const a = (state.mode === 'file' ? state.articles[idx] : state.currentList[idx]);
       if (!a) return;
 
-      const k = keyOf(a._fileUrl, a.htmlId);
+      const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
+      const entry = {
+        id,
+        fileUrl: artEl.dataset.fileUrl,
+        fileLabel: artEl.dataset.fileLabel,
+        htmlId: artEl.id,
+        text: a.text
+      };
 
       if (btn.dataset.action === 'copy'){
-        try{
-          await navigator.clipboard.writeText(a.text);
-          btn.classList.add('active');
-          showToast('✅ Artigo copiado!');
-          setTimeout(()=> btn.classList.remove('active'), 1200);
-        }catch{
-          showToast('Copie manualmente.');
-        }
-        return;
+        await withBusy(btn, async ()=>{
+          try{ await navigator.clipboard.writeText(a.text); notify('✅ Artigo copiado!'); }
+          catch{ notify('Copie manualmente.'); }
+        });
       }
 
       if (btn.dataset.action === 'study'){
-        // marca como estudado (persistente) e abre modal
-        const pos = state.studied.indexOf(k);
-        if (pos !== -1) state.studied.splice(pos,1);
-        state.studied.unshift(k);
-        if (state.studied.length > 50) state.studied.length = 50;
-        saveStudied();
-
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed','true');
-
-        openIAModalForArticle(a);
-        document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
-        artEl.classList.add('highlight-study');
-        return;
+        await withBusy(btn, async ()=>{
+          const prompt = buildPrompt(a);
+          // marcar como estudado
+          store.markStudied(entry);
+          btn.classList.add('active');
+          notify('📘 Marcado como estudado');
+          openStudyModal((a._split?.titleText) || a.title || 'Artigo', prompt);
+          // realçar o card
+          document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
+          artEl.classList.add('highlight-study');
+        });
       }
 
-      if (btn.dataset.action === 'favorite'){
-        if (state.favs.has(k)){
-          state.favs.delete(k);
-          saveFavs();
-          btn.classList.remove('active');
-          btn.setAttribute('aria-pressed','false');
-          btn.title = 'Adicionar aos favoritos';
-          // se estiver na visão favoritos, atualiza lista
-          if (state.currentMode === 'favorites'){ await showFavorites(); }
-        }else{
-          state.favs.add(k);
-          saveFavs();
-          btn.classList.add('active');
-          btn.setAttribute('aria-pressed','true');
-          btn.title = 'Remover dos favoritos';
-        }
-        return;
+      if (btn.dataset.action === 'fav'){
+        await withBusy(btn, async ()=>{
+          if (store.isFavorite(id)){
+            store.removeFavorite(id);
+            btn.classList.remove('active');
+            notify('⭐ Removido dos favoritos');
+            // Se estiver na página de favoritos, remover o card da lista
+            if (state.mode === 'favorites'){
+              const list = store.listFavorites().map(makeArticleFromEntry);
+              renderArticles(list, {globalMode:true});
+            }
+          } else {
+            store.addFavorite(entry);
+            btn.classList.add('active');
+            notify('⭐ Adicionado aos favoritos');
+          }
+        });
       }
 
       if (btn.dataset.action === 'note'){
-        const box = artEl.querySelector('.note-box');
-        const ta = box.querySelector('textarea');
-        // carregar nota salva
-        ta.value = state.notes.get(k) || '';
-        box.classList.toggle('show');
+        await withBusy(btn, async ()=>{
+          const pad = artEl.querySelector('.note-pad');
+          const textarea = pad.querySelector('textarea');
+          // abrir/fechar
+          const visible = pad.style.display === 'block';
+          pad.style.display = visible ? 'none' : 'block';
+          if (!visible){
+            // carregar nota, se houver
+            textarea.value = store.getNote(id) || '';
+            textarea.focus();
+          }
+          // estado ativo acompanha conteúdo
+          const onInput = ()=>{
+            const val = textarea.value;
+            store.setNote(entry, val);
+            if (val.trim()) btn.classList.add('active');
+            else btn.classList.remove('active');
+          };
+          textarea.removeEventListener('input', textarea._onInput);
+          textarea._onInput = onInput;
+          textarea.addEventListener('input', onInput);
 
-        // salvar / apagar
-        box.onclick = async (ev)=>{
-          const nbtn = ev.target.closest('[data-note]');
-          if (!nbtn) return;
-          if (nbtn.dataset.note === 'save'){
-            const val = ta.value.trim();
-            if (val){
-              state.notes.set(k, val);
-              saveNotes();
-              // liga destaque
-              const noteIcon = artEl.querySelector('.act-btn.note');
-              noteIcon.classList.add('active');
-              noteIcon.setAttribute('aria-pressed','true');
-              showToast('📝 Nota salva!');
-            }else{
-              // vazio => apaga
-              state.notes.delete(k);
-              saveNotes();
-              const noteIcon = artEl.querySelector('.act-btn.note');
-              noteIcon.classList.remove('active');
-              noteIcon.setAttribute('aria-pressed','false');
-              showToast('🗑️ Nota apagada.');
-              // se estiver na visão notas, atualiza
-              if (state.currentMode === 'notes'){ await showNotes(); }
-            }
-          }
-          if (nbtn.dataset.note === 'clear'){
-            ta.value = '';
-            state.notes.delete(k);
-            saveNotes();
-            const noteIcon = artEl.querySelector('.act-btn.note');
-            noteIcon.classList.remove('active');
-            noteIcon.setAttribute('aria-pressed','false');
-            showToast('🗑️ Nota apagada.');
-            if (state.currentMode === 'notes'){ await showNotes(); }
-          }
-        };
-        return;
+          // fechar botão
+          pad.querySelector('.note-close').onclick = ()=>{ pad.style.display='none'; };
+          // toast discreto
+          notify(pad.style.display==='block' ? '📝 Nota aberta' : '📝 Nota fechada');
+        });
       }
     });
 
-    /* =================== UI helpers =================== */
-    function showMainShell(){
-      // exibe topbar e searchbar e ajusta padding do conteúdo
-      els.topbar.classList.add('show');
-      els.topSearch.classList.add('show');
-      // tira hero e rolagem liberada
-      if (els.hero) els.hero.remove();
-      els.body.classList.remove('hero-mode');
-      document.getElementById('content').style.paddingTop = `calc(var(--topbar-h) + var(--search-h) + 14px)`;
-    }
-
-    /* =================== Reset para HERO =================== */
-    function resetAll(){
+    /* =================== Boot =================== */
+    function resetHome(){
+      state.mode = 'home';
       state.currentFileUrl = null;
-      state.currentFileLabel = null;
+      state.currentFileLabel = '';
       state.rawText = '';
       state.articles = [];
       state.currentArticleIdx = -1;
-      state.currentMode = 'hero';
+      state.currentList = [];
       state.currentTokens = [];
       state.matchArticles = [];
       state.matchIdx = -1;
-      els.searchInput.value = '';
-      updateCount();
 
-      // volta UI inicial: esconde topbar e searchbar, sem rolagem
-      els.topbar.classList.remove('show');
-      els.topSearch.classList.remove('show');
-      els.body.classList.add('hero-mode');
-      document.getElementById('content').style.paddingTop = `0`;
-
-      els.articlesWrap.innerHTML = `
+      setHome(true);
+      els.articles.innerHTML = `
         <div class="hero" id="hero">
-          <img src="icons/logo.png" alt="direito.love" class="hero-logo">
-          <button class="hero-btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
+          <div class="hero-inner">
+            <img src="icons/logo.png" alt="direito.love" class="hero-logo" id="heroLogo" title="Escolher código">
+            <button class="hero-btn btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerModal" title="Escolher código">Escolher código</button>
+          </div>
         </div>`;
-      document.getElementById('openPickerHero').addEventListener('click', openPicker);
-
+      document.getElementById('openPickerHero').addEventListener('click', (ev)=> withBusy(ev.currentTarget, async ()=> openPicker()));
+      document.getElementById('heroLogo').addEventListener('click', (ev)=> withBusy(ev.currentTarget, async ()=> openPicker()));
       window.scrollTo({top:0,behavior:'instant'});
+      updateBreadcrumb();
     }
 
-    /* =================== Boot =================== */
     document.addEventListener('DOMContentLoaded', ()=>{
       buildCatalogMaps();
-      loadPersist();
-      resetAll();
+      resetHome();
+      // Controles extras de teclado para fechar modais
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape'){
+          if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
+          if (els.pickerModal.getAttribute('aria-hidden') === 'false') closePicker();
+        }
+      });
     });
   </script>
 </body>
