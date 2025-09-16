@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>direito.love — Leitor jurídico</title>
+
+  <style>
+    :root{
+      --navy:#142B6F;
+      --muted:#5f6470;
+      --focus:#9bb6ff;
+      --bg:#f4f6f8;
+      --fg:#101418;
+      --radius:10px;
+      --shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+
+    body{margin:0;font:15px/1.6 system-ui;background:var(--bg);color:var(--fg);}
+
+    /* Topo */
+    header{
+      position:fixed;top:0;left:0;right:0;
+      height:54px;display:flex;align-items:center;justify-content:center;
+      background:var(--navy);color:#fff;z-index:100;box-shadow:var(--shadow);
+    }
+    header img{height:40px;}
+
+    main{padding:70px 16px 90px;max-width:680px;margin:0 auto;}
+
+    article{
+      background:#fff;margin:16px 0;padding:16px;border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .art-title{font-weight:700;font-size:1rem;margin-bottom:8px;}
+    .art-body{font-size:.9rem;line-height:1.5;}
+
+    .actions{margin-top:12px;display:flex;gap:8px;}
+    .actions button{
+      flex:1;padding:6px 10px;font-size:.8rem;font-weight:600;
+      border:1px solid #cfd4e2;border-radius:var(--radius);
+      background:#f7f8fc;cursor:pointer;
+    }
+    .actions button:focus{outline:2px solid var(--focus);}
+
+    /* Dock único */
+    .dock{
+      position:fixed;left:0;right:0;bottom:0;height:64px;
+      background:#fff;display:flex;align-items:center;gap:8px;
+      padding:8px 12px;box-shadow:0 -2px 6px rgba(0,0,0,.08);z-index:200;
+      padding-bottom:calc(8px + env(safe-area-inset-bottom));
+    }
+    .dock .file-btn{
+      flex:0 0 auto;padding:6px 10px;border-radius:var(--radius);
+      border:1px solid #cfd4e2;background:#f7f8fc;font-size:.8rem;
+    }
+    .dock .search{flex:1;display:flex;align-items:center;}
+    .dock input{
+      flex:1;height:40px;border:1px solid #cfd4e2;border-radius:var(--radius);
+      padding:0 12px;font-size:.9rem;
+    }
+    .dock input:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0 2px rgba(155,182,255,.35);}
+    .dock .nav-btn{
+      width:40px;height:40px;border-radius:var(--radius);
+      border:1px solid #cfd4e2;background:#f7f8fc;font-size:1rem;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="icons/logo.png" alt="direito.love">
+  </header>
+
+  <main>
+    <article>
+      <div class="art-title">Art. 1</div>
+      <div class="art-body">
+        § 1º Texto do artigo.<br>
+        I - Primeiro inciso.<br>
+        a) Primeira alínea.
+      </div>
+      <div class="actions">
+        <button>📄 Copiar link</button>
+        <button>🧠 Estudar com IA</button>
+      </div>
+    </article>
+
+    <article>
+      <div class="art-title">Art. 2</div>
+      <div class="art-body">
+        Texto do artigo 2...
+      </div>
+      <div class="actions">
+        <button>📄 Copiar link</button>
+        <button>🧠 Estudar com IA</button>
+      </div>
+    </article>
+  </main>
+
+  <div class="dock">
+    <button class="file-btn">📂 Código</button>
+    <div class="search">
+      <input type="search" placeholder="Buscar no texto…">
+    </div>
+    <button class="nav-btn">◀</button>
+    <button class="nav-btn">▶</button>
+    <button class="nav-btn">✕</button>
+  </div>
+</body>
+</html>
