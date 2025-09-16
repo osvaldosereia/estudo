@@ -6,7 +6,7 @@
   <title>direito.love — Leitor jurídico</title>
 
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#142B6F">
+  <meta name="theme-color" content="#f5f6fa">
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -18,23 +18,22 @@
       --yellow:#FFD601;
       --muted:#5f6470;
 
-      --bg:#ffffff;            /* 🔥 página branca */
+      /* fundo principal branco; barras topo em cinza claro */
+      --bg:#ffffff;
       --fg:#101418;
+      --topbar-bg:#f5f6fa;
+      --searchbar-bg:#ffffff;
 
-      --bar-info-bg:#f0f1f5;
-      --bar-bg:#ffffff;
-      --bar-bg-2:#142B6F;
-
-      --topbar-h: 54px;
-      --progress-h: 8px;
-      --bottom-info-h: 44px;
-      --bottom-search-h: 52px;
-      --bottom-study-h: 56px;
+      --topbar-h: 56px;
+      --progress-h: 6px;
+      --searchbar-h: 56px;
 
       --focus:#9bb6ff;
       --radius:12px;
       --shadow:0 2px 10px rgba(0,0,0,.06);
       --accent: rgba(255,214,1,.2);
+      --line:#e7eaf2;
+      --muted-2:#6c7282;
     }
 
     *{box-sizing:border-box}
@@ -47,111 +46,85 @@
     }
     button,input,select{font:inherit}
 
-    /* Topo */
+    /* ====== HERO (estado inicial): logo + seletor central ====== */
+    .hero{
+      min-height:100dvh; display:flex; align-items:center; justify-content:center;
+      padding:24px;
+    }
+    .hero-inner{
+      width:clamp(280px, 92vw, 480px); text-align:center;
+    }
+    .hero .brand-big{ height:72px; width:auto; display:block; margin:0 auto 18px; }
+    .hero .select-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:12px; background:#fff; border:1px solid #dfe3ef;
+      box-shadow:0 1px 3px rgba(0,0,0,.06); cursor:pointer;
+    }
+    .hero .select-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+
+    /* ====== Topo (modo arquivo) ====== */
     .topbar{
       position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
-      display:flex; align-items:center; justify-content:center;
-      background:#f6f7fb;       /* 🔥 cinza claro no topo */
-      color:#0e1638; z-index:100;
-      box-shadow:0 1px 0 #e6e9f2; /* linha sutil na base */
+      display:none; align-items:center; background:var(--topbar-bg); color:#0f173a; z-index:100; box-shadow:var(--shadow);
     }
+    body.mode-file .topbar{ display:flex; }
     .topbar-inner{
-      width:clamp(320px, 94vw, 840px);   /* 🔥 limite de largura no desktop */
-      padding:0 12px; display:flex; align-items:center; justify-content:center;
+      width:clamp(320px, 94vw, 880px);
+      margin:0 auto; padding:0 12px; display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
     }
-    .brand{ height:45px; width:auto; object-fit:contain; display:block; cursor:pointer; }
-    .brand:focus{outline:2px solid #fff; outline-offset:2px}
+    .brand{ height:32px; width:auto; object-fit:contain; display:block; cursor:pointer; }
+    .brand:focus{outline:2px solid #8eaaff; outline-offset:2px}
+    .picker-top{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:10px; background:#fff; border:1px solid #dfe3ef; color:#0f173a;
+      box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer;
+    }
+    .picker-top:hover{ background:#f8f9fd }
+    .picker-top:focus{ outline:2px solid var(--focus); outline-offset:2px; }
 
     /* Barra de progresso */
     .progress{
       position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--progress-h); z-index:95;
-      background:#f6f7fb;        /* 🔥 segue o cinza do topo */
+      background:transparent; display:none;
     }
+    body.mode-file .progress{ display:block; }
     .progress .bar{
       height:100%; width:0%; background:linear-gradient(90deg, #FFD601, #E1DEE6);
       transition:width .2s ease;
     }
     .progress[hidden]{display:none}
 
-    /* Conteúdo */
-    .content{
-      position:relative;
-      padding: calc(var(--topbar-h) + var(--progress-h) + 14px) 0 calc(var(--bottom-info-h) + var(--bottom-search-h) + var(--bottom-study-h) + 24px);
-      min-height:100dvh;
+    /* ====== Barra de busca (fixa logo abaixo do topo) ====== */
+    .bottom-search{ /* reaproveitando o id para manter a lógica intacta */
+      position:fixed; left:0; right:0; top:calc(var(--topbar-h) + var(--progress-h));
+      height:var(--searchbar-h);
+      background:var(--searchbar-bg);
+      z-index:90; display:none; align-items:center; justify-content:center; box-shadow:0 1px 8px rgba(0,0,0,.06);
+      border-top:1px solid #eef0f6; border-bottom:1px solid #eef0f6;
     }
-    .container{ width:clamp(320px, 94vw, 840px); margin:0 auto; padding:0 12px } /* 🔥 limite global */
-    .placeholder{
-      padding:24px; border:1px dashed #e6e9f2; border-radius:var(--radius);
-      color:#6b7280; background:#ffffff; text-align:center;
-    }
-    .placeholder p{ font-size:1.08rem; line-height:1.65; margin:0 }
-
-    /* Artigos */
-    article{
-      white-space:pre-wrap; border-bottom:1px solid #eef0f6;
-      padding:18px 10px; scroll-margin: 92px; border-radius:10px;
-      overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
-      background:#ffffff; /* sem cartão, só separador */
-    }
-    .supra{ color:#6c7282; font-weight:500; font-size:12px; margin-bottom:6px; }
-    .supra div{ line-height:1.35 }
-    .art-title{ display:block; font-weight:800; color:#0e1638; margin:0 0 6px; font-size:13px }
-    .art-body { font-size: 12px; line-height: 1.45; }
-    article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
-    article.highlight-study{ background:var(--accent) }
-    mark{padding:0 2px; border-radius:3px; background:#ffef99}
-
-    /* Barra INFO */
-    .bottom-info{
-      position:fixed; left:0; right:0; bottom:calc(var(--bottom-search-h) + var(--bottom-study-h));
-      height:var(--bottom-info-h);
-      background:var(--bar-info-bg);
-      box-shadow:0 -2px 6px rgba(0,0,0,.08);
-      z-index:72; display:flex; align-items:center; justify-content:center;
-    }
-    .bottom-info-inner{
-      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
-      display:flex; align-items:center; justify-content:center; padding:8px 12px;
-    }
-    .file-indicator{
-      flex:1 1 0; display:inline-flex; align-items:center; justify-content:center;
-      font-size:13px; font-weight:600; color:#142B6F;
-      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb;
-      padding:6px 12px; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.05);
-      cursor:pointer; text-align:center; transition: background .2s, border .2s, transform .1s, box-shadow .2s;
-    }
-    .file-indicator:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
-    .file-indicator:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
-    .file-indicator:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-
-    /* Barra BUSCA */
-    .bottom-search{
-      position:fixed; left:0; right:0; bottom:var(--bottom-study-h);
-      height:var(--bottom-search-h);
-      background:var(--bar-bg);
-      z-index:70; display:flex; align-items:center; justify-content:center;
-    }
+    body.mode-file .bottom-search{ display:flex; }
     .bottom-search-inner{
-      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
+      width:clamp(320px, 94vw, 880px);
       display:flex; align-items:center; gap:6px; padding:6px 10px;
     }
     .iconbtn{
       width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; cursor:pointer; user-select:none;
-      font-size:13px; line-height:1; border-radius:8px;
-      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; box-shadow:0 1px 2px rgba(0,0,0,.05);
+      font-size:13px; line-height:1; border-radius:999px;
+      background:#fff; border:1px solid #dfe3ef; box-shadow:0 1px 2px rgba(0,0,0,.04);
       transition: background .2s, border .2s, transform .1s, box-shadow .2s;
     }
-    .iconbtn:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
+    .iconbtn:hover{ background:#f6f7fb; border-color:#cfd6ee; transform:translateY(-1px); }
     .iconbtn:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
     .iconbtn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
-    .iconbtn.danger{ border-color:#f5b5b5; color:#a33; }
+    .iconbtn.danger{ border-color:#f0c5c5; color:#a33; }
 
     .search{flex:1; display:flex; align-items:center; gap:8px; min-width:0}
     .search input{
-      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:8px; padding:0 14px; background:#fff;
-      box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s;
+      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 14px; background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,.04); transition:border .2s, box-shadow .2s;
     }
-    .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
+    .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.25); outline:none; }
 
     .spinner{width:18px; height:18px; border:2px solid #e2e5f2; border-top-color:#142B6F; border-radius:50%;
       animation:spin 1s linear infinite; flex:0 0 18px}
@@ -160,29 +133,60 @@
 
     .result-count{
       min-width:52px; font-size:11px; color:#6c7282; border:1px solid #e2e5f2;
-      background:#f7f8fc; padding:4px 8px; border-radius:6px; text-align:center;
+      background:#f7f8fc; padding:4px 8px; border-radius:999px; text-align:center;
     }
 
-    /* Barra ESTUDAR */
-    .bottom-study{
-      position:fixed; left:0; right:0; bottom:0; height:var(--bottom-study-h);
-      background:var(--bar-bg-2);
-      z-index:75; display:flex; align-items:center; justify-content:center; padding:8px 0;
+    /* ====== Conteúdo ====== */
+    .content{
+      position:relative;
+      /* espaço para topo + progresso + busca */
+      padding: calc(var(--topbar-h) + var(--progress-h) + var(--searchbar-h) + 20px) 0 32px;
+      min-height:100dvh;
     }
-    .bottom-study-inner{
-      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
-      padding:6px 12px; display:flex; align-items:center; gap:10px;
-    }
-    .study,.do-search{
-      flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#142B6F;
-      background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; padding:6px 12px; border-radius:10px;
-      box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; text-align:center; transition: background .2s, border .2s, transform .1s, box-shadow .2s;
-    }
-    .study:hover,.do-search:hover{ background:#eef3ff; border-color:#9bb6ff; box-shadow:0 2px 8px rgba(20,43,111,.12); transform:translateY(-1px); }
-    .study:active,.do-search:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
-    .study:focus,.do-search:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    body.mode-idle .content{ padding-top:0; } /* no hero não precisamos de padding */
 
-    /* Modal IA */
+    .container{ width:clamp(320px, 94vw, 880px); margin:0 auto; padding:0 12px }
+    .placeholder{ padding:24px; border:1px dashed #dcdfea; border-radius:var(--radius); color:var(--muted); background:#fafbff; text-align:center; }
+    .placeholder p{ font-size:1.08rem; line-height:1.65; margin:0 }
+
+    /* ====== Artigos (NÃO muda formatação de texto/busca) ====== */
+    article{
+      position:relative;
+      white-space:pre-wrap;
+      padding:18px 52px 18px 10px;  /* espaço à direita pros botões */
+      scroll-margin: calc(var(--topbar-h) + var(--searchbar-h) + 24px);
+      overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
+    }
+    /* linha separadora 90% da largura */
+    article:not(:last-child)::after{
+      content:""; display:block; height:1px; width:90%; background:var(--line);
+      margin:14px auto 0;
+    }
+
+    .supra{ color:#6c7282; font-weight:500; font-size:12px; margin-bottom:6px; }
+    .supra div{ line-height:1.35 }
+    .art-title{ display:block; font-weight:800; color:#0e1638; margin:0 0 6px; font-size:13px }
+    .art-body { font-size: 12px; line-height: 1.45; }
+    article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
+    article.highlight-study{ background:var(--accent) }
+    mark{padding:0 2px; border-radius:3px; background:#ffef99}
+
+    /* Botões por artigo (direita, empilhados) */
+    .art-actions{
+      position:absolute; top:12px; right:8px; display:flex; flex-direction:column; gap:8px;
+    }
+    .art-action-btn{
+      width:30px; height:30px; display:grid; place-items:center; border-radius:999px;
+      background:#fff; border:1px solid #dfe3ef; box-shadow:0 1px 2px rgba(0,0,0,.05);
+      cursor:pointer; font-size:14px; line-height:1;
+    }
+    .art-action-btn:hover{ background:#f7f8fc; }
+    .art-action-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+
+    /* ====== Escondidos (removemos barras da base) ====== */
+    .bottom-info, .bottom-study{ display:none !important; }
+
+    /* ====== Modal IA / Sheet / Toast (inalterados no comportamento) ====== */
     .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.28); z-index:120; }
     .modal{ background:#fff; border-radius:16px; width:clamp(320px, 60vw, 440px); max-width:90vw; padding:18px; border:1px solid #eceef7; box-shadow: var(--shadow); max-height:calc(100vh - 48px); overflow:auto; }
     .modal h3{ margin:0 0 8px; color:#0f173a; font-size:1.05rem; font-weight:600; }
@@ -195,30 +199,20 @@
     .modal .foot{ margin-top:12px; display:flex; justify-content:flex-end; }
     .modal .close-btn{ padding:8px 12px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; cursor:pointer; }
 
-    /* Toast */
-    .toast{
-      position:fixed; left:50%; transform:translateX(-50%);
-      bottom:calc(var(--bottom-study-h) + var(--bottom-search-h) + var(--bottom-info-h) + 14px);
-      background:#111; color:#fff; padding:8px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:200
-    }
-    .toast.show{opacity:1}
-
-    /* Sheet (picker) */
     .sheet{ position:fixed; inset:0; z-index:120; }
     .sheet[hidden]{ display:none; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.32); }
     .sheet-panel{
-      position:absolute; left:50%; transform:translateX(-50%); bottom:0; background:#fff; border-radius:16px 16px 0 0;
+      position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0;
       max-height:80vh; display:flex; flex-direction:column; padding-bottom:max(8px, env(safe-area-inset-bottom)); box-shadow:0 -8px 24px rgba(0,0,0,.12);
-      width:min(720px,96vw);
     }
-    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid #eceef2; }
+    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eceef2; }
     .sheet-title{ color:#0e1638; font-weight:800; }
     .sheet-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
-    .sheet-search{ padding:10px 20px; }
+    .sheet-search{ padding:10px 16px; }
     .sheet-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
     .sheet-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
-    .sheet-body{ overflow:auto; padding:8px 20px 12px; }
+    .sheet-body{ overflow:auto; padding:8px 12px 12px; }
     .list-section{ padding:6px 0; }
     .list-section h4{ font-size:14px; letter-spacing:.4px; font-weight:700; color:#052373; margin:6px 2px 4px; text-transform:uppercase; }
     .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; }
@@ -227,37 +221,58 @@
     .item:hover, .item:focus{ outline:2px solid var(--focus); outline-offset:2px; }
     .highlight{ background:#ffef99; border-radius:3px; }
 
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:calc(24px + env(safe-area-inset-bottom));
+      background:#111; color:#fff; padding:8px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:200
+    }
+    .toast.show{opacity:1}
+
     /* Responsivo */
     .select-wrap, #codeSelect{ display:none !important; }
-    @media (max-width: 768px){ .brand{ height:38px; } }
-
-    @media (min-width: 1024px){
-      .file-indicator,.study,.do-search { max-width: 140px; flex:0 1 auto; }
-      .bottom-search-inner .search{ flex:1; }
-      .bottom-search-inner .search input{ flex:1; max-width:none; } /* ocupa todo o espaço disponível */
-    }
-
-    /* Botão PWA acima das barras */
-    #installApp{
-      position:fixed;
-      right:20px;
-      bottom:calc(var(--bottom-study-h) + var(--bottom-search-h) + var(--bottom-info-h) + 12px);
-      padding:10px 16px; border-radius:10px; background:#142B6F; color:#fff; border:none;
-      z-index:300; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2)
+    @media (max-width: 768px){
+      .brand{ height:28px; }
+      .hero .brand-big{ height:60px; }
+      .art-actions{ right:4px; }
     }
   </style>
 </head>
-<body>
-  <!-- TOPO COM LOGO CENTRALIZADA -->
-  <header class="topbar">
+<body class="mode-idle">
+  <!-- HERO (estado inicial): logo central + seletor -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <img src="icons/logo.png" alt="direito.love" class="brand-big" id="heroBrand">
+      <button class="select-btn" id="openPickerHero" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">Escolher código</button>
+    </div>
+  </section>
+
+  <!-- TOPO (modo arquivo): logo à esquerda + seletor à direita -->
+  <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Clique para reiniciar">
+      <button class="picker-top" id="openPickerTop" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">
+        <span id="fileIndicatorTop">Escolher código</span>
+      </button>
     </div>
   </header>
 
   <!-- PROGRESS BAR -->
   <div class="progress" id="progress" hidden>
     <div class="bar" id="progressBar"></div>
+  </div>
+
+  <!-- BARRA DE BUSCA (fixa sob o topo) -->
+  <div class="bottom-search" id="bottomSearch" aria-live="polite">
+    <div class="bottom-search-inner">
+      <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
+      <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
+      <div class="search">
+        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
+        <div class="spinner" id="spinner" hidden></div>
+      </div>
+      <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
+      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
+    </div>
   </div>
 
   <!-- CONTEÚDO -->
@@ -272,7 +287,7 @@
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO -->
+  <!-- CATÁLOGO OCULTO (fonte dos itens) -->
   <select id="codeSelect" title="Escolher arquivo" style="display:none">
     <option value="">— selecione —</option>
     <optgroup label="CF88">
@@ -311,39 +326,12 @@
     </optgroup>
   </select>
 
-  <!-- BARRA INFORMATIVA -->
-  <div class="bottom-info" id="bottomInfo">
-    <div class="bottom-info-inner">
-      <button class="file-indicator" id="openPicker" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">
-        <span id="fileIndicator">Escolher código</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- BARRA 1: BUSCA -->
-  <div class="bottom-search" id="bottomSearch">
-    <div class="bottom-search-inner" aria-live="polite">
-      <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
-      <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
-      <div class="search">
-        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
-        <div class="spinner" id="spinner" hidden></div>
-      </div>
-      <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
-      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
-    </div>
-  </div>
-
-  <!-- BARRA 2: ESTUDAR -->
-  <div class="bottom-study" id="bottomStudy">
-    <div class="bottom-study-inner">
-      <button class="study" id="studyBtn">Estudar com I.A.</button>
-      <button class="do-search" id="doSearchBtn">Buscar</button>
-    </div>
-  </div>
+  <!-- CONTÊINERES ANTIGOS (mantidos, porém ocultos por CSS para não quebrar a lógica) -->
+  <div class="bottom-info" id="bottomInfo" hidden></div>
+  <div class="bottom-study" id="bottomStudy" hidden></div>
 
   <!-- TOAST -->
-  <div class="toast" id="toast">✅ Prompt copiado!</div>
+  <div class="toast" id="toast">✅ Pronto!</div>
 
   <!-- MODAL DE I.A. -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
@@ -407,7 +395,14 @@
 
     /* =================== Refs =================== */
     const els = {
+      hero: document.getElementById('hero'),
+      heroBrand: document.getElementById('heroBrand'),
+      openPickerHero: document.getElementById('openPickerHero'),
+
       brandBtn: document.getElementById('brandBtn'),
+      openPickerTop: document.getElementById('openPickerTop'),
+      fileIndicatorTop: document.getElementById('fileIndicatorTop'),
+
       progress: document.getElementById('progress'),
       progressBar: document.getElementById('progressBar'),
 
@@ -417,18 +412,13 @@
       bottomSearch: document.getElementById('bottomSearch'),
       bottomStudy: document.getElementById('bottomStudy'),
 
-      openPicker: document.getElementById('openPicker'),
-      fileIndicator: document.getElementById('fileIndicator'),
-
       searchInput: document.getElementById('searchInput'),
       prevBtn: document.getElementById('prevBtn'),
       nextBtn: document.getElementById('nextBtn'),
       spinner: document.getElementById('spinner'),
       count: document.getElementById('count'),
-      doSearchBtn: document.getElementById('doSearchBtn'),
+      doSearchBtn: document.getElementById('doSearchBtn'), // (inexistente visualmente, mantido p/ compat)
       resetBtn: document.getElementById('resetBtn'),
-
-      studyBtn: document.getElementById('studyBtn'),
 
       modalBackdrop: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
@@ -485,12 +475,11 @@
       }
     }
     function setBusy(isBusy){
-      els.bottomSearch.setAttribute('aria-busy', String(isBusy));
-      els.doSearchBtn.disabled = isBusy;
+      els.bottomSearch?.setAttribute('aria-busy', String(isBusy));
       els.prevBtn.disabled = isBusy;
       els.nextBtn.disabled = isBusy;
-      els.spinner.hidden = !isBusy;        // 🔥 bolinha girando
-      setProgressActive(isBusy);           // barra superior
+      els.spinner.hidden = !isBusy;
+      setProgressActive(isBusy);
     }
     function updateCount(){
       if (!state.matchArticles || state.matchArticles.length === 0){
@@ -501,12 +490,11 @@
     }
     function setFileIndicator(label){
       const full = (label || 'Escolher código').trim();
-      els.fileIndicator.textContent = full;
-      els.openPicker.title = full;
+      els.fileIndicatorTop.textContent = full;
+      els.openPickerTop.title = full;
     }
 
-    /* =================== Normalização =================== */
-    // 🔥 normaliza acentos e ç para busca/compare
+    /* =================== Normalização (mantida) =================== */
     function norm(s){
       return (s||'')
         .normalize('NFD')
@@ -520,7 +508,7 @@
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
 
-    /* =================== Parser =================== */
+    /* =================== Parser (mantido) =================== */
     function splitBlockSupraTitleBody(raw){
       const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
       const artIdx = lines.findIndex(line =>
@@ -593,7 +581,7 @@
         let chunk = txt.slice(from, to).trimEnd();
 
         const endDot = chunk.lastIndexOf('.');
-        const endPar = chunk.lastIndexOf(')');
+               const endPar = chunk.lastIndexOf(')');
         const end    = Math.max(endDot, endPar);
         if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
@@ -651,7 +639,7 @@
           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
     }
 
-    /* =================== Render =================== */
+    /* =================== Render (visual + botões por artigo) =================== */
     function renderArticles(list, {globalMode=false}={}){
       const frag = document.createDocumentFragment();
       list.forEach((a, i)=>{
@@ -686,7 +674,7 @@
         const content = document.createElement('div');
         content.className = 'art-body';
 
-        // mantém quebras e destaques conforme seu padrão atual
+        // mantém as quebras/formatação como já usado
         let body = split.body || '';
         body = body
           .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
@@ -701,6 +689,16 @@
           .replace(/\n/g, '<br>');
 
         el.appendChild(content);
+
+        // ações por artigo (copiar / estudar)
+        const actions = document.createElement('div');
+        actions.className = 'art-actions';
+        actions.innerHTML = `
+          <button class="art-action-btn" data-action="copy" data-idx="${i}" title="Copiar texto" aria-label="Copiar texto">📋</button>
+          <button class="art-action-btn" data-action="study" data-idx="${i}" title="Estudar com I.A." aria-label="Estudar com I.A.">🤖</button>
+        `;
+        el.appendChild(actions);
+
         frag.appendChild(el);
       });
 
@@ -711,10 +709,7 @@
         els.articles.innerHTML = '<div class="placeholder"><p>🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</p></div>';
       }
 
-      els.bottomInfo.hidden = false;
-      els.bottomSearch.hidden = false;
-      els.bottomStudy.hidden = false;
-
+      // (barras da base ficam ocultas por CSS; a busca já está fixa no topo)
       state.currentList = list;
       updateCurrentOutline();
 
@@ -727,7 +722,7 @@
       renderArticles(state.currentList || [], { globalMode: false });
     }
 
-    /* =================== Destaque =================== */
+    /* =================== Destaque (mantido) =================== */
     function highlightTokens(art, tokens){
       const parts = ['.art-title', '.art-body', '.supra > div'];
       parts.forEach(sel=>{
@@ -742,7 +737,7 @@
       });
     }
 
-    /* =================== Scroll / Outline =================== */
+    /* =================== Scroll / Outline (mantido) =================== */
     function getArticleInView(){
       const nodes = document.querySelectorAll('article[data-idx]');
       const cy = window.innerHeight / 2;
@@ -798,7 +793,7 @@
       return groups;
     }
 
-    /* =================== Loader de arquivo =================== */
+    /* =================== Loader de arquivo (mantido) =================== */
     async function fetchTextCached(url){
       if (state.cache.has(url)) return state.cache.get(url);
       const res = await fetch(url, {cache: 'force-cache'});
@@ -818,6 +813,7 @@
         state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
         state.articles = list;
         state.currentMode = 'file';
+        enterFileMode();                        // <<< muda apenas layout/visibilidade
         renderArticles(list, {globalMode:false});
         setFileIndicator(state.currentFileLabel);
         window.scrollTo({top:0,behavior:'instant'});
@@ -828,17 +824,16 @@
       setBusy(false);
     }
 
-    /* =================== Busca Local =================== */
+    /* =================== Busca Local (mantida) =================== */
     async function runLocalSearch(){
       const q = els.searchInput.value.trim();
       if (!q) { clearMarksAndRerender(); return; }
 
-      const tokens = q.split(/\s+/).filter(Boolean).map(norm); // 🔥 sem acento
+      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
       state.currentTokens = tokens;
 
       setBusy(true);
 
-      // Re-renderiza todos os artigos SEM filtrar
       renderArticles(state.articles, { globalMode: false });
 
       state.matchArticles = [];
@@ -854,7 +849,7 @@
 
         if (tokens.every(t => textNorm.includes(t))){
           state.matchArticles.push(art);
-          highlightTokens(art, tokens); // destaca todas de uma vez
+          highlightTokens(art, tokens);
         }
       }
 
@@ -870,7 +865,6 @@
     }
 
     /* =================== Picker (sheet) =================== */
-    function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
     function renderPicker(filter=''){
       const groups = getGroupsFromSelect();
       const f = norm(filter);
@@ -888,21 +882,7 @@
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'item';
-
-          let labelHTML = it.label;
-          if (f){
-            const label = it.label;
-            const normLabel = norm(label);
-            const idx = normLabel.indexOf(f);
-            if (idx >= 0){
-              const a = label.slice(0, idx);
-              const b = label.slice(idx, idx + filter.length);
-              const c = label.slice(idx + filter.length);
-              labelHTML = `${a}<span class="highlight">${b}</span>${c}`;
-            }
-          }
-
-          btn.innerHTML = `<b>${labelHTML}</b>`;
+          btn.innerHTML = `<b>${it.label}</b>`;
           btn.addEventListener('click', async ()=>{
             await loadFile(it.value);
             closePicker();
@@ -931,11 +911,8 @@
       document.removeEventListener('keydown', onPickerKey);
     }
     function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
-    els.openPicker.addEventListener('click', openPicker);
-    els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
-    els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
 
-    /* =================== IA prompt =================== */
+    /* =================== IA prompt (mantido) =================== */
     function buildPrompt(a){
       const split = a._split || splitBlockSupraTitleBody(a.text);
       const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
@@ -943,16 +920,15 @@
       const tema = split.titleText || (a.title || 'Artigo');
       return [
         'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo. ',
-'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
-'(1) conceito detalhado, explicando separadamente caput, parágrafos, incisos e alíneas, com apoio em doutrina e jurisprudência majoritária; ',
-'(2) checklist para provas; ',
-'(3) mini exemplo prático; ',
-'(4) princípios constitucionais ou jurídicos relacionados; ',
-'(5) pontos de atenção na prática forense; ',
-'(6) erros comuns e pegadinhas em provas ou prática; ',
-'(7) artigos correlatos e possíveis relações processuais, com notas comparativas. ',
-'Responda em português claro, objetivo e didático.\n\n',
-
+        'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
+        '(1) conceito detalhado, explicando separadamente caput, parágrafos, incisos e alíneas, com apoio em doutrina e jurisprudência majoritária; ',
+        '(2) checklist para provas; ',
+        '(3) mini exemplo prático; ',
+        '(4) princípios constitucionais ou jurídicos relacionados; ',
+        '(5) pontos de atenção na prática forense; ',
+        '(6) erros comuns e pegadinhas em provas ou prática; ',
+        '(7) artigos correlatos e possíveis relações processuais, com notas comparativas. ',
+        'Responda em português claro, objetivo e didático.\n\n',
         `Tema: "${tema}"\n\n`,
         supraText + artigo,
         '\n\n💚 direito.love'
@@ -978,31 +954,12 @@
     els.modalBackdrop.addEventListener('click', (e)=>{ if (e.target === els.modalBackdrop) closeModal(); });
     document.addEventListener('keydown', (e)=>{ if (els.modalBackdrop.style.display === 'flex' && e.key === 'Escape') closeModal(); });
 
-    els.studyBtn.addEventListener('click', async ()=>{
-      if (state.currentMode !== 'file' || !state.articles.length){
-        showToast('Abra um código para estudar.');
-        return;
-      }
-      const idx = state.currentArticleIdx >= 0 ? state.currentArticleIdx : 0;
-      const a = state.articles[idx] || state.articles[0];
-      document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
-      document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('highlight-study');
-
-      const prompt = buildPrompt(a);
-      try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }
-      catch{ showToast('Copie manualmente no próximo passo.'); }
-
-      const title = (a._split?.titleText) || a.title || 'Artigo';
-      openModal(title);
-    });
-
-    /* =================== Controles busca & navegação =================== */
-    els.doSearchBtn.addEventListener('click', runLocalSearch);
+    /* =================== Controles busca & navegação (mantidos) =================== */
     els.searchInput.addEventListener('keydown', (e)=>{
       if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
       else if (e.key === 'Escape'){ e.preventDefault(); resetAll(); }
     });
-
+    // botão "buscar" global não existe visualmente; enter já executa a busca
     els.nextBtn.addEventListener('click', ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
@@ -1010,7 +967,6 @@
       art.scrollIntoView({behavior:'smooth', block:'center'});
       updateCount();
     });
-
     els.prevBtn.addEventListener('click', ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
@@ -1018,11 +974,52 @@
       art.scrollIntoView({behavior:'smooth', block:'center'});
       updateCount();
     });
-
     els.resetBtn.addEventListener('click', resetAll);
-    els.brandBtn.addEventListener('click', resetAll);
 
-    /* =================== Reset =================== */
+    /* =================== Ações por artigo =================== */
+    els.articles.addEventListener('click', async (e)=>{
+      const btn = e.target.closest('.art-action-btn');
+      if (!btn) return;
+      const idx = Number(btn.dataset.idx);
+      const a = state.articles[idx];
+      if (!a) return;
+
+      if (btn.dataset.action === 'copy'){
+        try{
+          await navigator.clipboard.writeText(a.text || '');
+          showToast('✅ Artigo copiado!');
+        }catch{
+          showToast('Copie manualmente.');
+        }
+      } else if (btn.dataset.action === 'study'){
+        const title = (a._split?.titleText) || a.title || 'Artigo';
+        const prompt = buildPrompt(a);
+        try{ await navigator.clipboard.writeText(prompt); showToast('✅ Prompt copiado!'); }
+        catch{ showToast('Copie manualmente no próximo passo.'); }
+        openModal(title);
+        // destaque visual leve no artigo atual
+        document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
+        document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('highlight-study');
+      }
+    });
+
+    /* =================== Picker (triggers) =================== */
+    function onPickerKey(e){ if (e.key === 'Escape') closePicker(); }
+    document.getElementById('openPickerTop').addEventListener('click', openPicker);
+    document.getElementById('openPickerHero').addEventListener('click', openPicker);
+
+    /* =================== Reset / modos de layout =================== */
+    function enterIdleMode(){
+      document.body.classList.remove('mode-file');
+      document.body.classList.add('mode-idle');
+      els.hero.style.display = 'flex';
+    }
+    function enterFileMode(){
+      document.body.classList.remove('mode-idle');
+      document.body.classList.add('mode-file');
+      els.hero.style.display = 'none';
+    }
+
     function resetAll(){
       state.currentFileUrl = null;
       state.currentFileLabel = 'Escolher código';
@@ -1045,19 +1042,35 @@
           <p>Seu <em>Mini Vade Mecum</em><br>que te ajuda a estudar com <strong>I.A.</strong></p>
         </div>`;
 
-      els.bottomInfo.hidden = false;
-      els.bottomSearch.hidden = false;
-      els.bottomStudy.hidden = false;
-
+      enterIdleMode();
       window.scrollTo({top:0,behavior:'instant'});
     }
 
     /* =================== Boot =================== */
+    function buildCatalogMaps(){ /* (definida acima — já foi incluída) */ }
     document.addEventListener('DOMContentLoaded', ()=>{
-      buildCatalogMaps();
+      // popula mapas dos <option>
+      (function buildCatalogMapsInit(){
+        const sel = els.codeSelect;
+        state.urlToLabel.clear();
+        sel.querySelectorAll('option').forEach(opt=>{
+          const url = opt.value?.trim();
+          const label = opt.textContent?.trim();
+          if (url) state.urlToLabel.set(url, label);
+        });
+      })();
+
       setFileIndicator('Escolher código');
       resetAll();
     });
+
+    /* ====== Click logo reseta ====== */
+    document.getElementById('brandBtn').addEventListener('click', resetAll);
+    document.getElementById('heroBrand').addEventListener('click', resetAll);
+
+    /* ====== Sheet wiring ====== */
+    els.pickerSheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closePicker(); });
+    els.pickerSearch.addEventListener('input', e=> renderPicker(e.target.value));
   </script>
 </body>
 </html>
