@@ -18,7 +18,7 @@
       --yellow:#FFD601;
       --muted:#5f6470;
 
-      --bg:#f4f6f8;
+      --bg:#ffffff;            /* 🔥 página branca */
       --fg:#101418;
 
       --bar-info-bg:#f0f1f5;
@@ -35,9 +35,6 @@
       --radius:12px;
       --shadow:0 2px 10px rgba(0,0,0,.06);
       --accent: rgba(255,214,1,.2);
-
-      /* UI v2 */
-      --dock-h: 64px;
     }
 
     *{box-sizing:border-box}
@@ -54,10 +51,12 @@
     .topbar{
       position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
       display:flex; align-items:center; justify-content:center;
-      background:var(--navy); color:#fff; z-index:100; box-shadow:var(--shadow);
+      background:#f6f7fb;       /* 🔥 cinza claro no topo */
+      color:#0e1638; z-index:100;
+      box-shadow:0 1px 0 #e6e9f2; /* linha sutil na base */
     }
     .topbar-inner{
-      width:clamp(320px, 92vw, 960px);
+      width:clamp(320px, 94vw, 840px);   /* 🔥 limite de largura no desktop */
       padding:0 12px; display:flex; align-items:center; justify-content:center;
     }
     .brand{ height:45px; width:auto; object-fit:contain; display:block; cursor:pointer; }
@@ -66,7 +65,7 @@
     /* Barra de progresso */
     .progress{
       position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--progress-h); z-index:95;
-      background:transparent;
+      background:#f6f7fb;        /* 🔥 segue o cinza do topo */
     }
     .progress .bar{
       height:100%; width:0%; background:linear-gradient(90deg, #FFD601, #E1DEE6);
@@ -80,24 +79,19 @@
       padding: calc(var(--topbar-h) + var(--progress-h) + 14px) 0 calc(var(--bottom-info-h) + var(--bottom-search-h) + var(--bottom-study-h) + 24px);
       min-height:100dvh;
     }
-    /* UI v2 ajusta o padding inferior para a dock */
-    body[data-ui="v2"] .content{
-      padding-bottom: calc(var(--dock-h) + 18px);
-    }
-
-    .container{ width:clamp(320px, 92vw, 960px); margin:0 auto; padding:0 12px }
+    .container{ width:clamp(320px, 94vw, 840px); margin:0 auto; padding:0 12px } /* 🔥 limite global */
     .placeholder{
-      padding:24px; border:1px dashed #dcdfea; border-radius:var(--radius);
-      color:var(--muted); background:#fafbff; text-align:center;
+      padding:24px; border:1px dashed #e6e9f2; border-radius:var(--radius);
+      color:#6b7280; background:#ffffff; text-align:center;
     }
     .placeholder p{ font-size:1.08rem; line-height:1.65; margin:0 }
 
-    /* Artigos (aparência v1) */
+    /* Artigos */
     article{
       white-space:pre-wrap; border-bottom:1px solid #eef0f6;
       padding:18px 10px; scroll-margin: 92px; border-radius:10px;
       overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
-      background:transparent;
+      background:#ffffff; /* sem cartão, só separador */
     }
     .supra{ color:#6c7282; font-weight:500; font-size:12px; margin-bottom:6px; }
     .supra div{ line-height:1.35 }
@@ -107,15 +101,7 @@
     article.highlight-study{ background:var(--accent) }
     mark{padding:0 2px; border-radius:3px; background:#ffef99}
 
-    /* Melhorias visuais em v2: cards para artigos */
-    body[data-ui="v2"] article{
-      background:#fff; border:1px solid #eef0f6; border-radius:12px;
-      margin:14px 0; box-shadow:var(--shadow);
-    }
-    body[data-ui="v2"] .art-title{ font-size:15px; }
-    body[data-ui="v2"] .art-body{ font-size:13px; line-height:1.6; }
-
-    /* Barra INFO (v1) */
+    /* Barra INFO */
     .bottom-info{
       position:fixed; left:0; right:0; bottom:calc(var(--bottom-search-h) + var(--bottom-study-h));
       height:var(--bottom-info-h);
@@ -124,11 +110,11 @@
       z-index:72; display:flex; align-items:center; justify-content:center;
     }
     .bottom-info-inner{
-      width:clamp(320px, 92vw, 960px);
+      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
       display:flex; align-items:center; justify-content:center; padding:8px 12px;
     }
     .file-indicator{
-      display:inline-flex; align-items:center; justify-content:center;
+      flex:1 1 0; display:inline-flex; align-items:center; justify-content:center;
       font-size:13px; font-weight:600; color:#142B6F;
       background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb;
       padding:6px 12px; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.05);
@@ -138,7 +124,7 @@
     .file-indicator:active{ transform:translateY(0); box-shadow:inset 0 1px 2px rgba(0,0,0,.06); }
     .file-indicator:focus{ outline:2px solid var(--focus); outline-offset:2px; }
 
-    /* Barra BUSCA (v1) */
+    /* Barra BUSCA */
     .bottom-search{
       position:fixed; left:0; right:0; bottom:var(--bottom-study-h);
       height:var(--bottom-search-h);
@@ -146,11 +132,11 @@
       z-index:70; display:flex; align-items:center; justify-content:center;
     }
     .bottom-search-inner{
-      width:clamp(320px, 92vw, 960px);
+      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
       display:flex; align-items:center; gap:6px; padding:6px 10px;
     }
     .iconbtn{
-      width:28px; height:28px; display:grid; place-items:center; cursor:pointer; user-select:none;
+      width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; cursor:pointer; user-select:none;
       font-size:13px; line-height:1; border-radius:8px;
       background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; box-shadow:0 1px 2px rgba(0,0,0,.05);
       transition: background .2s, border .2s, transform .1s, box-shadow .2s;
@@ -177,17 +163,18 @@
       background:#f7f8fc; padding:4px 8px; border-radius:6px; text-align:center;
     }
 
-    /* Barra ESTUDAR (v1) */
+    /* Barra ESTUDAR */
     .bottom-study{
       position:fixed; left:0; right:0; bottom:0; height:var(--bottom-study-h);
       background:var(--bar-bg-2);
       z-index:75; display:flex; align-items:center; justify-content:center; padding:8px 0;
     }
     .bottom-study-inner{
-      width:clamp(320px, 92vw, 960px); padding:6px 12px; display:flex; align-items:center; gap:10px;
+      width:clamp(320px, 94vw, 840px);   /* 🔥 limite aplicado */
+      padding:6px 12px; display:flex; align-items:center; gap:10px;
     }
     .study,.do-search{
-      display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#142B6F;
+      flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#142B6F;
       background:linear-gradient(#ffffff, #f3f6ff); border:2px solid #b9cffb; padding:6px 12px; border-radius:10px;
       box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; text-align:center; transition: background .2s, border .2s, transform .1s, box-shadow .2s;
     }
@@ -215,26 +202,23 @@
       background:#111; color:#fff; padding:8px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:200
     }
     .toast.show{opacity:1}
-    /* Toast posição em v2 */
-    body[data-ui="v2"] .toast{
-      bottom:calc(var(--dock-h) + 14px);
-    }
 
     /* Sheet (picker) */
     .sheet{ position:fixed; inset:0; z-index:120; }
     .sheet[hidden]{ display:none; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.32); }
     .sheet-panel{
-      position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0;
+      position:absolute; left:50%; transform:translateX(-50%); bottom:0; background:#fff; border-radius:16px 16px 0 0;
       max-height:80vh; display:flex; flex-direction:column; padding-bottom:max(8px, env(safe-area-inset-bottom)); box-shadow:0 -8px 24px rgba(0,0,0,.12);
+      width:min(720px,96vw);
     }
-    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eceef2; }
+    .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid #eceef2; }
     .sheet-title{ color:#0e1638; font-weight:800; }
     .sheet-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
-    .sheet-search{ padding:10px 16px; }
+    .sheet-search{ padding:10px 20px; }
     .sheet-search input{ width:100%; height:38px; border:1px solid #cfd4e2; border-radius:10px; padding:0 12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); transition:border .2s, box-shadow .2s; }
     .sheet-search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.35); outline:none; }
-    .sheet-body{ overflow:auto; padding:8px 12px 12px; }
+    .sheet-body{ overflow:auto; padding:8px 20px 12px; }
     .list-section{ padding:6px 0; }
     .list-section h4{ font-size:14px; letter-spacing:.4px; font-weight:700; color:#052373; margin:6px 2px 4px; text-transform:uppercase; }
     .item{ width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px 11px; border-radius:10px; margin:6px 0; border:1px solid #eceff4; background:#f9fafc; }
@@ -243,74 +227,23 @@
     .item:hover, .item:focus{ outline:2px solid var(--focus); outline-offset:2px; }
     .highlight{ background:#ffef99; border-radius:3px; }
 
-    /* -------- Dock (UI v2) -------- */
-    .dock{
-      position:fixed; left:0; right:0; bottom:0; height:var(--dock-h);
-      background:var(--bar-bg); z-index:120;
-      box-shadow:0 -2px 6px rgba(0,0,0,.08);
-      padding:8px 0; padding-bottom:max(8px, env(safe-area-inset-bottom));
-      display:none; /* só exibe em v2 */
-    }
-    body[data-ui="v2"] .dock{ display:block; }
-    .dock-inner{
-      width:clamp(320px, 92vw, 960px);
-      margin:0 auto; padding:0 12px;
-      display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center;
-    }
-    .dock-search{
-      display:grid; grid-template-columns:20px 1fr auto auto; gap:8px; align-items:center;
-      height:40px; border:1px solid #cfd4e2; border-radius:10px; background:#fff; padding:0 10px;
-    }
-    .dock-icon{font-size:14px; opacity:.7;}
-    .dock-search input{
-      border:0; height:36px; outline:none; font:inherit; width:100%;
-    }
-    .dock-search .chip{
-      font-size:11px; color:#6c7282; border:1px solid #e2e5f2; background:#f7f8fc;
-      padding:4px 8px; border-radius:6px;
-    }
-    .dock-actions{ display:flex; gap:8px; }
-    .dock .iconbtn{ width:36px; height:36px; border-radius:10px; }
-    .dock .study{
-      padding:8px 10px; border-radius:10px;
-      background:linear-gradient(#ffffff, #f3f6ff);
-      border:2px solid #b9cffb; color:#142B6F; font-size:13px; font-weight:600;
-    }
-    @media (max-width: 680px){
-      .dock-actions #doSearchBtn{ display:none; }
-    }
-
     /* Responsivo */
     .select-wrap, #codeSelect{ display:none !important; }
     @media (max-width: 768px){ .brand{ height:38px; } }
 
     @media (min-width: 1024px){
-      .file-indicator,.study,.do-search { max-width: 140px; }
+      .file-indicator,.study,.do-search { max-width: 140px; flex:0 1 auto; }
       .bottom-search-inner .search{ flex:1; }
-      .bottom-search-inner .search input{ flex:1; max-width:none; }
-      .sheet-panel{ width:min(720px,96vw); left:50%; right:auto; transform:translateX(-50%); border-radius:16px; }
-      .sheet-head,.sheet-search,.sheet-body{ padding-left:20px; padding-right:20px; }
-      .modal h3{ font-size:1rem; font-weight:500; letter-spacing:.2px; }
-      .modal .subtitle{ font-size:.85rem; color:#777; font-weight:400; }
-      .ia-btn{ font-size:.92rem; font-weight:400; padding:10px 12px; }
+      .bottom-search-inner .search input{ flex:1; max-width:none; } /* ocupa todo o espaço disponível */
     }
 
-    /* Esconde barras antigas quando UI v2 */
-    body[data-ui="v2"] #bottomInfo,
-    body[data-ui="v2"] #bottomSearch,
-    body[data-ui="v2"] #bottomStudy{ display:none !important; }
-
-    /* Botão PWA */
+    /* Botão PWA acima das barras */
     #installApp{
       position:fixed;
       right:20px;
       bottom:calc(var(--bottom-study-h) + var(--bottom-search-h) + var(--bottom-info-h) + 12px);
       padding:10px 16px; border-radius:10px; background:#142B6F; color:#fff; border:none;
       z-index:300; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2)
-    }
-    /* Posição do botão PWA em v2 */
-    body[data-ui="v2"] #installApp{
-      bottom:calc(var(--dock-h) + 12px);
     }
   </style>
 </head>
@@ -378,35 +311,34 @@
     </optgroup>
   </select>
 
-  <!-- BARRAS ANTIGAS (placeholders para compat) -->
-  <div class="bottom-info" id="bottomInfo" aria-hidden="true"></div>
-  <div class="bottom-search" id="bottomSearch" aria-hidden="true"></div>
-  <div class="bottom-study" id="bottomStudy" aria-hidden="true"></div>
-
-  <!-- DOCK NOVA (UI v2) -->
-  <div class="dock" id="dock">
-    <div class="dock-inner">
-      <!-- esquerda: seletor de código -->
+  <!-- BARRA INFORMATIVA -->
+  <div class="bottom-info" id="bottomInfo">
+    <div class="bottom-info-inner">
       <button class="file-indicator" id="openPicker" type="button" aria-haspopup="dialog" aria-controls="pickerSheet" title="Escolher código">
         <span id="fileIndicator">Escolher código</span>
       </button>
+    </div>
+  </div>
 
-      <!-- centro: busca -->
-      <div class="dock-search">
-        <span class="dock-icon" aria-hidden="true">🔍</span>
-        <input id="searchInput" type="search" placeholder="Buscar…" autocomplete="off" />
+  <!-- BARRA 1: BUSCA -->
+  <div class="bottom-search" id="bottomSearch">
+    <div class="bottom-search-inner" aria-live="polite">
+      <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
+      <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
+      <div class="search">
+        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
         <div class="spinner" id="spinner" hidden></div>
-        <span class="chip" id="count" title="Ocorrência atual / Total">0/0</span>
       </div>
+      <div class="result-count" title="Ocorrência atual / Total"><span id="count">0/0</span></div>
+      <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
+    </div>
+  </div>
 
-      <!-- direita: navegação + ações -->
-      <div class="dock-actions">
-        <button class="iconbtn" id="prevBtn" title="Anterior" aria-label="Anterior">◀</button>
-        <button class="iconbtn" id="nextBtn" title="Próximo" aria-label="Próximo">▶</button>
-        <button class="iconbtn danger" id="resetBtn" title="Reiniciar" aria-label="Reiniciar">✕</button>
-        <button class="study" id="doSearchBtn" title="Executar busca">Buscar</button>
-        <button class="study" id="studyBtn" title="Estudar com I.A.">Estudar com I.A.</button>
-      </div>
+  <!-- BARRA 2: ESTUDAR -->
+  <div class="bottom-study" id="bottomStudy">
+    <div class="bottom-study-inner">
+      <button class="study" id="studyBtn">Estudar com I.A.</button>
+      <button class="do-search" id="doSearchBtn">Buscar</button>
     </div>
   </div>
 
@@ -449,14 +381,6 @@
   <button id="installApp" hidden>📲 Instalar App</button>
 
   <script>
-    /* ========= Toggle de UI (v1/v2) ========= */
-    (function(){
-      const qs = new URLSearchParams(location.search);
-      const ui = qs.get('ui') || localStorage.getItem('ui') || 'v2'; // v2 por padrão
-      document.body.dataset.ui = ui;
-      localStorage.setItem('ui', ui);
-    })();
-
     /* =================== Service Worker =================== */
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -492,7 +416,6 @@
       bottomInfo: document.getElementById('bottomInfo'),
       bottomSearch: document.getElementById('bottomSearch'),
       bottomStudy: document.getElementById('bottomStudy'),
-      dock: document.getElementById('dock'),
 
       openPicker: document.getElementById('openPicker'),
       fileIndicator: document.getElementById('fileIndicator'),
@@ -562,9 +485,7 @@
       }
     }
     function setBusy(isBusy){
-      // mantém compat com v1 e também marca a dock
-      els.bottomSearch?.setAttribute('aria-busy', String(isBusy));
-      els.dock?.setAttribute('aria-busy', String(isBusy));
+      els.bottomSearch.setAttribute('aria-busy', String(isBusy));
       els.doSearchBtn.disabled = isBusy;
       els.prevBtn.disabled = isBusy;
       els.nextBtn.disabled = isBusy;
@@ -572,21 +493,20 @@
       setProgressActive(isBusy);           // barra superior
     }
     function updateCount(){
-      els.count.textContent = (!state.matchArticles || state.matchArticles.length === 0)
-        ? '0/0'
-        : `${state.matchIdx+1}/${state.matchArticles.length}`;
+      if (!state.matchArticles || state.matchArticles.length === 0){
+        els.count.textContent = '0/0';
+        return;
+      }
+      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
     }
     function setFileIndicator(label){
       const full = (label || 'Escolher código').trim();
       els.fileIndicator.textContent = full;
       els.openPicker.title = full;
     }
-// Conectar o botão da dock (openPicker) ao mesmo handler antigo
-document.getElementById("openPicker").addEventListener("click", ()=>{
-  showPicker(); // função que você já usa para abrir a sheet de códigos
-});
 
     /* =================== Normalização =================== */
+    // 🔥 normaliza acentos e ç para busca/compare
     function norm(s){
       return (s||'')
         .normalize('NFD')
@@ -673,7 +593,7 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
         let chunk = txt.slice(from, to).trimEnd();
 
         const endDot = chunk.lastIndexOf('.');
-               const endPar = chunk.lastIndexOf(')');
+        const endPar = chunk.lastIndexOf(')');
         const end    = Math.max(endDot, endPar);
         if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
@@ -703,7 +623,7 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
     }
     function parsePrincipios(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
       const out = [];
       parts.forEach((block, i)=>{
         const lines = block.split('\n').map(l=>l.trim());
@@ -766,14 +686,13 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
         const content = document.createElement('div');
         content.className = 'art-body';
 
-        // garante quebra de linha extra antes de §, Parágrafo único, incisos e alíneas
+        // mantém quebras e destaques conforme seu padrão atual
         let body = split.body || '';
         body = body
           .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
           .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
           .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
 
-        // converte \n\n em salto real, e o restante em quebra simples
         content.innerHTML = body
           .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
           .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
@@ -792,8 +711,10 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
         els.articles.innerHTML = '<div class="placeholder"><p>🤔 Nenhum resultado com todos os termos. Tente variar as palavras.</p></div>';
       }
 
-      // mantém as barras/dock visíveis
-      // (em v2 as antigas estão ocultas por CSS)
+      els.bottomInfo.hidden = false;
+      els.bottomSearch.hidden = false;
+      els.bottomStudy.hidden = false;
+
       state.currentList = list;
       updateCurrentOutline();
 
@@ -912,7 +833,7 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
       const q = els.searchInput.value.trim();
       if (!q) { clearMarksAndRerender(); return; }
 
-      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+      const tokens = q.split(/\s+/).filter(Boolean).map(norm); // 🔥 sem acento
       state.currentTokens = tokens;
 
       setBusy(true);
@@ -1022,15 +943,16 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
       const tema = split.titleText || (a.title || 'Artigo');
       return [
         'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo. ',
-        'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
-        '(1) conceito detalhado, explicando separadamente caput, parágrafos, incisos e alíneas, com apoio em doutrina e jurisprudência majoritária; ',
-        '(2) checklist para provas; ',
-        '(3) mini exemplo prático; ',
-        '(4) princípios constitucionais ou jurídicos relacionados; ',
-        '(5) pontos de atenção na prática forense; ',
-        '(6) erros comuns e pegadinhas em provas ou prática; ',
-        '(7) artigos correlatos e possíveis relações processuais, com notas comparativas. ',
-        'Responda em português claro, objetivo e didático.\n\n',
+'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
+'(1) conceito detalhado, explicando separadamente caput, parágrafos, incisos e alíneas, com apoio em doutrina e jurisprudência majoritária; ',
+'(2) checklist para provas; ',
+'(3) mini exemplo prático; ',
+'(4) princípios constitucionais ou jurídicos relacionados; ',
+'(5) pontos de atenção na prática forense; ',
+'(6) erros comuns e pegadinhas em provas ou prática; ',
+'(7) artigos correlatos e possíveis relações processuais, com notas comparativas. ',
+'Responda em português claro, objetivo e didático.\n\n',
+
         `Tema: "${tema}"\n\n`,
         supraText + artigo,
         '\n\n💚 direito.love'
@@ -1123,6 +1045,10 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
           <p>Seu <em>Mini Vade Mecum</em><br>que te ajuda a estudar com <strong>I.A.</strong></p>
         </div>`;
 
+      els.bottomInfo.hidden = false;
+      els.bottomSearch.hidden = false;
+      els.bottomStudy.hidden = false;
+
       window.scrollTo({top:0,behavior:'instant'});
     }
 
@@ -1131,18 +1057,6 @@ document.getElementById("openPicker").addEventListener("click", ()=>{
       buildCatalogMaps();
       setFileIndicator('Escolher código');
       resetAll();
-
-      // atalho: "/" foca busca
-      window.addEventListener('keydown', (e)=>{
-        if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey){
-          const t = e.target;
-          const isInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
-          if (!isInput){
-            e.preventDefault();
-            els.searchInput?.focus();
-          }
-        }
-      });
     });
   </script>
 </body>
