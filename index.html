@@ -121,7 +121,7 @@
     .tab.active::after{
       content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--blue); border-radius:2px;
     }
-    .tab-more{ margin-left:auto; }
+    .tab-more{ }
 
     .more-menu{
       position:fixed; top:calc(var(--topbar-h) + var(--filebar-h)); right:calc((100vw - min(var(--wrap-max), 92vw))/2 + 6px);
@@ -1076,7 +1076,7 @@
     }
 
     /* =================== Filebar =================== */
-    function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5; }
+    function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 7; }
 
     function renderFilebar(){
       const options = getAllOptions();
