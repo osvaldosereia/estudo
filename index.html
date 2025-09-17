@@ -14,10 +14,6 @@
 
   <style>
     :root{
-      --white:#FFFFFF;
-      --navy:#142B6F;
-      --muted:#5f6470;
-
       --bg:#ffffff;
       --fg:#101418;
 
@@ -33,15 +29,12 @@
 
       --wrap-max: 920px;
 
-      --active-bg:#eef3ff;
-      --active-br:#9bb6ff;
+      --blue:#2563eb;
+      --blue-soft:#e8f0ff;
 
-      --icon-muted:#c9ced9;       /* ícone inativo */
-      --icon-strong:#223;         /* texto/ícone padrão */
-      --icon-fav:#f5b301;         /* favorito ativo */
-      --icon-note:#2979ff;        /* nota ativa */
-      --icon-study:#00a562;       /* estudar ativo */
-      --icon-copy:#6b7280;        /* copy ativo (sutil) */
+      --icon-muted:#aeb4c2;
+      --icon-fav:#f5b301;
+      --icon-study:#0ea36b;
     }
 
     *{box-sizing:border-box}
@@ -54,8 +47,6 @@
     }
     button,input,select{font:inherit}
 
-    /* Utilitários */
-    .hidden{display:none !important;}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
     /* ======== TOP BAR ======== */
@@ -74,47 +65,77 @@
 
     .search-wrap{
       flex:1; display:flex; justify-content:flex-end; align-items:center;
-      position:relative; min-width:0;
+      position:relative; min-width:0; gap:8px;
     }
     .search{
       width:min(560px, 100%); position:relative;
     }
     .search input{
-      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 40px 0 14px; background:#fff;
+      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 70px 0 14px; background:#fff;
       box-shadow:0 1px 2px rgba(0,0,0,.03); transition:border .2s, box-shadow .2s;
     }
     .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.25); outline:none; }
     .search .spinner{
-      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      position:absolute; right:42px; top:50%; transform:translateY(-50%);
       width:18px; height:18px; border:2px solid #e2e5f2; border-top-color:#142B6F; border-radius:50%;
       animation:spin 1s linear infinite; display:none;
     }
     .search .spinner.show{ display:block; }
+    .search .clear-x{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      width:22px; height:22px; border-radius:999px; border:1px solid #e5e7ef; background:#fff; cursor:pointer;
+      display:none; align-items:center; justify-content:center; line-height:1;
+    }
+    .search .clear-x.show{ display:flex; }
     @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
 
-    /* ======== BARRA HORIZONTAL DE ARQUIVOS ======== */
+    /* Botão Enviar busca (desktop) */
+    .search-send{
+      display:none; width:38px; height:38px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
+      position:relative;
+    }
+    .search-send svg{ width:18px; height:18px; }
+    @media (min-width: 992px){
+      .search-send{ display:inline-grid; place-items:center; }
+    }
+
+    /* ======== TABS DE ARQUIVOS ======== */
     .filebar{
       position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--filebar-h);
       background:#fff; box-shadow:0 1px 0 var(--line); z-index:99;
       display:flex; align-items:center; justify-content:center;
     }
     .filebar-inner{
-      width:min(var(--wrap-max), 92vw); display:flex; gap:8px; padding:6px 6px; overflow-x:auto; scrollbar-width:none;
+      width:min(var(--wrap-max), 92vw);
+      display:flex; align-items:center; gap:16px; padding:0 6px; overflow-x:auto; scrollbar-width:none;
     }
     .filebar-inner::-webkit-scrollbar{ display:none; }
-    .chip{
-      flex:0 0 auto; padding:7px 12px; border:1px solid #dfe3ef; background:#fff; border-radius:999px;
-      font-weight:600; color:#223; cursor:pointer; user-select:none;
-      transition:background .15s, border-color .15s, transform .12s;
-      white-space:nowrap;
+    .tab{
+      flex:0 0 auto; padding:10px 2px; border:0; background:transparent; cursor:pointer; position:relative;
+      color:#3f4656; font-size:13px; font-weight:600; white-space:nowrap;
     }
-    .chip:hover{ background:#f6f7fb; transform:translateY(-1px); }
-    .chip.active{ background:#eef3ff; border-color:#c3cff5; box-shadow:0 0 0 2px rgba(155,182,255,.25); }
+    .tab:hover{ color:#111; }
+    .tab.active{ color:#111; }
+    .tab.active::after{
+      content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--blue); border-radius:2px;
+    }
+    .tab-more{ margin-left:auto; }
+
+    /* Dropdown Mais */
+    .more-menu{
+      position:fixed; top:calc(var(--topbar-h) + var(--filebar-h)); right:calc((100vw - min(var(--wrap-max), 92vw))/2 + 6px);
+      background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.14);
+      padding:6px; z-index:120; display:none; max-height:50vh; overflow:auto; min-width:220px;
+    }
+    .more-item{
+      display:block; width:100%; text-align:left; background:transparent; border:0; padding:10px 10px; cursor:pointer; border-radius:8px; font-size:13px;
+    }
+    .more-item:hover{ background:#f6f7fb; }
 
     /* ======== CONTEÚDO ======== */
     .content{
       position:relative;
-      padding: calc(var(--topbar-h) + var(--filebar-h) + 12px) 0 40px;
+      padding: calc(var(--topbar-h) + var(--filebar-h) + 12px) 0 44px;
       min-height:100dvh;
     }
     .container{ width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 8px }
@@ -127,7 +148,7 @@
       color:#6c7282; font-size:13px; margin:6px 4px 12px;
     }
 
-    /* ======== Artigos (layout mantido) ======== */
+    /* ======== Artigos ======== */
     article{
       white-space:pre-wrap;
       padding:16px 4px 18px; overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
@@ -145,67 +166,36 @@
       display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px;
     }
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
-    .art-actions{ display:flex; align-items:center; gap:6px }
-    .act-btn{
-      width:28px; height:28px; border-radius:999px; border:1px solid transparent; background:#fff; display:grid; place-items:center;
-      cursor:pointer; line-height:1; position:relative; color:var(--icon-muted);
+    .art-actions{ display:flex; align-items:center; gap:10px }
+
+    .icon-btn{
+      width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
+      color:var(--icon-muted);
     }
-    .act-btn svg{ width:16px; height:16px; display:block; }
-    .act-btn.active{ background:var(--active-bg); border-color:var(--active-br); box-shadow:0 0 0 2px rgba(155,182,255,.25); color:var(--icon-strong); }
-    .act-btn[data-action="fav"].active{ color:var(--icon-fav); }
-    .act-btn[data-action="note"].active{ color:var(--icon-note); }
-    .act-btn[data-action="study"].active{ color:var(--icon-study); }
-    .act-btn[data-action="copy"].active{ color:var(--icon-copy); }
-    .act-btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+    .icon-btn img{ width:18px; height:18px; display:block; }
+    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); filter: none; }
+    .icon-btn.active[data-action="study"]{ color:var(--icon-study); filter: none; }
 
     .art-body { font-size:12px; line-height:1.45; }
-    article.current-outline{ outline:3px solid #7aa8ff; outline-offset:2px; }
     article.highlight-study{ background:rgba(255,214,1,.12) }
     mark{padding:0 2px; border-radius:3px; background:#ffef99}
 
-    /* ======== Notas rápidas ======== */
-    .note-pad{
-      margin-top:8px; padding:10px; border:1px solid #e7eaf3; border-radius:10px; background:#f9fbff;
-      display:none;
-    }
-    .note-pad textarea{
-      width:100%; min-height:90px; resize:vertical; border:1px solid #cfd4e2; border-radius:8px; padding:8px; background:#fff;
-      outline:none;
-    }
-    .note-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
-    .btn{ position:relative; }
-    .btn, .note-actions button{
-      padding:8px 12px; border-radius:10px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
-    }
-
-    /* ======== MINI-MODAL DE BUSCA (próximo à base) ======== */
+    /* ======== MINI-MODAL DE BUSCA (flutuante/preto) ======== */
     .finder-pop{
       position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
-      background:#fff; border:1px solid #e1e5f2; box-shadow:0 6px 20px rgba(0,0,0,.12);
-      border-radius:12px; z-index:120; padding:6px 8px; display:none; align-items:center; gap:6px;
+      background:#000; color:#fff; border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      border-radius:14px; z-index:220; padding:8px 10px; display:none; align-items:center; gap:10px;
     }
     .finder-pop.show{ display:flex; }
     .mini-btn{
-      width:30px; height:30px; display:grid; place-items:center; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
+      width:36px; height:36px; display:grid; place-items:center; border-radius:999px; border:1px solid rgba(255,255,255,.25); background:transparent; cursor:pointer; color:#fff;
     }
-    .mini-btn svg{ width:16px; height:16px; }
+    .mini-btn:hover{ background:rgba(255,255,255,.08); }
+    .mini-btn svg{ width:18px; height:18px; }
     .mini-count{
-      min-width:60px; font-size:12px; color:#6c7282; border:1px solid #e2e5f2; background:#f7f8fc; padding:4px 8px; border-radius:999px; text-align:center;
+      min-width:72px; font-size:12px; color:#fff; border:1px solid rgba(255,255,255,.25); background:transparent; padding:6px 10px; border-radius:999px; text-align:center;
     }
-
-    /* ======== MODAL: ESTUDAR COM I.A. (mantido) ======== */
-    .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.28); z-index:200; }
-    .modal{ background:#fff; border-radius:16px; width:min(var(--wrap-max), 92vw); padding:0; border:1px solid #eceef7; box-shadow: var(--shadow); max-height:calc(100vh - 48px); overflow:auto; }
-    .study-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #eceef2; }
-    .study-title{ margin:0; color:#0f173a; font-size:16px; font-weight:600; letter-spacing:.2px; }
-    .study-sub{ margin:0; font-size:13px; color:#666; font-weight:400; padding:0 16px 12px; border-bottom:1px solid #f0f2f7; }
-    .prompt-box{ margin:12px 16px; border:1px solid #e2e5f2; background:#f6f7fb; border-radius:12px; padding:10px; max-height:180px; overflow:auto; font-size:12px; line-height:1.45; white-space:pre-wrap; }
-    .ia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 12px; }
-    .ia-btn{ display:flex; align-items:center; justify-content:center; padding:12px; border:1px solid #e6e8f2; background:#fff; border-radius:12px; cursor:pointer; text-decoration:none; color:#111; font-weight:500; transition: background .2s, border .15s, transform .12s; position:relative; }
-    .ia-btn:hover{ background:#f7f8ff; border-color:#c3cff5; transform:translateY(-1px); }
-    .copy-prompt{ margin:0 16px 16px; display:flex; justify-content:center; }
-    .copy-prompt button{ padding:10px 16px; border-radius:999px; background:#142B6F; color:#fff; border:1px solid #142B6F; font-weight:600; cursor:pointer; }
-    .study-close{ width:32px; height:32px; border:1px solid #e2e5f2; background:#fff; border-radius:10px; display:grid; place-items:center; cursor:pointer; }
 
     /* Toast */
     .toast{
@@ -215,7 +205,7 @@
     }
     .toast.show{opacity:1}
 
-    /* Spinner overlay sobre QUALQUER botão */
+    /* Spinner overlay em QUALQUER botão */
     .busy{ pointer-events:none; }
     .busy::after{
       content:""; position:absolute; inset:0; display:block;
@@ -229,8 +219,8 @@
     /* Responsivo */
     @media (max-width: 768px){
       .brand{ height:34px; }
-      .ia-grid{ grid-template-columns:1fr; }
-      .chip{ padding:7px 10px; }
+      .filebar-inner{ gap:12px; }
+      .tab{ font-size:12px; }
     }
   </style>
 </head>
@@ -243,17 +233,24 @@
         <div class="search">
           <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
           <div class="spinner" id="searchSpinner"></div>
+          <button class="clear-x" id="clearSearch" title="Limpar" aria-label="Limpar">✕</button>
         </div>
+        <button class="search-send btn" id="sendSearch" title="Buscar" aria-label="Buscar" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- BARRA DE ARQUIVOS (scroll horizontal invisível) -->
+  <!-- TABS DE ARQUIVOS -->
   <nav class="filebar">
     <div class="filebar-inner" id="filebarInner"></div>
   </nav>
 
-  <!-- MINI-MODAL DE BUSCA (setas + contador + X) -->
+  <!-- DROPDOWN "MAIS" -->
+  <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
+
+  <!-- MINI-MODAL DA BUSCA -->
   <div class="finder-pop" id="finderPop" aria-live="polite">
     <button class="mini-btn" id="prevBtn" title="Anterior" aria-label="Anterior" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -274,7 +271,7 @@
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO (fonte dos itens) -->
+  <!-- CATÁLOGO OCULTO -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
     <optgroup label="CF88">
@@ -354,9 +351,12 @@
       brandBtn: document.getElementById('brandBtn'),
       searchInput: document.getElementById('searchInput'),
       searchSpinner: document.getElementById('searchSpinner'),
+      clearSearch: document.getElementById('clearSearch'),
+      sendSearch: document.getElementById('sendSearch'),
 
       // filebar
       filebarInner: document.getElementById('filebarInner'),
+      moreMenu: document.getElementById('moreMenu'),
 
       // mini finder
       finderPop: document.getElementById('finderPop'),
@@ -391,7 +391,6 @@
       articles: [],
       currentArticleIdx: -1,
 
-      currentList: [],
       currentTokens: [],
       matchArticles: [],
       matchIdx: -1,
@@ -403,13 +402,10 @@
     const store = {
       get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
       set(k, v){ localStorage.setItem(k, JSON.stringify(v)); },
-      // chaves
       keyFav: 'dl_favorites',
-      keyNotes: 'dl_notes',
       keyStud: 'dl_studied',
       makeId: (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`,
 
-      // FAVORITOS
       listFavorites(){ return store.get(store.keyFav, []); },
       isFavorite(id){ return store.listFavorites().some(e => e.id === id); },
       addFavorite(entry){
@@ -422,25 +418,6 @@
         store.set(store.keyFav, list);
       },
 
-      // NOTAS
-      getNotesMap(){ return store.get(store.keyNotes, {}); },
-      getNote(id){
-        const map = store.getNotesMap();
-        return map[id]?.note || '';
-      },
-      setNote(entry, noteText){
-        const map = store.getNotesMap();
-        if (noteText && noteText.trim()){
-          map[entry.id] = { ...entry, ts: Date.now(), note: noteText.trim() };
-        } else {
-          delete map[entry.id];
-        }
-        store.set(store.keyNotes, map);
-      },
-      listNotes(){ return Object.values(store.getNotesMap()); },
-      hasNote(id){ return !!store.getNotesMap()[id]; },
-
-      // ESTUDADOS (últimos 50)
       listStudied(){ return store.get(store.keyStud, []); },
       markStudied(entry){
         let list = store.listStudied().filter(e => e.id !== entry.id);
@@ -460,7 +437,7 @@
     async function withBusy(btn, fn){
       if (btn) btn.classList.add('busy');
       try{
-        const min = 280;
+        const min = 260;
         const t0 = performance.now();
         const res = await fn();
         const dt = performance.now() - t0;
@@ -471,7 +448,7 @@
       }
     }
 
-    /* =================== Helpers UI =================== */
+    /* =================== Helpers =================== */
     const sanitizeForLayout = (s)=> s
       .replace(/\u00A0/g, ' ')
       .replace(/\t/g, ' ')
@@ -505,9 +482,7 @@
       return out;
     }
 
-    function sortByTsDesc(arr){
-      return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0));
-    }
+    function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser =================== */
     function splitBlockSupraTitleBody(raw){
@@ -640,14 +615,6 @@
            : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
     }
 
-    /* =================== Ícones (SVG) =================== */
-    const Icons = {
-      star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27l-5.18 3.04 1.4-5.99-4.22-3.65 6.05-.52L12 4l1.95 6.15 6.05.52-4.22 3.65 1.4 5.99z"/></svg>',
-      note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
-      book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5"/><path d="M20 22V6a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 6.5"/></svg>',
-      copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-    };
-
     /* =================== Render helpers =================== */
     function buildArticleElement(a, idx, {globalMode=false}={}){
       const el = document.createElement('article');
@@ -685,20 +652,16 @@
       const actions = document.createElement('div');
       actions.className = 'art-actions';
 
-      const starBtn = document.createElement('button');
-      starBtn.className = 'act-btn btn'; starBtn.title = 'Favoritar'; starBtn.dataset.action = 'fav'; starBtn.innerHTML = Icons.star;
-
-      const noteBtn = document.createElement('button');
-      noteBtn.className = 'act-btn btn'; noteBtn.title = 'Nota rápida'; noteBtn.dataset.action = 'note'; noteBtn.innerHTML = Icons.note;
+      // Só dois ícones (sem box) – você vai subir os SVGs
+      const favBtn = document.createElement('button');
+      favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
+      favBtn.innerHTML = `<img src="icons/favorito.svg" alt="Favoritar" />`;
 
       const studyBtn = document.createElement('button');
-      studyBtn.className = 'act-btn btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study'; studyBtn.innerHTML = Icons.book;
+      studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
+      studyBtn.innerHTML = `<img src="icons/estudar.svg" alt="Estudar" />`;
 
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'act-btn btn'; copyBtn.title = 'Copiar artigo'; copyBtn.dataset.action = 'copy'; copyBtn.innerHTML = Icons.copy;
-
-      actions.append(starBtn, noteBtn, studyBtn, copyBtn);
-
+      actions.append(favBtn, studyBtn);
       head.append(titleSpan, actions);
       el.appendChild(head);
 
@@ -720,53 +683,71 @@
 
       el.appendChild(content);
 
-      // Área de notas (oculta por padrão)
-      const notePad = document.createElement('div');
-      notePad.className = 'note-pad';
-      notePad.innerHTML = `
-        <textarea placeholder="Sua nota rápida aqui… (vazio para remover)"></textarea>
-        <div class="note-actions">
-          <button class="btn note-close">Fechar</button>
-        </div>`;
-      el.appendChild(notePad);
-
       // Estados ativos
       const id = store.makeId(el.dataset.fileUrl, el.id);
-      if (store.isFavorite(id)) starBtn.classList.add('active');
-      if (store.hasNote(id)) noteBtn.classList.add('active');
+      if (store.isFavorite(id)) favBtn.classList.add('active');
       if (store.isStudied(id)) studyBtn.classList.add('active');
 
       return el;
     }
 
-    function renderArticles(list, {globalMode=false}={}){
-      const frag = document.createDocumentFragment();
-      list.forEach((a, i)=>{
-        const el = buildArticleElement(a, i, {globalMode});
-        frag.appendChild(el);
-      });
+    function clearArticles(){
       els.articles.innerHTML = '';
-      if (list.length){ els.articles.appendChild(frag); }
-      else { els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum resultado com todos os termos.</div>'; }
+      state.currentArticleIdx = -1;
+    }
 
-      state.currentList = list;
-      updateCurrentOutline();
+    // Render progressivo: 5 primeiro instantâneo, resto em lotes
+    function renderArticlesProgressive(list, {chunkSize=30}={}){
+      clearArticles();
+      if (!list.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+        return;
+      }
+      // primeiros 5
+      const first = Math.min(5, list.length);
+      const frag = document.createDocumentFragment();
+      for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
+      els.articles.appendChild(frag);
 
-      state.matchArticles = [];
-      state.matchIdx = -1;
-      updateCount();
+      // fila restante
+      let i = first;
+      function appendChunk(deadline){
+        const fr = document.createDocumentFragment();
+        let added = 0;
+        while (i < list.length && added < chunkSize){
+          fr.appendChild(buildArticleElement(list[i], i, {globalMode:false}));
+          i++; added++;
+        }
+        els.articles.appendChild(fr);
+        if (i < list.length){
+          // usa requestIdleCallback quando disponível, senão timeout
+          if ('requestIdleCallback' in window){
+            requestIdleCallback(appendChunk);
+          } else {
+            setTimeout(appendChunk, 0);
+          }
+        }
+      }
+      if (first < list.length){
+        if ('requestIdleCallback' in window){
+          requestIdleCallback(appendChunk);
+        } else {
+          setTimeout(appendChunk, 0);
+        }
+      }
     }
 
     function renderHighlights(){
-      els.articles.innerHTML = '';
+      clearArticles();
+      const favs = sortByTsDesc(store.listFavorites());
+      const studs = sortByTsDesc(store.listStudied());
 
       const sections = [
-        { title: 'Favoritos', data: sortByTsDesc(store.listFavorites()) },
-        { title: 'Últimos estudados', data: sortByTsDesc(store.listStudied()) },
-        { title: 'Com notas', data: sortByTsDesc(store.listNotes()) },
+        { title: 'Favoritos', data: favs },
+        { title: 'Últimos estudados', data: studs },
       ];
 
-      let index = 0;
+      let idx = 0;
       sections.forEach(sec=>{
         const h = document.createElement('div');
         h.className = 'section-title';
@@ -792,27 +773,12 @@
 
         const frag = document.createDocumentFragment();
         list.forEach(a=>{
-          const el = buildArticleElement(a, index++, {globalMode:true});
-          frag.appendChild(el);
+          frag.appendChild(buildArticleElement(a, idx++, {globalMode:true}));
         });
         els.articles.appendChild(frag);
       });
 
-      state.currentList = []; // não usado em highlights
-      state.matchArticles = [];
-      state.matchIdx = -1;
-      updateCount();
       window.scrollTo({top:0,behavior:'instant'});
-    }
-
-    function updateCurrentOutline(){
-      const idx = getArticleInView();
-      if (idx === state.currentArticleIdx) return;
-      state.currentArticleIdx = idx;
-      document.querySelectorAll('article.current-outline').forEach(n=>n.classList.remove('current-outline'));
-      if (idx >= 0){
-        document.querySelector(`article[data-idx="${idx}"]`)?.classList.add('current-outline');
-      }
     }
 
     function getArticleInView(){
@@ -831,98 +797,13 @@
       }
       return hitIdx;
     }
-    window.addEventListener('scroll', ()=> updateCurrentOutline(), {passive:true});
 
-    /* =================== Loader de arquivo =================== */
-    async function fetchTextCached(url){
-      if (state.cache.has(url)) return state.cache.get(url);
-      const res = await fetch(url, {cache: 'force-cache'});
-      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
-      const txt = sanitizeForLayout(await res.text());
-      state.cache.set(url, txt);
-      return txt;
-    }
-    async function loadFile(url, chipBtn){
-      if (!url) return;
-      await withBusy(chipBtn, async ()=>{
-        els.searchSpinner.classList.add('show');
-        try{
-          const txt = await fetchTextCached(url);
-          state.rawText = txt;
-          const list = parseByUrl(url, txt);
-          state.currentFileUrl = url;
-          state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
-          state.articles = list;
-          state.mode = 'file';
-
-          renderArticles(list, {globalMode:false});
-          window.scrollTo({top:0,behavior:'instant'});
-          notify(`Carregado: ${state.currentFileLabel}`);
-        }catch(err){
-          console.error(err);
-          els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
-          notify('Erro ao carregar arquivo');
-        } finally {
-          els.searchSpinner.classList.remove('show');
-        }
-      });
-    }
-
-    /* =================== Busca Local (lógica preservada) =================== */
     function updateCount(){
       if (!state.matchArticles || state.matchArticles.length === 0){
         els.count.textContent = '0/0';
         return;
       }
       els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
-    }
-
-    async function runLocalSearch(){
-      if (state.mode !== 'file'){
-        notify('Abra um arquivo para buscar.');
-        return;
-      }
-
-      const q = els.searchInput.value.trim();
-      if (!q) {
-        renderArticles(state.articles, { globalMode: false });
-        state.matchArticles = []; state.matchIdx = -1; updateCount();
-        return;
-      }
-
-      els.searchSpinner.classList.add('show');
-
-      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
-      state.currentTokens = tokens;
-
-      renderArticles(state.articles, { globalMode: false });
-
-      state.matchArticles = [];
-      const articles = document.querySelectorAll('article');
-
-      for (const art of articles){
-        const fullText = [
-          art.querySelector('.art-title')?.textContent || '',
-          art.querySelector('.art-body')?.textContent || '',
-          ...[...art.querySelectorAll('.supra > div')].map(el => el.textContent || '')
-        ].join(' ');
-        const textNorm = norm(fullText);
-
-        if (tokens.every(t => textNorm.includes(t))){
-          state.matchArticles.push(art);
-          highlightTokens(art, tokens);
-        }
-      }
-
-      if (state.matchArticles.length){
-        state.matchIdx = 0;
-        state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
-      } else {
-        state.matchIdx = -1;
-      }
-
-      updateCount();
-      els.searchSpinner.classList.remove('show');
     }
 
     function highlightTokens(art, tokens){
@@ -939,18 +820,122 @@
       });
     }
 
-    /* =================== Filebar =================== */
+    window.addEventListener('scroll', ()=>{ /* outline removido por simplicidade visual */ }, {passive:true});
+
+    /* =================== Loader de arquivo =================== */
+    async function fetchTextCached(url){
+      if (state.cache.has(url)) return state.cache.get(url);
+      const res = await fetch(url, {cache: 'force-cache'});
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const txt = sanitizeForLayout(await res.text());
+      state.cache.set(url, txt);
+      return txt;
+    }
+
+    async function loadFile(url, tabBtn){
+      if (!url) return;
+      await withBusy(tabBtn, async ()=>{
+        els.searchSpinner.classList.add('show');
+        try{
+          const txt = await fetchTextCached(url);
+          state.rawText = txt;
+          const list = parseByUrl(url, txt);
+          state.currentFileUrl = url;
+          state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
+          state.articles = list;
+          state.mode = 'file';
+
+          renderArticlesProgressive(list);     // << instantâneo + lotes
+          window.scrollTo({top:0,behavior:'instant'});
+          notify(`Carregado: ${state.currentFileLabel}`);
+        }catch(err){
+          console.error(err);
+          els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
+          notify('Erro ao carregar arquivo');
+        } finally {
+          els.searchSpinner.classList.remove('show');
+        }
+      });
+    }
+
+    /* =================== Busca Local =================== */
+    async function runLocalSearch(){
+      if (state.mode !== 'file'){
+        notify('Abra um arquivo para buscar.');
+        return;
+      }
+      const q = els.searchInput.value.trim();
+      els.finderPop.classList.add('show');
+
+      if (!q) {
+        renderArticlesProgressive(state.articles);
+        state.matchArticles = []; state.matchIdx = -1; updateCount();
+        return;
+      }
+
+      els.searchSpinner.classList.add('show');
+
+      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+      state.currentTokens = tokens;
+
+      // Re-render para resetar marcações
+      renderArticlesProgressive(state.articles);
+
+      // após render, coletar e marcar
+      requestAnimationFrame(()=>{
+        state.matchArticles = [];
+        const articles = document.querySelectorAll('article');
+
+        for (const art of articles){
+          const fullText = [
+            art.querySelector('.art-title')?.textContent || '',
+            art.querySelector('.art-body')?.textContent || '',
+            ...[...art.querySelectorAll('.supra > div')].map(el => el.textContent || '')
+          ].join(' ');
+          const textNorm = norm(fullText);
+
+          if (tokens.every(t => textNorm.includes(t))){
+            state.matchArticles.push(art);
+            highlightTokens(art, tokens);
+          }
+        }
+
+        if (state.matchArticles.length){
+          state.matchIdx = 0;
+          state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
+        } else {
+          state.matchIdx = -1;
+        }
+
+        updateCount();
+        els.searchSpinner.classList.remove('show');
+      });
+    }
+
+    /* =================== TABS (filebar) =================== */
+    function getVisibleTabsCount(){
+      // número simples baseado na largura
+      const w = Math.min(window.innerWidth, 920);
+      if (w >= 900) return 7;
+      if (w >= 780) return 6;
+      if (w >= 680) return 5;
+      if (w >= 560) return 4;
+      if (w >= 460) return 3;
+      return Infinity; // mobile: mostra todas (scroll)
+    }
+
     function renderFilebar(){
+      const options = getAllOptions(); // todos os arquivos
       const frag = document.createDocumentFragment();
 
-      const mkChip = (label, url=null)=>{
+      const mkTab = (label, url=null, extraClass='')=>{
         const b = document.createElement('button');
-        b.className = 'chip';
+        b.className = `tab ${extraClass}`;
         b.type = 'button';
         b.textContent = label;
         b.dataset.url = url || '';
         b.addEventListener('click', async (e)=>{
-          document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
           b.classList.add('active');
           if (!url){
             state.mode = 'highlights';
@@ -962,19 +947,57 @@
         return b;
       };
 
-      // Destaques primeiro
-      const chipHighlights = mkChip('Destaques', null);
-      chipHighlights.classList.add('active');
-      frag.appendChild(chipHighlights);
+      // "Destaques"
+      const tabHighlights = mkTab('Destaques', null);
+      tabHighlights.classList.add('active');
+      frag.appendChild(tabHighlights);
 
-      // Demais arquivos
-      getAllOptions().forEach(opt=>{
-        const chip = mkChip(opt.label, opt.value);
-        frag.appendChild(chip);
-      });
+      const visibleCap = getVisibleTabsCount();
+      if (visibleCap === Infinity){
+        // mobile: mostra tudo com scroll
+        options.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
+      } else {
+        const visible = options.slice(0, visibleCap);
+        const hidden = options.slice(visibleCap);
+
+        visible.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
+
+        if (hidden.length){
+          const more = mkTab('Mais ▾', null, 'tab-more');
+          more.addEventListener('click', ()=>{
+            toggleMoreMenu(hidden, more);
+          });
+          frag.appendChild(more);
+        }
+      }
 
       els.filebarInner.innerHTML = '';
       els.filebarInner.appendChild(frag);
+    }
+
+    function toggleMoreMenu(items, anchorBtn){
+      if (els.moreMenu.style.display === 'block'){
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
+        return;
+      }
+      els.moreMenu.innerHTML = '';
+      items.forEach(it=>{
+        const bi = document.createElement('button');
+        bi.className = 'more-item';
+        bi.type = 'button';
+        bi.textContent = it.label;
+        bi.addEventListener('click', async ()=>{
+          els.moreMenu.style.display = 'none';
+          els.moreMenu.setAttribute('aria-hidden','true');
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          anchorBtn.classList.add('active'); // mantém sublinha no "Mais" até carregar
+          await loadFile(it.value, anchorBtn);
+        });
+        els.moreMenu.appendChild(bi);
+      });
+      els.moreMenu.style.display = 'block';
+      els.moreMenu.setAttribute('aria-hidden','false');
     }
 
     /* =================== IA prompt =================== */
@@ -1012,8 +1035,8 @@
     /* =================== Eventos globais =================== */
     // Logo -> Destaques
     els.brandBtn.addEventListener('click', ()=>{
-      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-      const first = els.filebarInner.querySelector('.chip');
+      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+      const first = els.filebarInner.querySelector('.tab');
       if (first){ first.classList.add('active'); }
       state.mode = 'highlights';
       renderHighlights();
@@ -1021,6 +1044,12 @@
     });
 
     // Busca
+    function toggleClear(){
+      els.clearSearch.classList.toggle('show', !!els.searchInput.value);
+    }
+    els.searchInput.addEventListener('input', toggleClear);
+    toggleClear();
+
     els.searchInput.addEventListener('focus', ()=>{
       els.finderPop.classList.add('show');
     });
@@ -1031,6 +1060,13 @@
     els.searchInput.addEventListener('keydown', (e)=>{
       if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
     });
+    els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
+    els.clearSearch.addEventListener('click', ()=>{
+      els.searchInput.value = '';
+      toggleClear();
+      runLocalSearch();
+    });
+
     els.nextBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
@@ -1065,44 +1101,29 @@
       });
     });
 
-    // Delegação nos cards
+    // Delegação nos cards (favoritar/estudar)
     els.articles.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('.act-btn');
+      const btn = e.target.closest('.icon-btn');
       if (!btn) return;
       const artEl = e.target.closest('article');
       if (!artEl) return;
 
       const idx = Number(artEl?.dataset.idx);
-      // No modo highlights, os índices são lineares entre seções; usamos currentList somente no modo file.
       const a = (state.mode === 'file' ? state.articles[idx] : null);
-      const sourceText = state.mode === 'file' ? a?.text : (()=> {
-        // recuperar texto a partir do próprio card (fallback)
-        const id = artEl.id;
-        const fileUrl = artEl.dataset.fileUrl;
-        // como salvamos texto completo nas listas (favoritos/notas/estudados), o botão só precisa do texto quando for abrir modal ou copiar
-        // guardaremos no dataset ao criar (não fizemos por memória). Aqui, buscaremos do store por id:
-        const entryId = store.makeId(fileUrl, id);
-        const fav = store.listFavorites().find(e => e.id === entryId);
-        const stud = store.listStudied().find(e => e.id === entryId);
-        const noteMap = store.getNotesMap()[entryId];
-        return fav?.text || stud?.text || noteMap?.text || '';
-      })();
-
       const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
+
       const entry = {
         id,
         fileUrl: artEl.dataset.fileUrl,
         fileLabel: artEl.dataset.fileLabel,
         htmlId: artEl.id,
-        text: state.mode === 'file' ? a.text : sourceText
+        text: state.mode === 'file' ? a.text : (()=>{
+          // recuperar texto salvo nos stores
+          const fav = store.listFavorites().find(e => e.id === id);
+          const stud = store.listStudied().find(e => e.id === id);
+          return fav?.text || stud?.text || '';
+        })()
       };
-
-      if (btn.dataset.action === 'copy'){
-        await withBusy(btn, async ()=>{
-          try{ await navigator.clipboard.writeText(entry.text || ''); notify('✅ Artigo copiado!'); }
-          catch{ notify('Copie manualmente.'); }
-        });
-      }
 
       if (btn.dataset.action === 'study'){
         await withBusy(btn, async ()=>{
@@ -1134,30 +1155,13 @@
           }
         });
       }
+    });
 
-      if (btn.dataset.action === 'note'){
-        await withBusy(btn, async ()=>{
-          const pad = artEl.querySelector('div.note-pad');
-          const textarea = pad.querySelector('textarea');
-          const visible = pad.style.display === 'block';
-          pad.style.display = visible ? 'none' : 'block';
-          if (!visible){
-            textarea.value = store.getNote(id) || '';
-            textarea.focus();
-          }
-          const onInput = ()=>{
-            const val = textarea.value;
-            store.setNote(entry, val);
-            if (val.trim()) btn.classList.add('active');
-            else btn.classList.remove('active');
-          };
-          textarea.removeEventListener('input', textarea._onInput);
-          textarea._onInput = onInput;
-          textarea.addEventListener('input', onInput);
-
-          pad.querySelector('.note-close').onclick = ()=>{ pad.style.display='none'; };
-          notify(pad.style.display==='block' ? '📝 Nota aberta' : '📝 Nota fechada');
-        });
+    // Fechar "Mais" ao clicar fora
+    document.addEventListener('click', (e)=>{
+      if (!els.moreMenu.contains(e.target) && !e.target.closest('.tab-more')){
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
       }
     });
 
@@ -1166,13 +1170,14 @@
       buildCatalogMaps();
       renderFilebar();
       renderHighlights(); // inicia em Destaques
-      // tecla Esc fecha mini finder e modal
+      // Esc fecha mini finder e modal
       document.addEventListener('keydown', (e)=>{
         if (e.key === 'Escape'){
           els.finderPop.classList.remove('show');
           if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
         }
       });
+      window.addEventListener('resize', ()=>{ renderFilebar(); }, {passive:true});
     }
 
     boot();
