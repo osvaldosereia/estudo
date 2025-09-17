@@ -528,7 +528,7 @@
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser =================== */
-    function splitBlockSupraTitleBody(raw){
+  function splitBlockSupraTitleBody(raw){
   const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
 
   const artIdx = lines.findIndex(line =>
@@ -552,35 +552,6 @@
         !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo/livro
         !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
       ) {
-        // garante que a linha atual seja realmente um artigo
-        if (/^Art\.?/i.test(lines[artIdx])) {
-          epigrafe = prev;
-          lines.splice(lookback, 1); // remove epígrafe da posição antiga
-          artIdx--;  function splitBlockSupraTitleBody(raw){
-  const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
-
-  const artIdx = lines.findIndex(line =>
-    /^\s*Pre[âa]mbulo/i.test(line) ||
-    /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
-    /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
-  );
-
-  // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
-  let epigrafe = "";
-  if (artIdx > 0) {
-    let lookback = artIdx - 1;
-    while (lookback >= 0 && lookback >= artIdx - 3) {
-      const prev = lines[lookback].trim();
-      if (!prev) { // ignora linhas em branco
-        lookback--;
-        continue;
-      }
-
-      if (
-        !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo/livro
-        !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
-      ) {
-        // garante que a linha atual seja realmente um artigo
         if (/^Art\.?/i.test(lines[artIdx])) {
           epigrafe = prev;
           lines.splice(lookback, 1); // remove epígrafe da posição antiga
@@ -615,6 +586,7 @@
     return { supra:[], titleText, body };
   }
 }
+
 
 
 
