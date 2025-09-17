@@ -1010,14 +1010,14 @@
 renderArticlesProgressive(state.articles, {chunkSize: Infinity});
 
 requestAnimationFrame(()=>{
-  // aplica destaque apenas nos que deram match
-  matched.forEach(m => {
-    const art = document.getElementById(m.htmlId);
-    if (art) highlightTextNodes(art, tokens);
+  // aplica highlight em todos os artigos renderizados
+  document.querySelectorAll('article').forEach(art=>{
+    highlightTextNodes(art, tokens);
   });
 
   // state.matchArticles só guarda os que deram match
   state.matchArticles = matched.map(m => document.getElementById(m.htmlId)).filter(Boolean);
+
 
 
     if (state.matchArticles.length){
