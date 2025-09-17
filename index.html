@@ -575,36 +575,38 @@
     }
 
     function parseByArt(txt){
-    const re = /(^|\n)\s*((?:Preâmbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
-     const starts = [];
-      let m;
-      while ((m = re.exec(txt)) !== null) {
-        const idxArt = re.lastIndex - m[2].length;
-        starts.push(idxArt);
-      }
-      if (!starts.length) return [{
-        title:'Texto',
-        text: txt.trim(),
-        htmlId:'art-0',
-        _split: splitBlockSupraTitleBody(txt.trim())
-      }];
+  // Agora reconhece "Preâmbulo" (com ou sem acento) e também os artigos
+  const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
+  const starts = [];
+  let m;
+  while ((m = re.exec(txt)) !== null) {
+    const idxArt = re.lastIndex - m[2].length;
+    starts.push(idxArt);
+  }
+  if (!starts.length) return [{
+    title:'Texto',
+    text: txt.trim(),
+    htmlId:'art-0',
+    _split: splitBlockSupraTitleBody(txt.trim())
+  }];
 
-      const arts = [];
-      for (let i = 0; i < starts.length; i++) {
-        const from = starts[i];
-        const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
-        let chunk = txt.slice(from, to).trimEnd();
+  const arts = [];
+  for (let i = 0; i < starts.length; i++) {
+    const from = starts[i];
+    const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
+    let chunk = txt.slice(from, to).trimEnd();
 
-        const endDot = chunk.lastIndexOf('.');
-        theEnd = Math.max(chunk.lastIndexOf('.'), chunk.lastIndexOf(')'));
-        if (theEnd !== -1) chunk = chunk.slice(0, theEnd + 1).trimEnd();
+    const endDot = chunk.lastIndexOf('.');
+    const endPar = chunk.lastIndexOf(')');
+    const end    = Math.max(endDot, endPar);
+    if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
-        const split = splitBlockSupraTitleBody(chunk);
-        const title = split.titleText || chunk.split('\n')[0].slice(0,40);
-        arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
-      }
-      return arts;
-    }
+    const split = splitBlockSupraTitleBody(chunk);
+    const title = split.titleText || chunk.split('\n')[0].slice(0,40);
+    arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
+  }
+  return arts;
+}
 
     function parseSumulas(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
