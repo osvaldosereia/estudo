@@ -1,3 +1,6 @@
+Aqui está o `index.html` completo já com todos os ajustes combinados: ícone com estados (estrela amarela / livro azul, cinza 40% quando inativo), correção do bug de favoritos “multiplicando” cards (validação forte + antiduplo-clique), modal com botão “Copiar prompt” estilizado, linha azul no card “central”, busca com marcação azul, inclusão do 1º/último no seletor pelo centro e **persistência de modo/arquivo/posição** após refresh.
+
+```html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -32,8 +35,10 @@
       --blue:#2563eb;
       --blue-soft:#e8f0ff;
 
-      --icon-muted:#aeb4c2;
-      --icon-fav:#f5b301;
+      /* Ícones */
+      --icon-muted: rgba(0,0,0,.4);
+      --icon-fav:#f5b301; /* amarelo */
+      --icon-study:#2979ff; /* azul */
     }
 
     *{box-sizing:border-box}
@@ -165,8 +170,14 @@
       width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
       color:var(--icon-muted);
     }
-    .icon-btn img{ width:18px; height:18px; display:block; }
-    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); filter:none; }
+    .icon-btn img{
+      width:18px; height:18px; display:block;
+      opacity:.6; /* cinza ~40% */
+    }
+    .icon-btn.active img{ opacity:1; }
+    /* a cor vem dos arquivos -active.svg; para fallback visual: */
+    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
+    .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
 
     .art-body { font-size:12px; line-height:1.45; }
     .paren{ color:rgba(0,0,0,.4); }
@@ -230,7 +241,14 @@
     .ia-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     .ia-btn{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; }
     .copy-prompt{ margin-top:10px; }
-    .btn{ cursor:pointer; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:8px 12px; border-radius:10px;
+      border:1px solid #e5e7eb; background:#fff; cursor:pointer;
+      transition:background .15s, border-color .15s, box-shadow .15s;
+    }
+    .btn:hover{ background:#f3f4f6; }
+    .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
 
     /* Responsivo */
     @media (max-width: 768px){
@@ -345,7 +363,7 @@
         <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
       </div>
       <div class="copy-prompt">
-        <button class="btn" id="copyPromptBtn">Copiar prompt</button>
+        <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
       </div>
     </div>
   </div>
@@ -412,13 +430,17 @@
     const store = {
       get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
       set(k, v){ localStorage.setItem(k, JSON.stringify(v)); },
+
       keyFav: 'dl_favorites',
       keyStud: 'dl_studied',
+      keyLast: 'dl_last_view',
+
       makeId: (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`,
 
       listFavorites(){ return store.get(store.keyFav, []); },
       isFavorite(id){ return store.listFavorites().some(e => e.id === id); },
       addFavorite(entry){
+        if (!entry || !entry.id || !entry.text) return; // blindagem
         const list = store.listFavorites().filter(e => e.id !== entry.id);
         list.unshift({...entry, ts: Date.now()});
         store.set(store.keyFav, list);
@@ -430,12 +452,20 @@
 
       listStudied(){ return store.get(store.keyStud, []); },
       markStudied(entry){
+        if (!entry || !entry.id || !entry.text) return; // blindagem
         let list = store.listStudied().filter(e => e.id !== entry.id);
         list.unshift({...entry, ts: Date.now()});
         if (list.length > 50) list = list.slice(0,50);
         store.set(store.keyStud, list);
       },
-      isStudied(id){ return store.listStudied().some(e => e.id === id); }
+      isStudied(id){ return store.listStudied().some(e => e.id === id); },
+
+      saveLast(partial){
+        const prev = store.get(store.keyLast, {});
+        store.set(store.keyLast, {...prev, ...partial});
+      },
+      getLast(){ return store.get(store.keyLast, null); },
+      clearLast(){ localStorage.removeItem(store.keyLast); },
     };
 
     /* =================== Utils =================== */
@@ -445,9 +475,10 @@
       setTimeout(()=> els.toast.classList.remove('show'), 1200);
     }
     async function withBusy(btn, fn){
+      if (btn && btn.classList.contains('busy')) return; // antiduplo-clique
       if (btn) btn.classList.add('busy');
       try{
-        const min = 260;
+        const min = 220;
         const t0 = performance.now();
         const res = await fn();
         const dt = performance.now() - t0;
@@ -684,6 +715,21 @@
       });
     }
 
+    // troca de ícones (cinza vs ativo) via src data-attrs
+    function applyIconState(btn){
+      const img = btn.querySelector('img');
+      if (!img) return;
+      const src = img.getAttribute('data-src');
+      const active = img.getAttribute('data-active');
+      if (btn.classList.contains('active') && active){
+        img.src = active;
+        img.style.opacity = 1;
+      } else if (src){
+        img.src = src;
+        img.style.opacity = .6;
+      }
+    }
+
     function buildArticleElement(a, idx, {globalMode=false}={}){
       const el = document.createElement('article');
       el.dataset.idx = idx;
@@ -722,11 +768,11 @@
 
       const favBtn = document.createElement('button');
       favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
-      favBtn.innerHTML = `<img src="icons/favorito.svg" alt="Favoritar" />`;
+      favBtn.innerHTML = `<img src="icons/favorito.svg" data-src="icons/favorito.svg" data-active="icons/favorito-active.svg" alt="Favoritar" />`;
 
       const studyBtn = document.createElement('button');
       studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
-      studyBtn.innerHTML = `<img src="icons/estudar.svg" alt="Estudar com I.A." />`;
+      studyBtn.innerHTML = `<img src="icons/estudar.svg" data-src="icons/estudar.svg" data-active="icons/estudar-active.svg" alt="Estudar com I.A." />`;
 
       actions.append(favBtn, studyBtn);
       head.append(titleSpan, actions);
@@ -750,9 +796,12 @@
 
       el.appendChild(content);
 
-      // estados ativos (apenas favorito fica colorido)
+      // estados ativos
       const id = store.makeId(el.dataset.fileUrl, el.id);
       if (store.isFavorite(id)) favBtn.classList.add('active');
+      if (store.isStudied(id)) studyBtn.classList.add('active');
+      applyIconState(favBtn);
+      applyIconState(studyBtn);
 
       // parênteses em cinza
       wrapParensIn(el);
@@ -765,19 +814,18 @@
       state.currentArticleIdx = -1;
     }
 
-    // linha azul no artigo central
+    // linha azul no artigo central + persistência do "artigo atual"
     function updateCurrentOutline(){
       const nodes = Array.from(document.querySelectorAll('article[data-idx]'));
       if (!nodes.length) return;
 
-      const topGap = 12;
+      const topGap = 48; // margem maior para fixar 1º/último melhor
       const scTop = window.scrollY || document.documentElement.scrollTop || 0;
       const scBottom = scTop + window.innerHeight;
       const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
 
       let targetIdx = -1;
 
-      // bordas: primeiro e último
       if (scTop <= topGap){ targetIdx = 0; }
       else if (scBottom >= docH - topGap){ targetIdx = nodes.length - 1; }
       else {
@@ -799,6 +847,15 @@
       nodes.forEach(n=> n.classList.remove('in-view'));
       nodes[targetIdx].classList.add('in-view');
       state.currentArticleIdx = targetIdx;
+
+      // persistir última visualização
+      const art = nodes[targetIdx];
+      store.saveLast({
+        mode: state.mode,
+        fileUrl: state.currentFileUrl,
+        articleId: art?.id || null,
+        scrollY: window.scrollY || 0
+      });
     }
 
     // Render progressivo
@@ -875,6 +932,8 @@
       });
 
       window.scrollTo({top:0,behavior:'instant'});
+      state.mode = 'highlights';
+      store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
       updateCurrentOutline();
     }
 
@@ -913,6 +972,9 @@
           renderArticlesProgressive(list);
           window.scrollTo({top:0,behavior:'instant'});
           notify(`Carregado: ${state.currentFileLabel}`);
+
+          // persistir modo/arquivo
+          store.saveLast({ mode:'file', fileUrl:url, scrollY:0, articleId:null });
         }catch(err){
           console.error(err);
           els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
@@ -947,7 +1009,6 @@
       renderArticlesProgressive(matched);
 
       requestAnimationFrame(()=>{
-        // aplica destaque nos resultados (sem quebrar a marcação §/incisos)
         document.querySelectorAll('article').forEach(art=>{
           highlightTextNodes(art, tokens);
         });
@@ -1000,7 +1061,6 @@
       };
 
       const tabHighlights = mkTab('Destaques', null);
-      tabHighlights.classList.add('active');
       frag.appendChild(tabHighlights);
 
       const visibleCap = getVisibleTabsCount();
@@ -1020,6 +1080,15 @@
 
       els.filebarInner.innerHTML = '';
       els.filebarInner.appendChild(frag);
+
+      // Restaurar aba ativa, se houver persistência
+      const last = store.getLast();
+      if (last?.mode === 'file' && last?.fileUrl){
+        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
+        if (btn){ btn.classList.add('active'); }
+      } else {
+        tabHighlights.classList.add('active');
+      }
     }
 
     function toggleMoreMenu(items, anchorBtn){
@@ -1151,7 +1220,7 @@
         fileUrl: artEl.dataset.fileUrl,
         fileLabel: artEl.dataset.fileLabel,
         htmlId: artEl.id,
-        text: state.mode === 'file' ? a.text : (()=>{
+        text: state.mode === 'file' ? a?.text : (()=>{
           const fav = store.listFavorites().find(e => e.id === id);
           const stud = store.listStudied().find(e => e.id === id);
           return fav?.text || stud?.text || '';
@@ -1160,25 +1229,39 @@
 
       if (btn.dataset.action === 'study'){
         await withBusy(btn, async ()=>{
+          // Montar prompt e marcar como "estudado"
           const useArticle = state.mode === 'file' ? a : {
             text: entry.text,
             _split: splitBlockSupraTitleBody(entry.text),
             title: splitBlockSupraTitleBody(entry.text).titleText
           };
-          const prompt = buildPrompt(useArticle);
+          if (!useArticle?.text){ notify('Não consegui capturar o texto deste artigo.'); return; }
 
-          // NÃO marcar botão como ativo; apenas salvar nos estudados
+          const prompt = buildPrompt(useArticle);
           store.markStudied(entry);
+
+          // feedback visual (livro azul)
+          btn.classList.add('active');
+          applyIconState(btn);
 
           // abrir modal
           openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
 
-          // trocar aba para Destaques (fica por trás do modal)
+          // ir para Destaques e focar o recém-adicionado
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
           const first = els.filebarInner.querySelector('.tab'); // "Destaques"
           if (first){ first.classList.add('active'); }
           state.mode = 'highlights';
           renderHighlights();
+
+          // scroll até o card salvo (após render)
+          setTimeout(()=>{
+            const target = [...document.querySelectorAll('article')].find(aEl=>{
+              const madeId = store.makeId(aEl.dataset.fileUrl, aEl.id);
+              return madeId === id;
+            });
+            if (target){ target.scrollIntoView({behavior:'smooth', block:'center'}); }
+          }, 60);
         });
       }
 
@@ -1187,10 +1270,13 @@
           if (store.isFavorite(id)){
             store.removeFavorite(id);
             btn.classList.remove('active');
+            applyIconState(btn);
             notify('⭐ Removido dos favoritos');
           } else {
+            if (!entry.text){ notify('Abra o arquivo para favoritar este artigo.'); return; }
             store.addFavorite(entry);
             btn.classList.add('active');
+            applyIconState(btn);
             notify('⭐ Adicionado aos favoritos');
           }
         });
@@ -1205,15 +1291,58 @@
       }
     });
 
-    // Scroll/resize -> atualizar linha azul
-    window.addEventListener('scroll', updateCurrentOutline, {passive:true});
+    // Scroll/resize -> atualizar linha azul + persistir scroll
+    window.addEventListener('scroll', ()=>{
+      updateCurrentOutline();
+      const last = store.getLast();
+      if (last){ store.saveLast({ scrollY: window.scrollY || 0 }); }
+    }, {passive:true});
     window.addEventListener('resize', updateCurrentOutline, {passive:true});
 
+    /* =================== Restauração =================== */
+    function restoreViewAfterRender(){
+      const last = store.getLast();
+      if (!last) return;
+
+      if (last.articleId){
+        // tentar achar o artigo renderizado (progressivo) com algumas tentativas
+        let tries = 0;
+        const max = 20;
+        const tick = ()=>{
+          const el = document.getElementById(last.articleId);
+          if (el){
+            el.scrollIntoView({behavior:'instant', block:'center'});
+            updateCurrentOutline();
+          } else if (tries++ < max){
+            setTimeout(tick, 100);
+          } else if (typeof last.scrollY === 'number'){
+            window.scrollTo({top:last.scrollY, behavior:'instant'});
+          }
+        };
+        tick();
+      } else if (typeof last.scrollY === 'number'){
+        window.scrollTo({top:last.scrollY, behavior:'instant'});
+      }
+    }
+
     /* =================== Boot =================== */
-    function boot(){
+    async function boot(){
       buildCatalogMaps();
       renderFilebar();
-      renderHighlights(); // inicia em Destaques
+
+      const last = store.getLast();
+      if (last?.mode === 'file' && last?.fileUrl){
+        // selecionar aba correta
+        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
+        if (btn){ btn.classList.add('active'); }
+        await loadFile(last.fileUrl, btn || null);
+        restoreViewAfterRender();
+      } else {
+        const first = els.filebarInner.querySelector('.tab');
+        if (first){ first.classList.add('active'); }
+        renderHighlights();
+        restoreViewAfterRender();
+      }
 
       document.addEventListener('keydown', (e)=>{
         if (e.key === 'Escape'){
@@ -1227,3 +1356,4 @@
   </script>
 </body>
 </html>
+```
