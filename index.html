@@ -529,40 +529,65 @@
 
     /* =================== Parser =================== */
     function splitBlockSupraTitleBody(raw){
-      const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
-      const artIdx = lines.findIndex(line =>
-  /^\s*Pre[âa]mbulo/i.test(line) ||
-  /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
-  /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
-);
+  const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
 
-// Se a linha anterior for uma epígrafe (não título/capítulo/seção/livro), cola no artigo
-// Se a linha anterior for uma epígrafe, cola no artigo seguinte
-// Procura epígrafe até 3 linhas antes do artigo
-// Procura epígrafe até 3 linhas antes do artigo
-// Procura epígrafe até 3 linhas antes do artigo (somente se for ANTES do Art.)
-let lookback = artIdx - 1;
-let epigrafe = "";
-while (lookback >= 0 && lookback >= artIdx - 3) {
-  const prev = lines[lookback].trim();
-  if (!prev) { // pula linha em branco
-    lookback--;
-    continue;
-  }
+  const artIdx = lines.findIndex(line =>
+    /^\s*Pre[âa]mbulo/i.test(line) ||
+    /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
+    /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
+  );
 
-  if (
-    !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo
-    !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
-  ) {
-    // Só considera epígrafe se a linha atual for mesmo um artigo
-    if (/^Art\.?/i.test(lines[artIdx])) {
-      epigrafe = prev;
-      lines.splice(lookback, 1); // remove a epígrafe do lugar original
-      artIdx--;                  // ajusta índice do artigo
+  // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
+  let epigrafe = "";
+  if (artIdx > 0) {
+    let lookback = artIdx - 1;
+    while (lookback >= 0 && lookback >= artIdx - 3) {
+      const prev = lines[lookback].trim();
+      if (!prev) { // ignora linhas em branco
+        lookback--;
+        continue;
+      }
+
+      if (
+        !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo/livro
+        !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
+      ) {
+        // garante que a linha atual seja realmente um artigo
+        if (/^Art\.?/i.test(lines[artIdx])) {
+          epigrafe = prev;
+          lines.splice(lookback, 1); // remove epígrafe da posição antiga
+          artIdx--;                  // ajusta índice
+        }
+      }
+      break; // encontrou algo válido → para
     }
   }
-  break;
+
+  if (artIdx >= 0){
+    const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+    const titleLine = lines[artIdx];
+
+    const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
+    let titleText = mt ? mt[1].trim() : titleLine.trim();
+    titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+
+    const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
+    const rest = lines.slice(artIdx+1).join('\n').trimStart();
+    let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+
+    // 🔎 Insere epígrafe no início do body, se encontrada
+    if (epigrafe) {
+      body = epigrafe + "\n" + body;
+    }
+
+    return { supra, titleText, body };
+  } else {
+    const titleText = (lines[0]||'').trim();
+    const body = lines.slice(1).join('\n').trimStart();
+    return { supra:[], titleText, body };
+  }
 }
+
 
 // Depois, se achou epígrafe válida, cola no body do artigo
 if (epigrafe) {
