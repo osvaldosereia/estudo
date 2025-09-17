@@ -70,6 +70,9 @@
     .search{
       width:min(560px, 100%); position:relative;
     }
+    /* Esconde o X nativo do input[type=search] (corrige X duplicado) */
+    .search input::-webkit-search-cancel-button{ -webkit-appearance:none; height:0; width:0; margin:0; }
+    .search input::-ms-clear{ display:none; width:0; height:0; }
     .search input{
       width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 70px 0 14px; background:#fff;
       box-shadow:0 1px 2px rgba(0,0,0,.03); transition:border .2s, box-shadow .2s;
@@ -172,7 +175,6 @@
       opacity:.6; /* cinza ~40% */
     }
     .icon-btn.active img{ opacity:1; }
-    /* a cor vem dos arquivos -active.svg; para fallback visual: */
     .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
     .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
 
@@ -262,9 +264,9 @@
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Destaques)">
       <div class="search-wrap">
         <div class="search">
-          <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" />
-          <div class="spinner" id="searchSpinner"></div>
-          <button class="clear-x" id="clearSearch" title="Limpar" aria-label="Limpar">✕</button>
+          <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
+          <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+          <button class="clear-x" id="clearSearch" title="Limpar busca" aria-label="Limpar busca">✕</button>
         </div>
         <button class="search-send btn" id="sendSearch" title="Buscar" aria-label="Buscar" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -274,7 +276,7 @@
   </header>
 
   <!-- FILEBAR -->
-  <nav class="filebar">
+  <nav class="filebar" aria-label="Documentos">
     <div class="filebar-inner" id="filebarInner"></div>
   </nav>
 
@@ -283,14 +285,14 @@
 
   <!-- MINI-FINDER -->
   <div class="finder-pop" id="finderPop" aria-live="polite">
-    <button class="mini-btn" id="prevBtn" title="Anterior" aria-label="Anterior" type="button">
+    <button class="mini-btn" id="prevBtn" title="Anterior (Shift+F3 / Ctrl+Shift+G)" aria-label="Anterior" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <div class="mini-count"><span id="count">0/0</span></div>
-    <button class="mini-btn" id="nextBtn" title="Próximo" aria-label="Próximo" type="button">
+    <div class="mini-count" aria-live="polite"><span id="count">0/0</span></div>
+    <button class="mini-btn" id="nextBtn" title="Próximo (F3 / Ctrl+G)" aria-label="Próximo" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
     </button>
-    <button class="mini-btn" id="closeFinder" title="Fechar" aria-label="Fechar" type="button">
+    <button class="mini-btn" id="closeFinder" title="Fechar (Esc)" aria-label="Fechar" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
   </div>
@@ -342,7 +344,7 @@
   </select>
 
   <!-- TOAST -->
-  <div class="toast" id="toast">Ok!</div>
+  <div class="toast" id="toast" role="status" aria-live="polite">Ok!</div>
 
   <!-- MODAL: ESTUDAR COM I.A. -->
   <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
@@ -437,7 +439,7 @@
       listFavorites(){ return store.get(store.keyFav, []); },
       isFavorite(id){ return store.listFavorites().some(e => e.id === id); },
       addFavorite(entry){
-        if (!entry || !entry.id || !entry.text) return; // blindagem
+        if (!entry || !entry.id || !entry.text) return;
         const list = store.listFavorites().filter(e => e.id !== entry.id);
         list.unshift({...entry, ts: Date.now()});
         store.set(store.keyFav, list);
@@ -449,7 +451,7 @@
 
       listStudied(){ return store.get(store.keyStud, []); },
       markStudied(entry){
-        if (!entry || !entry.id || !entry.text) return; // blindagem
+        if (!entry || !entry.id || !entry.text) return;
         let list = store.listStudied().filter(e => e.id !== entry.id);
         list.unshift({...entry, ts: Date.now()});
         if (list.length > 50) list = list.slice(0,50);
@@ -472,7 +474,7 @@
       setTimeout(()=> els.toast.classList.remove('show'), 1200);
     }
     async function withBusy(btn, fn){
-      if (btn && btn.classList.contains('busy')) return; // antiduplo-clique
+      if (btn && btn.classList.contains('busy')) return; // anti duplo-clique
       if (btn) btn.classList.add('busy');
       try{
         const min = 220;
@@ -591,9 +593,8 @@
         let chunk = txt.slice(from, to).trimEnd();
 
         const endDot = chunk.lastIndexOf('.');
-        const endPar = chunk.lastIndexOf(')');
-        const end    = Math.max(endDot, endPar);
-        if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
+        theEnd = Math.max(chunk.lastIndexOf('.'), chunk.lastIndexOf(')'));
+        if (theEnd !== -1) chunk = chunk.slice(0, theEnd + 1).trimEnd();
 
         const split = splitBlockSupraTitleBody(chunk);
         const title = split.titleText || chunk.split('\n')[0].slice(0,40);
@@ -688,7 +689,6 @@
         if (!txt.trim()) return;
 
         const frag = document.createDocumentFragment();
-        // percorre trechos alfanuméricos preservando pontuação/espaços
         const re = /[\p{L}\p{N}]+/gu;
         let idx = 0, m;
         while ((m = re.exec(txt))){
@@ -712,7 +712,6 @@
       });
     }
 
-    // troca de ícones (cinza vs ativo) via src data-attrs
     function applyIconState(btn){
       const img = btn.querySelector('img');
       if (!img) return;
@@ -793,16 +792,13 @@
 
       el.appendChild(content);
 
-      // estados ativos
       const id = store.makeId(el.dataset.fileUrl, el.id);
       if (store.isFavorite(id)) favBtn.classList.add('active');
       if (store.isStudied(id)) studyBtn.classList.add('active');
       applyIconState(favBtn);
       applyIconState(studyBtn);
 
-      // parênteses em cinza
       wrapParensIn(el);
-
       return el;
     }
 
@@ -811,12 +807,11 @@
       state.currentArticleIdx = -1;
     }
 
-    // linha azul no artigo central + persistência do "artigo atual"
     function updateCurrentOutline(){
       const nodes = Array.from(document.querySelectorAll('article[data-idx]'));
       if (!nodes.length) return;
 
-      const topGap = 48; // margem maior para fixar 1º/último melhor
+      const topGap = 48;
       const scTop = window.scrollY || document.documentElement.scrollTop || 0;
       const scBottom = scTop + window.innerHeight;
       const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
@@ -845,7 +840,6 @@
       nodes[targetIdx].classList.add('in-view');
       state.currentArticleIdx = targetIdx;
 
-      // persistir última visualização
       const art = nodes[targetIdx];
       store.saveLast({
         mode: state.mode,
@@ -855,26 +849,25 @@
       });
     }
 
-    // Render progressivo
+    /* ======== RENDER (global All + progressivo) ======== */
+    function renderArticlesAll(list){
+      clearArticles();
+      if (!list.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      list.forEach((a,i)=> frag.appendChild(buildArticleElement(a, i, {globalMode:false})));
+      els.articles.appendChild(frag);
+      updateCurrentOutline();
+    }
+
     function renderArticlesProgressive(list, {chunkSize=30}={}){
       clearArticles();
       if (!list.length){
         els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
         return;
       }
-// Render completo (sem progressivo)
-function renderArticlesAll(list){
-  clearArticles();
-  if (!list.length){
-    els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
-    return;
-  }
-  const frag = document.createDocumentFragment();
-  list.forEach((a,i)=> frag.appendChild(buildArticleElement(a, i, {globalMode:false})));
-  els.articles.appendChild(frag);
-  updateCurrentOutline();
-}
-
       const first = Math.min(5, list.length);
       const frag = document.createDocumentFragment();
       for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
@@ -983,7 +976,6 @@ function renderArticlesAll(list){
           window.scrollTo({top:0,behavior:'instant'});
           notify(`Carregado: ${state.currentFileLabel}`);
 
-          // persistir modo/arquivo
           store.saveLast({ mode:'file', fileUrl:url, scrollY:0, articleId:null });
         }catch(err){
           console.error(err);
@@ -995,75 +987,87 @@ function renderArticlesAll(list){
       });
     }
 
-    /* =================== Busca (revisada) =================== */
-   async function runLocalSearch(){
-  if (state.mode !== 'file'){
-    notify('Abra um arquivo para buscar.');
-    return;
-  }
-  const q = els.searchInput.value.trim();
-  els.finderPop.classList.add('show');
+    /* =================== Busca (desktop enter, UX estável) =================== */
+    async function runLocalSearch(){
+      if (state.mode !== 'file'){
+        notify('Abra um arquivo para buscar.');
+        return;
+      }
 
-  if (!q){
-    renderArticlesProgressive(state.articles);
-    state.matchArticles = [];
-    state.matchIdx = -1;
-    els.count.textContent = '0/0';
-    return;
-  }
+      const q = els.searchInput.value.trim();
+      els.finderPop.classList.add('show');
 
-  els.searchSpinner.classList.add('show');
+      if (!q){
+        renderArticlesProgressive(state.articles);
+        state.matchArticles = [];
+        state.matchIdx = -1;
+        els.count.textContent = '0/0';
+        return;
+      }
 
-  const tokens = q.split(/\s+/).filter(Boolean).map(norm);
-  state.currentTokens = tokens;
+      els.searchSpinner.classList.add('show');
+      try{
+        const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+        state.currentTokens = tokens;
 
-  const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
+        const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-  // força renderizar TODOS os artigos de uma vez (sem progressivo)
-renderArticlesAll(state.articles);
+        // 1) Garante DOM completo
+        renderArticlesAll(state.articles);
 
-requestAnimationFrame(()=>{
-  if (matched.length) {
-    matched.forEach(m => {
-      const art = document.getElementById(m.htmlId);
-      if (art) highlightTextNodes(art, tokens);
-    });
-  }
-  state.matchArticles = matched.map(m => document.getElementById(m.htmlId)).filter(Boolean);
-  hideSpinner();
-});
+        // 2) Marca apenas os artigos com match
+        requestAnimationFrame(()=>{
+          matchedMeta.forEach(m => {
+            const art = document.getElementById(m.htmlId);
+            if (art) highlightTextNodes(art, tokens);
+          });
 
+          // 3) Atualiza navegação do mini-finder
+          state.matchArticles = matchedMeta
+            .map(m => document.getElementById(m.htmlId))
+            .filter(Boolean);
 
+          if (state.matchArticles.length){
+            state.matchIdx = 0;
+            state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
+          } else {
+            state.matchIdx = -1;
+            notify('Nenhum resultado encontrado.');
+          }
 
+          els.count.textContent = state.matchArticles.length
+            ? `${state.matchIdx+1}/${state.matchArticles.length}`
+            : '0/0';
 
-
-    if (state.matchArticles.length){
-      state.matchIdx = 0;
-      state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
-    } else {
-      state.matchIdx = -1;
+          updateCurrentOutline();
+        });
+      } finally {
+        els.searchSpinner.classList.remove('show');
+      }
     }
 
-    els.count.textContent = state.matchArticles.length
-      ? `${state.matchIdx+1}/${state.matchArticles.length}`
-      : '0/0';
+    function updateCount(){
+      if (!state.matchArticles || state.matchArticles.length === 0){
+        els.count.textContent = '0/0';
+        return;
+      }
+      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
+    }
 
-    els.searchSpinner.classList.remove('show');
-    updateCurrentOutline();
-  });
-}
-
-// <-- FECHA aqui corretamente!
-
-// função auxiliar fora
-function updateCount(){
-  if (!state.matchArticles || state.matchArticles.length === 0){
-    els.count.textContent = '0/0';
-    return;
-  }
-  els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
-}
-
+    function gotoNext(){
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount(); updateCurrentOutline();
+    }
+    function gotoPrev(){
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount(); updateCurrentOutline();
+    }
 
     /* =================== Filebar =================== */
     function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5; }
@@ -1112,7 +1116,6 @@ function updateCount(){
       els.filebarInner.innerHTML = '';
       els.filebarInner.appendChild(frag);
 
-      // Restaurar aba ativa, se houver persistência
       const last = store.getLast();
       if (last?.mode === 'file' && last?.fileUrl){
         const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
@@ -1177,7 +1180,7 @@ function updateCount(){
       els.studyModal.setAttribute('aria-hidden','true');
     }
 
-    /* =================== Eventos globais =================== */
+    /* =================== Eventos globais / atalhos =================== */
     // Logo -> Destaques
     els.brandBtn.addEventListener('click', ()=>{
       document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
@@ -1188,7 +1191,7 @@ function updateCount(){
       window.scrollTo({top:0,behavior:'instant'});
     });
 
-    // Busca
+    // Busca visual
     function toggleClear(){ els.clearSearch.classList.toggle('show', !!els.searchInput.value); }
     els.searchInput.addEventListener('input', toggleClear);
     toggleClear();
@@ -1198,29 +1201,54 @@ function updateCount(){
       els.finderPop.classList.remove('show');
       els.searchInput.blur();
     });
-els.searchInput.addEventListener('keydown', (e)=>{ 
-  if (e.key === 'Enter'){ 
-    e.preventDefault(); 
-    withBusy(els.sendSearch, runLocalSearch); 
-  } 
-});
-    els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
-    els.clearSearch.addEventListener('click', ()=>{ els.searchInput.value = ''; toggleClear(); runLocalSearch(); });
 
-    els.nextBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
-      if (!state.matchArticles || state.matchArticles.length === 0) return;
-      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
-      const art = state.matchArticles[state.matchIdx];
-      art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount(); updateCurrentOutline();
-    }));
-    els.prevBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
-      if (!state.matchArticles || state.matchArticles.length === 0) return;
-      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
-      const art = state.matchArticles[state.matchIdx];
-      art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount(); updateCurrentOutline();
-    }));
+    // Enter no desktop (e mobile): dispara a busca
+    els.searchInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        withBusy(els.sendSearch, runLocalSearch);
+      } else if (e.key === 'Escape'){
+        // ESC limpa busca e fecha finder
+        els.searchInput.blur();
+        els.finderPop.classList.remove('show');
+      }
+    });
+    els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
+    els.clearSearch.addEventListener('click', ()=>{
+      els.searchInput.value = '';
+      toggleClear();
+      runLocalSearch();
+    });
+
+    // Navegação pelos resultados
+    els.nextBtn.addEventListener('click', ()=> gotoNext());
+    els.prevBtn.addEventListener('click', ()=> gotoPrev());
+
+    // Atalhos globais de produtividade:
+    document.addEventListener('keydown', (e)=>{
+      // Ctrl+K ou "/" focam a busca
+      if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !e.metaKey && !e.ctrlKey)){
+        e.preventDefault();
+        els.searchInput.focus();
+        els.searchInput.select();
+      }
+      // F3 / Ctrl+G -> próximo | Shift+F3 / Ctrl+Shift+G -> anterior
+      if (e.key === 'F3' || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'g')){
+        e.preventDefault();
+        gotoNext();
+      }
+      if ((e.shiftKey && e.key === 'F3') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'g')){
+        e.preventDefault();
+        gotoPrev();
+      }
+      // ESC fecha overlays
+      if (e.key === 'Escape'){
+        els.finderPop.classList.remove('show');
+        if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
+      }
+    });
 
     // Modal IA
     els.closeStudy.addEventListener('click', closeStudyModal);
@@ -1265,7 +1293,6 @@ els.searchInput.addEventListener('keydown', (e)=>{
 
       if (btn.dataset.action === 'study'){
         await withBusy(btn, async ()=>{
-          // Montar prompt e marcar como "estudado"
           const useArticle = state.mode === 'file' ? a : {
             text: entry.text,
             _split: splitBlockSupraTitleBody(entry.text),
@@ -1276,21 +1303,17 @@ els.searchInput.addEventListener('keydown', (e)=>{
           const prompt = buildPrompt(useArticle);
           store.markStudied(entry);
 
-          // feedback visual (livro azul)
           btn.classList.add('active');
           applyIconState(btn);
 
-          // abrir modal
           openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
 
-          // ir para Destaques e focar o recém-adicionado
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
           const first = els.filebarInner.querySelector('.tab'); // "Destaques"
           if (first){ first.classList.add('active'); }
           state.mode = 'highlights';
           renderHighlights();
 
-          // scroll até o card salvo (após render)
           setTimeout(()=>{
             const target = [...document.querySelectorAll('article')].find(aEl=>{
               const madeId = store.makeId(aEl.dataset.fileUrl, aEl.id);
@@ -1341,7 +1364,6 @@ els.searchInput.addEventListener('keydown', (e)=>{
       if (!last) return;
 
       if (last.articleId){
-        // tentar achar o artigo renderizado (progressivo) com algumas tentativas
         let tries = 0;
         const max = 20;
         const tick = ()=>{
@@ -1368,7 +1390,6 @@ els.searchInput.addEventListener('keydown', (e)=>{
 
       const last = store.getLast();
       if (last?.mode === 'file' && last?.fileUrl){
-        // selecionar aba correta
         const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
         if (btn){ btn.classList.add('active'); }
         await loadFile(last.fileUrl, btn || null);
@@ -1379,17 +1400,8 @@ els.searchInput.addEventListener('keydown', (e)=>{
         renderHighlights();
         restoreViewAfterRender();
       }
-
-      document.addEventListener('keydown', (e)=>{
-        if (e.key === 'Escape'){
-          els.finderPop.classList.remove('show');
-          if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
-        }
-      });
-      window.addEventListener('resize', ()=>{ renderFilebar(); }, {passive:true});
     }
     boot();
   </script>
 </body>
 </html>
-```
