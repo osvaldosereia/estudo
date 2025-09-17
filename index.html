@@ -862,6 +862,19 @@
         els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
         return;
       }
+// Render completo (sem progressivo)
+function renderArticlesAll(list){
+  clearArticles();
+  if (!list.length){
+    els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  list.forEach((a,i)=> frag.appendChild(buildArticleElement(a, i, {globalMode:false})));
+  els.articles.appendChild(frag);
+  updateCurrentOutline();
+}
+
       const first = Math.min(5, list.length);
       const frag = document.createDocumentFragment();
       for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
