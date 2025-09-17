@@ -1006,8 +1006,8 @@
 
   const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-  // força renderizar TODOS os artigos (sem chunk) para busca não ficar limitada
-renderArticlesProgressive(state.articles, {chunkSize: Infinity});
+  // força renderizar TODOS os artigos de uma vez (sem progressivo)
+renderArticlesAll(state.articles);
 
 requestAnimationFrame(()=>{
   // aplica highlight em todos os artigos renderizados
