@@ -759,9 +759,10 @@ const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[
 if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
   const div = document.createElement('div');
   div.className = 'section-title';
-  div.textContent = split.titleText;
+  div.textContent = a.text; // mostra o bloco todo
   return div;
 }
+
 
 
       const supraWrap = document.createElement('div');
