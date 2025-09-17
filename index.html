@@ -531,9 +531,11 @@
     function splitBlockSupraTitleBody(raw){
       const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
       const artIdx = lines.findIndex(line =>
-  /^\s*Pre[âa]mbulo/i.test(line) || 
-  /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line)
+  /^\s*Pre[âa]mbulo/i.test(line) ||
+  /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
+  /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
 );
+
 
       if (artIdx >= 0){
         const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
@@ -580,7 +582,7 @@
 
     function parseByArt(txt){
   // Agora reconhece "Preâmbulo" (com ou sem acento) e também os artigos
-  const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
+const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
   const starts = [];
   let m;
   while ((m = re.exec(txt)) !== null) {
@@ -743,6 +745,14 @@
       el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
 
       const split = a._split || splitBlockSupraTitleBody(a.text);
+      // Se for apenas cabeçalho (Livro/Título/Capítulo/Seção), renderiza como heading simples
+if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
+  const div = document.createElement('div');
+  div.className = 'section-title';
+  div.textContent = split.titleText;
+  return div;
+}
+
 
       const supraWrap = document.createElement('div');
       supraWrap.className = 'supra';
