@@ -534,18 +534,28 @@
         /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
       );
 
-    // 🔎 Se houver epígrafe marcada com @@EPI@@ imediatamente antes do artigo
+// 🔎 Captura epígrafes marcadas com @@EPI@@
 let epigrafe = "";
+
+// Caso 1: epígrafe imediatamente antes do artigo
 if (artIdx > 0) {
   let lookback = artIdx - 1;
   const prev = lines[lookback].trim();
-
   if (/^@@EPI@@/.test(prev)) {
-    epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim(); // remove marcador e espaços
-    lines.splice(lookback, 1); // remove linha original
-    artIdx--; // ajusta índice
+    epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim();
+    lines.splice(lookback, 1);
+    artIdx--;
   }
 }
+
+// Caso 2: epígrafes que aparecem dentro do artigo (ex: antes de §, incisos…)
+for (let i = artIdx + 1; i < lines.length; i++) {
+  if (/^@@EPI@@/.test(lines[i].trim())) {
+    const localEpigrafe = lines[i].trim().replace(/^@@EPI@@\s*/, "").trim();
+    lines[i] = localEpigrafe; // substitui no corpo, sem remover
+  }
+}
+
 
 
      if (artIdx >= 0){
