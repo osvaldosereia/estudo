@@ -575,7 +575,7 @@
     }
 
     function parseByArt(txt){
-      const re = /(^|\n)\s*((?:Preâmbulo)|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
+    const re = /(^|\n)\s*((?:Preâmbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/g;
      const starts = [];
       let m;
       while ((m = re.exec(txt)) !== null) {
