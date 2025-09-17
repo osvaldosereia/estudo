@@ -536,6 +536,16 @@
   /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
 );
 
+// Se a linha anterior for uma epígrafe (não título/capítulo/seção/livro), cola no artigo
+if (artIdx > 0) {
+  const prev = lines[artIdx - 1].trim();
+  if (/^[A-Z][a-z]/.test(prev) && !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev)) {
+    lines[artIdx] = prev + "\n" + lines[artIdx];
+    lines.splice(artIdx - 1, 1);
+  }
+}
+
+
 
       if (artIdx >= 0){
         const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
