@@ -1267,21 +1267,22 @@ supraText + artigo,
     els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
     document.querySelectorAll('.ia-btn').forEach(btn=>{
   btn.addEventListener('click', (e)=>{
-    withBusy(e.currentTarget, async ()=>{
-      try {
-        // Copia automático
-        await navigator.clipboard.writeText(els.promptPreview.textContent || '');
-        notify('✅ Prompt copiado!');
+    const url = e.currentTarget.dataset.url;
 
-        // Abre a IA escolhida
-        const url = e.currentTarget.dataset.url;
-        openIA(url);
-      } catch {
-        notify('Não consegui copiar, faça manualmente.');
-      }
-    });
+    // Abre a IA imediatamente (para não ser bloqueado pelo navegador)
+    openIA(url);
+
+    // Depois tenta copiar em paralelo
+    navigator.clipboard.writeText(els.promptPreview.textContent || '')
+      .then(()=>{
+        notify('✅ Prompt copiado!');
+      })
+      .catch(()=>{
+        notify('⚠️ Não consegui copiar, copie manualmente.');
+      });
   });
 });
+
 
     els.copyPromptBtn.addEventListener('click', (e)=>{
       withBusy(e.currentTarget, async ()=>{
