@@ -1006,18 +1006,19 @@
 
   const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-  // sempre renderiza todos
-  renderArticlesProgressive(state.articles);
+  // força renderizar TODOS os artigos (sem chunk) para busca não ficar limitada
+renderArticlesProgressive(state.articles, {chunkSize: Infinity});
 
-  requestAnimationFrame(()=>{
-    // aplica destaque apenas nos que deram match
-    matched.forEach(m => {
-      const art = document.getElementById(m.htmlId);
-      if (art) highlightTextNodes(art, tokens);
-    });
+requestAnimationFrame(()=>{
+  // aplica destaque apenas nos que deram match
+  matched.forEach(m => {
+    const art = document.getElementById(m.htmlId);
+    if (art) highlightTextNodes(art, tokens);
+  });
 
-    // state.matchArticles só guarda os que deram match
-    state.matchArticles = matched.map(m => document.getElementById(m.htmlId)).filter(Boolean);
+  // state.matchArticles só guarda os que deram match
+  state.matchArticles = matched.map(m => document.getElementById(m.htmlId)).filter(Boolean);
+
 
     if (state.matchArticles.length){
       state.matchIdx = 0;
@@ -1180,7 +1181,12 @@ function updateCount(){
       els.finderPop.classList.remove('show');
       els.searchInput.blur();
     });
-    els.searchInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); } });
+els.searchInput.addEventListener('keydown', (e)=>{ 
+  if (e.key === 'Enter'){ 
+    e.preventDefault(); 
+    withBusy(els.sendSearch, runLocalSearch); 
+  } 
+});
     els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
     els.clearSearch.addEventListener('click', ()=>{ els.searchInput.value = ''; toggleClear(); runLocalSearch(); });
 
