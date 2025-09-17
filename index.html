@@ -553,10 +553,12 @@
         !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
       ) {
         if (/^Art\.?/i.test(lines[artIdx])) {
-          epigrafe = prev;
-          lines.splice(lookback, 1); // remove epígrafe da posição antiga
-          artIdx--;                  // ajusta índice
-        }
+  // cola a epígrafe dentro do artigo
+  lines[artIdx] = prev + "\n" + lines[artIdx];
+  lines.splice(lookback, 1); // remove epígrafe da posição antiga
+  artIdx--;                  // ajusta índice
+}
+
       }
       break; // encontrou algo válido → para
     }
