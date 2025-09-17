@@ -523,31 +523,39 @@
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
-    /* =================== Parser =================== */
-    function splitBlockSupraTitleBody(raw){
-  let lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
+   /* =================== Parser =================== */
+function splitBlockSupraTitleBody(raw){
+  const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
 
-  // Detecta se existe uma epígrafe marcada
-  let epigrafe = null;
-  let epiIndex = lines.findIndex(l => /^@@EPI@@/.test(l.trim()));
-  if (epiIndex !== -1) {
-    epigrafe = lines[epiIndex].replace(/^@@EPI@@\s*/, "").trim();
-    lines.splice(epiIndex, 1); // remove linha original
-  }
-
-  // Localiza o artigo
+  // primeira linha elegível: Preâmbulo, Art., ou cabeçalho estrutural
   let artIdx = lines.findIndex(line =>
     /^\s*Pre[âa]mbulo/i.test(line) ||
     /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
     /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
   );
 
-  if (artIdx >= 0){
-    // Se tinha epígrafe, insere logo após a linha do artigo
-    if (epigrafe) {
-      lines.splice(artIdx + 1, 0, epigrafe);
-    }
+  // 🔎 Captura epígrafes marcadas com @@EPI@@
+  let epigrafe = "";
 
+  // Caso 1: epígrafe imediatamente antes do artigo → move para logo após o artigo
+  if (artIdx > 0) {
+    let lookback = artIdx - 1;
+    const prev = lines[lookback].trim();
+    if (/^@@EPI@@/.test(prev)) {
+      epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim();
+      lines.splice(lookback, 1);                // remove linha original
+      lines.splice(artIdx + 1, 0, epigrafe);    // insere logo após o artigo
+    }
+  }
+
+  // Caso 2: epígrafes dentro do artigo → mantém no corpo, só tira marcador
+  for (let i = artIdx + 1; i < lines.length; i++) {
+    if (/^@@EPI@@/.test(lines[i].trim())) {
+      lines[i] = lines[i].trim().replace(/^@@EPI@@\s*/, "").trim();
+    }
+  }
+
+  if (artIdx >= 0){
     const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
     const titleLine = lines[artIdx];
 
@@ -557,7 +565,7 @@
 
     const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
     const rest = lines.slice(artIdx+1).join('\n').trimStart();
-    const body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+    let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
 
     return { supra, titleText, body };
   } else {
@@ -566,6 +574,7 @@
     return { supra:[], titleText, body };
   }
 }
+
 
 
     function parseByDelimiters(txt){
