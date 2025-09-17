@@ -987,56 +987,56 @@ Aqui está o `index.html` completo já com todos os ajustes combinados: ícone c
 
     /* =================== Busca (revisada) =================== */
     async function runLocalSearch(){
-      if (state.mode !== 'file'){
-        notify('Abra um arquivo para buscar.');
-        return;
-      }
-      const q = els.searchInput.value.trim();
-      els.finderPop.classList.add('show');
-
-      if (!q){
-        renderArticlesProgressive(state.articles);
-        state.matchArticles = []; state.matchIdx = -1; els.count.textContent = '0/0';
-        return;
-      }
-
-      els.searchSpinner.classList.add('show');
-
-      const tokens = q.split(/\s+/).filter(Boolean).map(norm);
-      state.currentTokens = tokens;
-
-      const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
-renderArticlesProgressive(state.articles); // sempre renderiza todos os artigos
-
-requestAnimationFrame(()=>{
-  // aplica destaque apenas nas palavras que batem
-  document.querySelectorAll('article').forEach(art=>{
-    highlightTextNodes(art, tokens);
-  });
-
-  // state.matchArticles só guarda os que deram match
-  state.matchArticles = Array.from(document.querySelectorAll('article'))
-    .filter(art => matched.some(m => m.htmlId === art.id));
-
-  if (state.matchArticles.length){
-    state.matchIdx = 0;
-    state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
-  } else {
-    state.matchIdx = -1;
+  if (state.mode !== 'file'){
+    notify('Abra um arquivo para buscar.');
+    return;
   }
-  els.count.textContent = state.matchArticles.length ? `${state.matchIdx+1}/${state.matchArticles.length}` : '0/0';
-  els.searchSpinner.classList.remove('show');
-  updateCurrentOutline();
-});
+  const q = els.searchInput.value.trim();
+  els.finderPop.classList.add('show');
 
+  if (!q){
+    renderArticlesProgressive(state.articles);
+    state.matchArticles = []; state.matchIdx = -1; els.count.textContent = '0/0';
+    return;
+  }
 
-    function updateCount(){
-      if (!state.matchArticles || state.matchArticles.length === 0){
-        els.count.textContent = '0/0';
-        return;
-      }
-      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
+  els.searchSpinner.classList.add('show');
+
+  const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+  state.currentTokens = tokens;
+
+  const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
+  renderArticlesProgressive(state.articles);
+
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('article').forEach(art=>{
+      highlightTextNodes(art, tokens);
+    });
+
+    state.matchArticles = Array.from(document.querySelectorAll('article'))
+      .filter(art => matched.some(m => m.htmlId === art.id));
+
+    if (state.matchArticles.length){
+      state.matchIdx = 0;
+      state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      state.matchIdx = -1;
     }
+    els.count.textContent = state.matchArticles.length ? `${state.matchIdx+1}/${state.matchArticles.length}` : '0/0';
+    els.searchSpinner.classList.remove('show');
+    updateCurrentOutline();
+  });
+} // <-- FECHA aqui corretamente!
+
+// função auxiliar fora
+function updateCount(){
+  if (!state.matchArticles || state.matchArticles.length === 0){
+    els.count.textContent = '0/0';
+    return;
+  }
+  els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
+}
+
 
     /* =================== Filebar =================== */
     function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5; }
