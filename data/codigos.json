@@ -1,7 +1,0 @@
-[
-  { "id": "codigo_penal", "nome": "Código Penal" },
-  { "id": "codigo_Processo_Penal", "nome": "Código de Processo Penal" },
-  { "id": "codigo_civil", "nome": "Código Civil" },
-  { "id": "codigo_Processo_Civil", "nome": "Código de Processo Civil" },
-  { "id": "codigo_consumidor", "nome": "Código de Defesa do Consumidor" }
-]
