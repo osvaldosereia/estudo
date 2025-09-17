@@ -902,49 +902,44 @@
     }
 
     function renderHighlights(){
-      clearArticles();
-      const favs = sortByTsDesc(store.listFavorites());
-      const studs = sortByTsDesc(store.listStudied());
+  clearArticles();
 
-      const sections = [
-        { title: 'Favoritos', data: favs },
-        { title: 'Últimos estudados', data: studs },
-      ];
+  // Junta favoritos + estudados em uma lista só
+  const combined = [
+    ...store.listFavorites(),
+    ...store.listStudied()
+  ];
 
-      let idx = 0;
-      sections.forEach(sec=>{
-        const h = document.createElement('div');
-        h.className = 'section-title';
-        h.textContent = sec.title;
-        els.articles.appendChild(h);
+  if (!combined.length){
+    els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada por aqui ainda.</div>';
+    return;
+  }
 
-        if (!sec.data.length){
-          const empty = document.createElement('div');
-          empty.className = 'section-empty';
-          empty.textContent = 'Nada por aqui ainda.';
-          els.articles.appendChild(empty);
-          return;
-        }
+  // Ordena pelo timestamp mais recente (campo ts)
+  const merged = sortByTsDesc(combined);
 
-        const list = sec.data.map(entry => ({
-          title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
-          text: entry.text,
-          htmlId: entry.htmlId,
-          _split: splitBlockSupraTitleBody(entry.text),
-          _fileUrl: entry.fileUrl,
-          _fileLabel: entry.fileLabel
-        }));
+  let idx = 0;
+  const frag = document.createDocumentFragment();
+  merged.forEach(entry=>{
+    const art = {
+      title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
+      text: entry.text,
+      htmlId: entry.htmlId,
+      _split: splitBlockSupraTitleBody(entry.text),
+      _fileUrl: entry.fileUrl,
+      _fileLabel: entry.fileLabel
+    };
+    frag.appendChild(buildArticleElement(art, idx++, {globalMode:true}));
+  });
 
-        const frag = document.createDocumentFragment();
-        list.forEach(a=>{ frag.appendChild(buildArticleElement(a, idx++, {globalMode:true})); });
-        els.articles.appendChild(frag);
-      });
+  els.articles.appendChild(frag);
 
-      window.scrollTo({top:0,behavior:'instant'});
-      state.mode = 'highlights';
-      store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
-      updateCurrentOutline();
-    }
+  window.scrollTo({top:0,behavior:'instant'});
+  state.mode = 'highlights';
+  store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
+  updateCurrentOutline();
+}
+
 
     /* =================== Loader =================== */
     async function fetchTextCached(url){
