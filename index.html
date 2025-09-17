@@ -1023,18 +1023,16 @@ function renderArticlesAll(list){
 renderArticlesAll(state.articles);
 
 requestAnimationFrame(()=>{
-  // aplica highlight apenas nos artigos que deram match
-  matched.forEach(m => {
-    const art = document.getElementById(m.htmlId);
-    if (art) highlightTextNodes(art, tokens);
-  });
-
-  // state.matchArticles só guarda os que deram match
+  if (matched.length) {
+    matched.forEach(m => {
+      const art = document.getElementById(m.htmlId);
+      if (art) highlightTextNodes(art, tokens);
+    });
+  }
   state.matchArticles = matched.map(m => document.getElementById(m.htmlId)).filter(Boolean);
-
-  // encerra o loader
   hideSpinner();
 });
+
 
 
 
