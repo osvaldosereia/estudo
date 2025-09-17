@@ -535,23 +535,23 @@ function splitBlockSupraTitleBody(raw){
   );
 
   // 🔎 Captura epígrafes marcadas com @@EPI@@
-  let epigrafe = "";
-
-  // Caso 1: epígrafe imediatamente antes do artigo → move para logo após o artigo
+  // Caso 1: epígrafe imediatamente ANTES do artigo → move para logo após o artigo
   if (artIdx > 0) {
-    let lookback = artIdx - 1;
-    const prev = lines[lookback].trim();
-    if (/^@@EPI@@/.test(prev)) {
-      epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim();
-      lines.splice(lookback, 1);                // remove linha original
-      lines.splice(artIdx + 1, 0, epigrafe);    // insere logo após o artigo
+    const lookback = artIdx - 1;
+    const prev = (lines[lookback] || '').toString();
+    if (/^\s*@@EPI@@/.test(prev)) {
+      const epigrafe = prev.replace(/^\s*@@EPI@@\s*/, '').trim();
+      lines.splice(lookback, 1);   // remove da posição antiga
+      artIdx--;                    // ajusta índice do Art. após remoção
+      lines.splice(artIdx + 1, 0, epigrafe); // insere logo após o Art.
     }
   }
 
-  // Caso 2: epígrafes dentro do artigo → mantém no corpo, só tira marcador
-  for (let i = artIdx + 1; i < lines.length; i++) {
-    if (/^@@EPI@@/.test(lines[i].trim())) {
-      lines[i] = lines[i].trim().replace(/^@@EPI@@\s*/, "").trim();
+  // Caso 2: epígrafes DENTRO do artigo → mantém no corpo, só tira marcador
+  for (let i = Math.max(artIdx + 1, 0); i < lines.length; i++) {
+    const li = (lines[i] || '').toString();
+    if (/^\s*@@EPI@@/.test(li)) {
+      lines[i] = li.replace(/^\s*@@EPI@@\s*/, '').trim();
     }
   }
 
@@ -561,11 +561,12 @@ function splitBlockSupraTitleBody(raw){
 
     const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
     let titleText = mt ? mt[1].trim() : titleLine.trim();
+    // normaliza "12-A" -> "12A"
     titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
 
     const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
     const rest = lines.slice(artIdx+1).join('\n').trimStart();
-    let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+    const body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
 
     return { supra, titleText, body };
   } else {
@@ -575,114 +576,145 @@ function splitBlockSupraTitleBody(raw){
   }
 }
 
+function parseByDelimiters(txt){
+  const sepRe = /(^|\n)[^\S\r\n]*-{5,}[^\S\r\n]*(?=\n|$)/g;
+  const seps = [];
+  let m;
+  while ((m = sepRe.exec(txt)) !== null) {
+    const idx = m.index + (m[0].startsWith('\n') ? 1 : 0);
+    seps.push(idx);
+  }
+  if (seps.length < 2) return [];
+  const arts = [];
+  for (let i = 0; i + 1 < seps.length; i += 1) {
+    const startLineEnd = txt.indexOf('\n', seps[i]);
+    const from = (startLineEnd === -1) ? txt.length : startLineEnd + 1;
+    const to = seps[i + 1];
+    const raw = txt.slice(from, to).trim();
+    if (!raw) continue;
+    const split = splitBlockSupraTitleBody(raw);
+    const title = split.titleText || `Bloco ${arts.length + 1}`;
+    arts.push({ title, text: raw, htmlId: `art-${arts.length}`, _split: split });
+  }
+  return arts;
+}
 
+// ⛏️ Ajustado para tratar @@EPI@@ entre cabeçalho e Art.:
+// - Se a linha anterior ao início for @@EPI@@, inclui no mesmo bloco do Art.
+// - Se o bloco começar com cabeçalho e terminar com @@EPI@@, empurra a epígrafe para o PRÓXIMO bloco (do Art.)
+function parseByArt(txt){
+  const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
+  const starts = [];
+  let m;
+  while ((m = re.exec(txt)) !== null) {
+    const idxArt = re.lastIndex - m[2].length;
+    starts.push(idxArt);
+  }
+  if (!starts.length) return [{
+    title:'Texto',
+    text: txt.trim(),
+    htmlId:'art-0',
+    _split: splitBlockSupraTitleBody(txt.trim())
+  }];
 
-    function parseByDelimiters(txt){
-      const sepRe = /(^|\n)[^\S\r\n]*-{5,}[^\S\r\n]*(?=\n|$)/g;
-      const seps = [];
-      let m;
-      while ((m = sepRe.exec(txt)) !== null) {
-        const idx = m.index + (m[0].startsWith('\n') ? 1 : 0);
-        seps.push(idx);
+  const arts = [];
+  let nextFromOverride = null;
+
+  for (let i = 0; i < starts.length; i++) {
+    let from = (nextFromOverride != null ? nextFromOverride : starts[i]);
+    nextFromOverride = null;
+    let to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
+
+    // Se a linha imediatamente anterior a "from" for @@EPI@@ → inclui no bloco do Art.
+    if (from > 0) {
+      const prevNL = txt.lastIndexOf('\n', from - 2);
+      const prevLineStart = prevNL === -1 ? 0 : prevNL + 1;
+      const prevLineRaw = txt.slice(prevLineStart, from);
+      if (/^\s*@@EPI@@/.test(prevLineRaw)) {
+        from = prevLineStart;
       }
-      if (seps.length < 2) return [];
-      const arts = [];
-      for (let i = 0; i + 1 < seps.length; i += 1) {
-        const startLineEnd = txt.indexOf('\n', seps[i]);
-        const from = (startLineEnd === -1) ? txt.length : startLineEnd + 1;
-        const to = seps[i + 1];
-        const raw = txt.slice(from, to).trim();
-        if (!raw) continue;
-        const split = splitBlockSupraTitleBody(raw);
-        const title = split.titleText || `Bloco ${arts.length + 1}`;
-        arts.push({ title, text: raw, htmlId: `art-${arts.length}`, _split: split });
+    }
+
+    // Se começa por Cabeçalho e a última linha do bloco é @@EPI@@ → move para o PRÓXIMO bloco
+    const firstBreak = txt.indexOf('\n', from);
+    const firstLine = txt.slice(from, firstBreak === -1 ? to : firstBreak);
+    const isHeaderStart = /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(firstLine);
+    if (isHeaderStart && i + 1 < starts.length) {
+      // recua em branco até achar conteúdo
+      let endScan = to;
+      while (endScan > from && /\s/.test(txt[endScan - 1])) endScan--;
+      const lastNL = txt.lastIndexOf('\n', endScan - 1);
+      const lastLineStart = lastNL === -1 ? from : lastNL + 1;
+      const lastLineRaw = txt.slice(lastLineStart, endScan);
+      if (/^\s*@@EPI@@/.test(lastLineRaw)) {
+        to = lastLineStart;              // tira epígrafe deste bloco
+        nextFromOverride = lastLineStart; // próximo bloco começará na epígrafe
       }
-      return arts;
     }
 
-    function parseByArt(txt){
-      // reconhece "Preâmbulo" (com/sem acento), "Art.", e cabeçalhos estruturais
-      const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
-      const starts = [];
-      let m;
-      while ((m = re.exec(txt)) !== null) {
-        const idxArt = re.lastIndex - m[2].length;
-        starts.push(idxArt);
-      }
-      if (!starts.length) return [{
-        title:'Texto',
-        text: txt.trim(),
-        htmlId:'art-0',
-        _split: splitBlockSupraTitleBody(txt.trim())
-      }];
+    let chunk = txt.slice(from, to).trimEnd();
 
-      const arts = [];
-      for (let i = 0; i < starts.length; i++) {
-        const from = starts[i];
-        const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
-        let chunk = txt.slice(from, to).trimEnd();
+    // remove rabicho final fora do período/fecha parênteses
+    const endDot = chunk.lastIndexOf('.');
+    const endPar = chunk.lastIndexOf(')');
+    const end    = Math.max(endDot, endPar);
+    if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
-        // remove rabicho final fora do período/fecha parênteses
-        const endDot = chunk.lastIndexOf('.');
-        const endPar = chunk.lastIndexOf(')');
-        const end    = Math.max(endDot, endPar);
-        if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
+    const split = splitBlockSupraTitleBody(chunk);
+    const title = split.titleText || chunk.split('\n')[0].slice(0,40);
+    arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
+  }
+  return arts;
+}
 
-        const split = splitBlockSupraTitleBody(chunk);
-        const title = split.titleText || chunk.split('\n')[0].slice(0,40);
-        arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
-      }
-      return arts;
+function parseSumulas(txt){
+  const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+  const out = [];
+  parts.forEach((block, i)=>{
+    const lines = block.split('\n').map(l=>l.trim());
+    const header = (lines.shift() || 'Súmula').trim();
+    const body = lines.join('\n').trim();
+    out.push({
+      title: header,
+      text: header + (body ? '\n' + body : ''),
+      htmlId: `sumula-${i}`,
+      _split: { supra: [], titleText: header, body }
+    });
+  });
+  return out;
+}
+
+function parsePrincipios(txt){
+  const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+  const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+  const out = [];
+  parts.forEach((block, i)=>{
+    const lines = block.split('\n').map(l=>l.trim());
+    let header = (lines.shift() || 'Princípio').trim();
+    const reHeader = /^\s*Princ[ií]pio\b/i;
+    if (!reHeader.test(header)){
+      if (lines.length && reHeader.test(lines[0])) header = lines.shift();
+      else header = 'Princípio';
     }
+    const body = lines.join('\n').trim();
+    out.push({
+      title: header,
+      text: header + (body ? '\n' + body : ''),
+      htmlId: `principio-${i}`,
+      _split: { supra: [], titleText: header, body }
+    });
+  });
+  return out;
+}
 
-    function parseSumulas(txt){
-      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
-      const out = [];
-      parts.forEach((block, i)=>{
-        const lines = block.split('\n').map(l=>l.trim());
-        const header = (lines.shift() || 'Súmula').trim();
-        const body = lines.join('\n').trim();
-        out.push({
-          title: header,
-          text: header + (body ? '\n' + body : ''),
-          htmlId: `sumula-${i}`,
-          _split: { supra: [], titleText: header, body }
-        });
-      });
-      return out;
-    }
-
-    function parsePrincipios(txt){
-      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
-      const out = [];
-      parts.forEach((block, i)=>{
-        const lines = block.split('\n').map(l=>l.trim());
-        let header = (lines.shift() || 'Princípio').trim();
-        const reHeader = /^\s*Princ[ií]pio\b/i;
-        if (!reHeader.test(header)){
-          if (lines.length && reHeader.test(lines[0])) header = lines.shift();
-          else header = 'Princípio';
-        }
-        const body = lines.join('\n').trim();
-        out.push({
-          title: header,
-          text: header + (body ? '\n' + body : ''),
-          htmlId: `principio-${i}`,
-          _split: { supra: [], titleText: header, body }
-        });
-      });
-      return out;
-    }
-
-    function parseByUrl(url, txt){
-      const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
-      const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
-      return isSumulas ? parseSumulas(txt)
-           : isPrincipios ? parsePrincipios(txt)
-           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
-    }
+function parseByUrl(url, txt){
+  const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
+  const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
+  return isSumulas ? parseSumulas(txt)
+       : isPrincipios ? parsePrincipios(txt)
+       : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
+}
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
