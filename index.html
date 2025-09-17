@@ -1266,14 +1266,23 @@ supraText + artigo,
     els.closeStudy.addEventListener('click', closeStudyModal);
     els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
     document.querySelectorAll('.ia-btn').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        withBusy(e.currentTarget, async ()=>{
-          const url = e.currentTarget.dataset.url;
-          notify('Abrindo ' + e.currentTarget.textContent + '…');
-          openIA(url);
-        });
-      });
+  btn.addEventListener('click', (e)=>{
+    withBusy(e.currentTarget, async ()=>{
+      try {
+        // Copia automático
+        await navigator.clipboard.writeText(els.promptPreview.textContent || '');
+        notify('✅ Prompt copiado!');
+
+        // Abre a IA escolhida
+        const url = e.currentTarget.dataset.url;
+        openIA(url);
+      } catch {
+        notify('Não consegui copiar, faça manualmente.');
+      }
     });
+  });
+});
+
     els.copyPromptBtn.addEventListener('click', (e)=>{
       withBusy(e.currentTarget, async ()=>{
         try{ await navigator.clipboard.writeText(els.promptPreview.textContent||''); notify('✅ Prompt copiado!'); }
