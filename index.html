@@ -1006,7 +1006,15 @@ Aqui está o `index.html` completo já com todos os ajustes combinados: ícone c
       state.currentTokens = tokens;
 
       const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
-      renderArticlesProgressive(matched);
+renderArticlesProgressive(state.articles);
+requestAnimationFrame(()=>{
+  document.querySelectorAll('article').forEach(art=>{
+    // só destaca se o artigo estiver entre os que deram match
+    if (matched.find(m => m.htmlId === art.id)){
+      highlightTextNodes(art, tokens);
+    }
+  });
+});
 
       requestAnimationFrame(()=>{
         document.querySelectorAll('article').forEach(art=>{
