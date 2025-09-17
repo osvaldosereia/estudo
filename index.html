@@ -34,7 +34,6 @@
 
       --icon-muted:#aeb4c2;
       --icon-fav:#f5b301;
-      --icon-study:#0ea36b;
     }
 
     *{box-sizing:border-box}
@@ -46,7 +45,6 @@
       max-width:100%; overflow-x:hidden;
     }
     button,input,select{font:inherit}
-
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
     /* ======== TOP BAR ======== */
@@ -89,7 +87,6 @@
     .search .clear-x.show{ display:flex; }
     @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
 
-    /* Botão Enviar busca (desktop) */
     .search-send{
       display:none; width:38px; height:38px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
       position:relative;
@@ -99,7 +96,7 @@
       .search-send{ display:inline-grid; place-items:center; }
     }
 
-    /* ======== TABS DE ARQUIVOS ======== */
+    /* ======== FILEBAR ======== */
     .filebar{
       position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--filebar-h);
       background:#fff; box-shadow:0 1px 0 var(--line); z-index:99;
@@ -121,7 +118,6 @@
     }
     .tab-more{ margin-left:auto; }
 
-    /* Dropdown Mais */
     .more-menu{
       position:fixed; top:calc(var(--topbar-h) + var(--filebar-h)); right:calc((100vw - min(var(--wrap-max), 92vw))/2 + 6px);
       background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.14);
@@ -140,20 +136,19 @@
     }
     .container{ width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 8px }
 
-    /* ======== Títulos de seção (Destaques) ======== */
     .section-title{
       font-size:13px; letter-spacing:.3px; font-weight:800; color:#0e1638; margin:14px 4px 6px; text-transform:uppercase;
     }
-    .section-empty{
-      color:#6c7282; font-size:13px; margin:6px 4px 12px;
-    }
+    .section-empty{ color:#6c7282; font-size:13px; margin:6px 4px 12px; }
 
     /* ======== Artigos ======== */
     article{
       white-space:pre-wrap;
       padding:16px 4px 18px; overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
       position:relative; scroll-margin: calc(var(--topbar-h) + var(--filebar-h) + 20px);
+      border-left:3px solid transparent; transition:border-color .15s;
     }
+    article.in-view{ border-left-color: var(--blue); }
     article::after{
       content:""; display:block; width:90%; height:1px; background:var(--line);
       position:absolute; left:5%; bottom:0;
@@ -162,9 +157,7 @@
     .supra{ color:#6c7282; font-weight:500; font-size:12px; margin:0 0 6px; }
     .supra div{ line-height:1.35 }
 
-    .art-head{
-      display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px;
-    }
+    .art-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px; }
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
     .art-actions{ display:flex; align-items:center; gap:10px }
 
@@ -173,15 +166,15 @@
       color:var(--icon-muted);
     }
     .icon-btn img{ width:18px; height:18px; display:block; }
-    /* (cores via troca de arquivo: favorito-active.svg / estudar-active.svg) */
+    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); filter:none; }
 
     .art-body { font-size:12px; line-height:1.45; }
-    article.highlight-study{ background:rgba(255,214,1,.12) }
-
-    /* Destaque de parênteses */
     .paren{ color:rgba(0,0,0,.4); }
 
-    /* ======== MINI-MODAL DE BUSCA (flutuante/preto) ======== */
+    /* Busca: marcação azul */
+    mark{ padding:0 2px; border-radius:2px; background:#cce4ff; color:inherit; }
+
+    /* ======== MINI-FINDER ======== */
     .finder-pop{
       position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
       background:#000; color:#fff; border:1px solid rgba(255,255,255,.08);
@@ -206,16 +199,38 @@
     }
     .toast.show{opacity:1}
 
-    /* Spinner overlay em QUALQUER botão */
+    /* Busy overlay genérico */
     .busy{ pointer-events:none; }
     .busy::after{
-      content:""; position:absolute; inset:0; display:block;
-      background:rgba(255,255,255,.65); border-radius:inherit;
+      content:""; position:absolute; inset:0; display:block; background:rgba(255,255,255,.65); border-radius:inherit;
     }
     .busy::before{
       content:""; position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px;
       border:2px solid #cfd4e2; border-top-color:#142B6F; border-radius:50%; animation:spin 1s linear infinite;
     }
+
+    /* ======== MODAL ESTUDAR ======== */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; z-index:300;
+    }
+    .modal-backdrop[aria-hidden="false"]{ display:flex; }
+    .modal{
+      width:min(720px, 92vw); background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .study-title{ margin:0; font-size:18px; }
+    .study-close{ border:0; background:#f3f4f6; width:32px; height:32px; border-radius:8px; cursor:pointer; }
+    .study-sub{ margin:8px 0 10px; color:#4b5563; }
+    .prompt-box{
+      background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px; max-height:40vh; overflow:auto;
+      font:12px/1.45 ui-monospace, Menlo, Consolas, "SF Mono", monospace;
+    }
+    .ia-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .ia-btn{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; }
+    .copy-prompt{ margin-top:10px; }
+    .btn{ cursor:pointer; }
 
     /* Responsivo */
     @media (max-width: 768px){
@@ -243,15 +258,15 @@
     </div>
   </header>
 
-  <!-- TABS DE ARQUIVOS -->
+  <!-- FILEBAR -->
   <nav class="filebar">
     <div class="filebar-inner" id="filebarInner"></div>
   </nav>
 
-  <!-- DROPDOWN "MAIS" -->
+  <!-- DROPDOWN MAIS -->
   <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
 
-  <!-- MINI-MODAL DA BUSCA -->
+  <!-- MINI-FINDER -->
   <div class="finder-pop" id="finderPop" aria-live="polite">
     <button class="mini-btn" id="prevBtn" title="Anterior" aria-label="Anterior" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -336,43 +351,37 @@
   </div>
 
   <script>
-    /* =================== Service Worker (PWA) =================== */
+    /* =================== PWA =================== */
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log("✅ Service Worker registrado", reg.scope))
-          .catch(err => console.error("❌ SW falhou", err));
+          .then(reg => console.log("✅ SW", reg.scope))
+          .catch(err => console.error("❌ SW", err));
       });
     }
     window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
 
     /* =================== Refs =================== */
     const els = {
-      // topo
       brandBtn: document.getElementById('brandBtn'),
       searchInput: document.getElementById('searchInput'),
       searchSpinner: document.getElementById('searchSpinner'),
       clearSearch: document.getElementById('clearSearch'),
       sendSearch: document.getElementById('sendSearch'),
 
-      // filebar
       filebarInner: document.getElementById('filebarInner'),
       moreMenu: document.getElementById('moreMenu'),
 
-      // mini finder
       finderPop: document.getElementById('finderPop'),
       prevBtn: document.getElementById('prevBtn'),
       nextBtn: document.getElementById('nextBtn'),
       closeFinder: document.getElementById('closeFinder'),
       count: document.getElementById('count'),
 
-      // conteúdo
       articles: document.getElementById('articles'),
 
-      // catálogo
       codeSelect: document.getElementById('codeSelect'),
 
-      // modal IA
       studyModal: document.getElementById('studyModal'),
       closeStudy: document.getElementById('closeStudy'),
       modalTitle: document.getElementById('modalTitle'),
@@ -429,7 +438,7 @@
       isStudied(id){ return store.listStudied().some(e => e.id === id); }
     };
 
-    /* =================== Toast + Busy =================== */
+    /* =================== Utils =================== */
     function notify(msg='Ok!'){
       els.toast.textContent = msg;
       els.toast.classList.add('show');
@@ -444,12 +453,9 @@
         const dt = performance.now() - t0;
         if (dt < min) await new Promise(r=>setTimeout(r, min - dt));
         return res;
-      } finally {
-        if (btn) btn.classList.remove('busy');
-      }
+      } finally { if (btn) btn.classList.remove('busy'); }
     }
 
-    /* =================== Helpers =================== */
     const sanitizeForLayout = (s)=> s
       .replace(/\u00A0/g, ' ')
       .replace(/\t/g, ' ')
@@ -474,7 +480,6 @@
         if (url) state.urlToLabel.set(url, label);
       });
     }
-
     function getAllOptions(){
       const out = [];
       els.codeSelect.querySelectorAll('option').forEach(opt=>{
@@ -484,7 +489,6 @@
       });
       return out;
     }
-
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser =================== */
@@ -528,7 +532,6 @@
         const startLineEnd = txt.indexOf('\n', seps[i]);
         const from = (startLineEnd === -1) ? txt.length : startLineEnd + 1;
         const to = seps[i + 1];
-        if (from >= to) continue;
         const raw = txt.slice(from, to).trim();
         if (!raw) continue;
         const split = splitBlockSupraTitleBody(raw);
@@ -619,18 +622,6 @@
     }
 
     /* =================== Render helpers =================== */
-    function applyIconState(btn){
-      const img = btn.querySelector('img');
-      if (!img) return;
-      const src = img.getAttribute('data-src');
-      const active = img.getAttribute('data-active');
-      if (btn.classList.contains('active') && active){
-        img.src = active;
-      } else if (src){
-        img.src = src;
-      }
-    }
-
     function wrapParensIn(root){
       const re = /\(([^()]{1,200})\)/g;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
@@ -654,6 +645,41 @@
         }
         const after = text.slice(last);
         if (after) frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function highlightTextNodes(root, tokens){
+      if (!tokens || !tokens.length) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n; while((n = walker.nextNode())) nodes.push(n);
+
+      nodes.forEach(node=>{
+        const txt = node.nodeValue;
+        if (!txt.trim()) return;
+
+        const frag = document.createDocumentFragment();
+        // percorre trechos alfanuméricos preservando pontuação/espaços
+        const re = /[\p{L}\p{N}]+/gu;
+        let idx = 0, m;
+        while ((m = re.exec(txt))){
+          const before = txt.slice(idx, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+
+          const word = m[0];
+          const hit = tokens.some(t => norm(word).includes(t));
+          if (hit){
+            const mk = document.createElement('mark');
+            mk.textContent = word;
+            frag.appendChild(mk);
+          } else {
+            frag.appendChild(document.createTextNode(word));
+          }
+          idx = re.lastIndex;
+        }
+        const tail = txt.slice(idx);
+        if (tail) frag.appendChild(document.createTextNode(tail));
         node.parentNode.replaceChild(frag, node);
       });
     }
@@ -694,14 +720,13 @@
       const actions = document.createElement('div');
       actions.className = 'art-actions';
 
-      // Dois ícones (sem box) – você vai subir os SVGs
       const favBtn = document.createElement('button');
       favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
-      favBtn.innerHTML = `<img src="icons/favorito.svg" data-src="icons/favorito.svg" data-active="icons/favorito-active.svg" alt="Favoritar" />`;
+      favBtn.innerHTML = `<img src="icons/favorito.svg" alt="Favoritar" />`;
 
       const studyBtn = document.createElement('button');
       studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
-      studyBtn.innerHTML = `<img src="icons/estudar.svg" data-src="icons/estudar.svg" data-active="icons/estudar-active.svg" alt="Estudar" />`;
+      studyBtn.innerHTML = `<img src="icons/estudar.svg" alt="Estudar com I.A." />`;
 
       actions.append(favBtn, studyBtn);
       head.append(titleSpan, actions);
@@ -725,14 +750,11 @@
 
       el.appendChild(content);
 
-      // Estados ativos + ícones coloridos
+      // estados ativos (apenas favorito fica colorido)
       const id = store.makeId(el.dataset.fileUrl, el.id);
       if (store.isFavorite(id)) favBtn.classList.add('active');
-      if (store.isStudied(id)) studyBtn.classList.add('active');
-      applyIconState(favBtn);
-      applyIconState(studyBtn);
 
-      // Parênteses em cinza (40%)
+      // parênteses em cinza
       wrapParensIn(el);
 
       return el;
@@ -743,20 +765,55 @@
       state.currentArticleIdx = -1;
     }
 
-    // Render progressivo: 5 primeiro instantâneo, resto em lotes
+    // linha azul no artigo central
+    function updateCurrentOutline(){
+      const nodes = Array.from(document.querySelectorAll('article[data-idx]'));
+      if (!nodes.length) return;
+
+      const topGap = 12;
+      const scTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const scBottom = scTop + window.innerHeight;
+      const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+
+      let targetIdx = -1;
+
+      // bordas: primeiro e último
+      if (scTop <= topGap){ targetIdx = 0; }
+      else if (scBottom >= docH - topGap){ targetIdx = nodes.length - 1; }
+      else {
+        const cy = window.innerHeight / 2;
+        let best = Infinity, bestIdx = 0;
+        nodes.forEach((el, i)=>{
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          const mid = r.top + r.height/2;
+          const d = Math.abs(mid - cy);
+          if (d < best){ best = d; bestIdx = i; }
+        });
+        targetIdx = bestIdx;
+      }
+
+      if (targetIdx === -1) return;
+      if (state.currentArticleIdx === targetIdx) return;
+
+      nodes.forEach(n=> n.classList.remove('in-view'));
+      nodes[targetIdx].classList.add('in-view');
+      state.currentArticleIdx = targetIdx;
+    }
+
+    // Render progressivo
     function renderArticlesProgressive(list, {chunkSize=30}={}){
       clearArticles();
       if (!list.length){
         els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
         return;
       }
-      // primeiros 5
       const first = Math.min(5, list.length);
       const frag = document.createDocumentFragment();
       for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
       els.articles.appendChild(frag);
+      updateCurrentOutline();
 
-      // fila restante
       let i = first;
       function appendChunk(){
         const fr = document.createDocumentFragment();
@@ -766,20 +823,15 @@
           i++; added++;
         }
         els.articles.appendChild(fr);
+        updateCurrentOutline();
         if (i < list.length){
-          if ('requestIdleCallback' in window){
-            requestIdleCallback(appendChunk);
-          } else {
-            setTimeout(appendChunk, 0);
-          }
+          if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
+          else { setTimeout(appendChunk, 0); }
         }
       }
       if (first < list.length){
-        if ('requestIdleCallback' in window){
-          requestIdleCallback(appendChunk);
-        } else {
-          setTimeout(appendChunk, 0);
-        }
+        if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
+        else { setTimeout(appendChunk, 0); }
       }
     }
 
@@ -818,24 +870,15 @@
         }));
 
         const frag = document.createDocumentFragment();
-        list.forEach(a=>{
-          frag.appendChild(buildArticleElement(a, idx++, {globalMode:true}));
-        });
+        list.forEach(a=>{ frag.appendChild(buildArticleElement(a, idx++, {globalMode:true})); });
         els.articles.appendChild(frag);
       });
 
       window.scrollTo({top:0,behavior:'instant'});
+      updateCurrentOutline();
     }
 
-    function updateCount(){
-      if (!state.matchArticles || state.matchArticles.length === 0){
-        els.count.textContent = '0/0';
-        return;
-      }
-      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
-    }
-
-    /* =================== Loader de arquivo =================== */
+    /* =================== Loader =================== */
     async function fetchTextCached(url){
       if (state.cache.has(url)) return state.cache.get(url);
       const res = await fetch(url, {cache: 'force-cache'});
@@ -880,7 +923,7 @@
       });
     }
 
-    /* =================== Busca Local (revisada) =================== */
+    /* =================== Busca (revisada) =================== */
     async function runLocalSearch(){
       if (state.mode !== 'file'){
         notify('Abra um arquivo para buscar.');
@@ -889,28 +932,26 @@
       const q = els.searchInput.value.trim();
       els.finderPop.classList.add('show');
 
-      // Sem termo => volta a lista completa
       if (!q){
         renderArticlesProgressive(state.articles);
-        state.matchArticles = [];
-        state.matchIdx = -1;
-        updateCount();
+        state.matchArticles = []; state.matchIdx = -1; els.count.textContent = '0/0';
         return;
       }
 
       els.searchSpinner.classList.add('show');
 
-      // Normaliza termos e filtra nos DADOS (não no DOM)
       const tokens = q.split(/\s+/).filter(Boolean).map(norm);
       state.currentTokens = tokens;
 
       const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
-
-      // Renderiza apenas os resultados
       renderArticlesProgressive(matched);
 
-      // Atualiza navegação
       requestAnimationFrame(()=>{
+        // aplica destaque nos resultados (sem quebrar a marcação §/incisos)
+        document.querySelectorAll('article').forEach(art=>{
+          highlightTextNodes(art, tokens);
+        });
+
         state.matchArticles = Array.from(document.querySelectorAll('article'));
         if (state.matchArticles.length){
           state.matchIdx = 0;
@@ -918,19 +959,25 @@
         } else {
           state.matchIdx = -1;
         }
-        updateCount();
+        els.count.textContent = state.matchArticles.length ? `${state.matchIdx+1}/${state.matchArticles.length}` : '0/0';
         els.searchSpinner.classList.remove('show');
+        updateCurrentOutline();
       });
     }
 
-    /* =================== TABS (filebar) =================== */
-    function getVisibleTabsCount(){
-      // Desktop: sempre 5; Mobile: todas (scroll)
-      return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5;
+    function updateCount(){
+      if (!state.matchArticles || state.matchArticles.length === 0){
+        els.count.textContent = '0/0';
+        return;
+      }
+      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
     }
 
+    /* =================== Filebar =================== */
+    function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5; }
+
     function renderFilebar(){
-      const options = getAllOptions(); // todos os arquivos
+      const options = getAllOptions();
       const frag = document.createDocumentFragment();
 
       const mkTab = (label, url=null, extraClass='')=>{
@@ -952,19 +999,16 @@
         return b;
       };
 
-      // "Destaques"
       const tabHighlights = mkTab('Destaques', null);
       tabHighlights.classList.add('active');
       frag.appendChild(tabHighlights);
 
       const visibleCap = getVisibleTabsCount();
       if (visibleCap === Infinity){
-        // mobile: mostra tudo com scroll
         options.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
       } else {
         const visible = options.slice(0, visibleCap);
         const hidden = options.slice(visibleCap);
-
         visible.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
 
         if (hidden.length){
@@ -994,7 +1038,7 @@
           els.moreMenu.style.display = 'none';
           els.moreMenu.setAttribute('aria-hidden','true');
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-          anchorBtn.classList.add('active'); // mantém sublinha no "Mais" até carregar
+          anchorBtn.classList.add('active');
           await loadFile(it.value, anchorBtn);
         });
         els.moreMenu.appendChild(bi);
@@ -1003,7 +1047,7 @@
       els.moreMenu.setAttribute('aria-hidden','false');
     }
 
-    /* =================== IA prompt =================== */
+    /* =================== IA =================== */
     function buildPrompt(a){
       const split = a._split || splitBlockSupraTitleBody(a.text);
       const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
@@ -1027,11 +1071,9 @@
     function openStudyModal(title, prompt){
       els.modalTitle.textContent = `Estude o ${title} com I.A.`;
       els.promptPreview.textContent = prompt;
-      els.studyModal.style.display = 'flex';
       els.studyModal.setAttribute('aria-hidden','false');
     }
     function closeStudyModal(){
-      els.studyModal.style.display = 'none';
       els.studyModal.setAttribute('aria-hidden','true');
     }
 
@@ -1047,42 +1089,32 @@
     });
 
     // Busca
-    function toggleClear(){
-      els.clearSearch.classList.toggle('show', !!els.searchInput.value);
-    }
+    function toggleClear(){ els.clearSearch.classList.toggle('show', !!els.searchInput.value); }
     els.searchInput.addEventListener('input', toggleClear);
     toggleClear();
 
-    els.searchInput.addEventListener('focus', ()=>{
-      els.finderPop.classList.add('show');
-    });
+    els.searchInput.addEventListener('focus', ()=> els.finderPop.classList.add('show'));
     els.closeFinder.addEventListener('click', ()=>{
       els.finderPop.classList.remove('show');
       els.searchInput.blur();
     });
-    els.searchInput.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); }
-    });
+    els.searchInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); runLocalSearch(); } });
     els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
-    els.clearSearch.addEventListener('click', ()=>{
-      els.searchInput.value = '';
-      toggleClear();
-      runLocalSearch();
-    });
+    els.clearSearch.addEventListener('click', ()=>{ els.searchInput.value = ''; toggleClear(); runLocalSearch(); });
 
     els.nextBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
       const art = state.matchArticles[state.matchIdx];
       art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount();
+      updateCount(); updateCurrentOutline();
     }));
     els.prevBtn.addEventListener('click', (e)=> withBusy(e.currentTarget, async ()=>{
       if (!state.matchArticles || state.matchArticles.length === 0) return;
       state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
       const art = state.matchArticles[state.matchIdx];
       art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount();
+      updateCount(); updateCurrentOutline();
     }));
 
     // Modal IA
@@ -1104,12 +1136,11 @@
       });
     });
 
-    // Delegação nos cards (favoritar/estudar)
+    // Ações nos cards
     els.articles.addEventListener('click', async (e)=>{
       const btn = e.target.closest('.icon-btn');
       if (!btn) return;
-      const artEl = e.target.closest('article');
-      if (!artEl) return;
+      const artEl = e.target.closest('article'); if (!artEl) return;
 
       const idx = Number(artEl?.dataset.idx);
       const a = (state.mode === 'file' ? state.articles[idx] : null);
@@ -1121,7 +1152,6 @@
         fileLabel: artEl.dataset.fileLabel,
         htmlId: artEl.id,
         text: state.mode === 'file' ? a.text : (()=>{
-          // recuperar texto salvo nos stores
           const fav = store.listFavorites().find(e => e.id === id);
           const stud = store.listStudied().find(e => e.id === id);
           return fav?.text || stud?.text || '';
@@ -1136,13 +1166,19 @@
             title: splitBlockSupraTitleBody(entry.text).titleText
           };
           const prompt = buildPrompt(useArticle);
+
+          // NÃO marcar botão como ativo; apenas salvar nos estudados
           store.markStudied(entry);
-          btn.classList.add('active');
-          applyIconState(btn);
-          notify('📘 Marcado como estudado');
+
+          // abrir modal
           openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
-          document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
-          artEl.classList.add('highlight-study');
+
+          // trocar aba para Destaques (fica por trás do modal)
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          const first = els.filebarInner.querySelector('.tab'); // "Destaques"
+          if (first){ first.classList.add('active'); }
+          state.mode = 'highlights';
+          renderHighlights();
         });
       }
 
@@ -1151,12 +1187,10 @@
           if (store.isFavorite(id)){
             store.removeFavorite(id);
             btn.classList.remove('active');
-            applyIconState(btn);
             notify('⭐ Removido dos favoritos');
           } else {
             store.addFavorite(entry);
             btn.classList.add('active');
-            applyIconState(btn);
             notify('⭐ Adicionado aos favoritos');
           }
         });
@@ -1171,12 +1205,16 @@
       }
     });
 
+    // Scroll/resize -> atualizar linha azul
+    window.addEventListener('scroll', updateCurrentOutline, {passive:true});
+    window.addEventListener('resize', updateCurrentOutline, {passive:true});
+
     /* =================== Boot =================== */
     function boot(){
       buildCatalogMaps();
       renderFilebar();
       renderHighlights(); // inicia em Destaques
-      // Esc fecha mini finder e modal
+
       document.addEventListener('keydown', (e)=>{
         if (e.key === 'Escape'){
           els.finderPop.classList.remove('show');
@@ -1185,9 +1223,7 @@
       });
       window.addEventListener('resize', ()=>{ renderFilebar(); }, {passive:true});
     }
-
     boot();
   </script>
 </body>
 </html>
-```
