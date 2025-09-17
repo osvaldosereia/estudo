@@ -1,65 +1,1457 @@
-// sw.js - Service Worker revisado
-const CACHE_NAME = "direito-love-v9"; // 🔄 altere a versão SEMPRE que fizer update
-const FILES_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icons/favicon-32.png",
-  "./icons/favicon-192.png",
-  "./icons/apple-touch-icon.png"
-];
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>direito.love — Leitor jurídico</title>
 
-// Instalação
-self.addEventListener("install", (event) => {
-  // força ativação imediata
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
-  );
-});
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#f6f7fb">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-// Ativação
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(
-        keyList.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key); // 🔥 limpa caches antigos
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#101418;
+
+      --topbar-h:56px;
+      --filebar-h:48px;
+
+      --focus:#9bb6ff;
+      --radius:12px;
+      --shadow:0 2px 10px rgba(0,0,0,.06);
+
+      --line:#e9ecf3;
+      --soft:#f6f7fb;
+
+      --wrap-max: 920px;
+
+      --blue:#2563eb;
+      --blue-soft:#e8f0ff;
+
+      /* Ícones */
+      --icon-muted: rgba(0,0,0,.4);
+      --icon-fav:#f5b301; /* amarelo */
+      --icon-study:#2979ff; /* azul */
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      background:var(--bg); color:var(--fg);
+      font:15px/1.58 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      max-width:100%; overflow-x:hidden;
+    }
+    button,input,select{font:inherit}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* ======== TOP BAR ======== */
+    .topbar{
+      position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
+      display:flex; align-items:center; justify-content:center;
+      background:var(--soft); color:#111; z-index:100; box-shadow:0 1px 0 var(--line);
+    }
+    .topbar-inner{
+      width:min(var(--wrap-max), 92vw);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:0 6px;
+    }
+    .brand{ height:38px; width:auto; object-fit:contain; display:block; cursor:pointer;}
+    .brand:focus{outline:2px solid var(--focus); outline-offset:2px}
+
+    .search-wrap{
+      flex:1; display:flex; justify-content:flex-end; align-items:center;
+      position:relative; min-width:0; gap:8px;
+    }
+    .search{
+      width:min(560px, 100%); position:relative;
+    }
+    /* Esconde o X nativo do input[type=search] (corrige X duplicado) */
+    .search input::-webkit-search-cancel-button{ -webkit-appearance:none; height:0; width:0; margin:0; }
+    .search input::-ms-clear{ display:none; width:0; height:0; }
+    .search input{
+      width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 70px 0 14px; background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,.03); transition:border .2s, box-shadow .2s;
+    }
+    .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.25); outline:none; }
+    .search .spinner{
+      position:absolute; right:42px; top:50%; transform:translateY(-50%);
+      width:18px; height:18px; border:2px solid #e2e5f2; border-top-color:#142B6F; border-radius:50%;
+      animation:spin 1s linear infinite; display:none;
+    }
+    .search .spinner.show{ display:block; }
+    .search .clear-x{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      width:22px; height:22px; border-radius:999px; border:1px solid #e5e7ef; background:#fff; cursor:pointer;
+      display:none; align-items:center; justify-content:center; line-height:1;
+    }
+    .search .clear-x.show{ display:flex; }
+    @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+
+    .search-send{
+      display:none; width:38px; height:38px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
+      position:relative;
+    }
+    .search-send svg{ width:18px; height:18px; }
+    @media (min-width: 992px){
+      .search-send{ display:inline-grid; place-items:center; }
+    }
+
+    /* ======== FILEBAR ======== */
+    .filebar{
+      position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--filebar-h);
+      background:#fff; box-shadow:0 1px 0 var(--line); z-index:99;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .filebar-inner{
+      width:min(var(--wrap-max), 92vw);
+      display:flex; align-items:center; gap:16px; padding:0 6px; overflow-x:auto; scrollbar-width:none;
+    }
+    .filebar-inner::-webkit-scrollbar{ display:none; }
+    .tab{
+      flex:0 0 auto; padding:10px 2px; border:0; background:transparent; cursor:pointer; position:relative;
+      color:#3f4656; font-size:14px; font-weight:600; white-space:nowrap;
+    }
+    .tab:hover{ color:#111; }
+    .tab.active{ color:#111; }
+    .tab.active::after{
+      content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--blue); border-radius:2px;
+    }
+    .tab-more{ }
+
+    .more-menu{
+      position:fixed; top:calc(var(--topbar-h) + var(--filebar-h)); right:calc((100vw - min(var(--wrap-max), 92vw))/2 + 6px);
+      background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.14);
+      padding:6px; z-index:120; display:none; max-height:50vh; overflow:auto; min-width:220px;
+    }
+    .more-item{
+      display:block; width:100%; text-align:left; background:transparent; border:0; padding:10px 10px; cursor:pointer; border-radius:8px; font-size:13px;
+    }
+    .more-item:hover{ background:#f6f7fb; }
+
+    /* ======== CONTEÚDO ======== */
+    .content{
+      position:relative;
+      padding: calc(var(--topbar-h) + var(--filebar-h) + 12px) 0 44px;
+      min-height:100dvh;
+    }
+    .container{ width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 8px }
+
+    .section-title{
+      font-size:13px; letter-spacing:.3px; font-weight:800; color:#0e1638; margin:14px 4px 6px; text-transform:uppercase;
+    }
+    .section-empty{ color:#6c7282; font-size:13px; margin:6px 4px 12px; }
+
+    /* ======== Artigos ======== */
+    article{
+      white-space:pre-wrap;
+      padding:16px 4px 18px; overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
+      position:relative; scroll-margin: calc(var(--topbar-h) + var(--filebar-h) + 20px);
+      border-left:3px solid transparent; transition:border-color .15s;
+    }
+    article.in-view{ border-left-color: var(--blue); }
+    article::after{
+      content:""; display:block; width:90%; height:1px; background:var(--line);
+      position:absolute; left:5%; bottom:0;
+    }
+
+    .supra{ color:#6c7282; font-weight:500; font-size:12px; margin:0 0 6px; }
+    .supra div{ line-height:1.35 }
+
+    .art-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px; }
+    .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
+    .art-actions{ display:flex; align-items:center; gap:10px }
+
+    .icon-btn{
+      width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
+      color:var(--icon-muted);
+    }
+    .icon-btn img{
+      width:18px; height:18px; display:block;
+      opacity:.6; /* cinza ~40% */
+    }
+    .icon-btn.active img{ opacity:1; }
+    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
+    .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
+
+    .art-body { font-size:13px; line-height:1.5; }
+    .paren{ color: rgba(0,0,0,.4); font-size: 10px; }
+
+    /* Busca: marcação azul */
+    mark{ padding:0 2px; border-radius:2px; background:#cce4ff; color:inherit; }
+
+    /* ======== MINI-FINDER ======== */
+    .finder-pop{
+      position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
+      background:#000; color:#fff; border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      border-radius:14px; z-index:220; padding:8px 10px; display:none; align-items:center; gap:10px;
+    }
+    .finder-pop.show{ display:flex; }
+    .mini-btn{
+      width:36px; height:36px; display:grid; place-items:center; border-radius:999px; border:1px solid rgba(255,255,255,.25); background:transparent; cursor:pointer; color:#fff;
+    }
+    .mini-btn:hover{ background:rgba(255,255,255,.08); }
+    .mini-btn svg{ width:18px; height:18px; }
+    .mini-count{
+      min-width:72px; font-size:12px; color:#fff; border:1px solid rgba(255,255,255,.25); background:transparent; padding:6px 10px; border-radius:999px; text-align:center;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      top: calc(var(--topbar-h) + var(--filebar-h) + 10px);
+      background:#111; color:#fff; padding:8px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:220
+    }
+    .toast.show{opacity:1}
+
+    /* Busy overlay genérico */
+    .busy{ pointer-events:none; }
+    .busy::after{
+      content:""; position:absolute; inset:0; display:block; background:rgba(255,255,255,.65); border-radius:inherit;
+    }
+    .busy::before{
+      content:""; position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px;
+      border:2px solid #cfd4e2; border-top-color:#142B6F; border-radius:50%; animation:spin 1s linear infinite;
+    }
+
+    /* ======== MODAL ESTUDAR ======== */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; z-index:300;
+    }
+    .modal-backdrop[aria-hidden="false"]{ display:flex; }
+    .modal{
+      width:min(720px, 92vw); background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .study-title{ margin:0; font-size:18px; }
+    .study-close{ border:0; background:#f3f4f6; width:32px; height:32px; border-radius:8px; cursor:pointer; }
+    .study-sub{ margin:8px 0 10px; color:#4b5563; }
+    .prompt-box{
+      background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px; max-height:40vh; overflow:auto;
+      font:12px/1.45 ui-monospace, Menlo, Consolas, "SF Mono", monospace;
+    }
+    .ia-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .ia-btn{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; }
+    .copy-prompt{ margin-top:10px; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:8px 12px; border-radius:10px;
+      border:1px solid #e5e7eb; background:#fff; cursor:pointer;
+      transition:background .15s, border-color .15s, box-shadow .15s;
+    }
+    .btn:hover{ background:#f3f4f6; }
+    .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
+
+    /* Responsivo */
+    @media (max-width: 768px){
+      .brand{ height:34px; }
+      .filebar-inner{ gap:12px; }
+      .tab{ font-size:14px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Destaques)">
+      <div class="search-wrap">
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
+          <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+          <button class="clear-x" id="clearSearch" title="Limpar busca" aria-label="Limpar busca">✕</button>
+        </div>
+        <button class="search-send btn" id="sendSearch" title="Buscar" aria-label="Buscar" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILEBAR -->
+  <nav class="filebar" aria-label="Documentos">
+    <div class="filebar-inner" id="filebarInner"></div>
+  </nav>
+
+  <!-- DROPDOWN MAIS -->
+  <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
+
+  <!-- MINI-FINDER -->
+  <div class="finder-pop" id="finderPop" aria-live="polite">
+    <button class="mini-btn" id="prevBtn" title="Anterior (Shift+F3 / Ctrl+Shift+G)" aria-label="Anterior" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="mini-count" aria-live="polite"><span id="count">0/0</span></div>
+    <button class="mini-btn" id="nextBtn" title="Próximo (F3 / Ctrl+G)" aria-label="Próximo" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="mini-btn" id="closeFinder" title="Fechar (Esc)" aria-label="Fechar" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <main class="content">
+    <div class="container">
+      <div class="articles" id="articles"></div>
+    </div>
+  </main>
+
+  <!-- CATÁLOGO OCULTO -->
+  <select id="codeSelect" title="Arquivos" style="display:none">
+    <option value="">—</option>
+    <optgroup label="Códigos">
+      <option value="data/codigos/CF88.txt">Constituição Federal 1988</option>
+      <option value="data/codigos/codigo_civil.txt">Civil</option>
+      <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
+      <option value="data/codigos/codigo_penal.txt">Penal</option>
+      <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
+      <option value="data/codigos/CDC.txt">CDC</option>
+      <option value="data/codigos/CLT.txt">CLT</option>
+      <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
+      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
+      <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
+      <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
+    </optgroup>
+    <optgroup label="Leis">
+      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+      <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
+      <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
+      <option value="data/leis/lei_lgpd.txt">Lei LGPD</option>
+      <option value="data/leis/marco_civil_da_internet.txt">Marco Civil da Internet</option>
+      <option value="data/leis/crimes_hediondos.txt">Lei dos Crimes Hediondos</option>
+    </optgroup>
+    <optgroup label="Estatutos">
+      <option value="data/estatutos/ECA.txt">ECA - Estatuto da Criança e Adolescente</option>
+      <option value="data/estatutos/estatuto_do_desarmamento.txt">Estatuto do Desarmamento</option>
+      <option value="data/estatutos/estatuto_do_idoso.txt">Estatuto do Idoso</option>
+      <option value="data/estatutos/estatuto_da_juventude.txt">Estatuto da Juventude</option>
+      <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Estatuto da Pessoa com Deficiência</option>
+      <option value="data/estatutoS/estatuto_oab.txt">Estatuto Oab</option>
+    </optgroup>
+    <optgroup label="Súmulas">
+      <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
+      <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
+    </optgroup>
+    <optgroup label="Princípios">
+      <option value="data/principios/principios_do_direito.txt">Princípios (Rol Exemplificativo)</option>
+    </optgroup>
+  </select>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast" role="status" aria-live="polite">Ok!</div>
+
+  <!-- MODAL: ESTUDAR COM I.A. -->
+  <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="study-head">
+        <h3 id="modalTitle" class="study-title">Estude com I.A.</h3>
+        <button class="study-close btn" id="closeStudy" aria-label="Fechar">✕</button>
+      </div>
+      <p class="study-sub" id="studySub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
+      <pre class="prompt-box" id="promptPreview"></pre>
+      <div class="ia-grid">
+        <button class="ia-btn btn" data-url="https://chat.openai.com/">ChatGPT</button>
+        <button class="ia-btn btn" data-url="https://gemini.google.com/">Gemini</button>
+        <button class="ia-btn btn" data-url="https://copilot.microsoft.com/">Copilot</button>
+        <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
+      </div>
+      <div class="copy-prompt">
+        <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =================== PWA =================== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log("✅ SW", reg.scope))
+          .catch(err => console.error("❌ SW", err));
+      });
+    }
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
+
+    /* =================== Refs =================== */
+    const els = {
+      brandBtn: document.getElementById('brandBtn'),
+      searchInput: document.getElementById('searchInput'),
+      searchSpinner: document.getElementById('searchSpinner'),
+      clearSearch: document.getElementById('clearSearch'),
+      sendSearch: document.getElementById('sendSearch'),
+
+      filebarInner: document.getElementById('filebarInner'),
+      moreMenu: document.getElementById('moreMenu'),
+
+      finderPop: document.getElementById('finderPop'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      closeFinder: document.getElementById('closeFinder'),
+      count: document.getElementById('count'),
+
+      articles: document.getElementById('articles'),
+
+      codeSelect: document.getElementById('codeSelect'),
+
+      studyModal: document.getElementById('studyModal'),
+      closeStudy: document.getElementById('closeStudy'),
+      modalTitle: document.getElementById('modalTitle'),
+      studySub: document.getElementById('studySub'),
+      promptPreview: document.getElementById('promptPreview'),
+      copyPromptBtn: document.getElementById('copyPromptBtn'),
+
+      toast: document.getElementById('toast'),
+    };
+
+    /* =================== Estado + Storage =================== */
+    const state = {
+      mode: 'highlights', // highlights | file
+      currentFileUrl: null,
+      currentFileLabel: '',
+      rawText: '',
+      articles: [],
+      currentArticleIdx: -1,
+
+      currentTokens: [],
+      matchArticles: [],
+      matchIdx: -1,
+
+      cache: new Map(),
+      urlToLabel: new Map(),
+    };
+
+    const store = {
+      get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
+      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); },
+
+      keyFav: 'dl_favorites',
+      keyStud: 'dl_studied',
+      keyLast: 'dl_last_view',
+
+      makeId: (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`,
+
+      listFavorites(){ return store.get(store.keyFav, []); },
+      isFavorite(id){ return store.listFavorites().some(e => e.id === id); },
+      addFavorite(entry){
+        if (!entry || !entry.id || !entry.text) return;
+        const list = store.listFavorites().filter(e => e.id !== entry.id);
+        list.unshift({...entry, ts: Date.now()});
+        store.set(store.keyFav, list);
+      },
+      removeFavorite(id){
+        const list = store.listFavorites().filter(e => e.id !== id);
+        store.set(store.keyFav, list);
+      },
+
+      listStudied(){ return store.get(store.keyStud, []); },
+      markStudied(entry){
+        if (!entry || !entry.id || !entry.text) return;
+        let list = store.listStudied().filter(e => e.id !== entry.id);
+        list.unshift({...entry, ts: Date.now()});
+        if (list.length > 50) list = list.slice(0,50);
+        store.set(store.keyStud, list);
+      },
+      isStudied(id){ return store.listStudied().some(e => e.id === id); },
+
+      saveLast(partial){
+        const prev = store.get(store.keyLast, {});
+        store.set(store.keyLast, {...prev, ...partial});
+      },
+      getLast(){ return store.get(store.keyLast, null); },
+      clearLast(){ localStorage.removeItem(store.keyLast); },
+    };
+
+    /* =================== Utils =================== */
+    function notify(msg='Ok!'){
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      setTimeout(()=> els.toast.classList.remove('show'), 1200);
+    }
+    async function withBusy(btn, fn){
+      if (btn && btn.classList.contains('busy')) return; // anti duplo-clique
+      if (btn) btn.classList.add('busy');
+      try{
+        const min = 220;
+        const t0 = performance.now();
+        const res = await fn();
+        const dt = performance.now() - t0;
+        if (dt < min) await new Promise(r=>setTimeout(r, min - dt));
+        return res;
+      } finally { if (btn) btn.classList.remove('busy'); }
+    }
+
+    const sanitizeForLayout = (s)=> s
+      .replace(/\u00A0/g, ' ')
+      .replace(/\t/g, ' ')
+      .replace(/\s+\n/g, '\n');
+
+    function norm(s){
+      return (s||'')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/ç/g,'c')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,' ')
+        .trim();
+    }
+
+    function buildCatalogMaps(){
+      const sel = els.codeSelect;
+      state.urlToLabel.clear();
+      sel.querySelectorAll('option').forEach(opt=>{
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) state.urlToLabel.set(url, label);
+      });
+    }
+    function getAllOptions(){
+      const out = [];
+      els.codeSelect.querySelectorAll('option').forEach(opt=>{
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) out.push({label, value:url});
+      });
+      return out;
+    }
+    function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
+
+    /* =================== Parser =================== */
+    function splitBlockSupraTitleBody(raw){
+      const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
+
+      // primeira linha elegível: Preâmbulo, Art., ou cabeçalho estrutural
+      let artIdx = lines.findIndex(line =>
+        /^\s*Pre[âa]mbulo/i.test(line) ||
+        /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
+        /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
+      );
+
+      // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
+      let epigrafe = "";
+      if (artIdx > 0) {
+        let lookback = artIdx - 1;
+        while (lookback >= 0 && lookback >= artIdx - 3) {
+          const prev = lines[lookback].trim();
+          if (!prev) { lookback--; continue; } // ignora linha em branco
+
+          // não puxa títulos/cabeçalhos e nem "caixa alta pura"
+          const isHeader = /^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev);
+          const isAllCaps = prev === prev.toUpperCase() && /[A-ZÁÉÍÓÚÇ]/.test(prev);
+
+          if (!isHeader && !isAllCaps) {
+            // só "cola" se a linha alvo for um Art., não cabeçalho
+            if (/^\s*(?:Art|ART)\.?\s*\d/.test(lines[artIdx])) {
+              epigrafe = prev;
+              lines.splice(lookback, 1); // remove epígrafe da posição antiga
+              artIdx--;                  // ajusta índice
+            }
           }
-        })
-      );
-    }).then(() => {
-      return self.clients.claim(); // 🔄 força assumir imediatamente
-    })
-  );
-});
+          break; // avaliou 1 candidato válido → para
+        }
+      }
 
-// Fetch
-self.addEventListener("fetch", (event) => {
-  // Para HTML (navegação), tenta sempre da rede primeiro
-  if (event.request.mode === "navigate" || event.request.headers.get("accept").includes("text/html")) {
-    event.respondWith(
-      fetch(event.request).then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        return response;
-      }).catch(() => caches.match(event.request))
-    );
-    return;
-  }
+      if (artIdx >= 0){
+        const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+        const titleLine = lines[artIdx];
 
-  // Para outros arquivos (CSS, JS, imagens), usa cache-first
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-      );
-    })
-  );
-});
+        const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
+        let titleText = mt ? mt[1].trim() : titleLine.trim();
+        // normaliza "12-A" -> "12A"
+        titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+
+        const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
+        const rest = lines.slice(artIdx+1).join('\n').trimStart();
+        let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+
+        // 🔧 insere epígrafe movida (se houver)
+        if (epigrafe) body = epigrafe + "\n" + body;
+
+        return { supra, titleText, body };
+      } else {
+        const titleText = (lines[0]||'').trim();
+        const body = lines.slice(1).join('\n').trimStart();
+        return { supra:[], titleText, body };
+      }
+    }
+
+    function parseByDelimiters(txt){
+      const sepRe = /(^|\n)[^\S\r\n]*-{5,}[^\S\r\n]*(?=\n|$)/g;
+      const seps = [];
+      let m;
+      while ((m = sepRe.exec(txt)) !== null) {
+        const idx = m.index + (m[0].startsWith('\n') ? 1 : 0);
+        seps.push(idx);
+      }
+      if (seps.length < 2) return [];
+      const arts = [];
+      for (let i = 0; i + 1 < seps.length; i += 1) {
+        const startLineEnd = txt.indexOf('\n', seps[i]);
+        const from = (startLineEnd === -1) ? txt.length : startLineEnd + 1;
+        const to = seps[i + 1];
+        const raw = txt.slice(from, to).trim();
+        if (!raw) continue;
+        const split = splitBlockSupraTitleBody(raw);
+        const title = split.titleText || `Bloco ${arts.length + 1}`;
+        arts.push({ title, text: raw, htmlId: `art-${arts.length}`, _split: split });
+      }
+      return arts;
+    }
+
+    function parseByArt(txt){
+      // reconhece "Preâmbulo" (com/sem acento), "Art.", e cabeçalhos estruturais
+      const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
+      const starts = [];
+      let m;
+      while ((m = re.exec(txt)) !== null) {
+        const idxArt = re.lastIndex - m[2].length;
+        starts.push(idxArt);
+      }
+      if (!starts.length) return [{
+        title:'Texto',
+        text: txt.trim(),
+        htmlId:'art-0',
+        _split: splitBlockSupraTitleBody(txt.trim())
+      }];
+
+      const arts = [];
+      for (let i = 0; i < starts.length; i++) {
+        const from = starts[i];
+        const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
+        let chunk = txt.slice(from, to).trimEnd();
+
+        // remove rabicho final fora do período/fecha parênteses
+        const endDot = chunk.lastIndexOf('.');
+        const endPar = chunk.lastIndexOf(')');
+        const end    = Math.max(endDot, endPar);
+        if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
+
+        const split = splitBlockSupraTitleBody(chunk);
+        const title = split.titleText || chunk.split('\n')[0].slice(0,40);
+        arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
+      }
+      return arts;
+    }
+
+    function parseSumulas(txt){
+      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      parts.forEach((block, i)=>{
+        const lines = block.split('\n').map(l=>l.trim());
+        const header = (lines.shift() || 'Súmula').trim();
+        const body = lines.join('\n').trim();
+        out.push({
+          title: header,
+          text: header + (body ? '\n' + body : ''),
+          htmlId: `sumula-${i}`,
+          _split: { supra: [], titleText: header, body }
+        });
+      });
+      return out;
+    }
+
+    function parsePrincipios(txt){
+      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
+      const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      parts.forEach((block, i)=>{
+        const lines = block.split('\n').map(l=>l.trim());
+        let header = (lines.shift() || 'Princípio').trim();
+        const reHeader = /^\s*Princ[ií]pio\b/i;
+        if (!reHeader.test(header)){
+          if (lines.length && reHeader.test(lines[0])) header = lines.shift();
+          else header = 'Princípio';
+        }
+        const body = lines.join('\n').trim();
+        out.push({
+          title: header,
+          text: header + (body ? '\n' + body : ''),
+          htmlId: `principio-${i}`,
+          _split: { supra: [], titleText: header, body }
+        });
+      });
+      return out;
+    }
+
+    function parseByUrl(url, txt){
+      const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
+      const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
+      return isSumulas ? parseSumulas(txt)
+           : isPrincipios ? parsePrincipios(txt)
+           : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
+    }
+
+    /* =================== Render helpers =================== */
+    function wrapParensIn(root){
+      const re = /\(([^()]{1,200})\)/g;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) nodes.push(n);
+      nodes.forEach(node=>{
+        const text = node.nodeValue;
+        if (!re.test(text)){ re.lastIndex = 0; return; }
+        re.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = re.exec(text))){
+          const before = text.slice(last, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+          const span = document.createElement('span');
+          span.className = 'paren';
+          span.textContent = '(' + m[1] + ')';
+          frag.appendChild(span);
+          last = re.lastIndex;
+        }
+        const after = text.slice(last);
+        if (after) frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function highlightTextNodes(root, tokens){
+      if (!tokens || !tokens.length) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n; while((n = walker.nextNode())) nodes.push(n);
+
+      nodes.forEach(node=>{
+        const txt = node.nodeValue;
+        if (!txt.trim()) return;
+
+        const frag = document.createDocumentFragment();
+        const re = /[\p{L}\p{N}]+/gu;
+        let idx = 0, m;
+        while ((m = re.exec(txt))){
+          const before = txt.slice(idx, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+
+          const word = m[0];
+          const hit = tokens.some(t => norm(word).includes(t));
+          if (hit){
+            const mk = document.createElement('mark');
+            mk.textContent = word;
+            frag.appendChild(mk);
+          } else {
+            frag.appendChild(document.createTextNode(word));
+          }
+          idx = re.lastIndex;
+        }
+        const tail = txt.slice(idx);
+        if (tail) frag.appendChild(document.createTextNode(tail));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function applyIconState(btn){
+      const img = btn.querySelector('img');
+      if (!img) return;
+      const src = img.getAttribute('data-src');
+      const active = img.getAttribute('data-active');
+      if (btn.classList.contains('active') && active){
+        img.src = active;
+        img.style.opacity = 1;
+      } else if (src){
+        img.src = src;
+        img.style.opacity = .6;
+      }
+    }
+
+    function buildArticleElement(a, idx, {globalMode=false}={}){
+      const el = document.createElement('article');
+      el.dataset.idx = idx;
+      el.id = a.htmlId || `art-${idx}`;
+      el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || '';
+      el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
+
+      const split = a._split || splitBlockSupraTitleBody(a.text);
+
+      // Cabeçalhos (Livro/Título/Capítulo/Seção) -> renderiza como "section-title"
+      if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
+        const div = document.createElement('div');
+        div.className = 'section-title';
+        a.text.split(/\n/).forEach(line => {
+          const p = document.createElement('div');
+          p.textContent = line.trim();
+          if (p.textContent) div.appendChild(p);
+        });
+        return div;
+      }
+
+      const supraWrap = document.createElement('div');
+      supraWrap.className = 'supra';
+
+      if (globalMode && (a._fileLabel || a._fileUrl)){
+        const badge = document.createElement('div');
+        badge.textContent = `[${a._fileLabel || state.urlToLabel.get(a._fileUrl)||'Arquivo'}]`;
+        supraWrap.appendChild(badge);
+      }
+      if (split.supra && split.supra.length){
+        split.supra.forEach(line=>{
+          const d = document.createElement('div');
+          d.textContent = line;
+          supraWrap.appendChild(d);
+        });
+      }
+      if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
+
+      const head = document.createElement('div');
+      head.className = 'art-head';
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'art-title';
+      titleSpan.textContent = split.titleText || a.title || 'Artigo';
+
+      const actions = document.createElement('div');
+      actions.className = 'art-actions';
+
+      const favBtn = document.createElement('button');
+      favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
+      favBtn.innerHTML = `<img src="icons/favorito.svg" data-src="icons/favorito.svg" data-active="icons/favorito-active.svg" alt="Favoritar" />`;
+
+      const studyBtn = document.createElement('button');
+      studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
+      studyBtn.innerHTML = `<img src="icons/estudar.svg" data-src="icons/estudar.svg" data-active="icons/estudar-active.svg" alt="Estudar com I.A." />`;
+
+      actions.append(favBtn, studyBtn);
+      head.append(titleSpan, actions);
+      el.appendChild(head);
+
+      const content = document.createElement('div');
+      content.className = 'art-body';
+
+      let body = split.body || '';
+      body = body
+        .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
+        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
+        .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
+
+      content.innerHTML = body
+        .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
+        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
+        .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
+        .replace(/\n\n/g, '<br>')
+        .replace(/\n/g, '<br>');
+
+      el.appendChild(content);
+
+      const id = store.makeId(el.dataset.fileUrl, el.id);
+      if (store.isFavorite(id)) favBtn.classList.add('active');
+      if (store.isStudied(id)) studyBtn.classList.add('active');
+      applyIconState(favBtn);
+      applyIconState(studyBtn);
+
+      wrapParensIn(el);
+      return el;
+    }
+
+    function clearArticles(){
+      els.articles.innerHTML = '';
+      state.currentArticleIdx = -1;
+    }
+
+    function updateCurrentOutline(){
+      const nodes = Array.from(document.querySelectorAll('article[data-idx]'));
+      if (!nodes.length) return;
+
+      const topGap = 48;
+      const scTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const scBottom = scTop + window.innerHeight;
+      const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+
+      let targetIdx = -1;
+
+      if (scTop <= topGap){ targetIdx = 0; }
+      else if (scBottom >= docH - topGap){ targetIdx = nodes.length - 1; }
+      else {
+        const cy = window.innerHeight / 2;
+        let best = Infinity, bestIdx = 0;
+        nodes.forEach((el, i)=>{
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          const mid = r.top + r.height/2;
+          const d = Math.abs(mid - cy);
+          if (d < best){ best = d; bestIdx = i; }
+        });
+        targetIdx = bestIdx;
+      }
+
+      if (targetIdx === -1) return;
+      if (state.currentArticleIdx === targetIdx) return;
+
+      nodes.forEach(n=> n.classList.remove('in-view'));
+      nodes[targetIdx].classList.add('in-view');
+      state.currentArticleIdx = targetIdx;
+
+      const art = nodes[targetIdx];
+      store.saveLast({
+        mode: state.mode,
+        fileUrl: state.currentFileUrl,
+        articleId: art?.id || null,
+        scrollY: window.scrollY || 0
+      });
+    }
+
+    /* =================== RENDER (progressivo) =================== */
+    function renderArticlesAll(list){
+      clearArticles();
+      if (!list.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      list.forEach((a,i)=> frag.appendChild(buildArticleElement(a, i, {globalMode:false})));
+      els.articles.appendChild(frag);
+      updateCurrentOutline();
+    }
+
+    function renderArticlesProgressive(list, {chunkSize=30}={}){
+      clearArticles();
+      if (!list.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+        return;
+      }
+      const first = Math.min(5, list.length);
+      const frag = document.createDocumentFragment();
+      for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
+      els.articles.appendChild(frag);
+      updateCurrentOutline();
+
+      let i = first;
+      function appendChunk(){
+        const fr = document.createDocumentFragment();
+        let added = 0;
+        while (i < list.length && added < chunkSize){
+          fr.appendChild(buildArticleElement(list[i], i, {globalMode:false}));
+          i++; added++;
+        }
+        els.articles.appendChild(fr);
+        updateCurrentOutline();
+        if (i < list.length){
+          if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
+          else { setTimeout(appendChunk, 0); }
+        }
+      }
+      if (first < list.length){
+        if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
+        else { setTimeout(appendChunk, 0); }
+      }
+    }
+
+    function renderHighlights(){
+      clearArticles();
+
+      // Junta favoritos + estudados em uma lista só
+      const combined = [
+        ...store.listFavorites(),
+        ...store.listStudied()
+      ];
+
+      if (!combined.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada por aqui ainda.</div>';
+        return;
+      }
+
+      // Ordena pelo timestamp mais recente
+      const merged = sortByTsDesc(combined);
+
+      let idx = 0;
+      const frag = document.createDocumentFragment();
+      merged.forEach(entry=>{
+        const art = {
+          title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
+          text: entry.text,
+          htmlId: entry.htmlId,
+          _split: splitBlockSupraTitleBody(entry.text),
+          _fileUrl: entry.fileUrl,
+          _fileLabel: entry.fileLabel
+        };
+        frag.appendChild(buildArticleElement(art, idx++, {globalMode:true}));
+      });
+
+      els.articles.appendChild(frag);
+
+      window.scrollTo({top:0,behavior:'instant'});
+      state.mode = 'highlights';
+      store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
+      updateCurrentOutline();
+    }
+
+    /* =================== Loader =================== */
+    async function fetchTextCached(url){
+      if (state.cache.has(url)) return state.cache.get(url);
+      const res = await fetch(url, {cache: 'no-cache'});
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const txt = sanitizeForLayout(await res.text());
+      state.cache.set(url, txt);
+      return txt;
+    }
+
+    function addNormalizedField(list){
+      list.forEach(a=>{
+        const s = a._split || splitBlockSupraTitleBody(a.text);
+        const combo = [s.titleText || '', ...(s.supra||[]), s.body || ''].join(' ');
+        a._norm = norm(combo);
+      });
+      return list;
+    }
+
+    async function loadFile(url, tabBtn){
+      if (!url) return;
+      await withBusy(tabBtn, async ()=>{
+        els.searchSpinner.classList.add('show');
+        try{
+          const txt = await fetchTextCached(url);
+          state.rawText = txt;
+          const list = addNormalizedField(parseByUrl(url, txt));
+          state.currentFileUrl = url;
+          state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
+          state.articles = list;
+          state.mode = 'file';
+
+          renderArticlesProgressive(list);
+          window.scrollTo({top:0,behavior:'instant'});
+          notify(`Carregado: ${state.currentFileLabel}`);
+
+          store.saveLast({ mode:'file', fileUrl:url, scrollY:0, articleId:null });
+        }catch(err){
+          console.error(err);
+          els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
+          notify('Erro ao carregar arquivo');
+        } finally {
+          els.searchSpinner.classList.remove('show');
+        }
+      });
+    }
+
+    /* =================== Busca (enter no desktop) =================== */
+    async function runLocalSearch(){
+      if (state.mode !== 'file'){
+        notify('Abra um arquivo para buscar.');
+        return;
+      }
+
+      const q = els.searchInput.value.trim();
+      els.finderPop.classList.add('show');
+
+      if (!q){
+        renderArticlesProgressive(state.articles);
+        state.matchArticles = [];
+        state.matchIdx = -1;
+        els.count.textContent = '0/0';
+        return;
+      }
+
+      els.searchSpinner.classList.add('show');
+      try{
+        const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+        state.currentTokens = tokens;
+
+        const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
+
+        // 1) Garante DOM completo
+        renderArticlesAll(state.articles);
+
+        // 2) Marca apenas os artigos com match
+        requestAnimationFrame(()=>{
+          matchedMeta.forEach(m => {
+            const art = document.getElementById(m.htmlId);
+            if (art) highlightTextNodes(art, tokens);
+          });
+
+          // 3) Atualiza navegação do mini-finder
+          state.matchArticles = matchedMeta
+            .map(m => document.getElementById(m.htmlId))
+            .filter(Boolean);
+
+          if (state.matchArticles.length){
+            state.matchIdx = 0;
+            state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
+          } else {
+            state.matchIdx = -1;
+            notify('Nenhum resultado encontrado.');
+          }
+
+          els.count.textContent = state.matchArticles.length
+            ? `${state.matchIdx+1}/${state.matchArticles.length}`
+            : '0/0';
+
+          updateCurrentOutline();
+        });
+      } finally {
+        els.searchSpinner.classList.remove('show');
+      }
+    }
+
+    function updateCount(){
+      if (!state.matchArticles || state.matchArticles.length === 0){
+        els.count.textContent = '0/0';
+        return;
+      }
+      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
+    }
+
+    function gotoNext(){
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount(); updateCurrentOutline();
+    }
+    function gotoPrev(){
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({behavior:'smooth', block:'center'});
+      updateCount(); updateCurrentOutline();
+    }
+
+    /* =================== Filebar =================== */
+    function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 7; }
+
+    function renderFilebar(){
+      const options = getAllOptions();
+      const frag = document.createDocumentFragment();
+
+      const mkTab = (label, url=null, extraClass='')=>{
+        const b = document.createElement('button');
+        b.className = `tab ${extraClass}`;
+        b.type = 'button';
+        b.textContent = label;
+        b.dataset.url = url || '';
+        b.addEventListener('click', async ()=>{
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          b.classList.add('active');
+          if (!url){
+            state.mode = 'highlights';
+            renderHighlights();
+            return;
+          }
+          await loadFile(url, b);
+        });
+        return b;
+      };
+
+      const tabHighlights = mkTab('Destaques', null);
+      frag.appendChild(tabHighlights);
+
+      const visibleCap = getVisibleTabsCount();
+      if (visibleCap === Infinity){
+        options.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
+      } else {
+        const visible = options.slice(0, visibleCap);
+        const hidden = options.slice(visibleCap);
+        visible.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
+
+        if (hidden.length){
+          const more = mkTab('Mais ▾', null, 'tab-more');
+          more.addEventListener('click', ()=>{ toggleMoreMenu(hidden, more); });
+          frag.appendChild(more);
+        }
+      }
+
+      els.filebarInner.innerHTML = '';
+      els.filebarInner.appendChild(frag);
+
+      const last = store.getLast();
+      if (last?.mode === 'file' && last?.fileUrl){
+        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
+        if (btn){ btn.classList.add('active'); }
+      } else {
+        tabHighlights.classList.add('active');
+      }
+    }
+
+    function toggleMoreMenu(items, anchorBtn){
+      if (els.moreMenu.style.display === 'block'){
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
+        return;
+      }
+      els.moreMenu.innerHTML = '';
+      items.forEach(it=>{
+        const bi = document.createElement('button');
+        bi.className = 'more-item';
+        bi.type = 'button';
+        bi.textContent = it.label;
+        bi.addEventListener('click', async ()=>{
+          els.moreMenu.style.display = 'none';
+          els.moreMenu.setAttribute('aria-hidden','true');
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          anchorBtn.classList.add('active');
+          await loadFile(it.value, anchorBtn);
+        });
+        els.moreMenu.appendChild(bi);
+      });
+      els.moreMenu.style.display = 'block';
+      els.moreMenu.setAttribute('aria-hidden','false');
+    }
+
+    /* =================== IA =================== */
+    function buildPrompt(a){
+      const split = a._split || splitBlockSupraTitleBody(a.text);
+      const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
+      const artigo = (split.titleText ? split.titleText + ' ' : '') + (split.body || '');
+      const tema = split.titleText || (a.title || 'Artigo');
+      return [
+        'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ',
+        'Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ',
+        '(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ',
+        '(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ',
+        '(3) Exemplo prático — caso ilustrativo; ',
+        '(4) Princípios relacionados; ',
+        '(5) Pontos de atenção na prática; ',
+        '(6) Erros comuns/pegadinhas; ',
+        '(7) Artigos correlatos. ',
+        'Responda em português claro, objetivo e didático.\n\n',
+        `Tema: "${tema}"\n\n`,
+        supraText + artigo,
+        '\n\n💚 direito.love'
+      ].join('');
+    }
+    function openIA(url){
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) location.href = url;
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    function openStudyModal(title, prompt){
+      els.modalTitle.textContent = `Estude o ${title} com I.A.`;
+      els.promptPreview.textContent = prompt;
+      els.studyModal.setAttribute('aria-hidden','false');
+    }
+    function closeStudyModal(){
+      els.studyModal.setAttribute('aria-hidden','true');
+    }
+
+    /* =================== Eventos globais / atalhos =================== */
+    // Logo -> Destaques
+    els.brandBtn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+      const first = els.filebarInner.querySelector('.tab');
+      if (first){ first.classList.add('active'); }
+      state.mode = 'highlights';
+      renderHighlights();
+      window.scrollTo({top:0,behavior:'instant'});
+    });
+
+    // Busca visual
+    function toggleClear(){ els.clearSearch.classList.toggle('show', !!els.searchInput.value); }
+    els.searchInput.addEventListener('input', toggleClear);
+    toggleClear();
+
+    els.searchInput.addEventListener('focus', ()=> els.finderPop.classList.add('show'));
+    els.closeFinder.addEventListener('click', ()=>{
+      els.finderPop.classList.remove('show');
+      els.searchInput.blur();
+    });
+
+    // Enter
+    els.searchInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        withBusy(els.sendSearch, runLocalSearch);
+      } else if (e.key === 'Escape'){
+        els.searchInput.blur();
+        els.finderPop.classList.remove('show');
+      }
+    });
+    els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
+    els.clearSearch.addEventListener('click', ()=>{
+      els.searchInput.value = '';
+      toggleClear();
+      runLocalSearch();
+    });
+
+    // Navegação pelos resultados
+    els.nextBtn.addEventListener('click', ()=> gotoNext());
+    els.prevBtn.addEventListener('click', ()=> gotoPrev());
+
+    // Atalhos
+    document.addEventListener('keydown', (e)=>{
+      if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !e.metaKey && !e.ctrlKey)){
+        e.preventDefault();
+        els.searchInput.focus();
+        els.searchInput.select();
+      }
+      if (e.key === 'F3' || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'g')){
+        e.preventDefault();
+        gotoNext();
+      }
+      if ((e.shiftKey && e.key === 'F3') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'g')){
+        e.preventDefault();
+        gotoPrev();
+      }
+      if (e.key === 'Escape'){
+        els.finderPop.classList.remove('show');
+        if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
+      }
+    });
+
+    // Modal IA
+    els.closeStudy.addEventListener('click', closeStudyModal);
+    els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
+    document.querySelectorAll('.ia-btn').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const url = e.currentTarget.dataset.url;
+        const prompt = els.promptPreview.textContent || '';
+        try {
+          await navigator.clipboard.writeText(prompt);
+          notify('✅ Prompt copiado!');
+        } catch {
+          notify('⚠️ Não consegui copiar, copie manualmente.');
+        }
+        openIA(url);
+      });
+    });
+    els.copyPromptBtn.addEventListener('click', (e)=>{
+      withBusy(e.currentTarget, async ()=>{
+        try{ await navigator.clipboard.writeText(els.promptPreview.textContent||''); notify('✅ Prompt copiado!'); }
+        catch{ notify('Copie manualmente.'); }
+      });
+    });
+
+    // Ações nos cards
+    els.articles.addEventListener('click', async (e)=>{
+      const btn = e.target.closest('.icon-btn');
+      if (!btn) return;
+      const artEl = e.target.closest('article'); if (!artEl) return;
+
+      const idx = Number(artEl?.dataset.idx);
+      const a = (state.mode === 'file' ? state.articles[idx] : null);
+      const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
+
+      const entry = {
+        id,
+        fileUrl: artEl.dataset.fileUrl,
+        fileLabel: artEl.dataset.fileLabel,
+        htmlId: artEl.id,
+        text: state.mode === 'file' ? a?.text : (()=>{
+          const fav = store.listFavorites().find(e => e.id === id);
+          const stud = store.listStudied().find(e => e.id === id);
+          return fav?.text || stud?.text || '';
+        })()
+      };
+
+      if (btn.dataset.action === 'study'){
+        await withBusy(btn, async ()=>{
+          const useArticle = state.mode === 'file' ? a : {
+            text: entry.text,
+            _split: splitBlockSupraTitleBody(entry.text),
+            title: splitBlockSupraTitleBody(entry.text).titleText
+          };
+          if (!useArticle?.text){ notify('Não consegui capturar o texto deste artigo.'); return; }
+
+          const prompt = buildPrompt(useArticle);
+          store.markStudied(entry);
+
+          btn.classList.add('active');
+          applyIconState(btn);
+
+          openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
+
+          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          const first = els.filebarInner.querySelector('.tab'); // "Destaques"
+          if (first){ first.classList.add('active'); }
+          state.mode = 'highlights';
+          renderHighlights();
+
+          setTimeout(()=>{
+            const target = [...document.querySelectorAll('article')].find(aEl=>{
+              const madeId = store.makeId(aEl.dataset.fileUrl, aEl.id);
+              return madeId === id;
+            });
+            if (target){ target.scrollIntoView({behavior:'smooth', block:'center'}); }
+          }, 60);
+        });
+      }
+
+      if (btn.dataset.action === 'fav'){
+        await withBusy(btn, async ()=>{
+          if (store.isFavorite(id)){
+            store.removeFavorite(id);
+            btn.classList.remove('active');
+            applyIconState(btn);
+            notify('⭐ Removido dos favoritos');
+          } else {
+            if (!entry.text){ notify('Abra o arquivo para favoritar este artigo.'); return; }
+            store.addFavorite(entry);
+            btn.classList.add('active');
+            applyIconState(btn);
+            notify('⭐ Adicionado aos favoritos');
+          }
+        });
+      }
+    });
+
+    // Fechar "Mais" ao clicar fora
+    document.addEventListener('click', (e)=>{
+      if (!els.moreMenu.contains(e.target) && !e.target.closest('.tab-more')){
+        els.moreMenu.style.display = 'none';
+        els.moreMenu.setAttribute('aria-hidden','true');
+      }
+    });
+
+    // Scroll/resize -> atualizar linha azul + persistir scroll
+    window.addEventListener('scroll', ()=>{
+      updateCurrentOutline();
+      const last = store.getLast();
+      if (last){ store.saveLast({ scrollY: window.scrollY || 0 }); }
+    }, {passive:true});
+    window.addEventListener('resize', updateCurrentOutline, {passive:true});
+
+    /* =================== Restauração =================== */
+    function restoreViewAfterRender(){
+      const last = store.getLast();
+      if (!last) return;
+
+      if (last.articleId){
+        let tries = 0;
+        const max = 20;
+        const tick = ()=>{
+          const el = document.getElementById(last.articleId);
+          if (el){
+            el.scrollIntoView({behavior:'instant', block:'center'});
+            updateCurrentOutline();
+          } else if (tries++ < max){
+            setTimeout(tick, 100);
+          } else if (typeof last.scrollY === 'number'){
+            window.scrollTo({top:last.scrollY, behavior:'instant'});
+          }
+        };
+        tick();
+      } else if (typeof last.scrollY === 'number'){
+        window.scrollTo({top:last.scrollY, behavior:'instant'});
+      }
+    }
+
+    /* =================== Boot =================== */
+    async function boot(){
+      buildCatalogMaps();
+      renderFilebar();
+
+      const last = store.getLast();
+      if (last?.mode === 'file' && last?.fileUrl){
+        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
+        if (btn){ btn.classList.add('active'); }
+        await loadFile(last.fileUrl, btn || null);
+        restoreViewAfterRender();
+      } else {
+        const first = els.filebarInner.querySelector('.tab');
+        if (first){ first.classList.add('active'); }
+        renderHighlights();
+        restoreViewAfterRender();
+      }
+    }
+    boot();
+  </script>
+</body>
+</html>
