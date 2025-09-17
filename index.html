@@ -1163,14 +1163,20 @@
       const artigo = (split.titleText ? split.titleText + ' ' : '') + (split.body || '');
       const tema = split.titleText || (a.title || 'Artigo');
       return [
-        'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo. ',
-        'Explique detalhadamente o artigo, súmula ou tema abaixo (incluindo caput, parágrafos, incisos e alíneas), seguindo esta estrutura: ',
-        '(1) conceito detalhado; (2) checklist para provas; (3) mini exemplo prático; ',
-        '(4) princípios relacionados; (5) pontos de atenção; (6) erros comuns; (7) artigos correlatos. ',
-        'Responda em português claro, objetivo e didático.\n\n',
-        `Tema: "${tema}"\n\n`,
-        supraText + artigo,
-        '\n\n💚 direito.love'
+        'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ',
+'Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ',
+'(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ',
+'(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ',
+'(3) Exemplo prático — caso ilustrativo; ',
+'(4) Princípios relacionados; ',
+'(5) Pontos de atenção na prática; ',
+'(6) Erros comuns/pegadinhas; ',
+'(7) Artigos correlatos. ',
+'Responda em português claro, objetivo e didático.\n\n',
+`Tema: "${tema}"\n\n`,
+supraText + artigo,
+'\n\n💚 direito.love'
+
       ].join('');
     }
     function openIA(url){
