@@ -1,5 +1,5 @@
 // sw.js - Service Worker básico para cache offline
-const CACHE_NAME = "direito-love-v2";
+const CACHE_NAME = "direito-love-v3";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
