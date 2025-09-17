@@ -538,17 +538,26 @@
 
 // Se a linha anterior for uma epígrafe (não título/capítulo/seção/livro), cola no artigo
 // Se a linha anterior for uma epígrafe, cola no artigo seguinte
-if (artIdx > 0) {
-  const prev = lines[artIdx - 1].trim();
-  if (
-    prev && 
-    !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não cola cabeçalhos
-    !/^[A-Z\s]{3,}$/.test(prev) // não cola linhas em caixa alta tipo "PARTE GERAL"
-  ) {
-    lines[artIdx] = prev + "\n" + lines[artIdx];
-    lines.splice(artIdx - 1, 1);
+// Procura epígrafe até 3 linhas antes do artigo
+let lookback = artIdx - 1;
+while (lookback >= 0 && lookback >= artIdx - 3) {
+  const prev = lines[lookback].trim();
+  if (!prev) { // pula linha em branco
+    lookback--;
+    continue;
   }
+  if (
+    !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo
+    !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
+  ) {
+    // cola a epígrafe no artigo
+    lines[artIdx] = prev + "\n" + lines[artIdx];
+    lines.splice(lookback, 1);
+    artIdx--; // ajusta índice do artigo
+  }
+  break; // encontrou algo válido, para
 }
+
 
 
 
