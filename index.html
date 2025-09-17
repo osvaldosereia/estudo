@@ -1,3 +1,8 @@
+Segue o **index.html completo revisado**, com as correções e melhorias pedidas — incluindo a revisão da busca (agora ela filtra a lista a partir do conteúdo normalizado, sem depender do DOM progressivo) e a nova regra para deixar tudo entre parênteses em **cinza 40%**. A filebar no desktop mostra **Destaques + 5 tabs** e o resto fica em **“Mais ▾”**; no mobile continua rolável. Os ícones ativos trocam para as versões coloridas (`*-active.svg`) — você só precisa subir esses SVGs.
+
+> Observação sobre a busca: ela agora procura diretamente nos dados (com normalização forte, removendo acentos e pontuação) e **renderiza apenas os artigos que batem**. Isso evita o problema de não localizar itens quando o restante ainda está carregando em lotes.
+
+```html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -112,7 +117,7 @@
     .filebar-inner::-webkit-scrollbar{ display:none; }
     .tab{
       flex:0 0 auto; padding:10px 2px; border:0; background:transparent; cursor:pointer; position:relative;
-      color:#3f4656; font-size:13px; font-weight:600; white-space:nowrap;
+      color:#3f4656; font-size:14px; font-weight:600; white-space:nowrap;
     }
     .tab:hover{ color:#111; }
     .tab.active{ color:#111; }
@@ -173,12 +178,13 @@
       color:var(--icon-muted);
     }
     .icon-btn img{ width:18px; height:18px; display:block; }
-    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); filter: none; }
-    .icon-btn.active[data-action="study"]{ color:var(--icon-study); filter: none; }
+    /* (cores via troca de arquivo: favorito-active.svg / estudar-active.svg) */
 
     .art-body { font-size:12px; line-height:1.45; }
     article.highlight-study{ background:rgba(255,214,1,.12) }
-    mark{padding:0 2px; border-radius:3px; background:#ffef99}
+
+    /* Destaque de parênteses */
+    .paren{ color:rgba(0,0,0,.4); }
 
     /* ======== MINI-MODAL DE BUSCA (flutuante/preto) ======== */
     .finder-pop{
@@ -313,7 +319,7 @@
   <!-- TOAST -->
   <div class="toast" id="toast">Ok!</div>
 
-  <!-- MODAL: ESTUDAR COM I.A. (inalterado) -->
+  <!-- MODAL: ESTUDAR COM I.A. -->
   <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal" role="document">
       <div class="study-head">
@@ -459,7 +465,9 @@
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g,'')
         .replace(/ç/g,'c')
-        .toLowerCase();
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,' ')
+        .trim();
     }
 
     function buildCatalogMaps(){
@@ -616,6 +624,45 @@
     }
 
     /* =================== Render helpers =================== */
+    function applyIconState(btn){
+      const img = btn.querySelector('img');
+      if (!img) return;
+      const src = img.getAttribute('data-src');
+      const active = img.getAttribute('data-active');
+      if (btn.classList.contains('active') && active){
+        img.src = active;
+      } else if (src){
+        img.src = src;
+      }
+    }
+
+    function wrapParensIn(root){
+      const re = /\(([^()]{1,200})\)/g;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) nodes.push(n);
+      nodes.forEach(node=>{
+        const text = node.nodeValue;
+        if (!re.test(text)){ re.lastIndex = 0; return; }
+        re.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = re.exec(text))){
+          const before = text.slice(last, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+          const span = document.createElement('span');
+          span.className = 'paren';
+          span.textContent = '(' + m[1] + ')';
+          frag.appendChild(span);
+          last = re.lastIndex;
+        }
+        const after = text.slice(last);
+        if (after) frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
     function buildArticleElement(a, idx, {globalMode=false}={}){
       const el = document.createElement('article');
       el.dataset.idx = idx;
@@ -652,14 +699,14 @@
       const actions = document.createElement('div');
       actions.className = 'art-actions';
 
-      // Só dois ícones (sem box) – você vai subir os SVGs
+      // Dois ícones (sem box) – você vai subir os SVGs
       const favBtn = document.createElement('button');
       favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
-      favBtn.innerHTML = `<img src="icons/favorito.svg" alt="Favoritar" />`;
+      favBtn.innerHTML = `<img src="icons/favorito.svg" data-src="icons/favorito.svg" data-active="icons/favorito-active.svg" alt="Favoritar" />`;
 
       const studyBtn = document.createElement('button');
       studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
-      studyBtn.innerHTML = `<img src="icons/estudar.svg" alt="Estudar" />`;
+      studyBtn.innerHTML = `<img src="icons/estudar.svg" data-src="icons/estudar.svg" data-active="icons/estudar-active.svg" alt="Estudar" />`;
 
       actions.append(favBtn, studyBtn);
       head.append(titleSpan, actions);
@@ -683,10 +730,15 @@
 
       el.appendChild(content);
 
-      // Estados ativos
+      // Estados ativos + ícones coloridos
       const id = store.makeId(el.dataset.fileUrl, el.id);
       if (store.isFavorite(id)) favBtn.classList.add('active');
       if (store.isStudied(id)) studyBtn.classList.add('active');
+      applyIconState(favBtn);
+      applyIconState(studyBtn);
+
+      // Parênteses em cinza (40%)
+      wrapParensIn(el);
 
       return el;
     }
@@ -711,7 +763,7 @@
 
       // fila restante
       let i = first;
-      function appendChunk(deadline){
+      function appendChunk(){
         const fr = document.createDocumentFragment();
         let added = 0;
         while (i < list.length && added < chunkSize){
@@ -720,7 +772,6 @@
         }
         els.articles.appendChild(fr);
         if (i < list.length){
-          // usa requestIdleCallback quando disponível, senão timeout
           if ('requestIdleCallback' in window){
             requestIdleCallback(appendChunk);
           } else {
@@ -781,23 +832,6 @@
       window.scrollTo({top:0,behavior:'instant'});
     }
 
-    function getArticleInView(){
-      const nodes = document.querySelectorAll('article[data-idx]');
-      const cy = window.innerHeight / 2;
-      let hitIdx = -1;
-      for (const el of nodes){
-        const r = el.getBoundingClientRect();
-        if (r.top <= cy && r.bottom >= cy){ hitIdx = Number(el.dataset.idx); break; }
-      }
-      if (hitIdx === -1 && nodes.length){
-        for (const el of nodes){
-          const r = el.getBoundingClientRect();
-          if (r.bottom > 0 && r.top < window.innerHeight){ hitIdx = Number(el.dataset.idx); break; }
-        }
-      }
-      return hitIdx;
-    }
-
     function updateCount(){
       if (!state.matchArticles || state.matchArticles.length === 0){
         els.count.textContent = '0/0';
@@ -805,22 +839,6 @@
       }
       els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
     }
-
-    function highlightTokens(art, tokens){
-      const parts = ['.art-title', '.art-body', '.supra > div'];
-      parts.forEach(sel=>{
-        art.querySelectorAll(sel).forEach(el=>{
-          const raw = el.textContent;
-          el.innerHTML = raw.replace(/([\p{L}\p{N}]+)/gu, m=>{
-            return tokens.some(t => norm(m).includes(t))
-              ? `<mark>${m}</mark>`
-              : m;
-          });
-        });
-      });
-    }
-
-    window.addEventListener('scroll', ()=>{ /* outline removido por simplicidade visual */ }, {passive:true});
 
     /* =================== Loader de arquivo =================== */
     async function fetchTextCached(url){
@@ -832,6 +850,15 @@
       return txt;
     }
 
+    function addNormalizedField(list){
+      list.forEach(a=>{
+        const s = a._split || splitBlockSupraTitleBody(a.text);
+        const combo = [s.titleText || '', ...(s.supra||[]), s.body || ''].join(' ');
+        a._norm = norm(combo);
+      });
+      return list;
+    }
+
     async function loadFile(url, tabBtn){
       if (!url) return;
       await withBusy(tabBtn, async ()=>{
@@ -839,13 +866,13 @@
         try{
           const txt = await fetchTextCached(url);
           state.rawText = txt;
-          const list = parseByUrl(url, txt);
+          const list = addNormalizedField(parseByUrl(url, txt));
           state.currentFileUrl = url;
           state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
           state.articles = list;
           state.mode = 'file';
 
-          renderArticlesProgressive(list);     // << instantâneo + lotes
+          renderArticlesProgressive(list);
           window.scrollTo({top:0,behavior:'instant'});
           notify(`Carregado: ${state.currentFileLabel}`);
         }catch(err){
@@ -858,7 +885,7 @@
       });
     }
 
-    /* =================== Busca Local =================== */
+    /* =================== Busca Local (revisada) =================== */
     async function runLocalSearch(){
       if (state.mode !== 'file'){
         notify('Abra um arquivo para buscar.');
@@ -867,46 +894,35 @@
       const q = els.searchInput.value.trim();
       els.finderPop.classList.add('show');
 
-      if (!q) {
+      // Sem termo => volta a lista completa
+      if (!q){
         renderArticlesProgressive(state.articles);
-        state.matchArticles = []; state.matchIdx = -1; updateCount();
+        state.matchArticles = [];
+        state.matchIdx = -1;
+        updateCount();
         return;
       }
 
       els.searchSpinner.classList.add('show');
 
+      // Normaliza termos e filtra nos DADOS (não no DOM)
       const tokens = q.split(/\s+/).filter(Boolean).map(norm);
       state.currentTokens = tokens;
 
-      // Re-render para resetar marcações
-      renderArticlesProgressive(state.articles);
+      const matched = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-      // após render, coletar e marcar
+      // Renderiza apenas os resultados
+      renderArticlesProgressive(matched);
+
+      // Atualiza navegação
       requestAnimationFrame(()=>{
-        state.matchArticles = [];
-        const articles = document.querySelectorAll('article');
-
-        for (const art of articles){
-          const fullText = [
-            art.querySelector('.art-title')?.textContent || '',
-            art.querySelector('.art-body')?.textContent || '',
-            ...[...art.querySelectorAll('.supra > div')].map(el => el.textContent || '')
-          ].join(' ');
-          const textNorm = norm(fullText);
-
-          if (tokens.every(t => textNorm.includes(t))){
-            state.matchArticles.push(art);
-            highlightTokens(art, tokens);
-          }
-        }
-
+        state.matchArticles = Array.from(document.querySelectorAll('article'));
         if (state.matchArticles.length){
           state.matchIdx = 0;
           state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
         } else {
           state.matchIdx = -1;
         }
-
         updateCount();
         els.searchSpinner.classList.remove('show');
       });
@@ -914,14 +930,8 @@
 
     /* =================== TABS (filebar) =================== */
     function getVisibleTabsCount(){
-      // número simples baseado na largura
-      const w = Math.min(window.innerWidth, 920);
-      if (w >= 900) return 7;
-      if (w >= 780) return 6;
-      if (w >= 680) return 5;
-      if (w >= 560) return 4;
-      if (w >= 460) return 3;
-      return Infinity; // mobile: mostra todas (scroll)
+      // Desktop: sempre 5; Mobile: todas (scroll)
+      return window.matchMedia('(max-width: 768px)').matches ? Infinity : 5;
     }
 
     function renderFilebar(){
@@ -934,7 +944,7 @@
         b.type = 'button';
         b.textContent = label;
         b.dataset.url = url || '';
-        b.addEventListener('click', async (e)=>{
+        b.addEventListener('click', async ()=>{
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
           b.classList.add('active');
           if (!url){
@@ -964,9 +974,7 @@
 
         if (hidden.length){
           const more = mkTab('Mais ▾', null, 'tab-more');
-          more.addEventListener('click', ()=>{
-            toggleMoreMenu(hidden, more);
-          });
+          more.addEventListener('click', ()=>{ toggleMoreMenu(hidden, more); });
           frag.appendChild(more);
         }
       }
@@ -1135,6 +1143,7 @@
           const prompt = buildPrompt(useArticle);
           store.markStudied(entry);
           btn.classList.add('active');
+          applyIconState(btn);
           notify('📘 Marcado como estudado');
           openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
           document.querySelectorAll('article.highlight-study').forEach(n=>n.classList.remove('highlight-study'));
@@ -1147,10 +1156,12 @@
           if (store.isFavorite(id)){
             store.removeFavorite(id);
             btn.classList.remove('active');
+            applyIconState(btn);
             notify('⭐ Removido dos favoritos');
           } else {
             store.addFavorite(entry);
             btn.classList.add('active');
+            applyIconState(btn);
             notify('⭐ Adicionado aos favoritos');
           }
         });
@@ -1184,3 +1195,4 @@
   </script>
 </body>
 </html>
+```
