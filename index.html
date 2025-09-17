@@ -540,6 +540,7 @@
 // Se a linha anterior for uma epígrafe, cola no artigo seguinte
 // Procura epígrafe até 3 linhas antes do artigo
 // Procura epígrafe até 3 linhas antes do artigo
+// Procura epígrafe até 3 linhas antes do artigo (somente se for ANTES do Art.)
 let lookback = artIdx - 1;
 let epigrafe = "";
 while (lookback >= 0 && lookback >= artIdx - 3) {
@@ -548,16 +549,26 @@ while (lookback >= 0 && lookback >= artIdx - 3) {
     lookback--;
     continue;
   }
+
   if (
     !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo
     !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
   ) {
-    epigrafe = prev;
-    lines.splice(lookback, 1); // remove epígrafe do array
-    artIdx--;                  // ajusta índice do artigo
+    // Só considera epígrafe se a linha atual for mesmo um artigo
+    if (/^Art\.?/i.test(lines[artIdx])) {
+      epigrafe = prev;
+      lines.splice(lookback, 1); // remove a epígrafe do lugar original
+      artIdx--;                  // ajusta índice do artigo
+    }
   }
-  break; // encontrou algo válido, para
+  break;
 }
+
+// Depois, se achou epígrafe válida, cola no body do artigo
+if (epigrafe) {
+  body = epigrafe + "\n" + body;
+}
+
 
 // mais abaixo, depois de calcular body:
 if (epigrafe) {
