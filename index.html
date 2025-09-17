@@ -535,28 +535,19 @@
       );
 
       // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
-      let epigrafe = "";
-      if (artIdx > 0) {
-        let lookback = artIdx - 1;
-        while (lookback >= 0 && lookback >= artIdx - 3) {
-          const prev = lines[lookback].trim();
-          if (!prev) { lookback--; continue; } // ignora linha em branco
+      // 🔎 Se houver epígrafe marcada com @@EPI@@ imediatamente antes do artigo
+let epigrafe = "";
+if (artIdx > 0) {
+  let lookback = artIdx - 1;
+  const prev = lines[lookback].trim();
 
-          // não puxa títulos/cabeçalhos e nem "caixa alta pura"
-          const isHeader = /^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev);
-          const isAllCaps = prev === prev.toUpperCase() && /[A-ZÁÉÍÓÚÇ]/.test(prev);
+  if (prev.startsWith("@@EPI@@")) {
+    epigrafe = prev.replace(/^@@EPI@@\s*/, ""); // remove marcador
+    lines.splice(lookback, 1); // remove linha original
+    artIdx--; // ajusta índice
+  }
+}
 
-          if (!isHeader && !isAllCaps) {
-            // só "cola" se a linha alvo for um Art., não cabeçalho
-            if (/^\s*(?:Art|ART)\.?\s*\d/.test(lines[artIdx])) {
-              epigrafe = prev;
-              lines.splice(lookback, 1); // remove epígrafe da posição antiga
-              artIdx--;                  // ajusta índice
-            }
-          }
-          break; // avaliou 1 candidato válido → para
-        }
-      }
 
       if (artIdx >= 0){
         const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
