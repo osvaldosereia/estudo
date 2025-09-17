@@ -524,67 +524,68 @@
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser =================== */
-    function splitBlockSupraTitleBody(raw){
-      const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
+    function splitBlockSupraTitleBody(raw) {
+  const lines = raw.replace(/^\s+|\s+$/g, '').split(/\r?\n/);
 
-      // primeira linha elegível: Preâmbulo, Art., ou cabeçalho estrutural
-      let artIdx = lines.findIndex(line =>
-        /^\s*Pre[âa]mbulo/i.test(line) ||
-        /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
-        /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
-      );
+  // primeira linha elegível: Preâmbulo, Art., ou cabeçalho estrutural
+  let artIdx = lines.findIndex(line =>
+    /^\s*Pre[âa]mbulo/i.test(line) ||
+    /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
+    /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
+  );
 
-// 🔎 Captura epígrafes marcadas com @@EPI@@
-let epigrafe = "";
+  // 🔎 Captura epígrafes marcadas com @@EPI@@
+  let epigrafe = "";
 
-// Caso 1: epígrafe imediatamente antes do artigo
-if (artIdx > 0) {
-  let lookback = artIdx - 1;
-  const prev = lines[lookback].trim();
-  if (/^@@EPI@@/.test(prev)) {
-    epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim();
-    lines.splice(lookback, 1);
-    artIdx--;
-  }
-}
-
-// Caso 2: epígrafes que aparecem dentro do artigo (ex: antes de §, incisos…)
-for (let i = artIdx + 1; i < lines.length; i++) {
-  if (/^@@EPI@@/.test(lines[i].trim())) {
-    const localEpigrafe = lines[i].trim().replace(/^@@EPI@@\s*/, "").trim();
-    lines[i] = localEpigrafe; // substitui no corpo, sem remover
-  }
-}
-
-
-
-     if (artIdx >= 0){
-  const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-  const titleLine = lines[artIdx];
-
-  const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
-  let titleText = mt ? mt[1].trim() : titleLine.trim();
-  // normaliza "12-A" -> "12A"
-  titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
-
-  const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
-  const rest = lines.slice(artIdx+1).join('\n').trimStart();
-  let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
-
-  // 🔧 insere epígrafe movida (se houver)
-  if (epigrafe && body) {
-    body = epigrafe + "\n" + body;
-  } else if (epigrafe) {
-    body = epigrafe;
-  }
-
-  return { supra, titleText, body };
-} else {
-  const titleText = (lines[0]||'').trim();
-  const body = lines.slice(1).join('\n').trimStart();
-  return { supra:[], titleText, body };
-}
+  // Caso 1: epígrafe imediatamente antes do artigo
+  if (artIdx > 0) {
+    let lookback = artIdx - 1;
+    const prev = lines[lookback].trim();
+    if (/^@@EPI@@/.test(prev)) {
+      epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim();
+      lines.splice(lookback, 1); // remove linha original
+      artIdx--;                  // ajusta índice do artigo
     }
+  }
+
+  // Caso 2: epígrafes que aparecem dentro do artigo (ex: antes de §, incisos…)
+  for (let i = artIdx + 1; i < lines.length; i++) {
+    if (/^@@EPI@@/.test(lines[i].trim())) {
+      lines[i] = lines[i].trim().replace(/^@@EPI@@\s*/, "").trim();
+    }
+  }
+
+  if (artIdx >= 0) {
+    const supra = lines.slice(0, artIdx).map(s => s.trim()).filter(Boolean);
+    const titleLine = lines[artIdx];
+
+    const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
+    let titleText = mt ? mt[1].trim() : titleLine.trim();
+    // normaliza "12-A" -> "12A"
+    titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+
+    const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
+    const rest = lines.slice(artIdx + 1).join('\n').trimStart();
+    let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+
+    // 🔧 insere epígrafe movida (se houver)
+    if (epigrafe && body) {
+      body = epigrafe + "\n" + body;
+    } else if (epigrafe) {
+      body = epigrafe;
+    }
+
+    // 🔧 remove marcador @@EPI@@ restante, se sobrar
+    body = body.replace(/^@@EPI@@\s*/gm, "");
+
+    return { supra, titleText, body };
+  } else {
+    const titleText = (lines[0] || '').trim();
+    const body = lines.slice(1).join('\n').trimStart();
+    return { supra: [], titleText, body };
+  }
+}
+
 
     function parseByDelimiters(txt){
       const sepRe = /(^|\n)[^\S\r\n]*-{5,}[^\S\r\n]*(?=\n|$)/g;
