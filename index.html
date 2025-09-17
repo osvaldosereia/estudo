@@ -179,10 +179,7 @@
     .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
 
     .art-body { font-size:13px; line-height:1.5; }
-    .paren {
-  color: rgba(0,0,0,.4);
-  font-size: 10px;
-}
+    .paren{ color: rgba(0,0,0,.4); font-size: 10px; }
 
     /* Busca: marcação azul */
     mark{ padding:0 2px; border-radius:2px; background:#cce4ff; color:inherit; }
@@ -310,7 +307,7 @@
   <!-- CATÁLOGO OCULTO -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
-      <optgroup label="Códigos">
+    <optgroup label="Códigos">
       <option value="data/codigos/CF88.txt">Constituição Federal 1988</option>
       <option value="data/codigos/codigo_civil.txt">Civil</option>
       <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
@@ -321,7 +318,7 @@
       <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
       <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option> 
+      <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
     </optgroup>
     <optgroup label="Leis">
       <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
@@ -338,7 +335,6 @@
       <option value="data/estatutos/estatuto_da_juventude.txt">Estatuto da Juventude</option>
       <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Estatuto da Pessoa com Deficiência</option>
       <option value="data/estatutoS/estatuto_oab.txt">Estatuto Oab</option>
-
     </optgroup>
     <optgroup label="Súmulas">
       <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
@@ -528,85 +524,39 @@
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser =================== */
-  function splitBlockSupraTitleBody(raw){
-  const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
+    function splitBlockSupraTitleBody(raw){
+      const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
 
-  const artIdx = lines.findIndex(line =>
-    /^\s*Pre[âa]mbulo/i.test(line) ||
-    /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
-    /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
-  );
+      // primeira linha elegível: Preâmbulo, Art., ou cabeçalho estrutural
+      let artIdx = lines.findIndex(line =>
+        /^\s*Pre[âa]mbulo/i.test(line) ||
+        /^\s*(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?/.test(line) ||
+        /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
+      );
 
-  // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
-  let epigrafe = "";
-  if (artIdx > 0) {
-    let lookback = artIdx - 1;
-    while (lookback >= 0 && lookback >= artIdx - 3) {
-      const prev = lines[lookback].trim();
-      if (!prev) { // ignora linhas em branco
-        lookback--;
-        continue;
+      // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
+      let epigrafe = "";
+      if (artIdx > 0) {
+        let lookback = artIdx - 1;
+        while (lookback >= 0 && lookback >= artIdx - 3) {
+          const prev = lines[lookback].trim();
+          if (!prev) { lookback--; continue; } // ignora linha em branco
+
+          // não puxa títulos/cabeçalhos e nem "caixa alta pura"
+          const isHeader = /^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev);
+          const isAllCaps = prev === prev.toUpperCase() && /[A-ZÁÉÍÓÚÇ]/.test(prev);
+
+          if (!isHeader && !isAllCaps) {
+            // só "cola" se a linha alvo for um Art., não cabeçalho
+            if (/^\s*(?:Art|ART)\.?\s*\d/.test(lines[artIdx])) {
+              epigrafe = prev;
+              lines.splice(lookback, 1); // remove epígrafe da posição antiga
+              artIdx--;                  // ajusta índice
+            }
+          }
+          break; // avaliou 1 candidato válido → para
+        }
       }
-
-      if (
-        !/^(Cap[ií]tulo|Se[cç][aã]o|Livro|T[ií]tulo)/i.test(prev) && // não é título/capítulo/livro
-        !/^[A-Z\s]{3,}$/.test(prev) // não é só caixa alta tipo "PARTE GERAL"
-      ) {
-        if (/^Art\.?/i.test(lines[artIdx])) {
-  // cola a epígrafe dentro do artigo
-  lines[artIdx] = prev + "\n" + lines[artIdx];
-  lines.splice(lookback, 1); // remove epígrafe da posição antiga
-  artIdx--;                  // ajusta índice
-}
-
-      }
-      break; // encontrou algo válido → para
-    }
-  }
-
-  if (artIdx >= 0){
-    const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-    const titleLine = lines[artIdx];
-
-    const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
-    let titleText = mt ? mt[1].trim() : titleLine.trim();
-    titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
-
-    const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
-    const rest = lines.slice(artIdx+1).join('\n').trimStart();
-    let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
-
-    // 🔎 Insere epígrafe no início do body, se encontrada
-    if (epigrafe) {
-      body = epigrafe + "\n" + body;
-    }
-
-    return { supra, titleText, body };
-  } else {
-    const titleText = (lines[0]||'').trim();
-    const body = lines.slice(1).join('\n').trimStart();
-    return { supra:[], titleText, body };
-  }
-}
-
-
-
-
-// Depois, se achou epígrafe válida, cola no body do artigo
-if (epigrafe) {
-  body = epigrafe + "\n" + body;
-}
-
-
-// mais abaixo, depois de calcular body:
-if (epigrafe) {
-  body = epigrafe + "\n" + body;
-}
-
-
-
-
-
 
       if (artIdx >= 0){
         const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
@@ -614,11 +564,15 @@ if (epigrafe) {
 
         const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
         let titleText = mt ? mt[1].trim() : titleLine.trim();
+        // normaliza "12-A" -> "12A"
         titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
 
         const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
         const rest = lines.slice(artIdx+1).join('\n').trimStart();
-        const body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+        let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+
+        // 🔧 insere epígrafe movida (se houver)
+        if (epigrafe) body = epigrafe + "\n" + body;
 
         return { supra, titleText, body };
       } else {
@@ -652,38 +606,39 @@ if (epigrafe) {
     }
 
     function parseByArt(txt){
-  // Agora reconhece "Preâmbulo" (com ou sem acento) e também os artigos
-const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
-  const starts = [];
-  let m;
-  while ((m = re.exec(txt)) !== null) {
-    const idxArt = re.lastIndex - m[2].length;
-    starts.push(idxArt);
-  }
-  if (!starts.length) return [{
-    title:'Texto',
-    text: txt.trim(),
-    htmlId:'art-0',
-    _split: splitBlockSupraTitleBody(txt.trim())
-  }];
+      // reconhece "Preâmbulo" (com/sem acento), "Art.", e cabeçalhos estruturais
+      const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
+      const starts = [];
+      let m;
+      while ((m = re.exec(txt)) !== null) {
+        const idxArt = re.lastIndex - m[2].length;
+        starts.push(idxArt);
+      }
+      if (!starts.length) return [{
+        title:'Texto',
+        text: txt.trim(),
+        htmlId:'art-0',
+        _split: splitBlockSupraTitleBody(txt.trim())
+      }];
 
-  const arts = [];
-  for (let i = 0; i < starts.length; i++) {
-    const from = starts[i];
-    const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
-    let chunk = txt.slice(from, to).trimEnd();
+      const arts = [];
+      for (let i = 0; i < starts.length; i++) {
+        const from = starts[i];
+        const to   = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
+        let chunk = txt.slice(from, to).trimEnd();
 
-    const endDot = chunk.lastIndexOf('.');
-    const endPar = chunk.lastIndexOf(')');
-    const end    = Math.max(endDot, endPar);
-    if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
+        // remove rabicho final fora do período/fecha parênteses
+        const endDot = chunk.lastIndexOf('.');
+        const endPar = chunk.lastIndexOf(')');
+        const end    = Math.max(endDot, endPar);
+        if (end !== -1) chunk = chunk.slice(0, end + 1).trimEnd();
 
-    const split = splitBlockSupraTitleBody(chunk);
-    const title = split.titleText || chunk.split('\n')[0].slice(0,40);
-    arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
-  }
-  return arts;
-}
+        const split = splitBlockSupraTitleBody(chunk);
+        const title = split.titleText || chunk.split('\n')[0].slice(0,40);
+        arts.push({ title, text: chunk, htmlId: `art-${i}`, _split: split });
+      }
+      return arts;
+    }
 
     function parseSumulas(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
@@ -702,6 +657,7 @@ const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[
       });
       return out;
     }
+
     function parsePrincipios(txt){
       const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
       const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
@@ -724,6 +680,7 @@ const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[
       });
       return out;
     }
+
     function parseByUrl(url, txt){
       const isSumulas = /(^|\/)data\/sumulas\/?/i.test(url);
       const isPrincipios = /(^|\/)data\/principios\/?/i.test(url);
@@ -816,21 +773,18 @@ const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[
       el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
 
       const split = a._split || splitBlockSupraTitleBody(a.text);
-      // Se for apenas cabeçalho (Livro/Título/Capítulo/Seção), renderiza como heading simples
-if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
-  const div = document.createElement('div');
-  div.className = 'section-title';
-  // mantém quebras originais (cada linha separada)
-  a.text.split(/\n/).forEach(line => {
-    const p = document.createElement('div');
-    p.textContent = line.trim();
-    if (p.textContent) div.appendChild(p);
-  });
-  return div;
-}
 
-
-
+      // Cabeçalhos (Livro/Título/Capítulo/Seção) -> renderiza como "section-title"
+      if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
+        const div = document.createElement('div');
+        div.className = 'section-title';
+        a.text.split(/\n/).forEach(line => {
+          const p = document.createElement('div');
+          p.textContent = line.trim();
+          if (p.textContent) div.appendChild(p);
+        });
+        return div;
+      }
 
       const supraWrap = document.createElement('div');
       supraWrap.className = 'supra';
@@ -946,7 +900,7 @@ if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
       });
     }
 
-    /* ======== RENDER (global All + progressivo) ======== */
+    /* =================== RENDER (progressivo) =================== */
     function renderArticlesAll(list){
       clearArticles();
       if (!list.length){
@@ -993,44 +947,43 @@ if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
     }
 
     function renderHighlights(){
-  clearArticles();
+      clearArticles();
 
-  // Junta favoritos + estudados em uma lista só
-  const combined = [
-    ...store.listFavorites(),
-    ...store.listStudied()
-  ];
+      // Junta favoritos + estudados em uma lista só
+      const combined = [
+        ...store.listFavorites(),
+        ...store.listStudied()
+      ];
 
-  if (!combined.length){
-    els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada por aqui ainda.</div>';
-    return;
-  }
+      if (!combined.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada por aqui ainda.</div>';
+        return;
+      }
 
-  // Ordena pelo timestamp mais recente (campo ts)
-  const merged = sortByTsDesc(combined);
+      // Ordena pelo timestamp mais recente
+      const merged = sortByTsDesc(combined);
 
-  let idx = 0;
-  const frag = document.createDocumentFragment();
-  merged.forEach(entry=>{
-    const art = {
-      title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
-      text: entry.text,
-      htmlId: entry.htmlId,
-      _split: splitBlockSupraTitleBody(entry.text),
-      _fileUrl: entry.fileUrl,
-      _fileLabel: entry.fileLabel
-    };
-    frag.appendChild(buildArticleElement(art, idx++, {globalMode:true}));
-  });
+      let idx = 0;
+      const frag = document.createDocumentFragment();
+      merged.forEach(entry=>{
+        const art = {
+          title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
+          text: entry.text,
+          htmlId: entry.htmlId,
+          _split: splitBlockSupraTitleBody(entry.text),
+          _fileUrl: entry.fileUrl,
+          _fileLabel: entry.fileLabel
+        };
+        frag.appendChild(buildArticleElement(art, idx++, {globalMode:true}));
+      });
 
-  els.articles.appendChild(frag);
+      els.articles.appendChild(frag);
 
-  window.scrollTo({top:0,behavior:'instant'});
-  state.mode = 'highlights';
-  store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
-  updateCurrentOutline();
-}
-
+      window.scrollTo({top:0,behavior:'instant'});
+      state.mode = 'highlights';
+      store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
+      updateCurrentOutline();
+    }
 
     /* =================== Loader =================== */
     async function fetchTextCached(url){
@@ -1079,7 +1032,7 @@ if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
       });
     }
 
-    /* =================== Busca (desktop enter, UX estável) =================== */
+    /* =================== Busca (enter no desktop) =================== */
     async function runLocalSearch(){
       if (state.mode !== 'file'){
         notify('Abra um arquivo para buscar.');
@@ -1250,19 +1203,18 @@ if (/^(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)/i.test(split.titleText)) {
       const tema = split.titleText || (a.title || 'Artigo');
       return [
         'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ',
-'Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ',
-'(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ',
-'(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ',
-'(3) Exemplo prático — caso ilustrativo; ',
-'(4) Princípios relacionados; ',
-'(5) Pontos de atenção na prática; ',
-'(6) Erros comuns/pegadinhas; ',
-'(7) Artigos correlatos. ',
-'Responda em português claro, objetivo e didático.\n\n',
-`Tema: "${tema}"\n\n`,
-supraText + artigo,
-'\n\n💚 direito.love'
-
+        'Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ',
+        '(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ',
+        '(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ',
+        '(3) Exemplo prático — caso ilustrativo; ',
+        '(4) Princípios relacionados; ',
+        '(5) Pontos de atenção na prática; ',
+        '(6) Erros comuns/pegadinhas; ',
+        '(7) Artigos correlatos. ',
+        'Responda em português claro, objetivo e didático.\n\n',
+        `Tema: "${tema}"\n\n`,
+        supraText + artigo,
+        '\n\n💚 direito.love'
       ].join('');
     }
     function openIA(url){
@@ -1300,13 +1252,12 @@ supraText + artigo,
       els.searchInput.blur();
     });
 
-    // Enter no desktop (e mobile): dispara a busca
+    // Enter
     els.searchInput.addEventListener('keydown', (e)=>{
       if (e.key === 'Enter'){
         e.preventDefault();
         withBusy(els.sendSearch, runLocalSearch);
       } else if (e.key === 'Escape'){
-        // ESC limpa busca e fecha finder
         els.searchInput.blur();
         els.finderPop.classList.remove('show');
       }
@@ -1322,15 +1273,13 @@ supraText + artigo,
     els.nextBtn.addEventListener('click', ()=> gotoNext());
     els.prevBtn.addEventListener('click', ()=> gotoPrev());
 
-    // Atalhos globais de produtividade:
+    // Atalhos
     document.addEventListener('keydown', (e)=>{
-      // Ctrl+K ou "/" focam a busca
       if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !e.metaKey && !e.ctrlKey)){
         e.preventDefault();
         els.searchInput.focus();
         els.searchInput.select();
       }
-      // F3 / Ctrl+G -> próximo | Shift+F3 / Ctrl+Shift+G -> anterior
       if (e.key === 'F3' || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'g')){
         e.preventDefault();
         gotoNext();
@@ -1339,7 +1288,6 @@ supraText + artigo,
         e.preventDefault();
         gotoPrev();
       }
-      // ESC fecha overlays
       if (e.key === 'Escape'){
         els.finderPop.classList.remove('show');
         if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
@@ -1352,24 +1300,18 @@ supraText + artigo,
     els.closeStudy.addEventListener('click', closeStudyModal);
     els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
     document.querySelectorAll('.ia-btn').forEach(btn=>{
-  btn.addEventListener('click', async (e)=>{
-    const url = e.currentTarget.dataset.url;
-    const prompt = els.promptPreview.textContent || '';
-
-    try {
-      await navigator.clipboard.writeText(prompt);
-      notify('✅ Prompt copiado!');
-    } catch (err) {
-      notify('⚠️ Não consegui copiar, copie manualmente.');
-    }
-
-    // Só depois abre a IA
-    openIA(url);
-  });
-});
-
-
-
+      btn.addEventListener('click', async (e)=>{
+        const url = e.currentTarget.dataset.url;
+        const prompt = els.promptPreview.textContent || '';
+        try {
+          await navigator.clipboard.writeText(prompt);
+          notify('✅ Prompt copiado!');
+        } catch {
+          notify('⚠️ Não consegui copiar, copie manualmente.');
+        }
+        openIA(url);
+      });
+    });
     els.copyPromptBtn.addEventListener('click', (e)=>{
       withBusy(e.currentTarget, async ()=>{
         try{ await navigator.clipboard.writeText(els.promptPreview.textContent||''); notify('✅ Prompt copiado!'); }
@@ -1509,8 +1451,7 @@ supraText + artigo,
         restoreViewAfterRender();
       }
     }
-});
-</script>
+    boot();
+  </script>
 </body>
 </html>
-
