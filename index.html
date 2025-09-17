@@ -534,43 +534,46 @@
         /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
       );
 
-      // 🔎 Se houver epígrafe até 3 linhas antes do artigo, move para dentro do artigo
-      // 🔎 Se houver epígrafe marcada com @@EPI@@ imediatamente antes do artigo
+    // 🔎 Se houver epígrafe marcada com @@EPI@@ imediatamente antes do artigo
 let epigrafe = "";
 if (artIdx > 0) {
   let lookback = artIdx - 1;
   const prev = lines[lookback].trim();
 
-  if (prev.startsWith("@@EPI@@")) {
-    epigrafe = prev.replace(/^@@EPI@@\s*/, ""); // remove marcador
+  if (/^@@EPI@@/.test(prev)) {
+    epigrafe = prev.replace(/^@@EPI@@\s*/, "").trim(); // remove marcador e espaços
     lines.splice(lookback, 1); // remove linha original
     artIdx--; // ajusta índice
   }
 }
 
 
-      if (artIdx >= 0){
-        const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-        const titleLine = lines[artIdx];
+     if (artIdx >= 0){
+  const supra = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+  const titleLine = lines[artIdx];
 
-        const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
-        let titleText = mt ? mt[1].trim() : titleLine.trim();
-        // normaliza "12-A" -> "12A"
-        titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+  const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
+  let titleText = mt ? mt[1].trim() : titleLine.trim();
+  // normaliza "12-A" -> "12A"
+  titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
 
-        const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
-        const rest = lines.slice(artIdx+1).join('\n').trimStart();
-        let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
+  const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
+  const rest = lines.slice(artIdx+1).join('\n').trimStart();
+  let body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
 
-        // 🔧 insere epígrafe movida (se houver)
-        if (epigrafe) body = epigrafe + "\n" + body;
+  // 🔧 insere epígrafe movida (se houver)
+  if (epigrafe && body) {
+    body = epigrafe + "\n" + body;
+  } else if (epigrafe) {
+    body = epigrafe;
+  }
 
-        return { supra, titleText, body };
-      } else {
-        const titleText = (lines[0]||'').trim();
-        const body = lines.slice(1).join('\n').trimStart();
-        return { supra:[], titleText, body };
-      }
+  return { supra, titleText, body };
+} else {
+  const titleText = (lines[0]||'').trim();
+  const body = lines.slice(1).join('\n').trimStart();
+  return { supra:[], titleText, body };
+}
     }
 
     function parseByDelimiters(txt){
