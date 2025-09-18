@@ -764,18 +764,20 @@ function buildArticleElement(a) {
   content.className = "art-body";
 
   let body = (split.body || "")
-    .replace(/<\/?(strong|b)>/gi, "")
+  .replace(/<\/?(strong|b)>/gi, "")
 
-    // Garante que quebre antes dos blocos
-    .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
-    .replace(/(^|\n)(\s*[IVXLCDM]+ ?[-–—]?)/g, "\n$2")
-    .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2")
+  // 🔹 Garante quebra ANTES dos blocos
+  .replace(/([^\n])(\n§)/g, "$1\n\n§") // <= NOVO
+  .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
+  .replace(/(^|\n)(\s*[IVXLCDM]{1,12}\s*[-–—.]?)/g, "\n$2")
+  .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2")
 
-    // 1 linha de espaço APÓS cada bloco
-    .replace(/(^|\n)(§\s*[^\n]*)(\n)/g, "$1$2\n\n")
-    .replace(/(^|\n)(Par[aá]grafo[^\n]*)(\n)/gi, "$1$2\n\n")
-    .replace(/(^|\n)([IVXLCDM]+ ?[-–—.]?\s*[^\n]*)(\n)/g, "$1$2\n\n")
-    .replace(/(^|\n)([a-z]\)\s*[^\n]*)(\n)/g, "$1$2\n\n");
+  // 🔹 Garante 1 linha de respiro DEPOIS dos blocos
+  .replace(/(^|\n)(§\s*[^\n]*)(\n)/g, "$1$2\n\n")
+  .replace(/(^|\n)(Par[aá]grafo[^\n]*)(\n)/gi, "$1$2\n\n")
+  .replace(/(^|\n)([IVXLCDM]{1,12} ?[-–—.]?\s*[^\n]*)(\n)/g, "$1$2\n\n")
+  .replace(/(^|\n)([a-z]\)\s*[^\n]*)(\n)/g, "$1$2\n\n");
+
 
   const html = body.replace(/\n/g, "<br>");
   content.innerHTML = html;
