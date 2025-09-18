@@ -784,12 +784,13 @@ function parseByUrl(url, txt){
         .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
 
       const html = body
-        .replace(/(^|\n)(\s*Par[aá]grafo(?:\s+único)?)/gi, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*§[^ \n]*)/g, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
-        .replace(/\n\n/g, '<br>')
-        .replace(/\n/g, '<br>');
+  .replace(/(^|\n)(\s*Par[aá]grafo(?:\s+único)?)/gi, '<br>$2')
+  .replace(/(^|\n)(\s*§[^ \n]*)/g, '<br>$2')
+  .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br>$2')
+  .replace(/(^|\n)(\s*[a-z]\))/g, '<br>$2')
+  .replace(/\n\n/g, '<br>')
+  .replace(/\n/g, '<br>');
+
 
       content.innerHTML = html;
       el.appendChild(content);
