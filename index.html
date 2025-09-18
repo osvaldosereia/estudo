@@ -530,93 +530,105 @@
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
     /* =================== Parser NOVO =================== */
-    // Divide o texto por linhas com apenas "-----"
-    function splitIntoBlocks(txt){
-      const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
-      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim());
-      return parts.filter(Boolean);
-    }
+function splitIntoBlocks(txt){
+  const cleaned = sanitizeForLayout(
+    txt.replace(/^\uFEFF/, '')
+       .replace(/\r\n/g, '\n')
+       .replace(/[ \t]+/g, ' ') // remove espaços excessivos
+  );
+  // divide pelo delimitador -----
+  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim());
+  return parts.filter(Boolean);
+}
 
-    // A partir do bloco padronizado:
-    // Epígrafe (opcional) | Art ... (obrigatório) | Corpo (linhas restantes)
-    function parseBlock(block, idx){
-      const lines = block.split(/\n/).map(l=>l.trim());
-      const filtered = lines.filter(l=>l.length>0);
+function parseBlock(block, idx){
+  const lines = block.split(/\n/).map(l=>l.trim());
+  const filtered = lines.filter(l=>l.length>0);
 
-      let epigrafe = "";
-      let titleLine = "";
-      let bodyLines = [];
+  let epigrafe = "";
+  let titleLine = "";
+  let bodyLines = [];
 
-      if (!filtered.length){
-        return {
-          title:`Bloco ${idx+1}`,
-          text:block,
-          htmlId:`art-${idx}`,
-          _split:{supra:[], titleText:`Bloco ${idx+1}`, body:"", epigrafe:""}
-        };
-      }
+  if (!filtered.length){
+    return {
+      title:`Bloco ${idx+1}`,
+      text:block,
+      htmlId:`art-${idx}`,
+      _split:{supra:[], titleText:`Bloco ${idx+1}`, body:"", epigrafe:""}
+    };
+  }
 
-      // Se 1ª linha não começa com "Art", tratamos como epígrafe
-      if (!/^Art/i.test(filtered[0])) {
-        epigrafe = filtered[0];
-        filtered.shift();
-      }
-      // Próxima linha deve ser o "Art ..."
-      if (filtered.length && /^Art/i.test(filtered[0])) {
-        titleLine = filtered[0];
-        filtered.shift();
-      } else {
-        // fallback: se não houver "Art", usa a linha existente como título
-        titleLine = filtered.shift() || `Bloco ${idx+1}`;
-      }
+  // Se 1ª linha não começa com "Art" nem "Súmula", tratamos como epígrafe
+  if (!/^(Art|S[úu]mula)/i.test(filtered[0])) {
+    epigrafe = filtered[0];
+    filtered.shift();
+  }
 
-      bodyLines = filtered;
+  // Linha de título
+  if (filtered.length && /^(Art|S[úu]mula)/i.test(filtered[0])) {
+    titleLine = filtered[0];
+    filtered.shift();
+  } else {
+    titleLine = filtered.shift() || `Bloco ${idx+1}`;
+  }
 
-      // Garante 1 linha em branco entre caput / parágrafo / inciso / alínea
-      const ensureBlank = (txt)=>{
-        return txt
-          // insere quebra antes de marcadores se não houver linha em branco
-          .replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*-|[a-z]\))/g, (_,a,b)=> `${a}\n\n${b}`);
-      };
+  bodyLines = filtered;
 
-      // Bold automático para Parágrafo/§/Incisos/Alíneas
-      const formatBody = (arr)=>{
-        return arr.map(l=>{
-          if (/^Par[aá]grafo/i.test(l)) return `**${l}**`;
-          if (/^§/.test(l)) return `**${l}**`;
-          if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(l)) return `**${l}**`;
-          if (/^[a-z]\)/i.test(l)) return `**${l}**`;
-          return l;
-        }).join('\n');
-      };
+  // ==== Formatações especiais ====
 
-      const bodyRaw = formatBody(bodyLines);
-      const body = ensureBlank(bodyRaw);
+  // Negrito + Azul no título (apenas início do card)
+  titleLine = titleLine.replace(/^(Art\.?\s*\d+[A-Z]?)/i, `<span class="art-title">**$1**</span>`);
+  titleLine = titleLine.replace(/^(S[úu]mula\s*\d+)/i, `<span class="art-title">**$1**</span>`);
 
-      const textForStorage = [
-        epigrafe ? `Epígrafe: ${epigrafe}` : '',
-        titleLine,
-        body
-      ].filter(Boolean).join('\n');
+  // Deixa () em cor mais clara
+  const fadeParentheses = (txt)=>{
+    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+  };
 
-      return {
-        title: titleLine || `Bloco ${idx+1}`,
-        text: textForStorage,
-        htmlId: `art-${idx}`,
-        _split: { supra: [], titleText: titleLine, body, epigrafe }
-      };
-    }
+  // Garante 1 linha em branco após caput, parágrafo, inciso, alínea
+  const ensureBlank = (txt)=>{
+    return txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*-|[a-z]\))/g, (_,a,b)=> `${a}\n\n${b}`);
+  };
 
-    // Parser de arquivo: usa APENAS delimitadores "-----"
-    function parseByDelimiters(txt){
-      const blocks = splitIntoBlocks(txt);
-      return blocks.map((b,i)=> parseBlock(b,i));
-    }
+  // Negrito automático em §, Parágrafo, incisos, alíneas
+  const formatBody = (arr)=>{
+    return arr.map(l=>{
+      if (/^Par[aá]grafo/i.test(l)) return `**${fadeParentheses(l)}**`;
+      if (/^§/.test(l)) return `**${fadeParentheses(l)}**`;
+      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(l)) return `**${fadeParentheses(l)}**`;
+      if (/^[a-z]\)/i.test(l)) return `**${fadeParentheses(l)}**`;
+      return fadeParentheses(l);
+    }).join('\n');
+  };
 
-    // Seleção por URL (a partir de agora todo mundo usa o novo formato)
-    function parseByUrl(url, txt){
-      return parseByDelimiters(txt);
-    }
+  const bodyRaw = formatBody(bodyLines);
+  const body = ensureBlank(bodyRaw);
+
+  const textForStorage = [
+    epigrafe ? `Epígrafe: ${epigrafe}` : '',
+    titleLine,
+    body
+  ].filter(Boolean).join('\n');
+
+  return {
+    title: titleLine || `Bloco ${idx+1}`,
+    text: textForStorage,
+    htmlId: `art-${idx}`,
+    _split: { supra: [], titleText: titleLine, body, epigrafe }
+  };
+}
+
+// Parser principal: usa APENAS delimitadores "-----"
+function parseByDelimiters(txt){
+  const blocks = splitIntoBlocks(txt);
+  return blocks.map((b,i)=> parseBlock(b,i));
+}
+
+// Seleção por URL (agora sempre usa o mesmo parser para todos os arquivos)
+function parseByUrl(url, txt){
+  return parseByDelimiters(txt);
+}
+
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
