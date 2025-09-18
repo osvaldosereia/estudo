@@ -172,102 +172,58 @@
       position:absolute; left:2%; bottom:0;
     }
 
- /* ======== Fontes dos Cards ======== */
-.supra { 
-  color:#6c7282; 
-  font-weight:500; 
-  font-size:14px;       
-  margin:0 0 6px; 
-}
-.supra div { line-height:1.42; }
-
-.art-head { 
-  display: block;      
-  margin: 0 0 6px; 
-}
-
-.art-title { 
-  display:block; 
-  font-weight:400; 
-  color:#0e1638; 
-  font-size:14px;        
-  line-height:1.42;
-  margin:0;
-}
-
-.art-epigrafe {
-  font-size:14px;       
-  font-weight:400; 
-  color:#0e1638; 
-  margin:0 0 6px 0;
-}
-
-.art-body { 
-  font-size:14px;       
-  line-height:1.42; 
-}
-
-.paren { 
-  color: rgba(0,0,0,.6); 
-  font-size:12px;       
-}
-
-/* Unificação: garante que tudo dentro do card fique igual */
+/* ======== Fontes dos Cards ======== */
 article, 
 article .art-title, 
 article .art-body, 
 article .art-epigrafe, 
 article .supra {
-  font-size:14px !important;
-  line-height:1.42 !important;
-  font-weight:400 !important;
-  color:#0e1638;
+  font-size: 14px !important;
+  line-height: 1.42 !important;
+  font-weight: 400;
+  color: #0e1638;
 }
 
-/* Reset para headings dentro dos cards */
-article h1, 
-article h2, 
-article h3, 
-article h4, 
-article h5, 
-article h6 {
-  font-size:14px !important;
-  font-weight:400 !important;
-  margin:0;
-  line-height:1.42 !important;
-  color:#0e1638;
+/* Texto menor só para parênteses */
+.paren {
+  color: rgba(0,0,0,.6);
+  font-size: 12px; /* menor que o corpo */
 }
 
-/* ======== Ícones no topo do card ======== */
+/* ======== Área de ações (ícones) ======== */
 .art-actions-top {
   display: flex;
-  justify-content: flex-end;   /* ícones no lado direito */
-  gap: 8px;
-  margin-bottom: 6px;          /* separa do caput */
+  justify-content: flex-end;   /* joga pro canto direito */
+  align-items: center;
+  gap: 8px;                    /* espaço entre os ícones */
+  margin-bottom: 4px;          /* distância para o caput */
 }
 
-.art-actions-top .icon-btn {
-  width:28px; 
-  height:28px; 
-  display:grid; 
-  place-items:center; 
-  cursor:pointer; 
-  border:0; 
-  background:transparent; 
-  padding:0;
-  color:var(--icon-muted);
+/* Botões de ícone */
+.icon-btn {
+  width: 24px; 
+  height: 24px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--icon-muted);
 }
 
-.art-actions-top .icon-btn img {
-  width:14px;   
-  height:14px; 
-  display:block; 
-  opacity:.6; 
+.icon-btn img {
+  width: 16px;   /* tamanho fixo do ícone */
+  height: 16px;
+  display: block;
+  opacity: .6;
 }
 
-.art-actions-top .icon-btn.active img { opacity:1; }
-.art-actions-top .icon-btn.active[data-action="fav"] { color:var(--icon-fav); }
-.art-actions-top .icon-btn.active[data-action="study"] { color:var(--icon-study); }
+/* Estados ativos */
+.icon-btn.active img { opacity: 1; }
+.icon-btn.active[data-action="fav"] { color: var(--icon-fav); }
+.icon-btn.active[data-action="study"] { color: var(--icon-study); }
+
 
 
 
