@@ -1381,6 +1381,7 @@ els.articles.addEventListener("click", async (e) => {
           })(),
   };
 
+  // === BOTÃO ESTUDAR ===
   if (btn.dataset.action === "study") {
     await withBusy(btn, async () => {
       const useArticle =
@@ -1401,32 +1402,34 @@ els.articles.addEventListener("click", async (e) => {
     });
   }
 
+  // === BOTÃO FAVORITAR ===
   if (btn.dataset.action === "fav") {
-  await withBusy(btn, async () => {
-    if (store.isFavorite(id)) {
-      store.removeFavorite(id);
-      btn.classList.remove("active");
-      notify("⭐ Removido dos favoritos");
+    await withBusy(btn, async () => {
+      if (store.isFavorite(id)) {
+        store.removeFavorite(id);
+        btn.classList.remove("active");
+        notify("⭐ Removido dos favoritos");
 
-      // Se estiver na aba Favoritos → remove card e checa vazio
-      if (state.mode === "favorites") {
-        artEl.remove();
-        if (!els.articles.querySelector("article")) {
-          els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+        if (state.mode === "favorites") {
+          artEl.remove();
+          if (!els.articles.querySelector("article")) {
+            els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+          }
         }
+      } else {
+        if (!entry.text) {
+          notify("Abra o arquivo para favoritar este artigo.");
+          return;
+        }
+        store.addFavorite(entry);
+        btn.classList.add("active");
+        notify("⭐ Adicionado aos favoritos");
       }
-    } else {
-      if (!entry.text) {
-        notify("Abra o arquivo para favoritar este artigo.");
-        return;
-      }
-      store.addFavorite(entry);
-      btn.classList.add("active");
-      notify("⭐ Adicionado aos favoritos");
-    }
-  });
-}
+    });
+  }
+});
 
+/* ——— Listener global do menu "Mais" deve ficar FORA ——— */
 document.addEventListener("click", (e) => {
   if (!els.moreMenu.contains(e.target) && !e.target.closest(".tab-more")) {
     els.moreMenu.style.display = "none";
