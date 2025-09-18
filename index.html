@@ -778,18 +778,12 @@ function parseByUrl(url, txt){
       content.className = 'art-body';
 
       let body = split.body || '';
-      body = body
-        .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n\n$2")
-        .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
-        .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
+     body = body
+  .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
+  .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n$2")
+  .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2");
 
-      const html = body
-  .replace(/(^|\n)(\s*Par[aá]grafo(?:\s+único)?)/gi, '<br>$2')
-  .replace(/(^|\n)(\s*§[^ \n]*)/g, '<br>$2')
-  .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br>$2')
-  .replace(/(^|\n)(\s*[a-z]\))/g, '<br>$2')
-  .replace(/\n\n/g, '<br>')
-  .replace(/\n/g, '<br>');
+const html = body.replace(/\n/g, '<br>');
 
 
       content.innerHTML = html;
