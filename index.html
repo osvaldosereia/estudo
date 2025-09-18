@@ -532,18 +532,20 @@
     /* =================== Parser NOVO =================== */
 function splitIntoBlocks(txt){
   const cleaned = sanitizeForLayout(
-    txt.replace(/^\uFEFF/, '')
-       .replace(/\r\n/g, '\n')
-       .replace(/[ \t]+/g, ' ') // remove espaços excessivos
+    txt
+      .replace(/^\uFEFF/, '')
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+/g, ' ') // remove espaços excessivos
   );
-  // divide pelo delimitador -----
-  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim());
+  // divide pelos delimitadores "-----" em linha própria
+  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
   return parts.filter(Boolean);
 }
 
 function parseBlock(block, idx){
-  const lines = block.split(/\n/).map(l=>l.trim());
-  const filtered = lines.filter(l=>l.length > 0);
+  // normaliza linhas e remove linhas vazias
+  const lines = block.split(/\n/).map(l => l.trim());
+  const filtered = lines.filter(l => l.length > 0);
 
   let epigrafe = "";
   let titleLine = "";
@@ -559,13 +561,13 @@ function parseBlock(block, idx){
     };
   }
 
-  // Se 1ª linha não começa com "Art" nem "Súmula", tratamos como epígrafe
+  // Se 1ª linha não começa com "Art" nem "Súmula", é epígrafe
   if (!/^(Art|S[úu]mula)/i.test(filtered[0])) {
     epigrafe = filtered[0];
     filtered.shift();
   }
 
-  // Linha de título
+  // Linha de título (Art/Súmula) ou fallback
   if (filtered.length && /^(Art|S[úu]mula)/i.test(filtered[0])) {
     titleLine = filtered[0];
     filtered.shift();
@@ -575,42 +577,108 @@ function parseBlock(block, idx){
 
   bodyLines = filtered;
 
-  // Negrito automático em §, Parágrafo, incisos, alíneas
-  const formatBody = (arr)=>{
-    return arr.map(l=>{
-      if (/^Par[aá]grafo/i.test(l)) return `**${l}**`;
-      if (/^§/.test(l)) return `**${l}**`;
-      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(l)) return `**${l}**`;
-      if (/^[a-z]\)/i.test(l)) return `**${l}**`;
-      return l;
-    }).join('\n');
-  };
-
-  const bodyRaw = formatBody(bodyLines);
-
-  // Garante 1 linha em branco após caput, parágrafo, inciso, alínea
+  // Texto puro para busca/armazenamento (sem HTML)
+  // + espaçamento: 1 linha em branco após §/Parágrafo/Inciso/Alínea
   const ensureBlank = (txt)=>{
-    return txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*-|[a-z]\))/g, (_,a,b)=> `${a}\n\n${b}`);
+    return txt.replace(
+      /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+      (_,a,b)=> `${a}\n\n${b}`
+    );
   };
-  const body = ensureBlank(bodyRaw);
 
-  // Texto puro (sem HTML) → usado em buscas
+  const bodyText = ensureBlank(bodyLines.join('\n'));
+
   const textForStorage = [
     epigrafe ? `Epígrafe: ${epigrafe}` : '',
     titleLine,
-    body
+    bodyText
   ].filter(Boolean).join('\n');
 
-  // HTML para exibição
-  const html = renderWithStyles(titleLine, body, epigrafe);
+  // HTML apenas para UI
+  const html = renderWithStyles(titleLine, bodyText, epigrafe);
 
   return {
     title: titleLine || `Bloco ${idx+1}`,
     text: textForStorage,
     htmlId: `art-${idx}`,
     html,
-    _split: { supra: [], titleText: titleLine, body, epigrafe }
+    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
   };
+}
+
+/* ========= RENDER COM ESTILO (só para UI) ========= */
+function renderWithStyles(titleLine, body, epigrafe){
+  // 1) TÍTULO: negritar APENAS "Art N" ou "Súmula N" no INÍCIO da linha
+  let tLine = titleLine;
+
+  // Art. 12 / Art 12 / Art. 12-A (preserva o ponto após o número se existir)
+  tLine = tLine.replace(
+    /^(Art\.?\s*\d+[A-Z]?)(\.)?\s*/i,
+    (m, id, dot = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} `
+  );
+
+  // Súmula 123 / Súmula Vinculante 13
+  tLine = tLine.replace(
+    /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*/i,
+    (m, id, dot = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} `
+  );
+
+  // 2) COR MAIS CLARA para parênteses
+  const fadeParentheses = (txt)=>{
+    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+  };
+
+  // 3) DESTACAR SOMENTE O IDENTIFICADOR do parágrafo/inciso/alínea no início da linha
+  const boldOnlyPrefix = (line)=>{
+    // Parágrafo único
+    line = line.replace(
+      /^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/,
+      '<strong>$1</strong>'
+    );
+
+    // § 1º / §1º / § 2 / §2
+    line = line.replace(
+      /^§+\s*\d+[ºo]?/i,
+      (m)=> `<strong>${m.trim()}</strong>`
+    );
+
+    // Incisos: I -, II –, III.  (preserva o separador)
+    line = line.replace(
+      /^([IVXLCDM]+)\s*([\-–—.])\s*/i,
+      (m, romano, sep)=> `<strong>${romano}</strong>${sep} `
+    );
+
+    // Alíneas: a) b) c) (maiúscula/minúscula)
+    line = line.replace(
+      /^([a-z])\)/i,
+      (m, letra)=> `<strong>${letra})</strong>`
+    );
+
+    return line;
+  };
+
+  // Aplica clareamento de parênteses + bold do prefixo por linha
+  let b = body
+    .split('\n')
+    .map(l => boldOnlyPrefix(fadeParentheses(l)))
+    .join('\n');
+
+  // Monta saída HTML
+  return [
+    epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
+    tLine,
+    b
+  ].filter(Boolean).join('\n');
+}
+
+/* ========= Parser principal ========= */
+function parseByDelimiters(txt){
+  const blocks = splitIntoBlocks(txt);
+  return blocks.map((b,i)=> parseBlock(b,i));
+}
+
+function parseByUrl(url, txt){
+  return parseByDelimiters(txt);
 }
 
 /* ========= RENDER COM ESTILO (só para UI) ========= */
