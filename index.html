@@ -172,18 +172,17 @@
       position:absolute; left:2%; bottom:0;
     }
 
- /* ======== Fontes e Ícones dos Cards ======== */
+ /* ======== Fontes dos Cards ======== */
 .supra { 
   color:#6c7282; 
   font-weight:500; 
-  font-size:14px;       /* mesmo tamanho que todo o texto */
+  font-size:14px;       
   margin:0 0 6px; 
 }
 .supra div { line-height:1.42; }
 
 .art-head { 
-  position: relative;   /* contexto pros botões absolutos */
-  display: block;       /* evita flex esmagando texto */
+  display: block;      
   margin: 0 0 6px; 
 }
 
@@ -191,10 +190,9 @@
   display:block; 
   font-weight:400; 
   color:#0e1638; 
-  font-size:14px;        /* mesmo tamanho do corpo */
+  font-size:14px;        
   line-height:1.42;
   margin:0;
-  padding-right:60px;    /* reserva espaço pros botões */
 }
 
 .art-epigrafe {
@@ -211,7 +209,7 @@
 
 .paren { 
   color: rgba(0,0,0,.6); 
-  font-size:12px;       /* 2px menor que o corpo */
+  font-size:12px;       
 }
 
 /* Unificação: garante que tudo dentro do card fique igual */
@@ -222,41 +220,55 @@ article .art-epigrafe,
 article .supra {
   font-size:14px !important;
   line-height:1.42 !important;
+  font-weight:400 !important;
+  color:#0e1638;
 }
 
-/* ======== Ícones ======== */
-.art-actions {
-  position:absolute;    /* fora do fluxo do texto */
-  top:0;
-  right:0;
-  display:flex;
-  flex-direction:row;   /* ícones lado a lado */
-  gap:6px;
+/* Reset para headings dentro dos cards */
+article h1, 
+article h2, 
+article h3, 
+article h4, 
+article h5, 
+article h6 {
+  font-size:14px !important;
+  font-weight:400 !important;
+  margin:0;
+  line-height:1.42 !important;
+  color:#0e1638;
 }
 
-.icon-btn {
+/* ======== Ícones no topo do card ======== */
+.art-actions-top {
+  display: flex;
+  justify-content: flex-end;   /* ícones no lado direito */
+  gap: 8px;
+  margin-bottom: 6px;          /* separa do caput */
+}
+
+.art-actions-top .icon-btn {
   width:28px; 
   height:28px; 
   display:grid; 
   place-items:center; 
   cursor:pointer; 
-  position:relative; 
   border:0; 
   background:transparent; 
   padding:0;
   color:var(--icon-muted);
 }
 
-.icon-btn img {
+.art-actions-top .icon-btn img {
   width:14px;   
   height:14px; 
   display:block; 
   opacity:.6; 
 }
 
-.icon-btn.active img { opacity:1; }
-.icon-btn.active[data-action="fav"] { color:var(--icon-fav); }
-.icon-btn.active[data-action="study"] { color:var(--icon-study); }
+.art-actions-top .icon-btn.active img { opacity:1; }
+.art-actions-top .icon-btn.active[data-action="fav"] { color:var(--icon-fav); }
+.art-actions-top .icon-btn.active[data-action="study"] { color:var(--icon-study); }
+
 
 
     /* ======== MINI-FINDER ======== */
