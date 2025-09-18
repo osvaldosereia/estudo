@@ -538,8 +538,7 @@
       return out;
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
-
-   /* =================== Parser =================== */
+/* =================== Parser =================== */
 function splitBlockSupraTitleBody(raw){
   const lines = raw.replace(/^\s+|\s+$/g,'').split(/\r?\n/);
 
@@ -550,31 +549,26 @@ function splitBlockSupraTitleBody(raw){
     /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
   );
 
-  // 🔎 Epígrafe "de card" (linhas que começam com @@ ou @@EPI@@) — mover para o próximo Art.
   let epigrafe = "";
 
-  // Caso A: logo ANTES do artigo
+  // Caso A: epígrafe marcada com @@ ANTES do artigo → mover para este card
   if (artIdx > 0) {
-    // pula linhas vazias
     let look = artIdx - 1;
     while (look >= 0 && !lines[look].trim()) look--;
-    if (look >= 0 && /^\s*(?:@@EPI@@|@@)\b/.test(lines[look])) {
-      epigrafe = lines[look].replace(/^\s*(?:@@EPI@@|@@)\s*/, '').trim();
+    if (look >= 0 && /^@@/.test(lines[look])) {
+      epigrafe = lines[look].replace(/^@@\s*/, '').trim();
       lines.splice(look, 1);
-      artIdx--; // ajusta índice do Art. após remoção
+      artIdx--;
     }
   }
 
-  // Caso B: marcadas DENTRO do corpo deste bloco (ex.: antes de § etc.)
-  for (let i = Math.max(artIdx + 1, 0); i < lines.length; ) {
-    const li = (lines[i] || '').toString();
-    if (/^\s*(?:@@EPI@@|@@)\b/.test(li)) {
-      const local = li.replace(/^\s*(?:@@EPI@@|@@)\s*/, '').trim();
-      epigrafe = epigrafe ? (epigrafe + ' — ' + local) : local;
-      lines.splice(i, 1); // remove do corpo
-      continue; // não incrementa i, pois o array andou
+  // Caso B: epígrafes inline com @ → ficam no corpo, formatadas
+  for (let i = Math.max(artIdx + 1, 0); i < lines.length; i++) {
+    if (/^@[^@]/.test(lines[i].trim())) {
+      const local = lines[i].replace(/^@\s*/, '').trim();
+      // coloca em negrito, mas mantém regra dos parênteses
+      lines[i] = "**" + local.replace(/\((.*?)\)/g, "($1)") + "**";
     }
-    i++;
   }
 
   if (artIdx >= 0){
@@ -583,8 +577,7 @@ function splitBlockSupraTitleBody(raw){
 
     const mt = titleLine.match(/^\s*(Pre[âa]mbulo|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?)/i);
     let titleText = mt ? mt[1].trim() : titleLine.trim();
-    // normaliza "12-A" -> "12A"
-    titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2");
+    titleText = titleText.replace(/(\d+)-?([A-Z])/, "$1$2"); // normaliza 12-A → 12A
 
     const afterTitle = titleLine.slice(mt ? mt[1].length : 0).trimStart();
     const rest = lines.slice(artIdx+1).join('\n').trimStart();
@@ -621,9 +614,7 @@ function parseByDelimiters(txt){
   return arts;
 }
 
-// - Se a linha imediatamente anterior ao "Art." for @@/@@EPI@@, empurra-a para o bloco do Art.
 function parseByArt(txt){
-  // reconhece "Preâmbulo" (com/sem acento), "Art.", e cabeçalhos estruturais
   const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
 
   const starts = [];
@@ -647,19 +638,17 @@ function parseByArt(txt){
     let from = starts[i];
     const to = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
 
-    // Se a linha anterior for @@/@@EPI@@, inclua também
+    // Se a linha anterior for @@, inclui também
     if (from > 0) {
       const prevNL = txt.lastIndexOf('\n', from - 2);
       const prevLineStart = (prevNL === -1) ? 0 : prevNL + 1;
       const prevLineRaw = txt.slice(prevLineStart, from);
-      if (/^\s*(?:@@EPI@@|@@)\b/.test(prevLineRaw)) {
+      if (/^\s*@@/.test(prevLineRaw)) {
         from = prevLineStart;
       }
     }
 
-    // recorte do bloco (sem truncar por '.' / ')')
     let chunk = txt.slice(from, to).trimEnd();
-
     const split = splitBlockSupraTitleBody(chunk);
     const title = split.titleText || chunk.split('\n')[0].slice(0, 40);
 
@@ -677,26 +666,23 @@ function parseByArt(txt){
 function parseSumulas(txt){
   const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
   const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
-  const out = [];
-  parts.forEach((block, i)=>{
+  return parts.map((block, i)=>{
     const lines = block.split('\n').map(l=>l.trim());
     const header = (lines.shift() || 'Súmula').trim();
     const body = lines.join('\n').trim();
-    out.push({
+    return {
       title: header,
       text: header + (body ? '\n' + body : ''),
       htmlId: `sumula-${i}`,
       _split: { supra: [], titleText: header, body, epigrafe: "" }
-    });
+    };
   });
-  return out;
 }
 
 function parsePrincipios(txt){
   const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
   const parts = cleaned.split(/\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
-  const out = [];
-  parts.forEach((block, i)=>{
+  return parts.map((block, i)=>{
     const lines = block.split('\n').map(l=>l.trim());
     let header = (lines.shift() || 'Princípio').trim();
     const reHeader = /^\s*Princ[ií]pio\b/i;
@@ -705,14 +691,13 @@ function parsePrincipios(txt){
       else header = 'Princípio';
     }
     const body = lines.join('\n').trim();
-    out.push({
+    return {
       title: header,
       text: header + (body ? '\n' + body : ''),
       htmlId: `principio-${i}`,
       _split: { supra: [], titleText: header, body, epigrafe: "" }
-    });
+    };
   });
-  return out;
 }
 
 function parseByUrl(url, txt){
