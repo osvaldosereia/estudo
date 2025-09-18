@@ -13,6 +13,20 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <style>
+    html, body {
+  -webkit-text-size-adjust: none; /* Safari/Chrome iOS */
+  -moz-text-size-adjust: none;    /* Firefox */
+  -ms-text-size-adjust: none;     /* Edge antigo */
+  text-size-adjust: none;         /* Padrão */
+  font-size: 13px;                /* trava base */
+}
+
+article,
+article * {
+  font-size: 13px !important; /* força 13px em todos os cards */
+  line-height: 1.5;
+}
+
     :root{
       --bg:#ffffff;
       --fg:#101418;
