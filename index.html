@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-9" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
 
@@ -25,6 +25,7 @@
       --shadow:0 2px 10px rgba(0,0,0,.06);
 
       --line:#e9ecf3;
+      --line-strong:#d7dcea;
       --soft:#f6f7fb;
 
       --wrap-max: 920px;
@@ -152,9 +153,7 @@
     .section-empty{ color:#6c7282; font-size:13px; margin:6px 4px 12px; }
 
     /* ======== Bloco de cabeçalhos (PARTE/LIVRO/TÍTULO/...) ======== */
-    .law-heading{
-      padding:12px 4px 8px;
-    }
+    .law-heading{ padding:12px 4px 8px; }
     .law-heading pre{
       margin:0; white-space:pre-wrap; font:13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0e1638;
     }
@@ -162,30 +161,28 @@
     /* ======== Artigos ======== */
     article{
       white-space:pre-wrap;
-      padding:16px 4px 18px; overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
+      padding:14px 4px 16px;
+      overflow-wrap:anywhere; word-break:break-word; hyphens:auto; max-width:100%;
       position:relative; scroll-margin: calc(var(--topbar-h) + var(--filebar-h) + 20px);
       border-left:3px solid transparent; transition:border-color .15s;
     }
     article.in-view{ border-left-color: var(--blue); }
     article::after{
-      content:""; display:block; width:90%; height:1px; background:var(--line);
-      position:absolute; left:5%; bottom:0;
+      content:""; display:block; width:96%; height:2px; background:var(--line-strong);
+      position:absolute; left:2%; bottom:0;
     }
 
-    .supra{ color:#6c7282; font-weight:500; font-size:12px; margin:0 0 6px; }
+    /* Tudo nos cards do mesmo tamanho e sem negrito */
+    .supra{ color:#6c7282; font-weight:400; font-size:12px; margin:0 0 6px; }
     .supra div{ line-height:1.35 }
 
     .art-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px; }
-    .art-title{ display:block; font-weight:400; color:#0e1638; font-size:13px; margin:0 }
+    .art-title{ display:block; font-weight:400; color:#0e1638; font-size:12px; margin:0 }
     .art-actions{ display:flex; align-items:center; gap:10px }
 
     .art-epigrafe{
-      font-size:12px;
-      font-weight:400;
-      color:#0e1638;
-      margin: 0 0 6px 0;
+      font-size:12px; font-weight:400; color:#0e1638; margin: 0 0 6px 0;
     }
-    .art-epigrafe .paren{ font-weight:400; }
 
     .icon-btn{
       width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
@@ -196,8 +193,8 @@
     .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
     .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
 
-    .art-body { font-size:14px; line-height:1.5; }
-    .paren{ color: rgba(0,0,0,.4); font-size: 10px; }
+    .art-body { font-size:12px; line-height:1.42; }
+    .paren{ color: rgba(0,0,0,.6); font-size: 10px; }
 
     mark{ padding:0 2px; border-radius:2px; background:#cce4ff; color:inherit; }
 
@@ -249,10 +246,10 @@
     .study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .study-title{ margin:0; font-size:18px; }
     .study-close{ border:0; background:#f3f4f6; width:32px; height:32px; border-radius:8px; cursor:pointer; }
-    .study-sub{ margin:8px 0 10px; color:#4b5563; }
+    .study-sub{ margin:8px 0 10px; color:#4b5563; font-size:14px; } /* um pouco maior */
     .prompt-box{
       background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px; max-height:40vh; overflow:auto;
-      font:12px/1.45 ui-monospace, Menlo, Consolas, "SF Mono", monospace;
+      font:12px/1.28 ui-monospace, Menlo, Consolas, "SF Mono", monospace; /* entrelinhas menores */
     }
     .ia-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     .ia-btn{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; }
@@ -265,6 +262,13 @@
     }
     .btn:hover{ background:#f3f4f6; }
     .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
+    /* Botão copiar mais discreto que os das IAs */
+    .btn.soft{
+      background:#f3f4f6; border-color:#e5e7eb; color:#111;
+    }
+    .btn.soft:hover{
+      background:#edeff3;
+    }
 
     @media (max-width: 768px){
       .brand{ height:34px; }
@@ -387,7 +391,7 @@
         <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
       </div>
       <div class="copy-prompt">
-        <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
+        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
       </div>
     </div>
   </div>
@@ -549,89 +553,58 @@
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
-   /* =================== Parser NOVO (com detecção de cabeçalhos, sem negritos) =================== */
-function splitIntoBlocks(txt){
-  const cleaned = sanitizeForLayout(
-    txt.replace(/^\uFEFF/, '')
-       .replace(/\r\n/g, '\n')
-       .replace(/[ \t]+/g, ' ')
-  );
-  // divide pelos delimitadores "-----" em linha própria
-  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
-  return parts.filter(Boolean);
-}
-
-function parseBlockToItem(block, idx){
-  // Mantém linhas como vieram (não mexemos no texto dos cabeçalhos)
-  const lines = block.split(/\n/);
-
-  // Procura primeira linha de título de artigo/súmula
-  const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
-
-  // Se NÃO tem "Art" nem "Súmula" -> é um bloco de cabeçalhos/seções; não vira card
-  if (artIdx === -1){
-    return {
-      kind: 'heading',
-      raw: block,       // mostramos exatamente como veio
-      htmlId: `h-${idx}`
-    };
-  }
-
-  // Há artigo/súmula: tudo antes vira epígrafe (se existir)
-  const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-  const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
-
-  const epigrafe = pre.length ? pre.join('\n') : '';
-  const titleLine = after.shift() || '';
-  const bodyLines = after;
-
-  // garante linha em branco após §/Parágrafo/Inciso/Alínea no texto puro
-  const ensureBlank = (txt)=> txt.replace(
-    /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-    (_,a,b)=> `${a}\n\n${b}`
-  );
-  const bodyText = ensureBlank(bodyLines.join('\n'));
-
-  const textForStorage = [
-    epigrafe ? `Epígrafe: ${epigrafe}` : '',
-    titleLine,
-    bodyText
-  ].filter(Boolean).join('\n');
-
-  return {
-    kind: 'article',
-    title: titleLine || `Bloco ${idx+1}`,
-    text: textForStorage,
-    htmlId: `art-${idx}`, // reatribuiremos id sequencial de artigos depois
-    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
-  };
-}
-
-function renderWithStyles(titleLine, body, epigrafe){
-  // versão simples: não aplica negrito nem destaque
-  return [
-    epigrafe ? epigrafe : '',
-    titleLine,
-    body
-  ].filter(Boolean).join('\n');
-}
-
-function parseByUrl(url, txt){
-  const blocks = splitIntoBlocks(txt);
-  const items = blocks.map((b,i)=> parseBlockToItem(b,i));
-
-  // Reatribui ids sequenciais apenas para artigos e cria índice de artigos
-  let aidx = 0;
-  items.forEach(it=>{
-    if (it.kind === 'article'){
-      it.htmlId = `art-${aidx}`;
-      it._aidx = aidx;
-      aidx++;
+    /* =================== Parser (sem negritos) =================== */
+    function splitIntoBlocks(txt){
+      const cleaned = sanitizeForLayout(
+        txt.replace(/^\uFEFF/, '')
+           .replace(/\r\n/g, '\n')
+           .replace(/[ \t]+/g, ' ')
+      );
+      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
+      return parts.filter(Boolean);
     }
-  });
-  return items;
-}
 
+    function parseBlockToItem(block, idx){
+      const lines = block.split(/\n/);
+      const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
+      if (artIdx === -1){
+        return { kind:'heading', raw:block, htmlId:`h-${idx}` };
+      }
+
+      const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+      const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
+
+      const epigrafe = pre.length ? pre.join('\n') : '';
+      const titleLine = after.shift() || '';
+      const bodyLines = after;
+
+      const ensureBlank = (txt)=> txt.replace(
+        /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+        (_,a,b)=> `${a}\n${b}`      // apenas 1 linha, nada de duplo espaçamento
+      );
+      const bodyText = ensureBlank(bodyLines.join('\n'));
+
+      const textForStorage = [ epigrafe ? `Epígrafe: ${epigrafe}` : '', titleLine, bodyText ]
+        .filter(Boolean).join('\n');
+
+      return {
+        kind: 'article',
+        title: titleLine || `Bloco ${idx+1}`,
+        text: textForStorage,
+        htmlId: `art-${idx}`,
+        _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
+      };
+    }
+
+    function parseByUrl(url, txt){
+      const blocks = splitIntoBlocks(txt);
+      const items = blocks.map((b,i)=> parseBlockToItem(b,i));
+      let aidx = 0;
+      items.forEach(it=>{
+        if (it.kind === 'article'){ it.htmlId = `art-${aidx}`; it._aidx = aidx; aidx++; }
+      });
+      return items;
+    }
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
@@ -712,7 +685,7 @@ function parseByUrl(url, txt){
       el.className = 'law-heading';
       el.id = item.htmlId;
       const pre = document.createElement('pre');
-      pre.textContent = item.raw; // exatamente como veio
+      pre.textContent = item.raw;
       el.appendChild(pre);
       return el;
     }
@@ -746,8 +719,7 @@ function parseByUrl(url, txt){
       if (split.epigrafe){
         const epiTop = document.createElement('div');
         epiTop.className = 'art-epigrafe';
-        const esc = split.epigrafe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        epiTop.innerHTML = '<b>'+esc.replace(/\(([^()]{1,200})\)/g, '<span class="paren">($1)</span>')+'</b>';
+        epiTop.textContent = split.epigrafe;  // sem bold
         el.appendChild(epiTop);
       }
 
@@ -773,19 +745,17 @@ function parseByUrl(url, txt){
       head.append(titleSpan, actions);
       el.appendChild(head);
 
-      // Corpo
+      // Corpo (sem espaçamentos duplos, sem negritos)
       const content = document.createElement('div');
       content.className = 'art-body';
 
       let body = split.body || '';
-     body = body
-  .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
-  .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n$2")
-  .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2");
+      body = body
+        .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
+        .replace(/(^|\n)(\s*[IVXLCDM]+ ?[-–—]?)/g, "\n$2")
+        .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2");
 
-const html = body.replace(/\n/g, '<br>');
-
-
+      const html = body.replace(/\n/g, '<br>');
       content.innerHTML = html;
       el.appendChild(content);
 
@@ -855,11 +825,10 @@ const html = body.replace(/\n/g, '<br>');
       }
       const first = Math.min(8, items.length);
       const frag = document.createDocumentFragment();
-      let aCount = 0;
       for (let i=0;i<first;i++){
         const it = items[i];
         if (it.kind === 'heading'){ frag.appendChild(buildHeadingElement(it)); }
-        else { frag.appendChild(buildArticleElement(it)); aCount++; }
+        else { frag.appendChild(buildArticleElement(it)); }
       }
       els.articles.appendChild(frag);
       updateCurrentOutline();
@@ -908,7 +877,6 @@ const html = body.replace(/\n/g, '<br>');
         return;
       }
 
-      // Agrupa por arquivo e ordena grupos pela ordem do catálogo (ou alfabética fallback)
       const order = getAllOptions().map(o=>o.value);
       const byFile = new Map();
       favs.forEach(f=>{
@@ -917,7 +885,6 @@ const html = body.replace(/\n/g, '<br>');
         byFile.get(key).push(f);
       });
 
-      // ordena internos por ts desc
       for (const [k, arr] of byFile.entries()){
         byFile.set(k, sortByTsDesc(arr));
       }
@@ -965,7 +932,6 @@ const html = body.replace(/\n/g, '<br>');
       store.saveLast({ mode:'favorites', fileUrl:null, scrollY: 0, articleId: null });
       updateCurrentOutline();
 
-      // UI: ativar estrela, desativar tabs
       document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
       els.favTab.classList.add('active');
     }
@@ -1046,10 +1012,8 @@ const html = body.replace(/\n/g, '<br>');
 
         const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-        // Re-render completo (mantendo cabeçalhos)
         renderFileItemsAll(state.items);
 
-        // Destaca apenas os artigos com match
         requestAnimationFrame(()=>{
           matchedMeta.forEach(m => {
             const art = document.getElementById(m.htmlId);
@@ -1142,7 +1106,6 @@ const html = body.replace(/\n/g, '<br>');
       els.filebarInner.innerHTML = '';
       els.filebarInner.appendChild(frag);
 
-      // Ativa seleção baseada no last view
       const last = store.getLast();
       if (last?.mode === 'file' && last?.fileUrl){
         const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
@@ -1205,8 +1168,8 @@ const html = body.replace(/\n/g, '<br>');
       if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) location.href = url;
       else window.open(url, '_blank', 'noopener,noreferrer');
     }
-    function openStudyModal(title, prompt){
-      els.modalTitle.textContent = `Estude o ${title} com I.A.`;
+    function openStudyModal(_title, prompt){
+      els.modalTitle.textContent = 'Estude com I.A.'; // sem “Estude o … com I.A.”
       els.promptPreview.textContent = prompt;
       els.studyModal.setAttribute('aria-hidden','false');
     }
@@ -1326,7 +1289,6 @@ const html = body.replace(/\n/g, '<br>');
       };
 
       if (btn.dataset.action === 'study'){
-        // ⛔ Não envia para favoritos. Apenas marca estudado e abre modal.
         await withBusy(btn, async ()=>{
           const useArticle = state.mode === 'file' ? a : {
             text: entry.text,
