@@ -292,16 +292,21 @@ article, article * {
     .index-panel div{ padding: 6px 6px; cursor: pointer; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .index-panel div:hover{ background:#f3f4f6; }
 
-    @media (max-width: 768px){
-      .brand{ height:34px; }
-      .filebar-inner{ gap:12px; }
-      .tab{ font-size:16px; }
-      .index-toggle{ right: 8px; }
-      .index-panel{ right: 8px; max-height: 46vh; }
-      article{ grid-template-columns: 1fr; }
-      .art-actions{ flex-direction:row; align-items:center; justify-content:center; gap:12px; margin-top:8px; padding-left:0; }
-      .icon-btn{ width:36px; height:36px; }
-    }
+   @media (max-width: 768px){
+  .brand{ height:34px; }
+  .filebar-inner{ gap:12px; }
+  .tab{ font-size:16px; }
+  .index-toggle{ right: 8px; }
+  .index-panel{ 
+    right: 8px; 
+    max-height: 46vh; 
+    font-size: 12px;  /* 🔹 diminui a fonte do índice só no mobile */
+  }
+  article{ grid-template-columns: 1fr; }
+  .art-actions{ flex-direction:row; align-items:center; justify-content:center; gap:12px; margin-top:8px; padding-left:0; }
+  .icon-btn{ width:36px; height:36px; }
+}
+
   </style>
 </head>
 <body>
