@@ -557,7 +557,7 @@ function splitBlockSupraTitleBody(raw){
     while (look >= 0 && !lines[look].trim()) look--;
     if (look >= 0 && /^@@/.test(lines[look])) {
       epigrafe = lines[look].replace(/^@@\s*/, '').trim();
-      lines.splice(look, 1);
+      lines.splice(look, 1);   // 🔴 remove a linha de @@
       artIdx--;
     }
   }
@@ -566,7 +566,7 @@ function splitBlockSupraTitleBody(raw){
   for (let i = Math.max(artIdx + 1, 0); i < lines.length; i++) {
     if (/^@[^@]/.test(lines[i].trim())) {
       const local = lines[i].replace(/^@\s*/, '').trim();
-      // coloca em negrito, mas mantém regra dos parênteses
+      // coloca em negrito, mantendo conteúdo dos parênteses
       lines[i] = "**" + local.replace(/\((.*?)\)/g, "($1)") + "**";
     }
   }
@@ -707,6 +707,7 @@ function parseByUrl(url, txt){
        : isPrincipios ? parsePrincipios(txt)
        : (parseByDelimiters(txt).length ? parseByDelimiters(txt) : parseByArt(txt));
 }
+
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
