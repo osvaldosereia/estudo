@@ -178,7 +178,13 @@
 
     .art-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 6px; }
     .art-title{ display:block; font-weight:400; color:#0e1638; font-size:13px; margin:0 }
-    .art-actions{ display:flex; align-items:center; gap:10px }
+    .art-actions {
+  display: flex;
+  flex-direction: column;   /* 👈 coloca em coluna */
+  align-items: flex-start;  /* 👈 alinha à esquerda */
+  gap: 6px;                 /* 👈 espaço vertical entre ícones */
+}
+
 
     .art-epigrafe{
       font-size:13px; font-weight:400; color:#0e1638; margin: 0 0 6px 0;
