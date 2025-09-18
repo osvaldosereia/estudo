@@ -523,15 +523,17 @@
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
 
-    function norm(s){
-      return (s||'')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g,'')
-        .replace(/ç/g,'c')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g,' ')
-        .trim();
-    }
+   function norm(s){
+  return (s||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')   // remove acentos
+    .replace(/ç/g,'c')
+    .replace(/(\d)[.,](?=\d)/g, '$1') // 🔑 remove pontos e vírgulas entre dígitos (1.200 → 1200)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim();
+}
+
 
     function buildCatalogMaps(){
       const sel = els.codeSelect;
