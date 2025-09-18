@@ -152,7 +152,7 @@
     }
     .section-empty{ color:#6c7282; font-size:13px; margin:6px 4px 12px; }
 
-    /* ======== Bloco de cabeçalhos (PARTE/LIVRO/TÍTULO/...) ======== */
+    /* ======== Bloco de cabeçalhos ======== */
     .law-heading{ padding:12px 4px 8px; }
     .law-heading pre{
       margin:0; white-space:pre-wrap; font:13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0e1638;
@@ -172,128 +172,39 @@
       position:absolute; left:2%; bottom:0;
     }
 
-/* ===== Ajustes gerais dos cards ===== */
-.card {
-  position: relative;       /* necessário pros ícones absolutos */
-  padding: 10px 42px 10px 10px; /* 🔹 reserva espaço à direita (42px) pros ícones */
-  border-bottom: 1px solid #e0e0e0;
-}
+    /* ===== Cards/Artigo (texto) ===== */
+    .art-head{ margin: 0 0 6px; }
+    .art-title{
+      display:block; font-weight:400; color:#0e1638; font-size:14px; margin:0;
+    }
+    .art-body{ font-size:14px; line-height:1.42; }
+    .paren{ color: rgba(0,0,0,.6); font-size:11px; }
+    .art-epigrafe{ font-size:14px; font-weight:400; color:#0e1638; margin:0 0 6px 0; }
 
-/* Cabeçalho do artigo */
-.art-head {
-  margin: 0 0 6px;
-}
+    /* ===== Botões flutuantes ===== */
+    .float-actions{
+      position: fixed;
+      top: calc(var(--topbar-h) + var(--filebar-h) + 52px);
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 149;
+    }
+    .float-btn{
+      width: 36px; height: 36px; border-radius: 8px; background:#fff; border:1px solid #ddd;
+      display:grid; place-items:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15);
+    }
+    .float-btn img{ width:20px; height:20px; opacity:.6; }
+    .float-btn.active img{ opacity:1; }
 
-.art-title {
-  display: block;
-  font-weight: 400;
-  color: #0e1638;
-  font-size: 14px; /* 🔹 tamanho fixo, igual em todos os cards */
-  margin: 0;
-}
+    .icon-btn{ width:22px; height:22px; display:grid; place-items:center; cursor:pointer; border:0; background:transparent; padding:0; color:var(--icon-muted); }
+    .icon-btn img{ width:16px; height:16px; display:block; opacity:.6; }
+    .icon-btn.active img{ opacity:1; }
+    .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
+    .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
 
-.art-body {
-  font-size: 14px;
-  line-height: 1.42;
-}
-
-/* Texto extra (parênteses em notas) */
-.paren {
-  color: rgba(0, 0, 0, .6);
-  font-size: 11px;
-}
-
-/* Epígrafe */
-.art-epigrafe {
-  font-size: 14px;
-  font-weight: 400;
-  color: #0e1638;
-  margin: 0 0 6px 0;
-}
-
-/* ===== Ícones ===== */
-.float-actions {
-  position: fixed;
-  top: calc(var(--topbar-h) + var(--filebar-h) + 52px); /* logo abaixo do hambúrguer */
-  right: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 149;
-}
-.float-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #ddd;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,.15);
-}
-.float-btn img {
-  width: 20px;
-  height: 20px;
-  opacity: .6;
-}
-.float-btn.active img {
-  opacity: 1;
-}
-
-
-.icon-btn {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  position: relative;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--icon-muted);
-}
-
-.icon-btn img {
-  width: 16px;
-  height: 16px;
-  display: block;
-  opacity: .6;
-}
-
-.icon-btn.active img {
-  opacity: 1;
-}
-
-.icon-btn.active[data-action="fav"] {
-  color: var(--icon-fav);
-}
-.icon-btn.active[data-action="study"] {
-  color: var(--icon-study);
-}
-
-/* ===== Responsividade ===== */
-@media (max-width: 768px) {
-  .card {
-    padding: 10px 38px 10px 10px; /* 🔹 um pouco menos de espaço no mobile */
-  }
-  .art-title, .art-body {
-    font-size: 13px; /* 🔹 levemente menor no mobile */
-  }
-  .icon-btn {
-    width: 20px;
-    height: 20px;
-  }
-  .icon-btn img {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-
-
-    /* ======== MINI-FINDER ======== */
+    /* ===== MINI-FINDER ===== */
     .finder-pop{
       position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
       background:#000; color:#fff; border:1px solid rgba(255,255,255,.08);
@@ -334,17 +245,14 @@
       display:none; align-items:center; justify-content:center; z-index:300;
     }
     .modal-backdrop[aria-hidden="false"]{ display:flex; }
-    .modal{
-      width:min(720px, 92vw); background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25);
-      padding:16px;
-    }
+    .modal{ width:min(720px, 92vw); background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25); padding:16px; }
     .study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .study-title{ margin:0; font-size:18px; }
     .study-close{ border:0; background:#f3f4f6; width:32px; height:32px; border-radius:8px; cursor:pointer; }
-    .study-sub{ margin:8px 0 10px; color:#4b5563; font-size:14px; } /* um pouco maior */
+    .study-sub{ margin:8px 0 10px; color:#4b5563; font-size:14px; }
     .prompt-box{
       background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px; max-height:40vh; overflow:auto;
-      font:12px/1.28 ui-monospace, Menlo, Consolas, "SF Mono", monospace; /* entrelinhas menores */
+      font:12px/1.28 ui-monospace, Menlo, Consolas, "SF Mono", monospace;
     }
     .ia-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     .ia-btn{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:8px 10px; cursor:pointer; }
@@ -357,58 +265,30 @@
     }
     .btn:hover{ background:#f3f4f6; }
     .btn.primary{ background:var(--blue); border-color:var(--blue); color:#fff; }
-    /* Botão copiar mais discreto que os das IAs */
-    .btn.soft{
-      background:#f3f4f6; border-color:#e5e7eb; color:#111;
-    }
-    .btn.soft:hover{
-      background:#edeff3;
-    }
+    .btn.soft{ background:#f3f4f6; border-color:#e5e7eb; color:#111; }
+    .btn.soft:hover{ background:#edeff3; }
 
-    /* ======== ÍNDICE FLUTUANTE (hambúrguer) ======== */
+    /* ======== ÍNDICE FLUTUANTE ======== */
     .index-toggle{
       position: fixed;
       top: calc(var(--topbar-h) + var(--filebar-h) + 8px);
       right: 12px;
       z-index: 150;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: #fff;
-      border: 1px solid #ddd;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,.15);
-      font-size: 20px;
-      font-weight: bold;
-      line-height: 1;
+      width: 36px; height: 36px; border-radius: 8px; background: #fff; border: 1px solid #ddd;
+      display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      font-size: 20px; font-weight: bold; line-height: 1;
     }
     .index-panel{
       position: fixed;
       top: calc(var(--topbar-h) + var(--filebar-h) + 48px);
       right: 12px;
       z-index: 149;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15);
-      padding: 6px 8px;
-      font-size: 12px;
-      line-height: 1.4;
-      max-height: 50vh;
-      overflow-y: auto;
-      display: none;
-      min-width: 240px;
+      background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      padding: 6px 8px; font-size: 12px; line-height: 1.4; max-height: 50vh; overflow-y: auto; display: none; min-width: 240px;
     }
     .index-panel.show{ display:block; }
     .index-panel div{
-      padding: 4px 6px;
-      cursor: pointer;
-      color: #333;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 4px 6px; cursor: pointer; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .index-panel div:hover{ background:#f3f4f6; }
 
@@ -418,6 +298,7 @@
       .tab{ font-size:14px; }
       .index-toggle{ right: 8px; }
       .index-panel{ right: 8px; max-height: 46vh; }
+      .art-title, .art-body { font-size:13px; }
     }
   </style>
 </head>
@@ -474,6 +355,16 @@
       <div class="articles" id="articles"></div>
     </div>
   </main>
+
+  <!-- BOTÕES FLUTUANTES (fora de funções JS) -->
+  <div class="float-actions">
+    <button class="float-btn" id="floatFav" title="Favoritar" aria-label="Favoritar">
+      <img src="icons/favorito.svg" alt="Favoritar">
+    </button>
+    <button class="float-btn" id="floatStudy" title="Estudar com I.A." aria-label="Estudar">
+      <img src="icons/estudar.svg" alt="Estudar com I.A.">
+    </button>
+  </div>
 
   <!-- CATÁLOGO OCULTO -->
   <select id="codeSelect" title="Arquivos" style="display:none">
@@ -539,1135 +430,1261 @@
       </div>
     </div>
   </div>
-/* =================== BOTÕES FLUTUANTES =================== */
-const floatFav = document.getElementById('floatFav');
-const floatStudy = document.getElementById('floatStudy');
+<script>
+/* =================== PWA =================== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((reg) => console.log("✅ SW", reg.scope))
+      .catch((err) => console.error("❌ SW", err));
+  });
+}
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+});
 
+/* =================== Refs (DOM) =================== */
+const els = {
+  brandBtn: document.getElementById("brandBtn"),
+  favTab: document.getElementById("favTab"),
+
+  searchInput: document.getElementById("searchInput"),
+  searchSpinner: document.getElementById("searchSpinner"),
+  clearSearch: document.getElementById("clearSearch"),
+  sendSearch: document.getElementById("sendSearch"),
+
+  filebarInner: document.getElementById("filebarInner"),
+  moreMenu: document.getElementById("moreMenu"),
+
+  finderPop: document.getElementById("finderPop"),
+  prevBtn: document.getElementById("prevBtn"),
+  nextBtn: document.getElementById("nextBtn"),
+  closeFinder: document.getElementById("closeFinder"),
+  count: document.getElementById("count"),
+
+  articles: document.getElementById("articles"),
+
+  codeSelect: document.getElementById("codeSelect"),
+
+  studyModal: document.getElementById("studyModal"),
+  closeStudy: document.getElementById("closeStudy"),
+  modalTitle: document.getElementById("modalTitle"),
+  studySub: document.getElementById("studySub"),
+  promptPreview: document.getElementById("promptPreview"),
+  copyPromptBtn: document.getElementById("copyPromptBtn"),
+
+  toast: document.getElementById("toast"),
+
+  // Botões flutuantes na lateral:
+  floatFav: document.getElementById("floatFav"),
+  floatStudy: document.getElementById("floatStudy"),
+};
+// extras do índice
+els.indexToggle = null;
+els.indexPanel = null;
+
+/* =================== Estado + Storage =================== */
+const state = {
+  mode: "favorites", // favorites | file
+  currentFileUrl: null,
+  currentFileLabel: "",
+  rawText: "",
+  items: [], // headings + articles (na ordem do arquivo)
+  articles: [], // apenas artigos
+  currentArticleIdx: -1,
+
+  currentTokens: [],
+  matchArticles: [],
+  matchIdx: -1,
+
+  cache: new Map(),
+  urlToLabel: new Map(),
+};
+
+const store = {
+  get(k, def) {
+    try {
+      return JSON.parse(localStorage.getItem(k)) ?? def;
+    } catch {
+      return def;
+    }
+  },
+  set(k, v) {
+    localStorage.setItem(k, JSON.stringify(v));
+  },
+
+  keyFav: "dl_favorites",
+  keyStud: "dl_studied",
+  keyLast: "dl_last_view",
+
+  makeId: (fileUrl, htmlId) => `${fileUrl}::${htmlId}`,
+
+  listFavorites() {
+    return store.get(store.keyFav, []);
+  },
+  isFavorite(id) {
+    return store.listFavorites().some((e) => e.id === id);
+  },
+  addFavorite(entry) {
+    if (!entry || !entry.id || !entry.text) return;
+    const list = store.listFavorites().filter((e) => e.id !== entry.id);
+    list.unshift({ ...entry, ts: Date.now() });
+    store.set(store.keyFav, list);
+  },
+  removeFavorite(id) {
+    const list = store.listFavorites().filter((e) => e.id !== id);
+    store.set(store.keyFav, list);
+  },
+
+  listStudied() {
+    return store.get(store.keyStud, []);
+  },
+  markStudied(entry) {
+    if (!entry || !entry.id || !entry.text) return;
+    let list = store.listStudied().filter((e) => e.id !== entry.id);
+    list.unshift({ ...entry, ts: Date.now() });
+    if (list.length > 50) list = list.slice(0, 50);
+    store.set(store.keyStud, list);
+  },
+  isStudied(id) {
+    return store.listStudied().some((e) => e.id === id);
+  },
+
+  saveLast(partial) {
+    const prev = store.get(store.keyLast, {});
+    store.set(store.keyLast, { ...prev, ...partial });
+  },
+  getLast() {
+    return store.get(store.keyLast, null);
+  },
+  clearLast() {
+    localStorage.removeItem(store.keyLast);
+  },
+};
+
+/* =================== Utils =================== */
+function notify(msg = "Ok!") {
+  els.toast.textContent = msg;
+  els.toast.classList.add("show");
+  setTimeout(() => els.toast.classList.remove("show"), 1200);
+}
+async function withBusy(btn, fn) {
+  if (btn && btn.classList.contains("busy")) return;
+  if (btn) btn.classList.add("busy");
+  try {
+    const min = 220;
+    const t0 = performance.now();
+    const res = await fn();
+    const dt = performance.now() - t0;
+    if (dt < min) await new Promise((r) => setTimeout(r, min - dt));
+    return res;
+  } finally {
+    if (btn) btn.classList.remove("busy");
+  }
+}
+
+const sanitizeForLayout = (s) =>
+  s.replace(/\u00A0/g, " ").replace(/\t/g, " ").replace(/\s+\n/g, "\n");
+
+function norm(s) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/ç/g, "c")
+    .replace(/(\d)[.,](?=\d)/g, "$1") // 1.200 → 1200
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function buildCatalogMaps() {
+  const sel = els.codeSelect;
+  state.urlToLabel.clear();
+  sel.querySelectorAll("option").forEach((opt) => {
+    const url = opt.value?.trim();
+    const label = opt.textContent?.trim();
+    if (url) state.urlToLabel.set(url, label);
+  });
+}
+function getAllOptions() {
+  const out = [];
+  els.codeSelect.querySelectorAll("option").forEach((opt) => {
+    const url = opt.value?.trim();
+    const label = opt.textContent?.trim();
+    if (url) out.push({ label, value: url });
+  });
+  return out;
+}
+function sortByTsDesc(arr) {
+  return [...arr].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+}
+
+/* =================== Parser (sem negritos) =================== */
+function splitIntoBlocks(txt) {
+  const cleaned = sanitizeForLayout(
+    txt.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ")
+  );
+  const parts = cleaned
+    .split(/^\s*-{5,}\s*$/m)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts;
+}
+
+function parseBlockToItem(block, idx) {
+  const lines = block.split(/\n/);
+  const artIdx = lines.findIndex((l) => /^(Art|S[úu]mula)/i.test(l.trim()));
+  if (artIdx === -1) {
+    return { kind: "heading", raw: block, htmlId: `h-${idx}` };
+  }
+
+  const pre = lines
+    .slice(0, artIdx)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const after = lines
+    .slice(artIdx)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const epigrafe = pre.length ? pre.join("\n") : "";
+  const titleLine = after.shift() || "";
+  const bodyLines = after;
+
+  const ensureBlank = (txt) =>
+    txt.replace(
+      /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+      (_, a, b) => `${a}\n${b}`
+    );
+  const bodyText = ensureBlank(bodyLines.join("\n"));
+
+  const textForStorage = [epigrafe ? `Epígrafe: ${epigrafe}` : "", titleLine, bodyText]
+    .filter(Boolean)
+    .join("\n");
+
+  return {
+    kind: "article",
+    title: titleLine || `Bloco ${idx + 1}`,
+    text: textForStorage,
+    htmlId: `art-${idx}`,
+    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe },
+  };
+}
+
+function parseByUrl(url, txt) {
+  const blocks = splitIntoBlocks(txt);
+  const items = blocks.map((b, i) => parseBlockToItem(b, i));
+  let aidx = 0;
+  items.forEach((it) => {
+    if (it.kind === "article") {
+      it.htmlId = `art-${aidx}`;
+      it._aidx = aidx;
+      aidx++;
+    }
+  });
+  return items;
+}
+
+/* =================== Render helpers =================== */
+function wrapParensIn(root) {
+  const re = /\(([^()]{1,200})\)/g;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  let n;
+  while ((n = walker.nextNode())) nodes.push(n);
+  nodes.forEach((node) => {
+    const text = node.nodeValue;
+    if (!re.test(text)) {
+      re.lastIndex = 0;
+      return;
+    }
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let last = 0,
+      m;
+    while ((m = re.exec(text))) {
+      const before = text.slice(last, m.index);
+      if (before) frag.appendChild(document.createTextNode(before));
+      const span = document.createElement("span");
+      span.className = "paren";
+      span.textContent = "(" + m[1] + ")";
+      frag.appendChild(span);
+      last = re.lastIndex;
+    }
+    const after = text.slice(last);
+    if (after) frag.appendChild(document.createTextNode(after));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+function highlightTextNodes(root, tokens) {
+  if (!tokens || !tokens.length) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  let n;
+  while ((n = walker.nextNode())) nodes.push(n);
+
+  nodes.forEach((node) => {
+    const txt = node.nodeValue;
+    if (!txt.trim()) return;
+
+    const frag = document.createDocumentFragment();
+    const re = /[\p{L}\p{N}]+/gu;
+    let idx = 0,
+      m;
+    while ((m = re.exec(txt))) {
+      const before = txt.slice(idx, m.index);
+      if (before) frag.appendChild(document.createTextNode(before));
+
+      const word = m[0];
+      const hit = tokens.some((t) => norm(word).includes(t));
+      if (hit) {
+        const mk = document.createElement("mark");
+        mk.textContent = word;
+        frag.appendChild(mk);
+      } else {
+        frag.appendChild(document.createTextNode(word));
+      }
+      idx = re.lastIndex;
+    }
+    const tail = txt.slice(idx);
+    if (tail) frag.appendChild(document.createTextNode(tail));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+function buildHeadingElement(item) {
+  const el = document.createElement("div");
+  el.className = "law-heading";
+  el.id = item.htmlId;
+  const pre = document.createElement("pre");
+  pre.textContent = item.raw;
+  el.appendChild(pre);
+  return el;
+}
+
+function buildArticleElement(a) {
+  const el = document.createElement("article");
+  el.dataset.idx = a._aidx;
+  el.id = a.htmlId || `art-${a._aidx}`;
+  el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || "";
+  el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || "";
+
+  const split = a._split;
+
+  const supraWrap = document.createElement("div");
+  supraWrap.className = "supra";
+
+  if (a._fileLabel || a._fileUrl) {
+    const badge = document.createElement("div");
+    badge.textContent =
+      a._fileLabel || state.urlToLabel.get(a._fileUrl) || "Arquivo";
+    supraWrap.appendChild(badge);
+  }
+  if (split.supra && split.supra.length) {
+    split.supra.forEach((line) => {
+      const d = document.createElement("div");
+      d.textContent = line;
+      supraWrap.appendChild(d);
+    });
+  }
+  if (supraWrap.childNodes.length) el.appendChild(supraWrap);
+
+  if (split.epigrafe) {
+    const epiTop = document.createElement("div");
+    epiTop.className = "art-epigrafe";
+    epiTop.textContent = split.epigrafe; // sem bold
+    el.appendChild(epiTop);
+  }
+
+  const head = document.createElement("div");
+  head.className = "art-head";
+
+  const titleSpan = document.createElement("span");
+  titleSpan.className = "art-title";
+  titleSpan.textContent = split.titleText || a.title || "Artigo";
+  head.appendChild(titleSpan);
+  el.appendChild(head);
+
+  // Corpo (sem espaçamentos duplos, sem negritos)
+  const content = document.createElement("div");
+  content.className = "art-body";
+
+  let body = split.body || "";
+  body = body
+    .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
+    .replace(/(^|\n)(\s*[IVXLCDM]+ ?[-–—]?)/g, "\n$2")
+    .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2");
+
+  const html = body.replace(/\n/g, "<br>");
+  content.innerHTML = html;
+  el.appendChild(content);
+
+  wrapParensIn(el);
+  return el;
+}
+
+function clearArticles() {
+  els.articles.innerHTML = "";
+  state.currentArticleIdx = -1;
+}
+
+/* ——— Atualiza o “artigo em evidência” e sincroniza botões flutuantes ——— */
+function updateFloatButtonsFor(elArticle) {
+  if (!els.floatFav || !els.floatStudy || !elArticle) return;
+  const id = store.makeId(elArticle.dataset.fileUrl, elArticle.id);
+  els.floatFav.classList.toggle("active", store.isFavorite(id));
+  els.floatStudy.classList.toggle("active", store.isStudied(id));
+}
+
+function updateCurrentOutline() {
+  const nodes = Array.from(document.querySelectorAll("article[data-idx]"));
+  if (!nodes.length) return;
+
+  const topGap = 48;
+  const scTop = window.scrollY || document.documentElement.scrollTop || 0;
+  const scBottom = scTop + window.innerHeight;
+  const docH = Math.max(
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight
+  );
+
+  let targetIdx = -1;
+
+  if (scTop <= topGap) {
+    targetIdx = 0;
+  } else if (scBottom >= docH - topGap) {
+    targetIdx = nodes.length - 1;
+  } else {
+    const cy = window.innerHeight / 2;
+    let best = Infinity,
+      bestIdx = 0;
+    nodes.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      const mid = r.top + r.height / 2;
+      const d = Math.abs(mid - cy);
+      if (d < best) {
+        best = d;
+        bestIdx = i;
+      }
+    });
+    targetIdx = bestIdx;
+  }
+
+  if (targetIdx === -1) return;
+  if (state.currentArticleIdx === targetIdx) return;
+
+  nodes.forEach((n) => n.classList.remove("in-view"));
+  nodes[targetIdx].classList.add("in-view");
+  state.currentArticleIdx = targetIdx;
+
+  const art = nodes[targetIdx];
+  updateFloatButtonsFor(art);
+
+  store.saveLast({
+    mode: state.mode,
+    fileUrl: state.currentFileUrl,
+    articleId: art?.id || null,
+    scrollY: window.scrollY || 0,
+  });
+}
+
+/* =================== ÍNDICE: botão e painel =================== */
+function removeIndexUI() {
+  if (els.indexToggle) {
+    els.indexToggle.remove();
+    els.indexToggle = null;
+  }
+  if (els.indexPanel) {
+    els.indexPanel.remove();
+    els.indexPanel = null;
+  }
+}
+
+function buildIndexButton() {
+  removeIndexUI();
+  if (state.mode !== "file") return;
+
+  // Botão hambúrguer
+  const btn = document.createElement("button");
+  btn.className = "index-toggle";
+  btn.type = "button";
+  btn.setAttribute("aria-label", "Abrir índice do documento");
+  btn.textContent = "≡";
+  document.body.appendChild(btn);
+  els.indexToggle = btn;
+
+  // Painel
+  const panel = document.createElement("div");
+  panel.className = "index-panel";
+  panel.setAttribute("role", "menu");
+  panel.setAttribute("aria-hidden", "true");
+  document.body.appendChild(panel);
+  els.indexPanel = panel;
+
+  btn.addEventListener("click", () => {
+    const show = !panel.classList.contains("show");
+    panel.classList.toggle("show", show);
+    panel.setAttribute("aria-hidden", show ? "false" : "true");
+  });
+
+  // Fecha no ESC e clique fora
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && els.indexPanel && els.indexPanel.classList.contains("show")) {
+      els.indexPanel.classList.remove("show");
+      els.indexPanel.setAttribute("aria-hidden", "true");
+    }
+  });
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!els.indexPanel) return;
+      if (els.indexPanel.classList.contains("show")) {
+        const onToggle = e.target === els.indexToggle;
+        const insidePanel = e.target.closest && e.target.closest(".index-panel");
+        if (!onToggle && !insidePanel) {
+          els.indexPanel.classList.remove("show");
+          els.indexPanel.setAttribute("aria-hidden", "true");
+        }
+      }
+    },
+    { capture: true }
+  );
+}
+
+function renderIndex() {
+  if (!els.indexPanel) return;
+  els.indexPanel.innerHTML = "";
+
+  const headings = state.items.filter((it) => it.kind === "heading");
+  if (!headings.length) {
+    const empty = document.createElement("div");
+    empty.textContent = "Sem índice para este documento.";
+    els.indexPanel.appendChild(empty);
+    return;
+  }
+
+  headings.forEach((it) => {
+    const d = document.createElement("div");
+    d.textContent = it.raw.replace(/\s+/g, " ").trim();
+    d.title = it.raw.replace(/\s+/g, " ").trim();
+    d.addEventListener("click", () => {
+      const target = document.getElementById(it.htmlId);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      els.indexPanel.classList.remove("show");
+      els.indexPanel.setAttribute("aria-hidden", "true");
+    });
+    els.indexPanel.appendChild(d);
+  });
+}
+
+/* =================== RENDER FILE (itens na ordem) =================== */
+function renderFileItemsProgressive(items, { chunkSize = 30 } = {}) {
+  clearArticles();
+  if (!items.length) {
+    els.articles.innerHTML =
+      '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
+    removeIndexUI();
+    return;
+  }
+  const first = Math.min(8, items.length);
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < first; i++) {
+    const it = items[i];
+    if (it.kind === "heading") frag.appendChild(buildHeadingElement(it));
+    else frag.appendChild(buildArticleElement(it));
+  }
+  els.articles.appendChild(frag);
+  updateCurrentOutline();
+
+  // Índice
+  buildIndexButton();
+  renderIndex();
+
+  let i = first;
+  function appendChunk() {
+    const fr = document.createDocumentFragment();
+    let added = 0;
+    while (i < items.length && added < chunkSize) {
+      const it = items[i];
+      if (it.kind === "heading") fr.appendChild(buildHeadingElement(it));
+      else fr.appendChild(buildArticleElement(it));
+      i++;
+      added++;
+    }
+    els.articles.appendChild(fr);
+    updateCurrentOutline();
+    if (i < items.length) {
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(appendChunk);
+      } else {
+        setTimeout(appendChunk, 0);
+      }
+    }
+  }
+  if (first < items.length) {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(appendChunk);
+    } else {
+      setTimeout(appendChunk, 0);
+    }
+  }
+}
+
+function renderFileItemsAll(items) {
+  clearArticles();
+  const frag = document.createDocumentFragment();
+  items.forEach((it) => {
+    if (it.kind === "heading") frag.appendChild(buildHeadingElement(it));
+    else frag.appendChild(buildArticleElement(it));
+  });
+  els.articles.appendChild(frag);
+  updateCurrentOutline();
+
+  // manter índice
+  buildIndexButton();
+  renderIndex();
+}
+
+/* =================== FAVORITOS =================== */
+function renderFavorites() {
+  clearArticles();
+
+  const favs = store.listFavorites();
+  if (!favs.length) {
+    els.articles.innerHTML =
+      '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+    removeIndexUI();
+    return;
+  }
+
+  const order = getAllOptions().map((o) => o.value);
+  const byFile = new Map();
+  favs.forEach((f) => {
+    const key = f.fileLabel || f.fileUrl || "Arquivo";
+    if (!byFile.has(key)) byFile.set(key, []);
+    byFile.get(key).push(f);
+  });
+
+  for (const [k, arr] of byFile.entries()) {
+    byFile.set(k, sortByTsDesc(arr));
+  }
+
+  const groups = Array.from(byFile.entries()).sort((a, b) => {
+    const aUrl = (favs.find((x) => x.fileLabel === a[0]) || {}).fileUrl;
+    const bUrl = (favs.find((x) => x.fileLabel === b[0]) || {}).fileUrl;
+    const ai = aUrl ? order.indexOf(aUrl) : Infinity;
+    const bi = bUrl ? order.indexOf(bUrl) : Infinity;
+    if (ai !== bi) return ai - bi;
+    return a[0].localeCompare(b[0]);
+  });
+
+  const frag = document.createDocumentFragment();
+  let idx = 0;
+
+  groups.forEach(([label, list]) => {
+    const h = document.createElement("div");
+    h.className = "section-title";
+    h.textContent = label;
+    frag.appendChild(h);
+
+    list.forEach((entry) => {
+      const parsed = (() => {
+        const p = splitIntoBlocks(entry.text);
+        if (!p.length) return null;
+        const item = parseBlockToItem(p[0], 0);
+        if (!item || item.kind !== "article") return null;
+        item._fileUrl = entry.fileUrl;
+        item._fileLabel = entry.fileLabel;
+        item._aidx = idx++;
+        item.htmlId = item.htmlId || `fav-${idx}`;
+        return item;
+      })();
+
+      if (parsed) {
+        frag.appendChild(buildArticleElement(parsed));
+      }
+    });
+  });
+
+  els.articles.appendChild(frag);
+  window.scrollTo({ top: 0, behavior: "instant" });
+  state.mode = "favorites";
+  store.saveLast({ mode: "favorites", fileUrl: null, scrollY: 0, articleId: null });
+  updateCurrentOutline();
+
+  // UI: ativar estrela, desativar tabs + remover índice
+  document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+  els.favTab.classList.add("active");
+  removeIndexUI();
+}
+
+/* =================== Loader =================== */
+async function fetchTextCached(url) {
+  if (state.cache.has(url)) return state.cache.get(url);
+  const res = await fetch(url, { cache: "no-cache" });
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+  const txt = sanitizeForLayout(await res.text());
+  state.cache.set(url, txt);
+  return txt;
+}
+
+function addNormalizedFieldToArticles(items) {
+  const arts = items.filter((it) => it.kind === "article");
+  arts.forEach((a) => {
+    const s = a._split;
+    const combo = [s.titleText || "", s.epigrafe || "", ...(s.supra || []), s.body || ""].join(" ");
+    a._norm = norm(combo);
+  });
+  return arts;
+}
+
+async function loadFile(url, tabBtn) {
+  if (!url) return;
+  await withBusy(tabBtn, async () => {
+    els.searchSpinner.classList.add("show");
+    try {
+      const txt = await fetchTextCached(url);
+      state.rawText = txt;
+      const items = parseByUrl(url, txt);
+      state.currentFileUrl = url;
+      state.currentFileLabel = state.urlToLabel.get(url) || "Documento";
+      state.items = items;
+      state.articles = addNormalizedFieldToArticles(items);
+      state.mode = "file";
+
+      renderFileItemsProgressive(items);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      notify(`Carregado: ${state.currentFileLabel}`);
+
+      store.saveLast({ mode: "file", fileUrl: url, scrollY: 0, articleId: null });
+
+      els.favTab.classList.remove("active");
+    } catch (err) {
+      console.error(err);
+      els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${
+        (err && err.message) || "Erro desconhecido"
+      }</code></div>`;
+      notify("Erro ao carregar arquivo");
+      removeIndexUI();
+    } finally {
+      els.searchSpinner.classList.remove("show");
+    }
+  });
+}
+
+/* =================== Busca =================== */
+async function runLocalSearch() {
+  if (state.mode !== "file") {
+    notify("Abra um arquivo para buscar.");
+    return;
+  }
+
+  const q = els.searchInput.value.trim();
+  els.finderPop.classList.add("show");
+
+  if (!q) {
+    renderFileItemsProgressive(state.items);
+    state.matchArticles = [];
+    state.matchIdx = -1;
+    els.count.textContent = "0/0";
+    return;
+  }
+
+  els.searchSpinner.classList.add("show");
+  try {
+    const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+    state.currentTokens = tokens;
+
+    const matchedMeta = state.articles.filter((a) =>
+      tokens.every((t) => a._norm.includes(t))
+    );
+
+    renderFileItemsAll(state.items);
+
+    requestAnimationFrame(() => {
+      matchedMeta.forEach((m) => {
+        const art = document.getElementById(m.htmlId);
+        if (art) highlightTextNodes(art, tokens);
+      });
+
+      state.matchArticles = matchedMeta
+        .map((m) => document.getElementById(m.htmlId))
+        .filter(Boolean);
+
+      if (state.matchArticles.length) {
+        state.matchIdx = 0;
+        state.matchArticles[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        state.matchIdx = -1;
+        notify("Nenhum resultado encontrado.");
+      }
+
+      els.count.textContent = state.matchArticles.length
+        ? `${state.matchIdx + 1}/${state.matchArticles.length}`
+        : "0/0";
+
+      updateCurrentOutline();
+    });
+  } finally {
+    els.searchSpinner.classList.remove("show");
+  }
+}
+
+function updateCount() {
+  if (!state.matchArticles || state.matchArticles.length === 0) {
+    els.count.textContent = "0/0";
+    return;
+  }
+  els.count.textContent = `${state.matchIdx + 1}/${state.matchArticles.length}`;
+}
+
+function gotoNext() {
+  if (!state.matchArticles || state.matchArticles.length === 0) return;
+  state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+  const art = state.matchArticles[state.matchIdx];
+  art.scrollIntoView({ behavior: "smooth", block: "center" });
+  updateCount();
+  updateCurrentOutline();
+}
+function gotoPrev() {
+  if (!state.matchArticles || state.matchArticles.length === 0) return;
+  state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+  const art = state.matchArticles[state.matchIdx];
+  art.scrollIntoView({ behavior: "smooth", block: "center" });
+  updateCount();
+  updateCurrentOutline();
+}
+
+/* =================== Filebar =================== */
+function getVisibleTabsCount() {
+  return window.matchMedia("(max-width: 768px)").matches ? Infinity : 7;
+}
+
+function renderFilebar() {
+  const options = getAllOptions();
+  const frag = document.createDocumentFragment();
+
+  const mkTab = (label, url = null, extraClass = "") => {
+    const b = document.createElement("button");
+    b.className = `tab ${extraClass}`;
+    b.type = "button";
+    b.textContent = label;
+    b.dataset.url = url || "";
+    b.addEventListener("click", async () => {
+      document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+      els.favTab.classList.remove("active");
+      b.classList.add("active");
+      if (url) {
+        await loadFile(url, b);
+      }
+    });
+    return b;
+  };
+
+  const visibleCap = getVisibleTabsCount();
+  if (visibleCap === Infinity) {
+    options.forEach((opt) => frag.appendChild(mkTab(opt.label, opt.value)));
+  } else {
+    const visible = options.slice(0, visibleCap);
+    const hidden = options.slice(visibleCap);
+    visible.forEach((opt) => frag.appendChild(mkTab(opt.label, opt.value)));
+
+    if (hidden.length) {
+      const more = mkTab("Mais ▾", null, "tab-more");
+      more.addEventListener("click", () => {
+        toggleMoreMenu(hidden, more);
+      });
+      frag.appendChild(more);
+    }
+  }
+
+  els.filebarInner.innerHTML = "";
+  els.filebarInner.appendChild(frag);
+
+  const last = store.getLast();
+  if (last?.mode === "file" && last?.fileUrl) {
+    const btn = [...els.filebarInner.querySelectorAll(".tab")].find(
+      (t) => t.dataset.url === last.fileUrl
+    );
+    if (btn) {
+      btn.classList.add("active");
+    }
+  } else {
+    els.favTab.classList.add("active");
+  }
+}
+
+function toggleMoreMenu(items, anchorBtn) {
+  if (els.moreMenu.style.display === "block") {
+    els.moreMenu.style.display = "none";
+    els.moreMenu.setAttribute("aria-hidden", "true");
+    return;
+  }
+  els.moreMenu.innerHTML = "";
+  items.forEach((it) => {
+    const bi = document.createElement("button");
+    bi.className = "more-item";
+    bi.type = "button";
+    bi.textContent = it.label;
+    bi.addEventListener("click", async () => {
+      els.moreMenu.style.display = "none";
+      els.moreMenu.setAttribute("aria-hidden", "true");
+      document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+      anchorBtn.classList.add("active");
+      els.favTab.classList.remove("active");
+      await loadFile(it.value, anchorBtn);
+    });
+    els.moreMenu.appendChild(bi);
+  });
+  els.moreMenu.style.display = "block";
+  els.moreMenu.setAttribute("aria-hidden", "false");
+}
+
+/* =================== IA =================== */
+function buildPrompt(a) {
+  const split = a._split;
+  const supraText = split.supra && split.supra.length ? split.supra.join("\n") + "\n" : "";
+  const epiTop = split.epigrafe ? `Epígrafe: ${split.epigrafe}\n\n` : "";
+  const artigo = (split.titleText ? split.titleText + " " : "") + (split.body || "");
+  const tema = split.titleText || a.title || "Artigo";
+  return [
+    "Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ",
+    "Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ",
+    "(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ",
+    "(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ",
+    "(3) Exemplo prático — caso ilustrativo; ",
+    "(4) Princípios relacionados; ",
+    "(5) Pontos de atenção na prática; ",
+    "(6) Erros comuns/pegadinhas; ",
+    "(7) Artigos correlatos. ",
+    "Responda em português claro, objetivo e didático.\n\n",
+    `Tema: "${tema}"\n\n`,
+    epiTop + supraText + artigo,
+    "\n\n💚 direito.love",
+  ].join("");
+}
+function openIA(url) {
+  if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true)
+    location.href = url;
+  else window.open(url, "_blank", "noopener,noreferrer");
+}
+function openStudyModal(_title, prompt) {
+  els.modalTitle.textContent = "Estude com I.A."; // sem “Estude o … com I.A.”
+  els.promptPreview.textContent = prompt;
+  els.studyModal.setAttribute("aria-hidden", "false");
+}
+function closeStudyModal() {
+  els.studyModal.setAttribute("aria-hidden", "true");
+}
+
+/* =================== Eventos globais / atalhos =================== */
+els.brandBtn.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+  els.favTab.classList.add("active");
+  state.mode = "favorites";
+  renderFavorites();
+  window.scrollTo({ top: 0, behavior: "instant" });
+});
+
+els.favTab.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+  els.favTab.classList.add("active");
+  state.mode = "favorites";
+  renderFavorites();
+});
+
+function toggleClear() {
+  els.clearSearch.classList.toggle("show", !!els.searchInput.value);
+}
+els.searchInput.addEventListener("input", toggleClear);
+toggleClear();
+
+els.searchInput.addEventListener("focus", () => els.finderPop.classList.add("show"));
+els.closeFinder.addEventListener("click", () => {
+  els.finderPop.classList.remove("show");
+  els.searchInput.blur();
+});
+
+els.searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    withBusy(els.sendSearch, runLocalSearch);
+  } else if (e.key === "Escape") {
+    els.searchInput.blur();
+    els.finderPop.classList.remove("show");
+  }
+});
+els.sendSearch.addEventListener("click", (e) => withBusy(e.currentTarget, runLocalSearch));
+els.clearSearch.addEventListener("click", () => {
+  els.searchInput.value = "";
+  toggleClear();
+  runLocalSearch();
+});
+
+els.nextBtn.addEventListener("click", () => gotoNext());
+els.prevBtn.addEventListener("click", () => gotoPrev());
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey && e.key.toLowerCase() === "k") || (e.key === "/" && !e.metaKey && !e.ctrlKey)) {
+    e.preventDefault();
+    els.searchInput.focus();
+    els.searchInput.select();
+  }
+  if (e.key === "F3" || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "g")) {
+    e.preventDefault();
+    gotoNext();
+  }
+  if ((e.shiftKey && e.key === "F3") || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "g")) {
+    e.preventDefault();
+    gotoPrev();
+  }
+  if (e.key === "Escape") {
+    els.finderPop.classList.remove("show");
+    if (els.studyModal.getAttribute("aria-hidden") === "false") closeStudyModal();
+    els.moreMenu.style.display = "none";
+    els.moreMenu.setAttribute("aria-hidden", "true");
+    if (els.indexPanel) {
+      els.indexPanel.classList.remove("show");
+      els.indexPanel.setAttribute("aria-hidden", "true");
+    }
+  }
+});
+
+els.closeStudy.addEventListener("click", closeStudyModal);
+els.studyModal.addEventListener("click", (e) => {
+  if (e.target === els.studyModal) closeStudyModal();
+});
+document.querySelectorAll(".ia-btn").forEach((btn) => {
+  btn.addEventListener("click", async (e) => {
+    const url = e.currentTarget.dataset.url;
+    const prompt = els.promptPreview.textContent || "";
+    try {
+      await navigator.clipboard.writeText(prompt);
+      notify("✅ Prompt copiado!");
+    } catch {
+      notify("⚠️ Não consegui copiar, copie manualmente.");
+    }
+    openIA(url);
+  });
+});
+els.copyPromptBtn.addEventListener("click", (e) => {
+  withBusy(e.currentTarget, async () => {
+    try {
+      await navigator.clipboard.writeText(els.promptPreview.textContent || "");
+      notify("✅ Prompt copiado!");
+    } catch {
+      notify("Copie manualmente.");
+    }
+  });
+});
+
+/* ——— Botões flutuantes (favoritar / estudar) ——— */
 function getCurrentArticle() {
-  const art = document.querySelector('article.in-view');
+  const art = document.querySelector("article.in-view");
   if (!art) return null;
   const aidx = Number(art.dataset.idx);
   return {
     el: art,
-    meta: state.articles.find(x => x._aidx === aidx)
+    meta: state.articles.find((x) => x._aidx === aidx),
   };
 }
 
-floatFav.addEventListener('click', async ()=>{
-  const current = getCurrentArticle();
-  if (!current) return notify('Nenhum artigo em evidência.');
-  const { el, meta } = current;
-  const id = store.makeId(el.dataset.fileUrl, el.id);
+if (els.floatFav) {
+  els.floatFav.addEventListener("click", async () => {
+    const current = getCurrentArticle();
+    if (!current) return notify("Nenhum artigo em evidência.");
+    const { el, meta } = current;
+    const id = store.makeId(el.dataset.fileUrl, el.id);
+    const entry = {
+      id,
+      fileUrl: el.dataset.fileUrl,
+      fileLabel: el.dataset.fileLabel,
+      htmlId: el.id,
+      text: meta?.text || "",
+    };
+
+    if (store.isFavorite(id)) {
+      store.removeFavorite(id);
+      els.floatFav.classList.remove("active");
+      notify("⭐ Removido dos favoritos");
+    } else {
+      if (!entry.text) {
+        notify("Abra o arquivo para favoritar.");
+        return;
+      }
+      store.addFavorite(entry);
+      els.floatFav.classList.add("active");
+      notify("⭐ Adicionado aos favoritos");
+    }
+  });
+}
+
+if (els.floatStudy) {
+  els.floatStudy.addEventListener("click", async () => {
+    const current = getCurrentArticle();
+    if (!current) return notify("Nenhum artigo em evidência.");
+    const { el, meta } = current;
+    const id = store.makeId(el.dataset.fileUrl, el.id);
+    const entry = {
+      id,
+      fileUrl: el.dataset.fileUrl,
+      fileLabel: el.dataset.fileLabel,
+      htmlId: el.id,
+      text: meta?.text || "",
+    };
+    if (!meta?.text) {
+      notify("Não consegui capturar este artigo.");
+      return;
+    }
+    const prompt = buildPrompt(meta);
+    store.markStudied(entry);
+    els.floatStudy.classList.add("active");
+    openStudyModal(meta._split?.titleText || meta.title || "Artigo", prompt);
+  });
+}
+
+/* ——— Clique em ações dentro dos cards (se existirem botões .icon-btn) ——— */
+els.articles.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".icon-btn");
+  if (!btn) return;
+  const artEl = e.target.closest("article");
+  if (!artEl) return;
+
+  const aidx = Number(artEl?.dataset.idx);
+  const a = state.mode === "file" ? state.articles.find((x) => x._aidx === aidx) : null;
+  const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
+
   const entry = {
-    id, fileUrl: el.dataset.fileUrl, fileLabel: el.dataset.fileLabel,
-    htmlId: el.id, text: meta?.text || ''
+    id,
+    fileUrl: artEl.dataset.fileUrl,
+    fileLabel: artEl.dataset.fileLabel,
+    htmlId: artEl.id,
+    text:
+      state.mode === "file"
+        ? a?.text
+        : (() => {
+            const fav = store.listFavorites().find((e) => e.id === id);
+            const stud = store.listStudied().find((e) => e.id === id);
+            return fav?.text || stud?.text || "";
+          })(),
   };
 
-  if (store.isFavorite(id)){
-    store.removeFavorite(id);
-    floatFav.classList.remove('active');
-    notify('⭐ Removido dos favoritos');
-  } else {
-    if (!entry.text){ notify('Abra o arquivo para favoritar.'); return; }
-    store.addFavorite(entry);
-    floatFav.classList.add('active');
-    notify('⭐ Adicionado aos favoritos');
+  if (btn.dataset.action === "study") {
+    await withBusy(btn, async () => {
+      const useArticle =
+        state.mode === "file"
+          ? a
+          : {
+              text: entry.text,
+              _split: splitIntoBlocks(entry.text)[0]
+                ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
+                : { supra: [], titleText: "Artigo", body: entry.text, epigrafe: "" },
+              title: "Artigo",
+            };
+      if (!useArticle?.text) {
+        notify("Não consegui capturar o texto deste artigo.");
+        return;
+      }
+      const prompt = buildPrompt(useArticle);
+      store.markStudied(entry);
+      btn.classList.add("active");
+      openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
+    });
+  }
+
+  if (btn.dataset.action === "fav") {
+    await withBusy(btn, async () => {
+      if (store.isFavorite(id)) {
+        store.removeFavorite(id);
+        btn.classList.remove("active");
+        notify("⭐ Removido dos favoritos");
+      } else {
+        if (!entry.text) {
+          notify("Abra o arquivo para favoritar este artigo.");
+          return;
+        }
+        store.addFavorite(entry);
+        btn.classList.add("active");
+        notify("⭐ Adicionado aos favoritos");
+      }
+    });
   }
 });
 
-floatStudy.addEventListener('click', async ()=>{
-  const current = getCurrentArticle();
-  if (!current) return notify('Nenhum artigo em evidência.');
-  const { el, meta } = current;
-  const id = store.makeId(el.dataset.fileUrl, el.id);
-  const entry = {
-    id, fileUrl: el.dataset.fileUrl, fileLabel: el.dataset.fileLabel,
-    htmlId: el.id, text: meta?.text || ''
-  };
-  if (!meta?.text){ notify('Não consegui capturar este artigo.'); return; }
-  const prompt = buildPrompt(meta);
-  store.markStudied(entry);
-  floatStudy.classList.add('active');
-  openStudyModal(meta._split?.titleText || meta.title || 'Artigo', prompt);
-});
-
-  <script>
-    /* =================== PWA =================== */
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log("✅ SW", reg.scope))
-          .catch(err => console.error("❌ SW", err));
-      });
+document.addEventListener(
+  "click",
+  (e) => {
+    if (!els.moreMenu.contains(e.target) && !e.target.closest(".tab-more")) {
+      els.moreMenu.style.display = "none";
+      els.moreMenu.setAttribute("aria-hidden", "true");
     }
-    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
+  },
+  { capture: true }
+);
 
-    /* =================== Refs =================== */
-    const els = {
-      brandBtn: document.getElementById('brandBtn'),
-      favTab: document.getElementById('favTab'),
-
-      searchInput: document.getElementById('searchInput'),
-      searchSpinner: document.getElementById('searchSpinner'),
-      clearSearch: document.getElementById('clearSearch'),
-      sendSearch: document.getElementById('sendSearch'),
-
-      filebarInner: document.getElementById('filebarInner'),
-      moreMenu: document.getElementById('moreMenu'),
-
-      finderPop: document.getElementById('finderPop'),
-      prevBtn: document.getElementById('prevBtn'),
-      nextBtn: document.getElementById('nextBtn'),
-      closeFinder: document.getElementById('closeFinder'),
-      count: document.getElementById('count'),
-
-      articles: document.getElementById('articles'),
-
-      codeSelect: document.getElementById('codeSelect'),
-
-      studyModal: document.getElementById('studyModal'),
-      closeStudy: document.getElementById('closeStudy'),
-      modalTitle: document.getElementById('modalTitle'),
-      studySub: document.getElementById('studySub'),
-      promptPreview: document.getElementById('promptPreview'),
-      copyPromptBtn: document.getElementById('copyPromptBtn'),
-
-      toast: document.getElementById('toast'),
-    };
-    /* extras do índice */
-    els.indexToggle = null;
-    els.indexPanel  = null;
-
-    /* =================== Estado + Storage =================== */
-    const state = {
-      mode: 'favorites', // favorites | file
-      currentFileUrl: null,
-      currentFileLabel: '',
-      rawText: '',
-      items: [],        // headings + articles (na ordem do arquivo)
-      articles: [],     // apenas artigos
-      currentArticleIdx: -1,
-
-      currentTokens: [],
-      matchArticles: [],
-      matchIdx: -1,
-
-      cache: new Map(),
-      urlToLabel: new Map(),
-    };
-
-    const store = {
-      get(k, def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
-      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); },
-
-      keyFav: 'dl_favorites',
-      keyStud: 'dl_studied',
-      keyLast: 'dl_last_view',
-
-      makeId: (fileUrl, htmlId)=> `${fileUrl}::${htmlId}`,
-
-      listFavorites(){ return store.get(store.keyFav, []); },
-      isFavorite(id){ return store.listFavorites().some(e => e.id === id); },
-      addFavorite(entry){
-        if (!entry || !entry.id || !entry.text) return;
-        const list = store.listFavorites().filter(e => e.id !== entry.id);
-        list.unshift({...entry, ts: Date.now()});
-        store.set(store.keyFav, list);
-      },
-      removeFavorite(id){
-        const list = store.listFavorites().filter(e => e.id !== id);
-        store.set(store.keyFav, list);
-      },
-
-      listStudied(){ return store.get(store.keyStud, []); },
-      markStudied(entry){
-        if (!entry || !entry.id || !entry.text) return;
-        let list = store.listStudied().filter(e => e.id !== entry.id);
-        list.unshift({...entry, ts: Date.now()});
-        if (list.length > 50) list = list.slice(0,50);
-        store.set(store.keyStud, list);
-      },
-      isStudied(id){ return store.listStudied().some(e => e.id === id); },
-
-      saveLast(partial){
-        const prev = store.get(store.keyLast, {});
-        store.set(store.keyLast, {...prev, ...partial});
-      },
-      getLast(){ return store.get(store.keyLast, null); },
-      clearLast(){ localStorage.removeItem(store.keyLast); },
-    };
-
-    /* =================== Utils =================== */
-    function notify(msg='Ok!'){
-      els.toast.textContent = msg;
-      els.toast.classList.add('show');
-      setTimeout(()=>els.toast.classList.remove('show'), 1200);
+window.addEventListener(
+  "scroll",
+  () => {
+    updateCurrentOutline();
+    const last = store.getLast();
+    if (last) {
+      store.saveLast({ scrollY: window.scrollY || 0 });
     }
-    async function withBusy(btn, fn){
-      if (btn && btn.classList.contains('busy')) return;
-      if (btn) btn.classList.add('busy');
-      try{
-        const min = 220;
-        const t0 = performance.now();
-        const res = await fn();
-        const dt = performance.now() - t0;
-        if (dt < min) await new Promise(r=>setTimeout(r, min - dt));
-        return res;
-      } finally { if (btn) btn.classList.remove('busy'); }
-    }
+  },
+  { passive: true }
+);
+window.addEventListener("resize", updateCurrentOutline, { passive: true });
 
-    const sanitizeForLayout = (s)=> s
-      .replace(/\u00A0/g, ' ')
-      .replace(/\t/g, ' ')
-      .replace(/\s+\n/g, '\n');
+/* =================== Restauração =================== */
+function restoreViewAfterRender() {
+  const last = store.getLast();
+  if (!last) return;
 
-    function norm(s){
-      return (s||'')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g,'')   // remove acentos
-        .replace(/ç/g,'c')
-        .replace(/(\d)[.,](?=\d)/g, '$1') // 1.200 → 1200
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g,' ')
-        .trim();
-    }
-
-    function buildCatalogMaps(){
-      const sel = els.codeSelect;
-      state.urlToLabel.clear();
-      sel.querySelectorAll('option').forEach(opt=>{
-        const url = opt.value?.trim();
-        const label = opt.textContent?.trim();
-        if (url) state.urlToLabel.set(url, label);
-      });
-    }
-    function getAllOptions(){
-      const out = [];
-      els.codeSelect.querySelectorAll('option').forEach(opt=>{
-        const url = opt.value?.trim();
-        const label = opt.textContent?.trim();
-        if (url) out.push({label, value:url});
-      });
-      return out;
-    }
-    function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
-
-    /* =================== Parser (sem negritos) =================== */
-    function splitIntoBlocks(txt){
-      const cleaned = sanitizeForLayout(
-        txt.replace(/^\uFEFF/, '')
-           .replace(/\r\n/g, '\n')
-           .replace(/[ \t]+/g, ' ')
-      );
-      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
-      return parts.filter(Boolean);
-    }
-
-    function parseBlockToItem(block, idx){
-      const lines = block.split(/\n/);
-      const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
-      if (artIdx === -1){
-        return { kind:'heading', raw:block, htmlId:`h-${idx}` };
-      }
-
-      const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-      const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
-
-      const epigrafe = pre.length ? pre.join('\n') : '';
-      const titleLine = after.shift() || '';
-      const bodyLines = after;
-
-      const ensureBlank = (txt)=> txt.replace(
-        /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-        (_,a,b)=> `${a}\n${b}`      // apenas 1 linha
-      );
-      const bodyText = ensureBlank(bodyLines.join('\n'));
-
-      const textForStorage = [ epigrafe ? `Epígrafe: ${epigrafe}` : '', titleLine, bodyText ]
-        .filter(Boolean).join('\n');
-
-      return {
-        kind: 'article',
-        title: titleLine || `Bloco ${idx+1}`,
-        text: textForStorage,
-        htmlId: `art-${idx}`,
-        _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
-      };
-    }
-
-    function parseByUrl(url, txt){
-      const blocks = splitIntoBlocks(txt);
-      const items = blocks.map((b,i)=> parseBlockToItem(b,i));
-      let aidx = 0;
-      items.forEach(it=>{
-        if (it.kind === 'article'){ it.htmlId = `art-${aidx}`; it._aidx = aidx; aidx++; }
-      });
-      return items;
-    }
-
-    /* =================== Render helpers =================== */
-    function wrapParensIn(root){
-      const re = /\(([^()]{1,200})\)/g;
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-      const nodes = [];
-      let n;
-      while ((n = walker.nextNode())) nodes.push(n);
-      nodes.forEach(node=>{
-        const text = node.nodeValue;
-        if (!re.test(text)){ re.lastIndex = 0; return; }
-        re.lastIndex = 0;
-        const frag = document.createDocumentFragment();
-        let last = 0, m;
-        while ((m = re.exec(text))){
-          const before = text.slice(last, m.index);
-          if (before) frag.appendChild(document.createTextNode(before));
-          const span = document.createElement('span');
-          span.className = 'paren';
-          span.textContent = '(' + m[1] + ')';
-          frag.appendChild(span);
-          last = re.lastIndex;
-        }
-        const after = text.slice(last);
-        if (after) frag.appendChild(document.createTextNode(after));
-        node.parentNode.replaceChild(frag, node);
-      });
-    }
-
-    function highlightTextNodes(root, tokens){
-      if (!tokens || !tokens.length) return;
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-      const nodes = [];
-      let n; while((n = walker.nextNode())) nodes.push(n);
-
-      nodes.forEach(node=>{
-        const txt = node.nodeValue;
-        if (!txt.trim()) return;
-
-        const frag = document.createDocumentFragment();
-        const re = /[\p{L}\p{N}]+/gu;
-        let idx = 0, m;
-        while ((m = re.exec(txt))){
-          const before = txt.slice(idx, m.index);
-          if (before) frag.appendChild(document.createTextNode(before));
-
-          const word = m[0];
-          const hit = tokens.some(t => norm(word).includes(t));
-          if (hit){
-            const mk = document.createElement('mark');
-            mk.textContent = word;
-            frag.appendChild(mk);
-          } else {
-            frag.appendChild(document.createTextNode(word));
-          }
-          idx = re.lastIndex;
-        }
-        const tail = txt.slice(idx);
-        if (tail) frag.appendChild(document.createTextNode(tail));
-        node.parentNode.replaceChild(frag, node);
-      });
-    }
-
-    function applyIconState(btn){
-      const img = btn.querySelector('img');
-      if (!img) return;
-      const src = img.getAttribute('data-src');
-      const active = img.getAttribute('data-active');
-      if (btn.classList.contains('active') && active){
-        img.src = active; img.style.opacity = 1;
-      } else if (src){
-        img.src = src; img.style.opacity = .6;
-      }
-    }
-
-    function buildHeadingElement(item){
-      const el = document.createElement('div');
-      el.className = 'law-heading';
-      el.id = item.htmlId;
-      const pre = document.createElement('pre');
-      pre.textContent = item.raw;
-      el.appendChild(pre);
-      return el;
-    }
-
-    function buildArticleElement(a){
-      const el = document.createElement('article');
-      el.dataset.idx = a._aidx;
-      el.id = a.htmlId || `art-${a._aidx}`;
-      el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || '';
-      el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
-
-      const split = a._split;
-
-      const supraWrap = document.createElement('div');
-      supraWrap.className = 'supra';
-
-      if (a._fileLabel || a._fileUrl){
-        const badge = document.createElement('div');
-        badge.textContent = a._fileLabel || state.urlToLabel.get(a._fileUrl) || 'Arquivo';
-        supraWrap.appendChild(badge);
-      }
-      if (split.supra && split.supra.length){
-        split.supra.forEach(line=>{
-          const d = document.createElement('div');
-          d.textContent = line;
-          supraWrap.appendChild(d);
-        });
-      }
-      if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
-
-      if (split.epigrafe){
-        const epiTop = document.createElement('div');
-        epiTop.className = 'art-epigrafe';
-        epiTop.textContent = split.epigrafe;  // sem bold
-        el.appendChild(epiTop);
-      }
-
-      const head = document.createElement('div');
-      head.className = 'art-head';
-
-      const titleSpan = document.createElement('span');
-      titleSpan.className = 'art-title';
-      titleSpan.textContent = split.titleText || a.title || 'Artigo';
-
-      <!-- BOTÕES FLUTUANTES (Favoritar e Estudar) -->
-<div class="s">
-  <button class="float-btn" id="floatFav" title="Favoritar" aria-label="Favoritar">
-    <img src="icons/favorito.svg" alt="Favoritar">
-  </button>
-  <button class="float-btn" id="floatStudy" title="Estudar com I.A." aria-label="Estudar">
-    <img src="icons/estudar.svg" alt="Estudar com I.A.">
-  </button>
-</div>
-
-      el.appendChild(head);
-
-      // Corpo (sem espaçamentos duplos, sem negritos)
-      const content = document.createElement('div');
-      content.className = 'art-body';
-
-      let body = split.body || '';
-      body = body
-        .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n$2")
-        .replace(/(^|\n)(\s*[IVXLCDM]+ ?[-–—]?)/g, "\n$2")
-        .replace(/(^|\n)(\s*[a-z]\))/g, "\n$2");
-
-      const html = body.replace(/\n/g, '<br>');
-      content.innerHTML = html;
-      el.appendChild(content);
-
-      const id = store.makeId(el.dataset.fileUrl, el.id);
-      if (store.isFavorite(id)) favBtn.classList.add('active');
-      if (store.isStudied(id)) studyBtn.classList.add('active');
-      applyIconState(favBtn);
-      applyIconState(studyBtn);
-
-      wrapParensIn(el);
-      return el;
-    }
-
-    function clearArticles(){
-      els.articles.innerHTML = '';
-      state.currentArticleIdx = -1;
-    }
-
-    function updateCurrentOutline(){
-      const nodes = Array.from(document.querySelectorAll('article[data-idx]'));
-      if (!nodes.length) return;
-
-      const topGap = 48;
-      const scTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const scBottom = scTop + window.innerHeight;
-      const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
-
-      let targetIdx = -1;
-
-      if (scTop <= topGap){ targetIdx = 0; }
-      else if (scBottom >= docH - topGap){ targetIdx = nodes.length - 1; }
-      else {
-        const cy = window.innerHeight / 2;
-        let best = Infinity, bestIdx = 0;
-        nodes.forEach((el, i)=>{
-          const r = el.getBoundingClientRect();
-          if (r.bottom < 0 || r.top > window.innerHeight) return;
-          const mid = r.top + r.height/2;
-          const d = Math.abs(mid - cy);
-          if (d < best){ best = d; bestIdx = i; }
-        });
-        targetIdx = bestIdx;
-      }
-
-      if (targetIdx === -1) return;
-      if (state.currentArticleIdx === targetIdx) return;
-
-      nodes.forEach(n=> n.classList.remove('in-view'));
-      nodes[targetIdx].classList.add('in-view');
-      state.currentArticleIdx = targetIdx;
-
-      const art = nodes[targetIdx];
-      store.saveLast({
-        mode: state.mode,
-        fileUrl: state.currentFileUrl,
-        articleId: art?.id || null,
-        scrollY: window.scrollY || 0
-      });
-    }
-
-    /* =================== ÍNDICE: botão e painel =================== */
-    function removeIndexUI(){
-      if (els.indexToggle){ els.indexToggle.remove(); els.indexToggle = null; }
-      if (els.indexPanel){ els.indexPanel.remove();  els.indexPanel  = null; }
-    }
-
-    function buildIndexButton(){
-      // remove antigos
-      removeIndexUI();
-      if (state.mode !== 'file') return;
-
-      // Botão hambúrguer
-      const btn = document.createElement('button');
-      btn.className = 'index-toggle';
-      btn.type = 'button';
-      btn.setAttribute('aria-label','Abrir índice do documento');
-      btn.textContent = '≡';
-      document.body.appendChild(btn);
-      els.indexToggle = btn;
-
-      // Painel
-      const panel = document.createElement('div');
-      panel.className = 'index-panel';
-      panel.setAttribute('role','menu');
-      panel.setAttribute('aria-hidden','true');
-      document.body.appendChild(panel);
-      els.indexPanel = panel;
-
-      btn.addEventListener('click', ()=>{
-        const show = !panel.classList.contains('show');
-        panel.classList.toggle('show', show);
-        panel.setAttribute('aria-hidden', show ? 'false' : 'true');
-      });
-
-      // Fecha no ESC e clique fora
-      document.addEventListener('keydown', (e)=>{
-        if (e.key === 'Escape' && els.indexPanel && els.indexPanel.classList.contains('show')){
-          els.indexPanel.classList.remove('show');
-          els.indexPanel.setAttribute('aria-hidden','true');
-        }
-      });
-      document.addEventListener('click', (e)=>{
-        if (!els.indexPanel) return;
-        if (els.indexPanel.classList.contains('show')){
-          const onToggle = e.target === els.indexToggle;
-          const insidePanel = e.target.closest && e.target.closest('.index-panel');
-          if (!onToggle && !insidePanel){
-            els.indexPanel.classList.remove('show');
-            els.indexPanel.setAttribute('aria-hidden','true');
-          }
-        }
-      }, {capture:true});
-    }
-
-    function renderIndex(){
-      if (!els.indexPanel) return;
-      els.indexPanel.innerHTML = '';
-
-      const headings = state.items.filter(it=>it.kind==='heading');
-      if (!headings.length){
-        const empty = document.createElement('div');
-        empty.textContent = 'Sem índice para este documento.';
-        els.indexPanel.appendChild(empty);
-        return;
-      }
-
-      headings.forEach(it=>{
-        const d = document.createElement('div');
-        d.textContent = it.raw.replace(/\s+/g,' ').trim();
-        d.title = it.raw.replace(/\s+/g,' ').trim();
-        d.addEventListener('click', ()=>{
-          const target = document.getElementById(it.htmlId);
-          if (target){
-            target.scrollIntoView({behavior:'smooth', block:'start'});
-          }
-          els.indexPanel.classList.remove('show');
-          els.indexPanel.setAttribute('aria-hidden','true');
-        });
-        els.indexPanel.appendChild(d);
-      });
-    }
-
-    /* =================== RENDER FILE (itens na ordem) =================== */
-    function renderFileItemsProgressive(items, {chunkSize=30}={}){
-      clearArticles();
-      if (!items.length){
-        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
-        removeIndexUI();
-        return;
-      }
-      const first = Math.min(8, items.length);
-      const frag = document.createDocumentFragment();
-      for (let i=0;i<first;i++){
-        const it = items[i];
-        if (it.kind === 'heading'){ frag.appendChild(buildHeadingElement(it)); }
-        else { frag.appendChild(buildArticleElement(it)); }
-      }
-      els.articles.appendChild(frag);
-      updateCurrentOutline();
-
-      // Índice
-      buildIndexButton();
-      renderIndex();
-
-      let i = first;
-      function appendChunk(){
-        const fr = document.createDocumentFragment();
-        let added = 0;
-        while (i < items.length && added < chunkSize){
-          const it = items[i];
-          if (it.kind === 'heading'){ fr.appendChild(buildHeadingElement(it)); }
-          else { fr.appendChild(buildArticleElement(it)); }
-          i++; added++;
-        }
-        els.articles.appendChild(fr);
+  if (last.articleId) {
+    let tries = 0;
+    const max = 20;
+    const tick = () => {
+      const el = document.getElementById(last.articleId);
+      if (el) {
+        el.scrollIntoView({ behavior: "instant", block: "center" });
         updateCurrentOutline();
-        if (i < items.length){
-          if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
-          else { setTimeout(appendChunk, 0); }
-        }
+      } else if (tries++ < max) {
+        setTimeout(tick, 100);
+      } else if (typeof last.scrollY === "number") {
+        window.scrollTo({ top: last.scrollY, behavior: "instant" });
       }
-      if (first < items.length){
-        if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
-        else { setTimeout(appendChunk, 0); }
-      }
+    };
+    tick();
+  } else if (typeof last.scrollY === "number") {
+    window.scrollTo({ top: last.scrollY, behavior: "instant" });
+  }
+}
+
+/* =================== Boot =================== */
+async function boot() {
+  buildCatalogMaps();
+  renderFilebar();
+
+  const last = store.getLast();
+  if (last?.mode === "file" && last?.fileUrl) {
+    const btn = [...els.filebarInner.querySelectorAll(".tab")].find(
+      (t) => t.dataset.url === last.fileUrl
+    );
+    if (btn) {
+      btn.classList.add("active");
     }
-
-    function renderFileItemsAll(items){
-      clearArticles();
-      const frag = document.createDocumentFragment();
-      items.forEach(it=>{
-        if (it.kind === 'heading') frag.appendChild(buildHeadingElement(it));
-        else frag.appendChild(buildArticleElement(it));
-      });
-      els.articles.appendChild(frag);
-      updateCurrentOutline();
-
-      // manter índice
-      buildIndexButton();
-      renderIndex();
-    }
-
-    /* =================== FAVORITOS =================== */
-    function renderFavorites(){
-      clearArticles();
-
-      const favs = store.listFavorites();
-      if (!favs.length){
-        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
-        removeIndexUI();
-        return;
-      }
-
-      const order = getAllOptions().map(o=>o.value);
-      const byFile = new Map();
-      favs.forEach(f=>{
-        const key = f.fileLabel || f.fileUrl || 'Arquivo';
-        if (!byFile.has(key)) byFile.set(key, []);
-        byFile.get(key).push(f);
-      });
-
-      for (const [k, arr] of byFile.entries()){
-        byFile.set(k, sortByTsDesc(arr));
-      }
-
-      const groups = Array.from(byFile.entries()).sort((a,b)=>{
-        const aUrl = (favs.find(x=>x.fileLabel===a[0])||{}).fileUrl;
-        const bUrl = (favs.find(x=>x.fileLabel===b[0])||{}).fileUrl;
-        const ai = aUrl ? order.indexOf(aUrl) : Infinity;
-        const bi = bUrl ? order.indexOf(bUrl) : Infinity;
-        if (ai !== bi) return ai - bi;
-        return a[0].localeCompare(b[0]);
-      });
-
-      const frag = document.createDocumentFragment();
-      let idx = 0;
-
-      groups.forEach(([label, list])=>{
-        const h = document.createElement('div');
-        h.className = 'section-title';
-        h.textContent = label;
-        frag.appendChild(h);
-
-        list.forEach(entry=>{
-          const parsed = (()=>{
-            const p = splitIntoBlocks(entry.text);
-            if (!p.length) return null;
-            const item = parseBlockToItem(p[0], 0);
-            if (!item || item.kind !== 'article') return null;
-            item._fileUrl = entry.fileUrl;
-            item._fileLabel = entry.fileLabel;
-            item._aidx = idx++;
-            item.htmlId = item.htmlId || `fav-${idx}`;
-            return item;
-          })();
-
-          if (parsed){
-            frag.appendChild(buildArticleElement(parsed));
-          }
-        });
-      });
-
-      els.articles.appendChild(frag);
-      window.scrollTo({top:0,behavior:'instant'});
-      state.mode = 'favorites';
-      store.saveLast({ mode:'favorites', fileUrl:null, scrollY: 0, articleId: null });
-      updateCurrentOutline();
-
-      // UI: ativar estrela, desativar tabs + remover índice
-      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-      els.favTab.classList.add('active');
-      removeIndexUI();
-    }
-
-    /* =================== Loader =================== */
-    async function fetchTextCached(url){
-      if (state.cache.has(url)) return state.cache.get(url);
-      const res = await fetch(url, {cache: 'no-cache'});
-      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
-      const txt = sanitizeForLayout(await res.text());
-      state.cache.set(url, txt);
-      return txt;
-    }
-
-    function addNormalizedFieldToArticles(items){
-      const arts = items.filter(it=>it.kind==='article');
-      arts.forEach(a=>{
-        const s = a._split;
-        const combo = [s.titleText || '', s.epigrafe || '', ...(s.supra||[]), s.body || ''].join(' ');
-        a._norm = norm(combo);
-      });
-      return arts;
-    }
-
-    async function loadFile(url, tabBtn){
-      if (!url) return;
-      await withBusy(tabBtn, async ()=>{
-        els.searchSpinner.classList.add('show');
-        try{
-          const txt = await fetchTextCached(url);
-          state.rawText = txt;
-          const items = parseByUrl(url, txt);
-          state.currentFileUrl = url;
-          state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
-          state.items = items;
-          state.articles = addNormalizedFieldToArticles(items);
-          state.mode = 'file';
-
-          renderFileItemsProgressive(items);
-          window.scrollTo({top:0,behavior:'instant'});
-          notify(`Carregado: ${state.currentFileLabel}`);
-
-          store.saveLast({ mode:'file', fileUrl:url, scrollY:0, articleId:null });
-
-          els.favTab.classList.remove('active');
-        }catch(err){
-          console.error(err);
-          els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
-          notify('Erro ao carregar arquivo');
-          removeIndexUI();
-        } finally {
-          els.searchSpinner.classList.remove('show');
-        }
-      });
-    }
-
-    /* =================== Busca =================== */
-    async function runLocalSearch(){
-      if (state.mode !== 'file'){
-        notify('Abra um arquivo para buscar.');
-        return;
-      }
-
-      const q = els.searchInput.value.trim();
-      els.finderPop.classList.add('show');
-
-      if (!q){
-        renderFileItemsProgressive(state.items);
-        state.matchArticles = [];
-        state.matchIdx = -1;
-        els.count.textContent = '0/0';
-        return;
-      }
-
-      els.searchSpinner.classList.add('show');
-      try{
-        const tokens = q.split(/\s+/).filter(Boolean).map(norm);
-        state.currentTokens = tokens;
-
-        const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
-
-        renderFileItemsAll(state.items);
-
-        requestAnimationFrame(()=>{
-          matchedMeta.forEach(m => {
-            const art = document.getElementById(m.htmlId);
-            if (art) highlightTextNodes(art, tokens);
-          });
-
-          state.matchArticles = matchedMeta
-            .map(m => document.getElementById(m.htmlId))
-            .filter(Boolean);
-
-          if (state.matchArticles.length){
-            state.matchIdx = 0;
-            state.matchArticles[0].scrollIntoView({behavior:'smooth', block:'center'});
-          } else {
-            state.matchIdx = -1;
-            notify('Nenhum resultado encontrado.');
-          }
-
-          els.count.textContent = state.matchArticles.length
-            ? `${state.matchIdx+1}/${state.matchArticles.length}`
-            : '0/0';
-
-          updateCurrentOutline();
-        });
-      } finally {
-        els.searchSpinner.classList.remove('show');
-      }
-    }
-
-    function updateCount(){
-      if (!state.matchArticles || state.matchArticles.length === 0){
-        els.count.textContent = '0/0';
-        return;
-      }
-      els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
-    }
-
-    function gotoNext(){
-      if (!state.matchArticles || state.matchArticles.length === 0) return;
-      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
-      const art = state.matchArticles[state.matchIdx];
-      art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount(); updateCurrentOutline();
-    }
-    function gotoPrev(){
-      if (!state.matchArticles || state.matchArticles.length === 0) return;
-      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
-      const art = state.matchArticles[state.matchIdx];
-      art.scrollIntoView({behavior:'smooth', block:'center'});
-      updateCount(); updateCurrentOutline();
-    }
-
-    /* =================== Filebar =================== */
-    function getVisibleTabsCount(){ return window.matchMedia('(max-width: 768px)').matches ? Infinity : 7; }
-
-    function renderFilebar(){
-      const options = getAllOptions();
-      const frag = document.createDocumentFragment();
-
-      const mkTab = (label, url=null, extraClass='')=>{
-        const b = document.createElement('button');
-        b.className = `tab ${extraClass}`;
-        b.type = 'button';
-        b.textContent = label;
-        b.dataset.url = url || '';
-        b.addEventListener('click', async ()=>{
-          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-          els.favTab.classList.remove('active');
-          b.classList.add('active');
-          if (url){ await loadFile(url, b); }
-        });
-        return b;
-      };
-
-      const visibleCap = getVisibleTabsCount();
-      if (visibleCap === Infinity){
-        options.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
-      } else {
-        const visible = options.slice(0, visibleCap);
-        const hidden = options.slice(visibleCap);
-        visible.forEach(opt=> frag.appendChild(mkTab(opt.label, opt.value)));
-
-        if (hidden.length){
-          const more = mkTab('Mais ▾', null, 'tab-more');
-          more.addEventListener('click', ()=>{ toggleMoreMenu(hidden, more); });
-          frag.appendChild(more);
-        }
-      }
-
-      els.filebarInner.innerHTML = '';
-      els.filebarInner.appendChild(frag);
-
-      const last = store.getLast();
-      if (last?.mode === 'file' && last?.fileUrl){
-        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
-        if (btn){ btn.classList.add('active'); }
-      } else {
-        els.favTab.classList.add('active');
-      }
-    }
-
-    function toggleMoreMenu(items, anchorBtn){
-      if (els.moreMenu.style.display === 'block'){
-        els.moreMenu.style.display = 'none';
-        els.moreMenu.setAttribute('aria-hidden','true');
-        return;
-      }
-      els.moreMenu.innerHTML = '';
-      items.forEach(it=>{
-        const bi = document.createElement('button');
-        bi.className = 'more-item';
-        bi.type = 'button';
-        bi.textContent = it.label;
-        bi.addEventListener('click', async ()=>{
-          els.moreMenu.style.display = 'none';
-          els.moreMenu.setAttribute('aria-hidden','true');
-          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-          anchorBtn.classList.add('active');
-          els.favTab.classList.remove('active');
-          await loadFile(it.value, anchorBtn);
-        });
-        els.moreMenu.appendChild(bi);
-      });
-      els.moreMenu.style.display = 'block';
-      els.moreMenu.setAttribute('aria-hidden','false');
-    }
-
-    /* =================== IA =================== */
-    function buildPrompt(a){
-      const split = a._split;
-      const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
-      const epiTop = split.epigrafe ? `Epígrafe: ${split.epigrafe}\n\n` : '';
-      const artigo = (split.titleText ? split.titleText + ' ' : '') + (split.body || '');
-      const tema = split.titleText || (a.title || 'Artigo');
-      return [
-        'Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ',
-        'Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ',
-        '(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ',
-        '(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ',
-        '(3) Exemplo prático — caso ilustrativo; ',
-        '(4) Princípios relacionados; ',
-        '(5) Pontos de atenção na prática; ',
-        '(6) Erros comuns/pegadinhas; ',
-        '(7) Artigos correlatos. ',
-        'Responda em português claro, objetivo e didático.\n\n',
-        `Tema: "${tema}"\n\n`,
-        epiTop + supraText + artigo,
-        '\n\n💚 direito.love'
-      ].join('');
-    }
-    function openIA(url){
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) location.href = url;
-      else window.open(url, '_blank', 'noopener,noreferrer');
-    }
-    function openStudyModal(_title, prompt){
-      els.modalTitle.textContent = 'Estude com I.A.'; // sem “Estude o … com I.A.”
-      els.promptPreview.textContent = prompt;
-      els.studyModal.setAttribute('aria-hidden','false');
-    }
-    function closeStudyModal(){
-      els.studyModal.setAttribute('aria-hidden','true');
-    }
-
-    /* =================== Eventos globais / atalhos =================== */
-    els.brandBtn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-      els.favTab.classList.add('active');
-      state.mode = 'favorites';
-      renderFavorites();
-      window.scrollTo({top:0,behavior:'instant'});
-    });
-
-    els.favTab.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-      els.favTab.classList.add('active');
-      state.mode = 'favorites';
-      renderFavorites();
-    });
-
-    function toggleClear(){ els.clearSearch.classList.toggle('show', !!els.searchInput.value); }
-    els.searchInput.addEventListener('input', toggleClear);
-    toggleClear();
-
-    els.searchInput.addEventListener('focus', ()=> els.finderPop.classList.add('show'));
-    els.closeFinder.addEventListener('click', ()=>{
-      els.finderPop.classList.remove('show');
-      els.searchInput.blur();
-    });
-
-    els.searchInput.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter'){
-        e.preventDefault();
-        withBusy(els.sendSearch, runLocalSearch);
-      } else if (e.key === 'Escape'){
-        els.searchInput.blur();
-        els.finderPop.classList.remove('show');
-      }
-    });
-    els.sendSearch.addEventListener('click', (e)=> withBusy(e.currentTarget, runLocalSearch));
-    els.clearSearch.addEventListener('click', ()=>{
-      els.searchInput.value = '';
-      toggleClear();
-      runLocalSearch();
-    });
-
-    els.nextBtn.addEventListener('click', ()=> gotoNext());
-    els.prevBtn.addEventListener('click', ()=> gotoPrev());
-
-    document.addEventListener('keydown', (e)=>{
-      if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !e.metaKey && !e.ctrlKey)){
-        e.preventDefault();
-        els.searchInput.focus();
-        els.searchInput.select();
-      }
-      if (e.key === 'F3' || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'g')){
-        e.preventDefault();
-        gotoNext();
-      }
-      if ((e.shiftKey && e.key === 'F3') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'g')){
-        e.preventDefault();
-        gotoPrev();
-      }
-      if (e.key === 'Escape'){
-        els.finderPop.classList.remove('show');
-        if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
-        els.moreMenu.style.display = 'none';
-        els.moreMenu.setAttribute('aria-hidden','true');
-        if (els.indexPanel){ els.indexPanel.classList.remove('show'); els.indexPanel.setAttribute('aria-hidden','true'); }
-      }
-    });
-
-    els.closeStudy.addEventListener('click', closeStudyModal);
-    els.studyModal.addEventListener('click', (e)=>{ if (e.target === els.studyModal) closeStudyModal(); });
-    document.querySelectorAll('.ia-btn').forEach(btn=>{
-      btn.addEventListener('click', async (e)=>{
-        const url = e.currentTarget.dataset.url;
-        const prompt = els.promptPreview.textContent || '';
-        try {
-          await navigator.clipboard.writeText(prompt);
-          notify('✅ Prompt copiado!');
-        } catch {
-          notify('⚠️ Não consegui copiar, copie manualmente.');
-        }
-        openIA(url);
-      });
-    });
-    els.copyPromptBtn.addEventListener('click', (e)=>{
-      withBusy(e.currentTarget, async ()=>{
-        try{ await navigator.clipboard.writeText(els.promptPreview.textContent||''); notify('✅ Prompt copiado!'); }
-        catch{ notify('Copie manualmente.'); }
-      });
-    });
-
-    // Ações nos cards
-    els.articles.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('.icon-btn');
-      if (!btn) return;
-      const artEl = e.target.closest('article'); if (!artEl) return;
-
-      const aidx = Number(artEl?.dataset.idx);
-      const a = (state.mode === 'file' ? state.articles.find(x=>x._aidx===aidx) : null);
-      const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
-
-      const entry = {
-        id,
-        fileUrl: artEl.dataset.fileUrl,
-        fileLabel: artEl.dataset.fileLabel,
-        htmlId: artEl.id,
-        text: state.mode === 'file' ? a?.text : (()=>{
-          const fav = store.listFavorites().find(e => e.id === id);
-          const stud = store.listStudied().find(e => e.id === id);
-          return fav?.text || stud?.text || '';
-        })()
-      };
-
-      if (btn.dataset.action === 'study'){
-        await withBusy(btn, async ()=>{
-          const useArticle = state.mode === 'file' ? a : {
-            text: entry.text,
-            _split: splitIntoBlocks(entry.text)[0] ? parseBlockToItem(splitIntoBlocks(entry.text)[0],0)._split : {supra:[], titleText:'Artigo', body:entry.text, epigrafe:''},
-            title: 'Artigo'
-          };
-          if (!useArticle?.text){ notify('Não consegui capturar o texto deste artigo.'); return; }
-          const prompt = buildPrompt(useArticle);
-          store.markStudied(entry);
-          btn.classList.add('active'); applyIconState(btn);
-          openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
-        });
-      }
-
-      if (btn.dataset.action === 'fav'){
-        await withBusy(btn, async ()=>{
-          if (store.isFavorite(id)){
-            store.removeFavorite(id);
-            btn.classList.remove('active'); applyIconState(btn);
-            notify('⭐ Removido dos favoritos');
-          } else {
-            if (!entry.text){ notify('Abra o arquivo para favoritar este artigo.'); return; }
-            store.addFavorite(entry);
-            btn.classList.add('active'); applyIconState(btn);
-            notify('⭐ Adicionado aos favoritos');
-          }
-        });
-      }
-    });
-
-    document.addEventListener('click', (e)=>{
-      if (!els.moreMenu.contains(e.target) && !e.target.closest('.tab-more')){
-        els.moreMenu.style.display = 'none';
-        els.moreMenu.setAttribute('aria-hidden','true');
-      }
-    });
-
-    window.addEventListener('scroll', ()=>{
-      updateCurrentOutline();
-      const last = store.getLast();
-      if (last){ store.saveLast({ scrollY: window.scrollY || 0 }); }
-    }, {passive:true});
-    window.addEventListener('resize', updateCurrentOutline, {passive:true});
-
-    /* =================== Restauração =================== */
-    function restoreViewAfterRender(){
-      const last = store.getLast();
-      if (!last) return;
-
-      if (last.articleId){
-        let tries = 0;
-        const max = 20;
-        const tick = ()=>{
-          const el = document.getElementById(last.articleId);
-          if (el){
-            el.scrollIntoView({behavior:'instant', block:'center'});
-            updateCurrentOutline();
-          } else if (tries++ < max){
-            setTimeout(tick, 100);
-          } else if (typeof last.scrollY === 'number'){
-            window.scrollTo({top:last.scrollY, behavior:'instant'});
-          }
-        };
-        tick();
-      } else if (typeof last.scrollY === 'number'){
-        window.scrollTo({top:last.scrollY, behavior:'instant'});
-      }
-    }
-
-    /* =================== Boot =================== */
-    async function boot(){
-      buildCatalogMaps();
-      renderFilebar();
-
-      const last = store.getLast();
-      if (last?.mode === 'file' && last?.fileUrl){
-        const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
-        if (btn){ btn.classList.add('active'); }
-        await loadFile(last.fileUrl, btn || null);
-        restoreViewAfterRender();
-      } else {
-        els.favTab.classList.add('active');
-        renderFavorites();
-        restoreViewAfterRender();
-      }
-    }
-    boot();
-  </script>
-</body>
-</html>
+    await loadFile(last.fileUrl, btn || null);
+    restoreViewAfterRender();
+  } else {
+    els.favTab.classList.add("active");
+    renderFavorites();
+    restoreViewAfterRender();
+  }
+}
+boot();
+</script>
