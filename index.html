@@ -912,13 +912,19 @@ function renderIndex() {
     d.textContent = oneLine;
     d.title = oneLine;
     d.addEventListener("click", () => {
-      const target = document.getElementById(it.htmlId);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      els.indexPanel.classList.remove("show");
-      els.indexPanel.setAttribute("aria-hidden", "true");
-    });
-    els.indexPanel.appendChild(d);
-  });
+  const target = document.getElementById(it.htmlId);
+  if (target) {
+    const y = target.getBoundingClientRect().top + window.scrollY;
+    const offset =
+      parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h")) +
+      parseInt(getComputedStyle(document.documentElement).getPropertyValue("--filebar-h")) +
+      12; // margem extra opcional
+    window.scrollTo({ top: y - offset, behavior: "smooth" });
+  }
+  els.indexPanel.classList.remove("show");
+  els.indexPanel.setAttribute("aria-hidden", "true");
+});
+
 }
 
 /* =================== RENDER FILE (ordem original) =================== */
