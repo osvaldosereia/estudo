@@ -172,50 +172,43 @@
       position:absolute; left:2%; bottom:0;
     }
 
-  /* ======== Fontes e Ícones dos Cards ======== */
+  /* ======== Fontes dos Cards ======== */
 .supra { 
   color:#6c7282; 
   font-weight:500; 
-  font-size:14px;       /* mesmo tamanho que todo o texto */
+  font-size:14px; 
   margin:0 0 6px; 
 }
 .supra div { line-height:1.42; }
 
 .art-head { 
-  display:flex; 
-  align-items:flex-start; 
-  justify-content:space-between; 
-  gap:10px; 
+  position: relative;   /* referência para os ícones absolutos */
   margin:0 0 6px; 
 }
 
 .art-title { 
-  flex: 1 1 auto;  /* 👈 força o título a ocupar o espaço */
-  min-width: 0;
-  display:block; 
   font-weight:400; 
   color:#0e1638; 
-  font-size:14px;        /* mesmo tamanho do corpo */
+  font-size:14px; 
   line-height:1.42;
   margin:0;
 }
 
-
 .art-epigrafe {
-  font-size:14px;       /* igual ao corpo */
+  font-size:14px; 
   font-weight:400; 
   color:#0e1638; 
   margin:0 0 6px 0;
 }
 
 .art-body { 
-  font-size:14px;       /* igual ao caput */
+  font-size:14px; 
   line-height:1.42; 
 }
 
 .paren { 
   color: rgba(0,0,0,.6); 
-  font-size:12px;       /* 2px menor que o corpo */
+  font-size:12px; 
 }
 
 /* Unificação: garante que tudo dentro do card fique igual */
@@ -230,10 +223,12 @@ article .supra {
 
 /* ======== Ícones ======== */
 .art-actions {
+  position: absolute;   /* sai do fluxo → não afeta texto */
+  top: 0;               /* canto superior */
+  right: 0;             /* canto direito */
   display: flex;
-  flex-direction: column;   /* um abaixo do outro */
-  align-items: flex-start;  /* alinhados à esquerda */
-  gap: 6px;                 /* espaço vertical entre ícones */
+  flex-direction: row;  /* ícones lado a lado */
+  gap: 8px;
 }
 
 .icon-btn {
@@ -242,7 +237,6 @@ article .supra {
   display:grid; 
   place-items:center; 
   cursor:pointer; 
-  position:relative; 
   border:0; 
   background:transparent; 
   padding:0;
@@ -250,7 +244,7 @@ article .supra {
 }
 
 .icon-btn img {
-  width:14px;   /* tamanho real do ícone */
+  width:14px;   
   height:14px; 
   display:block; 
   opacity:.6; 
@@ -259,6 +253,7 @@ article .supra {
 .icon-btn.active img { opacity:1; }
 .icon-btn.active[data-action="fav"] { color:var(--icon-fav); }
 .icon-btn.active[data-action="study"] { color:var(--icon-study); }
+
 
 
 
