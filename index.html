@@ -67,9 +67,7 @@
       flex:1; display:flex; justify-content:flex-end; align-items:center;
       position:relative; min-width:0; gap:8px;
     }
-    .search{
-      width:min(560px, 100%); position:relative;
-    }
+    .search{ width:min(560px, 100%); position:relative; }
     .search input::-webkit-search-cancel-button{ -webkit-appearance:none; height:0; width:0; margin:0; }
     .search input::-ms-clear{ display:none; width:0; height:0; }
     .search input{
@@ -93,7 +91,6 @@
 
     .search-send{
       display:none; width:38px; height:38px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
-      position:relative;
     }
     .search-send svg{ width:18px; height:18px; }
     @media (min-width: 992px){
@@ -106,9 +103,19 @@
       background:#fff; box-shadow:0 1px 0 var(--line); z-index:99;
       display:flex; align-items:center; justify-content:center;
     }
-    .filebar-inner{
+    .filebar-shell{
       width:min(var(--wrap-max), 92vw);
-      display:flex; align-items:center; gap:16px; padding:0 6px; overflow-x:auto; scrollbar-width:none;
+      display:flex; align-items:center; gap:12px; padding:0 6px;
+    }
+    .filebar-left{ flex:0 0 auto; display:flex; align-items:center; }
+    .fav-tab{
+      width:34px; height:34px; border-radius:10px; border:1px solid #e7eaf3; background:#fff; display:grid; place-items:center; cursor:pointer;
+    }
+    .fav-tab img{ width:20px; height:20px; display:block; }
+    .fav-tab.active{ border-color:#ffe39a; background:#fffbe8; }
+    .filebar-inner{
+      flex:1 1 auto;
+      display:flex; align-items:center; gap:16px; overflow-x:auto; scrollbar-width:none;
     }
     .filebar-inner::-webkit-scrollbar{ display:none; }
     .tab{
@@ -120,7 +127,6 @@
     .tab.active::after{
       content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--blue); border-radius:2px;
     }
-    .tab-more{ }
 
     .more-menu{
       position:fixed; top:calc(var(--topbar-h) + var(--filebar-h)); right:calc((100vw - min(var(--wrap-max), 92vw))/2 + 6px);
@@ -145,6 +151,14 @@
     }
     .section-empty{ color:#6c7282; font-size:13px; margin:6px 4px 12px; }
 
+    /* ======== Bloco de cabeçalhos (PARTE/LIVRO/TÍTULO/...) ======== */
+    .law-heading{
+      padding:12px 4px 8px;
+    }
+    .law-heading pre{
+      margin:0; white-space:pre-wrap; font:13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0e1638;
+    }
+
     /* ======== Artigos ======== */
     article{
       white-space:pre-wrap;
@@ -165,7 +179,6 @@
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
     .art-actions{ display:flex; align-items:center; gap:10px }
 
-    /* Epígrafes */
     .art-epigrafe{
       font-size:12px;
       font-weight:700;
@@ -178,10 +191,7 @@
       width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
       color:var(--icon-muted);
     }
-    .icon-btn img{
-      width:18px; height:18px; display:block;
-      opacity:.6;
-    }
+    .icon-btn img{ width:18px; height:18px; display:block; opacity:.6; }
     .icon-btn.active img{ opacity:1; }
     .icon-btn.active[data-action="fav"]{ color:var(--icon-fav); }
     .icon-btn.active[data-action="study"]{ color:var(--icon-study); }
@@ -267,7 +277,7 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-inner">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Destaques)">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
       <div class="search-wrap">
         <div class="search">
           <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
@@ -283,7 +293,14 @@
 
   <!-- FILEBAR -->
   <nav class="filebar" aria-label="Documentos">
-    <div class="filebar-inner" id="filebarInner"></div>
+    <div class="filebar-shell">
+      <div class="filebar-left">
+        <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
+          <img src="icons/favorito-active.svg" alt="Favoritos">
+        </button>
+      </div>
+      <div class="filebar-inner" id="filebarInner"></div>
+    </div>
   </nav>
 
   <!-- DROPDOWN MAIS -->
@@ -389,6 +406,8 @@
     /* =================== Refs =================== */
     const els = {
       brandBtn: document.getElementById('brandBtn'),
+      favTab: document.getElementById('favTab'),
+
       searchInput: document.getElementById('searchInput'),
       searchSpinner: document.getElementById('searchSpinner'),
       clearSearch: document.getElementById('clearSearch'),
@@ -419,11 +438,12 @@
 
     /* =================== Estado + Storage =================== */
     const state = {
-      mode: 'highlights', // highlights | file
+      mode: 'favorites', // favorites | file
       currentFileUrl: null,
       currentFileLabel: '',
       rawText: '',
-      articles: [],
+      items: [],        // headings + articles (na ordem do arquivo)
+      articles: [],     // apenas artigos
       currentArticleIdx: -1,
 
       currentTokens: [],
@@ -529,256 +549,105 @@
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
-    /* =================== Parser NOVO (corrigido) =================== */
-function splitIntoBlocks(txt){
-  const cleaned = sanitizeForLayout(
-    txt
-      .replace(/^\uFEFF/, '')
-      .replace(/\r\n/g, '\n')
-      .replace(/[ \t]+/g, ' ') // remove espaços excessivos
-  );
-  // divide pelos delimitadores "-----" em linha própria
-  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
-  return parts.filter(Boolean);
-}
+    /* =================== Parser NOVO (com detecção de cabeçalhos) =================== */
+    function splitIntoBlocks(txt){
+      const cleaned = sanitizeForLayout(
+        txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ')
+      );
+      // divide pelos delimitadores "-----" em linha própria
+      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
+      return parts.filter(Boolean);
+    }
 
-function parseBlock(block, idx){
-  // normaliza linhas e remove linhas vazias
-  const lines = block.split(/\n/).map(l => l.trim());
-  const filtered = lines.filter(l => l.length > 0);
+    function parseBlockToItem(block, idx){
+      // Mantém linhas como vieram (não mexemos no texto dos cabeçalhos)
+      const lines = block.split(/\n/);
 
-  let epigrafe = "";
-  let titleLine = "";
-  let bodyLines = [];
+      // Procura primeira linha de título de artigo/súmula
+      const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
 
-  if (!filtered.length){
-    return {
-      title: `Bloco ${idx+1}`,
-      text: block,
-      htmlId: `art-${idx}`,
-      html: block,
-      _split: { supra: [], titleText: `Bloco ${idx+1}`, body: "", epigrafe: "" }
-    };
-  }
+      // Se NÃO tem "Art" nem "Súmula" -> é um bloco de cabeçalhos/seções; não vira card
+      if (artIdx === -1){
+        return {
+          kind: 'heading',
+          raw: block,       // mostramos exatamente como veio
+          htmlId: `h-${idx}`
+        };
+      }
 
-  // Se 1ª linha não começa com "Art" nem "Súmula", é epígrafe
-  if (!/^(Art|S[úu]mula)/i.test(filtered[0])) {
-    epigrafe = filtered[0];
-    filtered.shift();
-  }
+      // Há artigo/súmula: tudo antes vira epígrafe (se existir)
+      const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+      const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
 
-  // Linha de título (Art/Súmula) ou fallback
-  if (filtered.length && /^(Art|S[úu]mula)/i.test(filtered[0])) {
-    titleLine = filtered[0];
-    filtered.shift();
-  } else {
-    titleLine = filtered.shift() || `Bloco ${idx+1}`;
-  }
+      const epigrafe = pre.length ? pre.join('\n') : '';
+      const titleLine = after.shift() || '';
+      const bodyLines = after;
 
-  bodyLines = filtered;
+      // garante linha em branco após §/Parágrafo/Inciso/Alínea no texto puro
+      const ensureBlank = (txt)=> txt.replace(
+        /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+        (_,a,b)=> `${a}\n\n${b}`
+      );
+      const bodyText = ensureBlank(bodyLines.join('\n'));
 
-  // Texto puro p/ busca/armazenamento (sem HTML) + 1 linha em branco após §/Parágrafo/Inciso/Alínea
-  const ensureBlank = (txt)=>{
-    return txt.replace(
-      /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-      (_,a,b)=> `${a}\n\n${b}`
-    );
-  };
+      const textForStorage = [
+        epigrafe ? `Epígrafe: ${epigrafe}` : '',
+        titleLine,
+        bodyText
+      ].filter(Boolean).join('\n');
 
-  const bodyText = ensureBlank(bodyLines.join('\n'));
+      return {
+        kind: 'article',
+        title: titleLine || `Bloco ${idx+1}`,
+        text: textForStorage,
+        htmlId: `art-${idx}`, // reatribuiremos id sequencial de artigos depois
+        _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
+      };
+    }
 
-  const textForStorage = [
-    epigrafe ? `Epígrafe: ${epigrafe}` : '',
-    titleLine,
-    bodyText
-  ].filter(Boolean).join('\n');
+    function renderWithStyles(titleLine, body, epigrafe){
+      // Título: negritar apenas o prefixo (Art. N / Súmula N)
+      let tLine = titleLine;
+      tLine = tLine.replace(/^(Art\.?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
+        (m, id, dot = '', rest = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`);
+      tLine = tLine.replace(/^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
+        (m, id, dot = '', rest = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`);
 
-  // HTML apenas para UI
-  const html = renderWithStyles(titleLine, bodyText, epigrafe);
+      const fadeParentheses = (txt)=> txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
 
-  return {
-    title: titleLine || `Bloco ${idx+1}`,
-    text: textForStorage,
-    htmlId: `art-${idx}`,
-    html,
-    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
-  };
-}
+      // Destaque apenas do prefixo nas linhas de corpo (Parágrafo/§/inciso/alínea)
+      const boldOnlyPrefix = (line)=>{
+        line = line.replace(/^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/, '<strong>$1</strong>');
+        line = line.replace(/^§+\s*\d+[ºo]?/i, (m)=> `<strong>${m.trim()}</strong>`);
+        line = line.replace(/^([IVXLCDM]+)\s*([\-–—.])\s*/i, (m, romano, sep)=> `<strong>${romano}</strong>${sep} `);
+        line = line.replace(/^([a-z])\)/i, (m, letra)=> `<strong>${letra})</strong>`);
+        return line;
+      };
 
-/* ========= RENDER COM ESTILO (só para UI) ========= */
-function renderWithStyles(titleLine, body, epigrafe){
-  let tLine = titleLine;
+      const bodyHtml = body.split('\n').map(l => boldOnlyPrefix(fadeParentheses(l))).join('\n');
 
-  // ✅ Só o prefixo "Art. N" ou "Súmula N" fica negrito+azul; caput permanece normal
-  tLine = tLine.replace(
-    /^(Art\.?\s*\d+[A-Z]?)(\.)?(.*)$/i,
-    (m, id, dot = '', rest = '') =>
-      `<span class="art-title"><strong>${id}</strong></span>${dot}${rest}`
-  );
-  tLine = tLine.replace(
-    /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?(.*)$/i,
-    (m, id, dot = '', rest = '') =>
-      `<span class="art-title"><strong>${id}</strong></span>${dot}${rest}`
-  );
+      return [
+        epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
+        tLine,
+        bodyHtml
+      ].filter(Boolean).join('\n');
+    }
 
-  // () 50% mais claros
-  const fadeParentheses = (txt)=> txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+    function parseByUrl(url, txt){
+      const blocks = splitIntoBlocks(txt);
+      const items = blocks.map((b,i)=> parseBlockToItem(b,i));
 
-  // Bold somente no IDENTIFICADOR inicial de parágrafo/inciso/alínea
-  const boldOnlyPrefix = (line)=>{
-    // Parágrafo único
-    line = line.replace(/^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/, '<strong>$1</strong>');
-    // § 1º / §1º / § 2 / §2
-    line = line.replace(/^§+\s*\d+[ºo]?/i, (m)=> `<strong>${m.trim()}</strong>`);
-    // Incisos: I -, II –, III.
-    line = line.replace(/^([IVXLCDM]+)\s*([\-–—.])\s*/i, (m, romano, sep)=> `<strong>${romano}</strong>${sep} `);
-    // Alíneas: a) b) c)
-    line = line.replace(/^([a-z])\)/i, (m, letra)=> `<strong>${letra})</strong>`);
-    return line;
-  };
-
-  const bodyHtml = body
-    .split('\n')
-    .map(l => boldOnlyPrefix(fadeParentheses(l)))
-    .join('\n');
-
-  return [
-    epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
-    tLine,
-    bodyHtml
-  ].filter(Boolean).join('\n');
-}
-
-/* ========= Parser principal ========= */
-function parseByDelimiters(txt){
-  const blocks = splitIntoBlocks(txt);
-  return blocks.map((b,i)=> parseBlock(b,i));
-}
-
-function parseByUrl(url, txt){
-  return parseByDelimiters(txt);
-}
-
-
-/* ========= RENDER COM ESTILO (só para UI) ========= */
-function renderWithStyles(titleLine, body, epigrafe){
-  // 1) TÍTULO: negritar APENAS "Art N" ou "Súmula N" no INÍCIO da linha
-  let tLine = titleLine;
-
-  // Art. 12 / Art 12 / Art. 12-A (preserva o ponto após o número se existir)
-  tLine = tLine.replace(
-    /^(Art\.?\s*\d+[A-Z]?)(\.)?\s*/i,
-    (m, id, dot = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} `
-  );
-
-  // Súmula 123 / Súmula Vinculante 13
-  tLine = tLine.replace(
-    /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*/i,
-    (m, id, dot = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} `
-  );
-
-  // 2) COR MAIS CLARA para parênteses
-  const fadeParentheses = (txt)=>{
-    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
-  };
-
-  // 3) DESTACAR SOMENTE O IDENTIFICADOR do parágrafo/inciso/alínea no início da linha
-  const boldOnlyPrefix = (line)=>{
-    // Parágrafo único
-    line = line.replace(
-      /^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/,
-      '<strong>$1</strong>'
-    );
-
-    // § 1º / §1º / § 2 / §2
-    line = line.replace(
-      /^§+\s*\d+[ºo]?/i,
-      (m)=> `<strong>${m.trim()}</strong>`
-    );
-
-    // Incisos: I -, II –, III.  (preserva o separador)
-    line = line.replace(
-      /^([IVXLCDM]+)\s*([\-–—.])\s*/i,
-      (m, romano, sep)=> `<strong>${romano}</strong>${sep} `
-    );
-
-    // Alíneas: a) b) c) (maiúscula/minúscula)
-    line = line.replace(
-      /^([a-z])\)/i,
-      (m, letra)=> `<strong>${letra})</strong>`
-    );
-
-    return line;
-  };
-
-  // Aplica clareamento de parênteses + bold do prefixo por linha
-  let b = body
-    .split('\n')
-    .map(l => boldOnlyPrefix(fadeParentheses(l)))
-    .join('\n');
-
-  // Monta saída HTML
-  return [
-    epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
-    tLine,
-    b
-  ].filter(Boolean).join('\n');
-}
-
-/* ========= Parser principal ========= */
-function parseByDelimiters(txt){
-  const blocks = splitIntoBlocks(txt);
-  return blocks.map((b,i)=> parseBlock(b,i));
-}
-
-function parseByUrl(url, txt){
-  return parseByDelimiters(txt);
-}
-
-/* ========= RENDER COM ESTILO (só para UI) ========= */
-function renderWithStyles(titleLine, body, epigrafe){
-  let tLine = titleLine;
-
-  // Negrito + Azul no título
-  // ✅ novo: só deixa negrito/azul o prefixo (Art. N / Súmula N)
-tLine = tLine.replace(
-  /^(Art\.?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
-  (m, id, dot = '', rest = '') =>
-    `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`
-);
-
-tLine = tLine.replace(
-  /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
-  (m, id, dot = '', rest = '') =>
-    `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`
-);
-
-
-  // Deixa () em cor mais clara
-  const fadeParentheses = (txt)=>{
-    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
-  };
-
-  let b = fadeParentheses(body);
-
-  return [
-    epigrafe ? `<em>${epigrafe}</em>` : '',
-    tLine,
-    b
-  ].filter(Boolean).join('\n');
-}
-
-/* ========= Parser principal ========= */
-function parseByDelimiters(txt){
-  const blocks = splitIntoBlocks(txt);
-  return blocks.map((b,i)=> parseBlock(b,i));
-}
-
-function parseByUrl(url, txt){
-  return parseByDelimiters(txt);
-}
-
-
+      // Reatribui ids sequenciais apenas para artigos e cria índice de artigos
+      let aidx = 0;
+      items.forEach(it=>{
+        if (it.kind === 'article'){
+          it.htmlId = `art-${aidx}`;
+          it._aidx = aidx;
+          aidx++;
+        }
+      });
+      return items;
+    }
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
@@ -848,18 +717,26 @@ function parseByUrl(url, txt){
       const src = img.getAttribute('data-src');
       const active = img.getAttribute('data-active');
       if (btn.classList.contains('active') && active){
-        img.src = active;
-        img.style.opacity = 1;
+        img.src = active; img.style.opacity = 1;
       } else if (src){
-        img.src = src;
-        img.style.opacity = .6;
+        img.src = src; img.style.opacity = .6;
       }
     }
 
-    function buildArticleElement(a, idx, {globalMode=false}={}){
+    function buildHeadingElement(item){
+      const el = document.createElement('div');
+      el.className = 'law-heading';
+      el.id = item.htmlId;
+      const pre = document.createElement('pre');
+      pre.textContent = item.raw; // exatamente como veio
+      el.appendChild(pre);
+      return el;
+    }
+
+    function buildArticleElement(a){
       const el = document.createElement('article');
-      el.dataset.idx = idx;
-      el.id = a.htmlId || `art-${idx}`;
+      el.dataset.idx = a._aidx;
+      el.id = a.htmlId || `art-${a._aidx}`;
       el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || '';
       el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || '';
 
@@ -868,9 +745,9 @@ function parseByUrl(url, txt){
       const supraWrap = document.createElement('div');
       supraWrap.className = 'supra';
 
-      if (globalMode && (a._fileLabel || a._fileUrl)){
+      if (a._fileLabel || a._fileUrl){
         const badge = document.createElement('div');
-        badge.textContent = `[${a._fileLabel || state.urlToLabel.get(a._fileUrl)||'Arquivo'}]`;
+        badge.textContent = a._fileLabel || state.urlToLabel.get(a._fileUrl) || 'Arquivo';
         supraWrap.appendChild(badge);
       }
       if (split.supra && split.supra.length){
@@ -882,7 +759,6 @@ function parseByUrl(url, txt){
       }
       if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
 
-      // Epígrafe ANTES do Art.
       if (split.epigrafe){
         const epiTop = document.createElement('div');
         epiTop.className = 'art-epigrafe';
@@ -913,25 +789,21 @@ function parseByUrl(url, txt){
       head.append(titleSpan, actions);
       el.appendChild(head);
 
-      // ===== Corpo =====
+      // Corpo
       const content = document.createElement('div');
       content.className = 'art-body';
 
-      // Regras visuais: bold em Parágrafo/§/Incisos/Alíneas e uma linha vazia de separação
       let body = split.body || '';
       body = body
-        // (já garantimos quebras no parser; aqui reforçamos)
         .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi, "\n\n$2")
         .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
         .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
 
       const html = body
-        // negritos
         .replace(/(^|\n)(\s*Par[aá]grafo(?:\s+único)?)/gi, '<br><b>$2</b>')
         .replace(/(^|\n)(\s*§[^ \n]*)/g, '<br><b>$2</b>')
         .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
         .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
-        // quebras
         .replace(/\n\n/g, '<br>')
         .replace(/\n/g, '<br>');
 
@@ -995,28 +867,21 @@ function parseByUrl(url, txt){
       });
     }
 
-    /* =================== RENDER (progressivo) =================== */
-    function renderArticlesAll(list){
+    /* =================== RENDER FILE (itens na ordem) =================== */
+    function renderFileItemsProgressive(items, {chunkSize=30}={}){
       clearArticles();
-      if (!list.length){
-        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
+      if (!items.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
         return;
       }
+      const first = Math.min(8, items.length);
       const frag = document.createDocumentFragment();
-      list.forEach((a,i)=> frag.appendChild(buildArticleElement(a, i, {globalMode:false})));
-      els.articles.appendChild(frag);
-      updateCurrentOutline();
-    }
-
-    function renderArticlesProgressive(list, {chunkSize=30}={}){
-      clearArticles();
-      if (!list.length){
-        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nenhum artigo.</div>';
-        return;
+      let aCount = 0;
+      for (let i=0;i<first;i++){
+        const it = items[i];
+        if (it.kind === 'heading'){ frag.appendChild(buildHeadingElement(it)); }
+        else { frag.appendChild(buildArticleElement(it)); aCount++; }
       }
-      const first = Math.min(5, list.length);
-      const frag = document.createDocumentFragment();
-      for (let i=0;i<first;i++){ frag.appendChild(buildArticleElement(list[i], i, {globalMode:false})); }
       els.articles.appendChild(frag);
       updateCurrentOutline();
 
@@ -1024,65 +889,106 @@ function parseByUrl(url, txt){
       function appendChunk(){
         const fr = document.createDocumentFragment();
         let added = 0;
-        while (i < list.length && added < chunkSize){
-          fr.appendChild(buildArticleElement(list[i], i, {globalMode:false}));
+        while (i < items.length && added < chunkSize){
+          const it = items[i];
+          if (it.kind === 'heading'){ fr.appendChild(buildHeadingElement(it)); }
+          else { fr.appendChild(buildArticleElement(it)); }
           i++; added++;
         }
         els.articles.appendChild(fr);
         updateCurrentOutline();
-        if (i < list.length){
+        if (i < items.length){
           if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
           else { setTimeout(appendChunk, 0); }
         }
       }
-      if (first < list.length){
+      if (first < items.length){
         if ('requestIdleCallback' in window){ requestIdleCallback(appendChunk); }
         else { setTimeout(appendChunk, 0); }
       }
     }
 
-    function renderHighlights(){
+    function renderFileItemsAll(items){
+      clearArticles();
+      const frag = document.createDocumentFragment();
+      items.forEach(it=>{
+        if (it.kind === 'heading') frag.appendChild(buildHeadingElement(it));
+        else frag.appendChild(buildArticleElement(it));
+      });
+      els.articles.appendChild(frag);
+      updateCurrentOutline();
+    }
+
+    /* =================== FAVORITOS =================== */
+    function renderFavorites(){
       clearArticles();
 
-      const combined = [
-        ...store.listFavorites(),
-        ...store.listStudied()
-      ];
-
-      if (!combined.length){
-        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada por aqui ainda.</div>';
+      const favs = store.listFavorites();
+      if (!favs.length){
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
         return;
       }
 
-      const merged = sortByTsDesc(combined);
+      // Agrupa por arquivo e ordena grupos pela ordem do catálogo (ou alfabética fallback)
+      const order = getAllOptions().map(o=>o.value);
+      const byFile = new Map();
+      favs.forEach(f=>{
+        const key = f.fileLabel || f.fileUrl || 'Arquivo';
+        if (!byFile.has(key)) byFile.set(key, []);
+        byFile.get(key).push(f);
+      });
 
-      let idx = 0;
+      // ordena internos por ts desc
+      for (const [k, arr] of byFile.entries()){
+        byFile.set(k, sortByTsDesc(arr));
+      }
+
+      const groups = Array.from(byFile.entries()).sort((a,b)=>{
+        const aUrl = (favs.find(x=>x.fileLabel===a[0])||{}).fileUrl;
+        const bUrl = (favs.find(x=>x.fileLabel===b[0])||{}).fileUrl;
+        const ai = aUrl ? order.indexOf(aUrl) : Infinity;
+        const bi = bUrl ? order.indexOf(bUrl) : Infinity;
+        if (ai !== bi) return ai - bi;
+        return a[0].localeCompare(b[0]);
+      });
+
       const frag = document.createDocumentFragment();
-      merged.forEach(entry=>{
-        // reconstrói split a partir do texto salvo
-        const parsed = parseByDelimiters(entry.text).at(0) || {
-          title: 'Artigo',
-          text: entry.text,
-          htmlId: entry.htmlId,
-          _split: {supra:[], titleText:'Artigo', body:entry.text, epigrafe:''}
-        };
-        const art = {
-          title: parsed.title,
-          text: entry.text,
-          htmlId: entry.htmlId,
-          _split: parsed._split,
-          _fileUrl: entry.fileUrl,
-          _fileLabel: entry.fileLabel
-        };
-        frag.appendChild(buildArticleElement(art, idx++, {globalMode:true}));
+      let idx = 0;
+
+      groups.forEach(([label, list])=>{
+        const h = document.createElement('div');
+        h.className = 'section-title';
+        h.textContent = label;
+        frag.appendChild(h);
+
+        list.forEach(entry=>{
+          const parsed = (()=>{
+            const p = splitIntoBlocks(entry.text);
+            if (!p.length) return null;
+            const item = parseBlockToItem(p[0], 0);
+            if (!item || item.kind !== 'article') return null;
+            item._fileUrl = entry.fileUrl;
+            item._fileLabel = entry.fileLabel;
+            item._aidx = idx++;
+            item.htmlId = item.htmlId || `fav-${idx}`;
+            return item;
+          })();
+
+          if (parsed){
+            frag.appendChild(buildArticleElement(parsed));
+          }
+        });
       });
 
       els.articles.appendChild(frag);
-
       window.scrollTo({top:0,behavior:'instant'});
-      state.mode = 'highlights';
-      store.saveLast({ mode:'highlights', fileUrl:null, scrollY: 0, articleId: null });
+      state.mode = 'favorites';
+      store.saveLast({ mode:'favorites', fileUrl:null, scrollY: 0, articleId: null });
       updateCurrentOutline();
+
+      // UI: ativar estrela, desativar tabs
+      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+      els.favTab.classList.add('active');
     }
 
     /* =================== Loader =================== */
@@ -1095,13 +1001,14 @@ function parseByUrl(url, txt){
       return txt;
     }
 
-    function addNormalizedField(list){
-      list.forEach(a=>{
+    function addNormalizedFieldToArticles(items){
+      const arts = items.filter(it=>it.kind==='article');
+      arts.forEach(a=>{
         const s = a._split;
         const combo = [s.titleText || '', s.epigrafe || '', ...(s.supra||[]), s.body || ''].join(' ');
         a._norm = norm(combo);
       });
-      return list;
+      return arts;
     }
 
     async function loadFile(url, tabBtn){
@@ -1111,17 +1018,20 @@ function parseByUrl(url, txt){
         try{
           const txt = await fetchTextCached(url);
           state.rawText = txt;
-          const list = addNormalizedField(parseByUrl(url, txt));
+          const items = parseByUrl(url, txt);
           state.currentFileUrl = url;
           state.currentFileLabel = state.urlToLabel.get(url) || 'Documento';
-          state.articles = list;
+          state.items = items;
+          state.articles = addNormalizedFieldToArticles(items);
           state.mode = 'file';
 
-          renderArticlesProgressive(list);
+          renderFileItemsProgressive(items);
           window.scrollTo({top:0,behavior:'instant'});
           notify(`Carregado: ${state.currentFileLabel}`);
 
           store.saveLast({ mode:'file', fileUrl:url, scrollY:0, articleId:null });
+
+          els.favTab.classList.remove('active');
         }catch(err){
           console.error(err);
           els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
@@ -1143,7 +1053,7 @@ function parseByUrl(url, txt){
       els.finderPop.classList.add('show');
 
       if (!q){
-        renderArticlesProgressive(state.articles);
+        renderFileItemsProgressive(state.items);
         state.matchArticles = [];
         state.matchIdx = -1;
         els.count.textContent = '0/0';
@@ -1157,17 +1067,16 @@ function parseByUrl(url, txt){
 
         const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
-        // 1) Garante DOM completo
-        renderArticlesAll(state.articles);
+        // Re-render completo (mantendo cabeçalhos)
+        renderFileItemsAll(state.items);
 
-        // 2) Marca apenas os artigos com match
+        // Destaca apenas os artigos com match
         requestAnimationFrame(()=>{
           matchedMeta.forEach(m => {
             const art = document.getElementById(m.htmlId);
             if (art) highlightTextNodes(art, tokens);
           });
 
-          // 3) Navegação
           state.matchArticles = matchedMeta
             .map(m => document.getElementById(m.htmlId))
             .filter(Boolean);
@@ -1229,19 +1138,12 @@ function parseByUrl(url, txt){
         b.dataset.url = url || '';
         b.addEventListener('click', async ()=>{
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+          els.favTab.classList.remove('active');
           b.classList.add('active');
-          if (!url){
-            state.mode = 'highlights';
-            renderHighlights();
-            return;
-          }
-          await loadFile(url, b);
+          if (url){ await loadFile(url, b); }
         });
         return b;
       };
-
-      const tabHighlights = mkTab('Destaques', null);
-      frag.appendChild(tabHighlights);
 
       const visibleCap = getVisibleTabsCount();
       if (visibleCap === Infinity){
@@ -1261,12 +1163,13 @@ function parseByUrl(url, txt){
       els.filebarInner.innerHTML = '';
       els.filebarInner.appendChild(frag);
 
+      // Ativa seleção baseada no last view
       const last = store.getLast();
       if (last?.mode === 'file' && last?.fileUrl){
         const btn = [...els.filebarInner.querySelectorAll('.tab')].find(t => t.dataset.url === last.fileUrl);
         if (btn){ btn.classList.add('active'); }
       } else {
-        tabHighlights.classList.add('active');
+        els.favTab.classList.add('active');
       }
     }
 
@@ -1287,6 +1190,7 @@ function parseByUrl(url, txt){
           els.moreMenu.setAttribute('aria-hidden','true');
           document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
           anchorBtn.classList.add('active');
+          els.favTab.classList.remove('active');
           await loadFile(it.value, anchorBtn);
         });
         els.moreMenu.appendChild(bi);
@@ -1334,11 +1238,17 @@ function parseByUrl(url, txt){
     /* =================== Eventos globais / atalhos =================== */
     els.brandBtn.addEventListener('click', ()=>{
       document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-      const first = els.filebarInner.querySelector('.tab');
-      if (first){ first.classList.add('active'); }
-      state.mode = 'highlights';
-      renderHighlights();
+      els.favTab.classList.add('active');
+      state.mode = 'favorites';
+      renderFavorites();
       window.scrollTo({top:0,behavior:'instant'});
+    });
+
+    els.favTab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
+      els.favTab.classList.add('active');
+      state.mode = 'favorites';
+      renderFavorites();
     });
 
     function toggleClear(){ els.clearSearch.classList.toggle('show', !!els.searchInput.value); }
@@ -1420,8 +1330,8 @@ function parseByUrl(url, txt){
       if (!btn) return;
       const artEl = e.target.closest('article'); if (!artEl) return;
 
-      const idx = Number(artEl?.dataset.idx);
-      const a = (state.mode === 'file' ? state.articles[idx] : null);
+      const aidx = Number(artEl?.dataset.idx);
+      const a = (state.mode === 'file' ? state.articles.find(x=>x._aidx===aidx) : null);
       const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
 
       const entry = {
@@ -1437,35 +1347,18 @@ function parseByUrl(url, txt){
       };
 
       if (btn.dataset.action === 'study'){
+        // ⛔ Não envia para favoritos. Apenas marca estudado e abre modal.
         await withBusy(btn, async ()=>{
           const useArticle = state.mode === 'file' ? a : {
             text: entry.text,
-            _split: parseByDelimiters(entry.text)[0]?._split || {supra:[], titleText:'Artigo', body:entry.text, epigrafe:''},
-            title: parseByDelimiters(entry.text)[0]?.title || 'Artigo'
+            _split: splitIntoBlocks(entry.text)[0] ? parseBlockToItem(splitIntoBlocks(entry.text)[0],0)._split : {supra:[], titleText:'Artigo', body:entry.text, epigrafe:''},
+            title: 'Artigo'
           };
           if (!useArticle?.text){ notify('Não consegui capturar o texto deste artigo.'); return; }
-
           const prompt = buildPrompt(useArticle);
           store.markStudied(entry);
-
-          btn.classList.add('active');
-          applyIconState(btn);
-
+          btn.classList.add('active'); applyIconState(btn);
           openStudyModal((useArticle._split?.titleText) || useArticle.title || 'Artigo', prompt);
-
-          document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
-          const first = els.filebarInner.querySelector('.tab');
-          if (first){ first.classList.add('active'); }
-          state.mode = 'highlights';
-          renderHighlights();
-
-          setTimeout(()=>{
-            const target = [...document.querySelectorAll('article')].find(aEl=>{
-              const madeId = store.makeId(aEl.dataset.fileUrl, aEl.id);
-              return madeId === id;
-            });
-            if (target){ target.scrollIntoView({behavior:'smooth', block:'center'}); }
-          }, 60);
         });
       }
 
@@ -1473,14 +1366,12 @@ function parseByUrl(url, txt){
         await withBusy(btn, async ()=>{
           if (store.isFavorite(id)){
             store.removeFavorite(id);
-            btn.classList.remove('active');
-            applyIconState(btn);
+            btn.classList.remove('active'); applyIconState(btn);
             notify('⭐ Removido dos favoritos');
           } else {
             if (!entry.text){ notify('Abra o arquivo para favoritar este artigo.'); return; }
             store.addFavorite(entry);
-            btn.classList.add('active');
-            applyIconState(btn);
+            btn.classList.add('active'); applyIconState(btn);
             notify('⭐ Adicionado aos favoritos');
           }
         });
@@ -1538,9 +1429,8 @@ function parseByUrl(url, txt){
         await loadFile(last.fileUrl, btn || null);
         restoreViewAfterRender();
       } else {
-        const first = els.filebarInner.querySelector('.tab');
-        if (first){ first.classList.add('active'); }
-        renderHighlights();
+        els.favTab.classList.add('active');
+        renderFavorites();
         restoreViewAfterRender();
       }
     }
