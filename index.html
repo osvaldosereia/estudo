@@ -686,8 +686,19 @@ function renderWithStyles(titleLine, body, epigrafe){
   let tLine = titleLine;
 
   // Negrito + Azul no título
-  tLine = tLine.replace(/^(Art\.?\s*\d+[A-Z]?)/i, `<span class="art-title">**$1**</span>`);
-  tLine = tLine.replace(/^(S[úu]mula\s*\d+)/i, `<span class="art-title">**$1**</span>`);
+  // ✅ novo: só deixa negrito/azul o prefixo (Art. N / Súmula N)
+tLine = tLine.replace(
+  /^(Art\.?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
+  (m, id, dot = '', rest = '') =>
+    `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`
+);
+
+tLine = tLine.replace(
+  /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
+  (m, id, dot = '', rest = '') =>
+    `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`
+);
+
 
   // Deixa () em cor mais clara
   const fadeParentheses = (txt)=>{
