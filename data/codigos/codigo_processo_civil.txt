@@ -2,17 +2,17 @@
 
 -----
 PARTE GERAL
+-----
 
 LIVRO I
-
 DAS NORMAS PROCESSUAIS CIVIS
+-----
 
 TÍTULO ÚNICO
-
 DAS NORMAS FUNDAMENTAIS E DA APLICAÇÃO DAS NORMAS PROCESSUAIS
+-----
 
 CAPÍTULO I
-
 DAS NORMAS FUNDAMENTAIS DO PROCESSO CIVIL
 
 -----
@@ -150,6 +150,7 @@ Art. 20. É admissível a ação meramente declaratória, ainda que tenha ocorri
 TÍTULO II
 
 DOS LIMITES DA JURISDIÇÃO NACIONAL E DA COOPERAÇÃO INTERNACIONAL
+-----
 
 CAPÍTULO I
 
@@ -320,10 +321,12 @@ Parágrafo único. O disposto no caput não impede, quando necessária, a aplica
 TÍTULO III
 
 DA COMPETÊNCIA INTERNA
+-----
 
 CAPÍTULO I
 
 DA COMPETÊNCIA
+-----
 
 Seção I
 
@@ -568,10 +571,12 @@ VII - a execução de decisão jurisdicional.
 LIVRO III
 
 DOS SUJEITOS DO PROCESSO
+-----
 
 TÍTULO I
 
 DAS PARTES E DOS PROCURADORES
+-----
 
 CAPÍTULO I
 
@@ -1129,6 +1134,7 @@ Art. 118. Cada litisconsorte tem o direito de promover o andamento do processo, 
 TÍTULO III
 
 DA INTERVENÇÃO DE TERCEIROS
+-----
 
 CAPÍTULO I
 
@@ -3878,6 +3884,7 @@ Art. 429. Incumbe o ônus da prova quando:
 I - se tratar de falsidade de documento ou de preenchimento abusivo, à parte que a arguir;
 
 II - se tratar de impugnação da autenticidade, à parte que produziu o documento.
+-----
 
 Subseção II
 Da Arguição de Falsidade
@@ -3897,6 +3904,7 @@ Parágrafo único. Não se procederá ao exame pericial se a parte que produziu 
 
 -----
 Art. 433. A declaração sobre a falsidade do documento, quando suscitada como questão principal, constará da parte dispositiva da sentença e sobre ela incidirá também a autoridade da coisa julgada.
+-----
 
 Subseção III
 Da Produção da Prova Documental
@@ -3958,6 +3966,7 @@ Art. 441. Serão admitidos documentos eletrônicos produzidos e conservados com 
 -----
 Seção IX
 Da Prova Testemunhal
+-----
 
 Subseção I
 Da Admissibilidade e do Valor da Prova Testemunhal
@@ -4027,6 +4036,7 @@ II - a cujo respeito, por estado ou profissão, deva guardar sigilo.
 Art. 449. Salvo disposição especial em contrário, as testemunhas devem ser ouvidas na sede do juízo.
 
 Parágrafo único. Quando a parte ou a testemunha, por enfermidade ou por outro motivo relevante, estiver impossibilitada de comparecer, mas não de prestar depoimento, o juiz designará, conforme as circunstâncias, dia, hora e lugar para inquiri-la.
+-----
 
 Subseção II
 Da Produção da Prova Testemunhal
