@@ -270,10 +270,59 @@
       background:#edeff3;
     }
 
+    /* ======== ÍNDICE FLUTUANTE (hambúrguer) ======== */
+    .index-toggle{
+      position: fixed;
+      top: calc(var(--topbar-h) + var(--filebar-h) + 8px);
+      right: 12px;
+      z-index: 150;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #ddd;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .index-panel{
+      position: fixed;
+      top: calc(var(--topbar-h) + var(--filebar-h) + 48px);
+      right: 12px;
+      z-index: 149;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      padding: 6px 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 50vh;
+      overflow-y: auto;
+      display: none;
+      min-width: 240px;
+    }
+    .index-panel.show{ display:block; }
+    .index-panel div{
+      padding: 4px 6px;
+      cursor: pointer;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .index-panel div:hover{ background:#f3f4f6; }
+
     @media (max-width: 768px){
       .brand{ height:34px; }
       .filebar-inner{ gap:12px; }
       .tab{ font-size:14px; }
+      .index-toggle{ right: 8px; }
+      .index-panel{ right: 8px; max-height: 46vh; }
     }
   </style>
 </head>
@@ -439,6 +488,9 @@
 
       toast: document.getElementById('toast'),
     };
+    /* extras do índice */
+    els.indexToggle = null;
+    els.indexPanel  = null;
 
     /* =================== Estado + Storage =================== */
     const state = {
@@ -523,17 +575,16 @@
       .replace(/\t/g, ' ')
       .replace(/\s+\n/g, '\n');
 
-   function norm(s){
-  return (s||'')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')   // remove acentos
-    .replace(/ç/g,'c')
-    .replace(/(\d)[.,](?=\d)/g, '$1') // 🔑 remove pontos e vírgulas entre dígitos (1.200 → 1200)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g,' ')
-    .trim();
-}
-
+    function norm(s){
+      return (s||'')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')   // remove acentos
+        .replace(/ç/g,'c')
+        .replace(/(\d)[.,](?=\d)/g, '$1') // 1.200 → 1200
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,' ')
+        .trim();
+    }
 
     function buildCatalogMaps(){
       const sel = els.codeSelect;
@@ -582,7 +633,7 @@
 
       const ensureBlank = (txt)=> txt.replace(
         /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-        (_,a,b)=> `${a}\n${b}`      // apenas 1 linha, nada de duplo espaçamento
+        (_,a,b)=> `${a}\n${b}`      // apenas 1 linha
       );
       const bodyText = ensureBlank(bodyLines.join('\n'));
 
@@ -818,11 +869,94 @@
       });
     }
 
+    /* =================== ÍNDICE: botão e painel =================== */
+    function removeIndexUI(){
+      if (els.indexToggle){ els.indexToggle.remove(); els.indexToggle = null; }
+      if (els.indexPanel){ els.indexPanel.remove();  els.indexPanel  = null; }
+    }
+
+    function buildIndexButton(){
+      // remove antigos
+      removeIndexUI();
+      if (state.mode !== 'file') return;
+
+      // Botão hambúrguer
+      const btn = document.createElement('button');
+      btn.className = 'index-toggle';
+      btn.type = 'button';
+      btn.setAttribute('aria-label','Abrir índice do documento');
+      btn.textContent = '≡';
+      document.body.appendChild(btn);
+      els.indexToggle = btn;
+
+      // Painel
+      const panel = document.createElement('div');
+      panel.className = 'index-panel';
+      panel.setAttribute('role','menu');
+      panel.setAttribute('aria-hidden','true');
+      document.body.appendChild(panel);
+      els.indexPanel = panel;
+
+      btn.addEventListener('click', ()=>{
+        const show = !panel.classList.contains('show');
+        panel.classList.toggle('show', show);
+        panel.setAttribute('aria-hidden', show ? 'false' : 'true');
+      });
+
+      // Fecha no ESC e clique fora
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape' && els.indexPanel && els.indexPanel.classList.contains('show')){
+          els.indexPanel.classList.remove('show');
+          els.indexPanel.setAttribute('aria-hidden','true');
+        }
+      });
+      document.addEventListener('click', (e)=>{
+        if (!els.indexPanel) return;
+        if (els.indexPanel.classList.contains('show')){
+          const onToggle = e.target === els.indexToggle;
+          const insidePanel = e.target.closest && e.target.closest('.index-panel');
+          if (!onToggle && !insidePanel){
+            els.indexPanel.classList.remove('show');
+            els.indexPanel.setAttribute('aria-hidden','true');
+          }
+        }
+      }, {capture:true});
+    }
+
+    function renderIndex(){
+      if (!els.indexPanel) return;
+      els.indexPanel.innerHTML = '';
+
+      const headings = state.items.filter(it=>it.kind==='heading');
+      if (!headings.length){
+        const empty = document.createElement('div');
+        empty.textContent = 'Sem índice para este documento.';
+        els.indexPanel.appendChild(empty);
+        return;
+      }
+
+      headings.forEach(it=>{
+        const d = document.createElement('div');
+        d.textContent = it.raw.replace(/\s+/g,' ').trim();
+        d.title = it.raw.replace(/\s+/g,' ').trim();
+        d.addEventListener('click', ()=>{
+          const target = document.getElementById(it.htmlId);
+          if (target){
+            target.scrollIntoView({behavior:'smooth', block:'start'});
+          }
+          els.indexPanel.classList.remove('show');
+          els.indexPanel.setAttribute('aria-hidden','true');
+        });
+        els.indexPanel.appendChild(d);
+      });
+    }
+
     /* =================== RENDER FILE (itens na ordem) =================== */
     function renderFileItemsProgressive(items, {chunkSize=30}={}){
       clearArticles();
       if (!items.length){
         els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
+        removeIndexUI();
         return;
       }
       const first = Math.min(8, items.length);
@@ -834,6 +968,10 @@
       }
       els.articles.appendChild(frag);
       updateCurrentOutline();
+
+      // Índice
+      buildIndexButton();
+      renderIndex();
 
       let i = first;
       function appendChunk(){
@@ -867,6 +1005,10 @@
       });
       els.articles.appendChild(frag);
       updateCurrentOutline();
+
+      // manter índice
+      buildIndexButton();
+      renderIndex();
     }
 
     /* =================== FAVORITOS =================== */
@@ -876,6 +1018,7 @@
       const favs = store.listFavorites();
       if (!favs.length){
         els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+        removeIndexUI();
         return;
       }
 
@@ -934,8 +1077,10 @@
       store.saveLast({ mode:'favorites', fileUrl:null, scrollY: 0, articleId: null });
       updateCurrentOutline();
 
+      // UI: ativar estrela, desativar tabs + remover índice
       document.querySelectorAll('.tab').forEach(c=>c.classList.remove('active'));
       els.favTab.classList.add('active');
+      removeIndexUI();
     }
 
     /* =================== Loader =================== */
@@ -983,6 +1128,7 @@
           console.error(err);
           els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err && err.message) || 'Erro desconhecido'}</code></div>`;
           notify('Erro ao carregar arquivo');
+          removeIndexUI();
         } finally {
           els.searchSpinner.classList.remove('show');
         }
@@ -1243,6 +1389,7 @@
         if (els.studyModal.getAttribute('aria-hidden') === 'false') closeStudyModal();
         els.moreMenu.style.display = 'none';
         els.moreMenu.setAttribute('aria-hidden','true');
+        if (els.indexPanel){ els.indexPanel.classList.remove('show'); els.indexPanel.setAttribute('aria-hidden','true'); }
       }
     });
 
