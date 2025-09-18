@@ -184,25 +184,12 @@
     .art-content{ min-width:0; } /* garante quebra correta */
     .art-head{ margin: 0 0 6px; }
 
-    .art-title{
-      display:block;
-      font-weight:400; color:#0e1638;
-      font-size:15px; margin:0 0 4px 0;
-    }
-    .art-epigrafe{
-      font-size:15px; font-style:italic; color:#0e1638;
-      margin:0 0 6px 0;
-    }
-    .art-body,
-    .art-body p,
-    .art-body span,
-    .art-body div,
-    .art-body li{
-      font-size:15px; line-height:1.5;
-      margin:0 0 12px 0; /* 1 linha de respiro */
-    }
-    .art-body strong, .art-body b{ font-weight:400; } /* sem negrito */
-    .paren{ color: rgba(0,0,0,.5); font-size:15px; }
+    /* 🔹 Força todos os textos dentro do card a 15px */
+article, article * {
+  font-size:16px !important;
+  line-height:1.5;
+}
+
 
     /* Ações dentro do card */
     .art-actions{
