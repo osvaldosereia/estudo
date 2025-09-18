@@ -543,7 +543,7 @@ function splitIntoBlocks(txt){
 
 function parseBlock(block, idx){
   const lines = block.split(/\n/).map(l=>l.trim());
-  const filtered = lines.filter(l=>l.length>0);
+  const filtered = lines.filter(l=>l.length > 0);
 
   let epigrafe = "";
   let titleLine = "";
@@ -551,10 +551,11 @@ function parseBlock(block, idx){
 
   if (!filtered.length){
     return {
-      title:`Bloco ${idx+1}`,
-      text:block,
-      htmlId:`art-${idx}`,
-      _split:{supra:[], titleText:`Bloco ${idx+1}`, body:"", epigrafe:""}
+      title: `Bloco ${idx+1}`,
+      text: block,
+      htmlId: `art-${idx}`,
+      html: block,
+      _split: { supra: [], titleText: `Bloco ${idx+1}`, body: "", epigrafe: "" }
     };
   }
 
@@ -574,60 +575,76 @@ function parseBlock(block, idx){
 
   bodyLines = filtered;
 
-  // ==== Formatações especiais ====
-
-  // Negrito + Azul no título (apenas início do card)
-  titleLine = titleLine.replace(/^(Art\.?\s*\d+[A-Z]?)/i, `<span class="art-title">**$1**</span>`);
-  titleLine = titleLine.replace(/^(S[úu]mula\s*\d+)/i, `<span class="art-title">**$1**</span>`);
-
-  // Deixa () em cor mais clara
-  const fadeParentheses = (txt)=>{
-    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+  // Negrito automático em §, Parágrafo, incisos, alíneas
+  const formatBody = (arr)=>{
+    return arr.map(l=>{
+      if (/^Par[aá]grafo/i.test(l)) return `**${l}**`;
+      if (/^§/.test(l)) return `**${l}**`;
+      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(l)) return `**${l}**`;
+      if (/^[a-z]\)/i.test(l)) return `**${l}**`;
+      return l;
+    }).join('\n');
   };
+
+  const bodyRaw = formatBody(bodyLines);
 
   // Garante 1 linha em branco após caput, parágrafo, inciso, alínea
   const ensureBlank = (txt)=>{
     return txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*-|[a-z]\))/g, (_,a,b)=> `${a}\n\n${b}`);
   };
-
-  // Negrito automático em §, Parágrafo, incisos, alíneas
-  const formatBody = (arr)=>{
-    return arr.map(l=>{
-      if (/^Par[aá]grafo/i.test(l)) return `**${fadeParentheses(l)}**`;
-      if (/^§/.test(l)) return `**${fadeParentheses(l)}**`;
-      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(l)) return `**${fadeParentheses(l)}**`;
-      if (/^[a-z]\)/i.test(l)) return `**${fadeParentheses(l)}**`;
-      return fadeParentheses(l);
-    }).join('\n');
-  };
-
-  const bodyRaw = formatBody(bodyLines);
   const body = ensureBlank(bodyRaw);
 
+  // Texto puro (sem HTML) → usado em buscas
   const textForStorage = [
     epigrafe ? `Epígrafe: ${epigrafe}` : '',
     titleLine,
     body
   ].filter(Boolean).join('\n');
 
+  // HTML para exibição
+  const html = renderWithStyles(titleLine, body, epigrafe);
+
   return {
     title: titleLine || `Bloco ${idx+1}`,
     text: textForStorage,
     htmlId: `art-${idx}`,
+    html,
     _split: { supra: [], titleText: titleLine, body, epigrafe }
   };
 }
 
-// Parser principal: usa APENAS delimitadores "-----"
+/* ========= RENDER COM ESTILO (só para UI) ========= */
+function renderWithStyles(titleLine, body, epigrafe){
+  let tLine = titleLine;
+
+  // Negrito + Azul no título
+  tLine = tLine.replace(/^(Art\.?\s*\d+[A-Z]?)/i, `<span class="art-title">**$1**</span>`);
+  tLine = tLine.replace(/^(S[úu]mula\s*\d+)/i, `<span class="art-title">**$1**</span>`);
+
+  // Deixa () em cor mais clara
+  const fadeParentheses = (txt)=>{
+    return txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+  };
+
+  let b = fadeParentheses(body);
+
+  return [
+    epigrafe ? `<em>${epigrafe}</em>` : '',
+    tLine,
+    b
+  ].filter(Boolean).join('\n');
+}
+
+/* ========= Parser principal ========= */
 function parseByDelimiters(txt){
   const blocks = splitIntoBlocks(txt);
   return blocks.map((b,i)=> parseBlock(b,i));
 }
 
-// Seleção por URL (agora sempre usa o mesmo parser para todos os arquivos)
 function parseByUrl(url, txt){
   return parseByDelimiters(txt);
 }
+
 
 
     /* =================== Render helpers =================== */
