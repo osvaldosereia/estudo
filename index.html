@@ -1400,7 +1400,7 @@ els.articles.addEventListener("click", async (e) => {
   notify("⭐ Removido dos favoritos");
 
   // 👇 NOVO: se estiver na aba Favoritos, remove o card do DOM
-  if (state.mode === "fav") {
+  if (state.mode === "favorites") {
     artEl.remove();
   }
 } else {
