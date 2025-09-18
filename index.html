@@ -172,90 +172,104 @@
       position:absolute; left:2%; bottom:0;
     }
 
-/* ================== CARDS ================== */
-.supra { 
-  color:#6c7282; 
-  font-weight:400; 
-  font-size:13px; 
-  margin:0 0 6px; 
-}
-.supra div { 
-  line-height:1.35 
+/* ===== Ajustes gerais dos cards ===== */
+.card {
+  position: relative;       /* necessário pros ícones absolutos */
+  padding: 10px 42px 10px 10px; /* 🔹 reserva espaço à direita (42px) pros ícones */
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.art-card {
-  position: relative;      /* 👈 referência pros ícones flutuarem */
-  padding: 12px 10px;      /* espaço interno do card */
-  padding-top: 34px;       /* 👈 garante espaço extra pro topo (não sobrepor caput) */
-  border-bottom: 1px solid #e3e6ed;
+/* Cabeçalho do artigo */
+.art-head {
+  margin: 0 0 6px;
 }
 
-.art-head { 
-  margin:0 0 6px; 
+.art-title {
+  display: block;
+  font-weight: 400;
+  color: #0e1638;
+  font-size: 14px; /* 🔹 tamanho fixo, igual em todos os cards */
+  margin: 0;
 }
 
-.art-title { 
-  display:block; 
-  font-weight:400; 
-  color:#0e1638; 
-  font-size:15px;  /* caput mesmo tamanho do resto */
-  margin:0 
+.art-body {
+  font-size: 14px;
+  line-height: 1.42;
 }
 
+/* Texto extra (parênteses em notas) */
+.paren {
+  color: rgba(0, 0, 0, .6);
+  font-size: 11px;
+}
+
+/* Epígrafe */
 .art-epigrafe {
-  font-size:13px; 
-  font-weight:400; 
-  color:#0e1638; 
+  font-size: 14px;
+  font-weight: 400;
+  color: #0e1638;
   margin: 0 0 6px 0;
 }
 
-.art-body { 
-  font-size:15px;    /* 👈 mesmo tamanho do caput */
-  line-height:1.42; 
-}
-
-.paren { 
-  color: rgba(0,0,0,.6); 
-  font-size: 12px; 
-}
-
-/* ================== ICONES ================== */
+/* ===== Ícones ===== */
 .art-actions {
-  position: absolute;   /* 👈 flutuam dentro do card */
+  position: absolute;
   top: 6px;
-  right: 8px;
-  display: flex;        /* 👈 lado a lado */
-  gap: 8px;
+  right: 6px;
+  display: flex;
+  flex-direction: row; /* lado a lado */
+  gap: 6px;
 }
 
 .icon-btn {
-  width: 22px; 
-  height: 22px; 
-  display: grid; 
-  place-items: center; 
-  cursor: pointer; 
-  border: 0; 
-  background: transparent; 
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  position: relative;
+  border: 0;
+  background: transparent;
   padding: 0;
   color: var(--icon-muted);
 }
-.icon-btn img { 
-  width: 16px; 
-  height: 16px; 
-  display:block; 
-  opacity:.6; 
-}
-.icon-btn.active img { opacity:1; }
-.icon-btn.active[data-action="fav"] { color: var(--icon-fav); }
-.icon-btn.active[data-action="study"] { color: var(--icon-study); }
 
-/* ================== MARCAÇÃO ================ */
-mark { 
-  padding:0 2px; 
-  border-radius:2px; 
-  background:#cce4ff; 
-  color:inherit; 
+.icon-btn img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: .6;
 }
+
+.icon-btn.active img {
+  opacity: 1;
+}
+
+.icon-btn.active[data-action="fav"] {
+  color: var(--icon-fav);
+}
+.icon-btn.active[data-action="study"] {
+  color: var(--icon-study);
+}
+
+/* ===== Responsividade ===== */
+@media (max-width: 768px) {
+  .card {
+    padding: 10px 38px 10px 10px; /* 🔹 um pouco menos de espaço no mobile */
+  }
+  .art-title, .art-body {
+    font-size: 13px; /* 🔹 levemente menor no mobile */
+  }
+  .icon-btn {
+    width: 20px;
+    height: 20px;
+  }
+  .icon-btn img {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 
 
     /* ======== MINI-FINDER ======== */
