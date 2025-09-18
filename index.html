@@ -212,14 +212,35 @@
 }
 
 /* ===== Ícones ===== */
-.art-actions {
-  position: absolute;
-  top: 6px;
-  right: 6px;
+.float-actions {
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--filebar-h) + 52px); /* logo abaixo do hambúrguer */
+  right: 12px;
   display: flex;
-  flex-direction: row; /* lado a lado */
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 149;
 }
+.float-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.float-btn img {
+  width: 20px;
+  height: 20px;
+  opacity: .6;
+}
+.float-btn.active img {
+  opacity: 1;
+}
+
 
 .icon-btn {
   width: 22px;
@@ -518,6 +539,57 @@
       </div>
     </div>
   </div>
+/* =================== BOTÕES FLUTUANTES =================== */
+const floatFav = document.getElementById('floatFav');
+const floatStudy = document.getElementById('floatStudy');
+
+function getCurrentArticle() {
+  const art = document.querySelector('article.in-view');
+  if (!art) return null;
+  const aidx = Number(art.dataset.idx);
+  return {
+    el: art,
+    meta: state.articles.find(x => x._aidx === aidx)
+  };
+}
+
+floatFav.addEventListener('click', async ()=>{
+  const current = getCurrentArticle();
+  if (!current) return notify('Nenhum artigo em evidência.');
+  const { el, meta } = current;
+  const id = store.makeId(el.dataset.fileUrl, el.id);
+  const entry = {
+    id, fileUrl: el.dataset.fileUrl, fileLabel: el.dataset.fileLabel,
+    htmlId: el.id, text: meta?.text || ''
+  };
+
+  if (store.isFavorite(id)){
+    store.removeFavorite(id);
+    floatFav.classList.remove('active');
+    notify('⭐ Removido dos favoritos');
+  } else {
+    if (!entry.text){ notify('Abra o arquivo para favoritar.'); return; }
+    store.addFavorite(entry);
+    floatFav.classList.add('active');
+    notify('⭐ Adicionado aos favoritos');
+  }
+});
+
+floatStudy.addEventListener('click', async ()=>{
+  const current = getCurrentArticle();
+  if (!current) return notify('Nenhum artigo em evidência.');
+  const { el, meta } = current;
+  const id = store.makeId(el.dataset.fileUrl, el.id);
+  const entry = {
+    id, fileUrl: el.dataset.fileUrl, fileLabel: el.dataset.fileLabel,
+    htmlId: el.id, text: meta?.text || ''
+  };
+  if (!meta?.text){ notify('Não consegui capturar este artigo.'); return; }
+  const prompt = buildPrompt(meta);
+  store.markStudied(entry);
+  floatStudy.classList.add('active');
+  openStudyModal(meta._split?.titleText || meta.title || 'Artigo', prompt);
+});
 
   <script>
     /* =================== PWA =================== */
@@ -857,19 +929,16 @@
       titleSpan.className = 'art-title';
       titleSpan.textContent = split.titleText || a.title || 'Artigo';
 
-      const actions = document.createElement('div');
-      actions.className = 'art-actions';
+      <!-- BOTÕES FLUTUANTES (Favoritar e Estudar) -->
+<div class="s">
+  <button class="float-btn" id="floatFav" title="Favoritar" aria-label="Favoritar">
+    <img src="icons/favorito.svg" alt="Favoritar">
+  </button>
+  <button class="float-btn" id="floatStudy" title="Estudar com I.A." aria-label="Estudar">
+    <img src="icons/estudar.svg" alt="Estudar com I.A.">
+  </button>
+</div>
 
-      const favBtn = document.createElement('button');
-      favBtn.className = 'icon-btn'; favBtn.title = 'Favoritar'; favBtn.dataset.action = 'fav';
-      favBtn.innerHTML = `<img src="icons/favorito.svg" data-src="icons/favorito.svg" data-active="icons/favorito-active.svg" alt="Favoritar" />`;
-
-      const studyBtn = document.createElement('button');
-      studyBtn.className = 'icon-btn'; studyBtn.title = 'Estudar com I.A.'; studyBtn.dataset.action = 'study';
-      studyBtn.innerHTML = `<img src="icons/estudar.svg" data-src="icons/estudar.svg" data-active="icons/estudar-active.svg" alt="Estudar com I.A." />`;
-
-      actions.append(favBtn, studyBtn);
-      head.append(titleSpan, actions);
       el.appendChild(head);
 
       // Corpo (sem espaçamentos duplos, sem negritos)
