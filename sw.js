@@ -1,5 +1,5 @@
 // sw.js - Service Worker revisado
-const CACHE_NAME = "direito-love-v28"; // 🔄 altere a versão SEMPRE que fizer update
+const CACHE_NAME = "direito-love-v29"; // 🔄 altere a versão SEMPRE que fizer update
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
