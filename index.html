@@ -1394,12 +1394,12 @@ els.articles.addEventListener("click", async (e) => {
 
   if (btn.dataset.action === "fav") {
     await withBusy(btn, async () => {
-      if (store.isFavorite(id)) {
+     if (store.isFavorite(id)) {
   store.removeFavorite(id);
   btn.classList.remove("active");
   notify("⭐ Removido dos favoritos");
 
-  // 👇 NOVO: se estiver na aba Favoritos, remove o card do DOM
+  // Agora funciona: remove o card ao desfavoritar na aba Favoritos
   if (state.mode === "favorites") {
     artEl.remove();
   }
@@ -1412,6 +1412,7 @@ els.articles.addEventListener("click", async (e) => {
   btn.classList.add("active");
   notify("⭐ Adicionado aos favoritos");
 }
+
 
     });
   }
