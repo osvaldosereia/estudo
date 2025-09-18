@@ -166,6 +166,22 @@
     .art-title{ display:block; font-weight:800; color:#0e1638; font-size:13px; margin:0 }
     .art-actions{ display:flex; align-items:center; gap:10px }
 
+    /* Epígrafes */
+    .art-epigrafe{
+      font-size:12px;
+      font-weight:700;
+      color:#0e1638;
+      margin: 0 0 6px 0;
+    }
+    .art-epigrafe .paren{ font-weight:400; }
+
+    .epi-inline{
+      font-weight:700;
+      display:block;
+      margin: 6px 0;
+    }
+    .epi-inline .paren{ font-weight:400; }
+
     .icon-btn{
       width:28px; height:28px; display:grid; place-items:center; cursor:pointer; position:relative; border:0; background:transparent; padding:0;
       color:var(--icon-muted);
@@ -534,25 +550,31 @@ function splitBlockSupraTitleBody(raw){
     /^\s*(LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b/i.test(line)
   );
 
-  // 🔎 Captura epígrafes marcadas com @@EPI@@
-  // Caso 1: epígrafe imediatamente ANTES do artigo → move para logo após o artigo
+  // 🔎 Epígrafe "de card" (linhas que começam com @@ ou @@EPI@@) — mover para o próximo Art.
+  let epigrafe = "";
+
+  // Caso A: logo ANTES do artigo
   if (artIdx > 0) {
-    const lookback = artIdx - 1;
-    const prev = (lines[lookback] || '').toString();
-    if (/^\s*@@EPI@@/.test(prev)) {
-      const epigrafe = prev.replace(/^\s*@@EPI@@\s*/, '').trim();
-      lines.splice(lookback, 1);   // remove da posição antiga
-      artIdx--;                    // ajusta índice do Art. após remoção
-      lines.splice(artIdx + 1, 0, epigrafe); // insere logo após o Art.
+    // pula linhas vazias
+    let look = artIdx - 1;
+    while (look >= 0 && !lines[look].trim()) look--;
+    if (look >= 0 && /^\s*(?:@@EPI@@|@@)\b/.test(lines[look])) {
+      epigrafe = lines[look].replace(/^\s*(?:@@EPI@@|@@)\s*/, '').trim();
+      lines.splice(look, 1);
+      artIdx--; // ajusta índice do Art. após remoção
     }
   }
 
-  // Caso 2: epígrafes DENTRO do artigo → mantém no corpo, só tira marcador
-  for (let i = Math.max(artIdx + 1, 0); i < lines.length; i++) {
+  // Caso B: marcadas DENTRO do corpo deste bloco (ex.: antes de § etc.)
+  for (let i = Math.max(artIdx + 1, 0); i < lines.length; ) {
     const li = (lines[i] || '').toString();
-    if (/^\s*@@EPI@@/.test(li)) {
-      lines[i] = li.replace(/^\s*@@EPI@@\s*/, '').trim();
+    if (/^\s*(?:@@EPI@@|@@)\b/.test(li)) {
+      const local = li.replace(/^\s*(?:@@EPI@@|@@)\s*/, '').trim();
+      epigrafe = epigrafe ? (epigrafe + ' — ' + local) : local;
+      lines.splice(i, 1); // remove do corpo
+      continue; // não incrementa i, pois o array andou
     }
+    i++;
   }
 
   if (artIdx >= 0){
@@ -568,11 +590,11 @@ function splitBlockSupraTitleBody(raw){
     const rest = lines.slice(artIdx+1).join('\n').trimStart();
     const body = afterTitle ? (rest ? afterTitle + '\n' + rest : afterTitle) : rest;
 
-    return { supra, titleText, body };
+    return { supra, titleText, body, epigrafe };
   } else {
     const titleText = (lines[0]||'').trim();
     const body = lines.slice(1).join('\n').trimStart();
-    return { supra:[], titleText, body };
+    return { supra:[], titleText, body, epigrafe: "" };
   }
 }
 
@@ -599,7 +621,7 @@ function parseByDelimiters(txt){
   return arts;
 }
 
-// - Se o bloco começar com cabeçalho e terminar com @@EPI@@, empurra a epígrafe para o PRÓXIMO bloco (do Art.)
+// - Se a linha imediatamente anterior ao "Art." for @@/@@EPI@@, empurra-a para o bloco do Art.
 function parseByArt(txt){
   // reconhece "Preâmbulo" (com/sem acento), "Art.", e cabeçalhos estruturais
   const re = /(^|\n)\s*((?:Pre[âa]mbulo)[\s\.\-:]*|(?:Art|ART)\.?\s*\d{1,4}(?:-?[A-Z])?(?:º|o)?\.?|(?:LIVRO|T[IÍ]TULO|CAP[IÍ]TULO|SEÇÃO)\b)/g;
@@ -625,17 +647,17 @@ function parseByArt(txt){
     let from = starts[i];
     const to = (i + 1 < starts.length) ? starts[i + 1] : txt.length;
 
-    // 🔗 Se a linha imediatamente ANTERIOR ao "from" for @@EPI@@, inclua-a no bloco do artigo
+    // Se a linha anterior for @@/@@EPI@@, inclua também
     if (from > 0) {
       const prevNL = txt.lastIndexOf('\n', from - 2);
       const prevLineStart = (prevNL === -1) ? 0 : prevNL + 1;
       const prevLineRaw = txt.slice(prevLineStart, from);
-      if (/^\s*@@EPI@@/.test(prevLineRaw)) {
+      if (/^\s*(?:@@EPI@@|@@)\b/.test(prevLineRaw)) {
         from = prevLineStart;
       }
     }
 
-    // Recorta o bloco e preserva o final (NÃO cortar por '.' ou ')', para não sumir epígrafe movida)
+    // recorte do bloco (sem truncar por '.' / ')')
     let chunk = txt.slice(from, to).trimEnd();
 
     const split = splitBlockSupraTitleBody(chunk);
@@ -652,7 +674,6 @@ function parseByArt(txt){
   return arts;
 }
 
-
 function parseSumulas(txt){
   const cleaned = sanitizeForLayout(txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'));
   const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim()).filter(Boolean);
@@ -665,7 +686,7 @@ function parseSumulas(txt){
       title: header,
       text: header + (body ? '\n' + body : ''),
       htmlId: `sumula-${i}`,
-      _split: { supra: [], titleText: header, body }
+      _split: { supra: [], titleText: header, body, epigrafe: "" }
     });
   });
   return out;
@@ -688,7 +709,7 @@ function parsePrincipios(txt){
       title: header,
       text: header + (body ? '\n' + body : ''),
       htmlId: `principio-${i}`,
-      _split: { supra: [], titleText: header, body }
+      _split: { supra: [], titleText: header, body, epigrafe: "" }
     });
   });
   return out;
@@ -816,6 +837,16 @@ function parseByUrl(url, txt){
       }
       if (supraWrap.childNodes.length){ el.appendChild(supraWrap); }
 
+      /* Epígrafe (se houver) vem ANTES do cabeçalho Art. */
+      if (split.epigrafe){
+        const epiTop = document.createElement('div');
+        epiTop.className = 'art-epigrafe';
+        // protege &<> e aplica span .paren para ( )
+        const esc = split.epigrafe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        epiTop.innerHTML = esc.replace(/\(([^()]{1,200})\)/g, '<span class="paren">($1)</span>');
+        el.appendChild(epiTop);
+      }
+
       const head = document.createElement('div');
       head.className = 'art-head';
 
@@ -841,19 +872,37 @@ function parseByUrl(url, txt){
       const content = document.createElement('div');
       content.className = 'art-body';
 
+      // ===== Corpo =====
       let body = split.body || '';
+
+      // 1) Single-@ inline: marca como placeholder (não mover)
+      body = body.replace(/(^|\n)\s*@\s*(.+?)(?=\n|$)/g, (m, p1, t)=> `${p1}§§EPIINLINE§§${t}`);
+
+      // 2) Quebras lógicas (parágrafo, incisos, alíneas) -> inserir espaçamento
       body = body
         .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, "\n\n$2")
         .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, "\n\n$2")
         .replace(/(^|\n)(\s*[a-z]\))/g, "\n\n$2");
 
-      content.innerHTML = body
+      // 3) Bold nos marcadores
+      let html = body
         .replace(/(^|\n)(\s*(?:§|Parágrafo único))/g, '<br><b>$2</b>')
         .replace(/(^|\n)(\s*[IVXLCDM]+ ?-)/g, '<br><b>$2</b>')
-        .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>')
+        .replace(/(^|\n)(\s*[a-z]\))/g, '<br><b>$2</b>');
+
+      // 4) Converte single-@ para bloco em negrito (sem bold dentro de parênteses)
+      html = html.replace(/§§EPIINLINE§§([^\n<]*)/g, (m, t)=>{
+        const esc = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const withParen = esc.replace(/\(([^()]{1,200})\)/g, '<span class="paren">($1)</span>');
+        return `<div class="epi-inline">${withParen}</div>`;
+      });
+
+      // 5) New lines -> <br>
+      html = html
         .replace(/\n\n/g, '<br>')
         .replace(/\n/g, '<br>');
 
+      content.innerHTML = html;
       el.appendChild(content);
 
       const id = store.makeId(el.dataset.fileUrl, el.id);
@@ -862,6 +911,7 @@ function parseByUrl(url, txt){
       applyIconState(favBtn);
       applyIconState(studyBtn);
 
+      // Aplica ( ) → .paren no restante
       wrapParensIn(el);
       return el;
     }
@@ -979,11 +1029,12 @@ function parseByUrl(url, txt){
       let idx = 0;
       const frag = document.createDocumentFragment();
       merged.forEach(entry=>{
+        const s = splitBlockSupraTitleBody(entry.text);
         const art = {
-          title: splitBlockSupraTitleBody(entry.text).titleText || 'Artigo',
+          title: s.titleText || 'Artigo',
           text: entry.text,
           htmlId: entry.htmlId,
-          _split: splitBlockSupraTitleBody(entry.text),
+          _split: s,
           _fileUrl: entry.fileUrl,
           _fileLabel: entry.fileLabel
         };
@@ -1011,7 +1062,7 @@ function parseByUrl(url, txt){
     function addNormalizedField(list){
       list.forEach(a=>{
         const s = a._split || splitBlockSupraTitleBody(a.text);
-        const combo = [s.titleText || '', ...(s.supra||[]), s.body || ''].join(' ');
+        const combo = [s.titleText || '', s.epigrafe || '', ...(s.supra||[]), s.body || ''].join(' ');
         a._norm = norm(combo);
       });
       return list;
@@ -1212,6 +1263,7 @@ function parseByUrl(url, txt){
     function buildPrompt(a){
       const split = a._split || splitBlockSupraTitleBody(a.text);
       const supraText = split.supra && split.supra.length ? split.supra.join('\n') + '\n' : '';
+      const epiTop = split.epigrafe ? `Epígrafe: ${split.epigrafe}\n\n` : '';
       const artigo = (split.titleText ? split.titleText + ' ' : '') + (split.body || '');
       const tema = split.titleText || (a.title || 'Artigo');
       return [
@@ -1226,7 +1278,7 @@ function parseByUrl(url, txt){
         '(7) Artigos correlatos. ',
         'Responda em português claro, objetivo e didático.\n\n',
         `Tema: "${tema}"\n\n`,
-        supraText + artigo,
+        epiTop + supraText + artigo,
         '\n\n💚 direito.love'
       ].join('');
     }
