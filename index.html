@@ -549,105 +549,89 @@
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
-    /* =================== Parser NOVO (com detecção de cabeçalhos) =================== */
-    function splitIntoBlocks(txt){
-      const cleaned = sanitizeForLayout(
-        txt.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ')
-      );
-      // divide pelos delimitadores "-----" em linha própria
-      const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
-      return parts.filter(Boolean);
+   /* =================== Parser NOVO (com detecção de cabeçalhos, sem negritos) =================== */
+function splitIntoBlocks(txt){
+  const cleaned = sanitizeForLayout(
+    txt.replace(/^\uFEFF/, '')
+       .replace(/\r\n/g, '\n')
+       .replace(/[ \t]+/g, ' ')
+  );
+  // divide pelos delimitadores "-----" em linha própria
+  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
+  return parts.filter(Boolean);
+}
+
+function parseBlockToItem(block, idx){
+  // Mantém linhas como vieram (não mexemos no texto dos cabeçalhos)
+  const lines = block.split(/\n/);
+
+  // Procura primeira linha de título de artigo/súmula
+  const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
+
+  // Se NÃO tem "Art" nem "Súmula" -> é um bloco de cabeçalhos/seções; não vira card
+  if (artIdx === -1){
+    return {
+      kind: 'heading',
+      raw: block,       // mostramos exatamente como veio
+      htmlId: `h-${idx}`
+    };
+  }
+
+  // Há artigo/súmula: tudo antes vira epígrafe (se existir)
+  const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
+  const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
+
+  const epigrafe = pre.length ? pre.join('\n') : '';
+  const titleLine = after.shift() || '';
+  const bodyLines = after;
+
+  // garante linha em branco após §/Parágrafo/Inciso/Alínea no texto puro
+  const ensureBlank = (txt)=> txt.replace(
+    /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+    (_,a,b)=> `${a}\n\n${b}`
+  );
+  const bodyText = ensureBlank(bodyLines.join('\n'));
+
+  const textForStorage = [
+    epigrafe ? `Epígrafe: ${epigrafe}` : '',
+    titleLine,
+    bodyText
+  ].filter(Boolean).join('\n');
+
+  return {
+    kind: 'article',
+    title: titleLine || `Bloco ${idx+1}`,
+    text: textForStorage,
+    htmlId: `art-${idx}`, // reatribuiremos id sequencial de artigos depois
+    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
+  };
+}
+
+function renderWithStyles(titleLine, body, epigrafe){
+  // versão simples: não aplica negrito nem destaque
+  return [
+    epigrafe ? epigrafe : '',
+    titleLine,
+    body
+  ].filter(Boolean).join('\n');
+}
+
+function parseByUrl(url, txt){
+  const blocks = splitIntoBlocks(txt);
+  const items = blocks.map((b,i)=> parseBlockToItem(b,i));
+
+  // Reatribui ids sequenciais apenas para artigos e cria índice de artigos
+  let aidx = 0;
+  items.forEach(it=>{
+    if (it.kind === 'article'){
+      it.htmlId = `art-${aidx}`;
+      it._aidx = aidx;
+      aidx++;
     }
+  });
+  return items;
+}
 
-    function parseBlockToItem(block, idx){
-      // Mantém linhas como vieram (não mexemos no texto dos cabeçalhos)
-      const lines = block.split(/\n/);
-
-      // Procura primeira linha de título de artigo/súmula
-      const artIdx = lines.findIndex(l => /^(Art|S[úu]mula)/i.test(l.trim()));
-
-      // Se NÃO tem "Art" nem "Súmula" -> é um bloco de cabeçalhos/seções; não vira card
-      if (artIdx === -1){
-        return {
-          kind: 'heading',
-          raw: block,       // mostramos exatamente como veio
-          htmlId: `h-${idx}`
-        };
-      }
-
-      // Há artigo/súmula: tudo antes vira epígrafe (se existir)
-      const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-      const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
-
-      const epigrafe = pre.length ? pre.join('\n') : '';
-      const titleLine = after.shift() || '';
-      const bodyLines = after;
-
-      // garante linha em branco após §/Parágrafo/Inciso/Alínea no texto puro
-      const ensureBlank = (txt)=> txt.replace(
-        /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-        (_,a,b)=> `${a}\n\n${b}`
-      );
-      const bodyText = ensureBlank(bodyLines.join('\n'));
-
-      const textForStorage = [
-        epigrafe ? `Epígrafe: ${epigrafe}` : '',
-        titleLine,
-        bodyText
-      ].filter(Boolean).join('\n');
-
-      return {
-        kind: 'article',
-        title: titleLine || `Bloco ${idx+1}`,
-        text: textForStorage,
-        htmlId: `art-${idx}`, // reatribuiremos id sequencial de artigos depois
-        _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
-      };
-    }
-
-    function renderWithStyles(titleLine, body, epigrafe){
-      // Título: negritar apenas o prefixo (Art. N / Súmula N)
-      let tLine = titleLine;
-      tLine = tLine.replace(/^(Art\.?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
-        (m, id, dot = '', rest = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`);
-      tLine = tLine.replace(/^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?\s*(.*)$/i,
-        (m, id, dot = '', rest = '') => `<span class="art-title"><strong>${id}</strong></span>${dot} ${rest}`);
-
-      const fadeParentheses = (txt)=> txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
-
-      // Destaque apenas do prefixo nas linhas de corpo (Parágrafo/§/inciso/alínea)
-      const boldOnlyPrefix = (line)=>{
-        line = line.replace(/^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/, '<strong>$1</strong>');
-        line = line.replace(/^§+\s*\d+[ºo]?/i, (m)=> `<strong>${m.trim()}</strong>`);
-        line = line.replace(/^([IVXLCDM]+)\s*([\-–—.])\s*/i, (m, romano, sep)=> `<strong>${romano}</strong>${sep} `);
-        line = line.replace(/^([a-z])\)/i, (m, letra)=> `<strong>${letra})</strong>`);
-        return line;
-      };
-
-      const bodyHtml = body.split('\n').map(l => boldOnlyPrefix(fadeParentheses(l))).join('\n');
-
-      return [
-        epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
-        tLine,
-        bodyHtml
-      ].filter(Boolean).join('\n');
-    }
-
-    function parseByUrl(url, txt){
-      const blocks = splitIntoBlocks(txt);
-      const items = blocks.map((b,i)=> parseBlockToItem(b,i));
-
-      // Reatribui ids sequenciais apenas para artigos e cria índice de artigos
-      let aidx = 0;
-      items.forEach(it=>{
-        if (it.kind === 'article'){
-          it.htmlId = `art-${aidx}`;
-          it._aidx = aidx;
-          aidx++;
-        }
-      });
-      return items;
-    }
 
     /* =================== Render helpers =================== */
     function wrapParensIn(root){
