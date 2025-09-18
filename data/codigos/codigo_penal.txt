@@ -5,11 +5,11 @@ TÍTULO I
 DA APLICAÇÃO DA LEI PENAL
 (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
-@@EPI@@Anterioridade da Lei.
+@@Anterioridade da Lei.
         Art 1 - Não há crime sem lei anterior que o defina. Não há pena sem prévia cominação legal. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
        
- @@EPI@@ Lei penal no tempo
+ @@ Lei penal no tempo
         Art. 2º - Ninguém pode ser punido por fato que lei posterior deixa de considerar crime, cessando em virtude dela a execução e os efeitos penais da sentença condenatória.  (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
         Parágrafo único - A lei posterior, que de qualquer modo favorecer o agente, aplica-se aos fatos anteriores, ainda que decididos por sentença condenatória transitada em julgado.  (Redação dada pela Lei nº 7.209, de 11.7.1984)
