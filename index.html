@@ -529,7 +529,7 @@
     }
     function sortByTsDesc(arr){ return [...arr].sort((a,b)=> (b.ts||0) - (a.ts||0)); }
 
-    /* =================== Parser NOVO =================== */
+    /* =================== Parser NOVO (corrigido) =================== */
 function splitIntoBlocks(txt){
   const cleaned = sanitizeForLayout(
     txt
@@ -577,8 +577,7 @@ function parseBlock(block, idx){
 
   bodyLines = filtered;
 
-  // Texto puro para busca/armazenamento (sem HTML)
-  // + espaçamento: 1 linha em branco após §/Parágrafo/Inciso/Alínea
+  // Texto puro p/ busca/armazenamento (sem HTML) + 1 linha em branco após §/Parágrafo/Inciso/Alínea
   const ensureBlank = (txt)=>{
     return txt.replace(
       /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
@@ -605,6 +604,61 @@ function parseBlock(block, idx){
     _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe }
   };
 }
+
+/* ========= RENDER COM ESTILO (só para UI) ========= */
+function renderWithStyles(titleLine, body, epigrafe){
+  let tLine = titleLine;
+
+  // ✅ Só o prefixo "Art. N" ou "Súmula N" fica negrito+azul; caput permanece normal
+  tLine = tLine.replace(
+    /^(Art\.?\s*\d+[A-Z]?)(\.)?(.*)$/i,
+    (m, id, dot = '', rest = '') =>
+      `<span class="art-title"><strong>${id}</strong></span>${dot}${rest}`
+  );
+  tLine = tLine.replace(
+    /^(S[úu]mula(?:\s+Vinculante)?\s*\d+[A-Z]?)(\.)?(.*)$/i,
+    (m, id, dot = '', rest = '') =>
+      `<span class="art-title"><strong>${id}</strong></span>${dot}${rest}`
+  );
+
+  // () 50% mais claros
+  const fadeParentheses = (txt)=> txt.replace(/\((.*?)\)/g, `<span class="faded">($1)</span>`);
+
+  // Bold somente no IDENTIFICADOR inicial de parágrafo/inciso/alínea
+  const boldOnlyPrefix = (line)=>{
+    // Parágrafo único
+    line = line.replace(/^(Par[aá]grafo\s+Único|Par[aá]grafo\s+único)\b/, '<strong>$1</strong>');
+    // § 1º / §1º / § 2 / §2
+    line = line.replace(/^§+\s*\d+[ºo]?/i, (m)=> `<strong>${m.trim()}</strong>`);
+    // Incisos: I -, II –, III.
+    line = line.replace(/^([IVXLCDM]+)\s*([\-–—.])\s*/i, (m, romano, sep)=> `<strong>${romano}</strong>${sep} `);
+    // Alíneas: a) b) c)
+    line = line.replace(/^([a-z])\)/i, (m, letra)=> `<strong>${letra})</strong>`);
+    return line;
+  };
+
+  const bodyHtml = body
+    .split('\n')
+    .map(l => boldOnlyPrefix(fadeParentheses(l)))
+    .join('\n');
+
+  return [
+    epigrafe ? `<em>${fadeParentheses(epigrafe)}</em>` : '',
+    tLine,
+    bodyHtml
+  ].filter(Boolean).join('\n');
+}
+
+/* ========= Parser principal ========= */
+function parseByDelimiters(txt){
+  const blocks = splitIntoBlocks(txt);
+  return blocks.map((b,i)=> parseBlock(b,i));
+}
+
+function parseByUrl(url, txt){
+  return parseByDelimiters(txt);
+}
+
 
 /* ========= RENDER COM ESTILO (só para UI) ========= */
 function renderWithStyles(titleLine, body, epigrafe){
