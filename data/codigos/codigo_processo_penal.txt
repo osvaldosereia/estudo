@@ -9,7 +9,7 @@ TÍTULO I
 DISPOSIÇÕES PRELIMINARES
 
 -----
-  Art. 1o O processo penal reger-se-á, em todo o território brasileiro, por este Código, ressalvados:
+  Art. 1 O processo penal reger-se-á, em todo o território brasileiro, por este Código, ressalvados:
 
 I - os tratados, as convenções e regras de direito internacional;
 
@@ -24,10 +24,10 @@ V - os processos por crimes de imprensa.         (Vide ADPF nº 130)
 Parágrafo único.  Aplicar-se-á, entretanto, este Código aos processos referidos nos nos. IV e V, quando as leis especiais que os regulam não dispuserem de modo diverso.
 
 -----
-  Art. 2o  A lei processual penal aplicar-se-á desde logo, sem prejuízo da validade dos atos realizados sob a vigência da lei anterior.
+  Art. 2  A lei processual penal aplicar-se-á desde logo, sem prejuízo da validade dos atos realizados sob a vigência da lei anterior.
 
 -----
-  Art. 3o  A lei processual penal admitirá interpretação extensiva e aplicação analógica, bem como o suplemento dos princípios gerais de direito.
+  Art. 3  A lei processual penal admitirá interpretação extensiva e aplicação analógica, bem como o suplemento dos princípios gerais de direito.
 
 Juiz das Garantias
 
@@ -130,7 +130,7 @@ Art. 4 A polícia judiciária será exercida pelas autoridades policiais no terr
 Parágrafo único.  A competência definida neste artigo não excluirá a de autoridades administrativas, a quem por lei seja cometida a mesma função.
 
 -----
-  Art. 5o  Nos crimes de ação pública o inquérito policial será iniciado:
+  Art. 5  Nos crimes de ação pública o inquérito policial será iniciado:
 
 I - de ofício;
 
@@ -153,7 +153,7 @@ c) a nomeação das testemunhas, com indicação de sua profissão e residência
 § 5o  Nos crimes de ação privada, a autoridade policial somente poderá proceder a inquérito a requerimento de quem tenha qualidade para intentá-la.
 
 -----
-  Art. 6o  Logo que tiver conhecimento da prática da infração penal, a autoridade policial deverá:
+  Art. 6  Logo que tiver conhecimento da prática da infração penal, a autoridade policial deverá:
 
 I – se possivel e conveniente, dirigir-se ao local, providenciando para que se não alterem o estado e conservação das coisas, enquanto necessário;             (Vide Lei nº 5.970, de 1973)
 
@@ -180,13 +180,13 @@ IX - averiguar a vida pregressa do indiciado, sob o ponto de vista individual, f
 X - colher informações sobre a existência de filhos, respectivas idades e se possuem alguma deficiência e o nome e o contato de eventual responsável pelos cuidados dos filhos, indicado pela pessoa presa.           (Incluído pela Lei nº 13.257, de 2016)
 
 -----
-  Art. 7o  Para verificar a possibilidade de haver a infração sido praticada de determinado modo, a autoridade policial poderá proceder à reprodução simulada dos fatos, desde que esta não contrarie a moralidade ou a ordem pública.
+  Art. 7  Para verificar a possibilidade de haver a infração sido praticada de determinado modo, a autoridade policial poderá proceder à reprodução simulada dos fatos, desde que esta não contrarie a moralidade ou a ordem pública.
 
 -----
-  Art. 8o  Havendo prisão em flagrante, será observado o disposto no Capítulo II do Título IX deste Livro.
+  Art. 8  Havendo prisão em flagrante, será observado o disposto no Capítulo II do Título IX deste Livro.
 
 -----
-  Art. 9o  Todas as peças do inquérito policial serão, num só processado, reduzidas a escrito ou datilografadas e, neste caso, rubricadas pela autoridade.
+  Art. 9  Todas as peças do inquérito policial serão, num só processado, reduzidas a escrito ou datilografadas e, neste caso, rubricadas pela autoridade.
 
 -----
   Art. 10.  O inquérito deverá terminar no prazo de 10 dias, se o indiciado tiver sido preso em flagrante, ou estiver preso preventivamente, contado o prazo, nesta hipótese, a partir do dia em que se executar a ordem de prisão, ou no prazo de 30 dias, quando estiver solto, mediante fiança ou sem ela.
