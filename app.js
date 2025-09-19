@@ -938,74 +938,75 @@ function layoutTabsByWidth(options){
   const wrap = els.filebarInner;
   wrap.innerHTML = "";
 
-  // 1) Cria todas as tabs (sem "Mais") para medir
+  // 1) criar tabs temporárias + botão "Mais" só para medir
   const tempTabs = options.map(opt => makeTab(opt.label, opt.value));
   const frag = document.createDocumentFragment();
   tempTabs.forEach(t => frag.appendChild(t));
   wrap.appendChild(frag);
 
-  // 2) Cria botão "Mais" (oculto inicialmente) para medir largura dele também
   const moreBtn = makeTab("Mais ▾", null, "tab-more");
-  // handler abre/fecha menu
   let hiddenItems = [];
   moreBtn.addEventListener("click", ()=> toggleMoreMenu(hiddenItems, moreBtn));
+  wrap.appendChild(moreBtn); // precisa estar no DOM para medir largura real
 
-  // Inserimos para medir a largura real do botão
-  wrap.appendChild(moreBtn);
-
-  // 3) Mede larguras
+  // 2) medições
+  const style = getComputedStyle(wrap);
+  const gapPx = parseFloat(style.gap || style.columnGap || 0) || 0; // gap entre as tabs
   const wrapW = wrap.clientWidth;
   const moreW = moreBtn.getBoundingClientRect().width;
-  const gapReserve = 8; // pequeno respiro
-  const maxW = wrapW - moreW - gapReserve;
 
-  // 4) Decide quantas cabem
+  // 3) assumimos inicialmente que o "Mais" será necessário,
+  //    então reservamos espaço para (gap antes do Mais) + (largura do Mais)
+  const limit = wrapW - (gapPx + moreW);
+
+  // largura acumulada com gaps entre as VISÍVEIS
   let used = 0;
-  let cutIndex = tempTabs.length; // por padrão, cabem todas
-  for (let i=0; i<tempTabs.length; i++){
+  let cutIndex = tempTabs.length; // por padrão, todos cabem
+
+  for (let i = 0; i < tempTabs.length; i++) {
     const w = tempTabs[i].getBoundingClientRect().width;
-    if (used + w <= maxW){
-      used += w;
+    const withGap = used > 0 ? used + gapPx + w : used + w;
+    if (withGap <= limit) {
+      used = withGap;
     } else {
-      cutIndex = i; // a partir daqui vai pro "Mais"
+      cutIndex = i; // a partir daqui vai para o "Mais"
       break;
     }
   }
 
-  // 5) Reconstrói DOM final: visíveis + "Mais" (se precisar)
+  // 4) se TODO MUNDO coube mesmo reservando o "Mais", então não precisamos dele
+  const everybodyFits = (cutIndex === tempTabs.length);
   wrap.innerHTML = "";
   const finalFrag = document.createDocumentFragment();
 
-  const visible = tempTabs.slice(0, cutIndex);
-  hiddenItems = options.slice(cutIndex);
+  if (everybodyFits) {
+    // monta tudo sem "Mais"
+    tempTabs.forEach(t => finalFrag.appendChild(t));
+    hiddenItems = [];
+  } else {
+    // mantém apenas os visíveis + "Mais"
+    const visible = tempTabs.slice(0, Math.max(1, cutIndex)); // garante 1 visível
+    hiddenItems = options.slice(visible.length);
 
-  // Garante pelo menos 1 visível quando houver itens
-  if (!visible.length && options.length){
-    visible.push(tempTabs[0]);
-    hiddenItems = options.slice(1);
-  }
-
-  visible.forEach(t => finalFrag.appendChild(t));
-
-  if (hiddenItems.length){
+    visible.forEach(t => finalFrag.appendChild(t));
     finalFrag.appendChild(moreBtn);
   }
 
   wrap.appendChild(finalFrag);
 
-  // Reaplica "active" na aba do último arquivo aberto, se existir na barra
+  // re-aplica "active" se a aba estiver visível
   if (_lastActiveUrl){
     const btn = [...wrap.querySelectorAll(".tab")].find(t=>t.dataset.url===_lastActiveUrl);
     if (btn) btn.classList.add("active");
   } else {
-    // Se não houver último, marca favoritos por padrão (comportamento anterior)
     els.favTab.classList.add("active");
   }
 
-  // Fecha o menu se a janela for redimensionada
+  // fecha o menu ao relayout
   els.moreMenu.style.display="none";
   els.moreMenu.setAttribute("aria-hidden","true");
 }
+
 
 /**
  * Renderiza a filebar para uma categoria e chama o layout responsivo
