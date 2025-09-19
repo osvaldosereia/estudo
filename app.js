@@ -1072,10 +1072,23 @@ function getActiveArticle(){
   return { el, meta };
 }
 
-function snippetFromArticle(el){
-  const txt = el?.querySelector(".art-body")?.innerText?.trim() || "";
-  const s = txt.replace(/\s+/g, " ").slice(0, 16); // ~10–16 caracteres
-  return s ? `“${s}…”` : "“—”";
+/* Pega o texto de cabeçalho do card (título/cabeçalho/1ª linha do corpo) */
+function getArticleHeaderText(el){
+  if (!el) return "";
+  const t1 = el.querySelector(".art-title")?.innerText?.trim();
+  if (t1) return t1;
+  const t2 = el.querySelector(".art-head")?.innerText?.trim();
+  if (t2) return t2;
+  const first = (el.querySelector(".art-body")?.innerText || "").trim().split("\n")[0];
+  return first || "";
+}
+
+/* Monta o snippet curto com aspas e reticências */
+function snippetFromArticle(el, max = 28){
+  const raw = getArticleHeaderText(el).replace(/\s+/g, " ");
+  if (!raw) return "“—”";
+  const cut = raw.length > max ? raw.slice(0, max) + "…" : raw;
+  return `“${cut}”`;
 }
 
 function toggleActionMenu(show){
@@ -1086,9 +1099,10 @@ function toggleActionMenu(show){
 
 actionFab?.addEventListener("click", ()=>{
   const a = getActiveArticle();
-  actionCtx.textContent = snippetFromArticle(a?.el);
+  actionCtx.textContent = snippetFromArticle(a?.el, 32); // ajuste o tamanho se quiser
   toggleActionMenu();
 });
+
 
 document.addEventListener("click", (e)=>{
   if (!actionMenu) return;
