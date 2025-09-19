@@ -388,3 +388,53 @@ article::after{
     width: min(280px, 92vw);
   }
 }
+/* ===== NOVO LAYOUT: Top actions à direita ===== */
+.topbar-inner{
+  width:min(var(--wrap-max), 92vw);
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:0 6px; background:#e3e1e1;
+}
+.top-actions{ display:flex; align-items:center; gap:8px; }
+.top-actions .icon-btn{
+  width:36px; height:36px; display:grid; place-items:center;
+  border-radius:10px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
+}
+.top-actions .icon-btn img{ width:18px; height:18px; display:block; }
+
+/* ===== NOVA MENUBAR (apenas a busca) ===== */
+.menubar{
+  position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--filebar-h);
+  background:#f0f0f0; box-shadow:0 1px 0 var(--line); z-index:99;
+  display:flex; align-items:center; justify-content:center;
+}
+.menubar-inner{
+  width:min(var(--wrap-max), 92vw); padding:0 6px; display:flex; align-items:center; gap:8px;
+}
+.menubar .search{ width:100%; position:relative; }
+.menubar .search input{
+  width:100%; height:38px; border:1px solid #cfd4e2; border-radius:999px; padding:0 35px 0 14px; background:#fff;
+}
+.menubar .search .spinner{ right:42px; }
+.menubar .search .clear-x{ right:10px; }
+
+/* Sugeridos da busca ajustados à menubar */
+.suggest{ top:42px; }
+
+/* ===== Esconder FILEBAR antiga (sem quebrar JS) ===== */
+.filebar--hidden{ display:none !important; }
+
+/* ===== Título da página ===== */
+.page-title{
+  margin: 6px 4px 8px;
+  font-weight:600;
+  color:#0e1638;
+  letter-spacing:.2px;
+  text-transform:none;
+  border-bottom:1px solid var(--line-strong);
+  padding-bottom:6px;
+}
+
+/* Ajuste do conteúdo por nova barra (Top + Menu) */
+.content{
+  padding: calc(var(--topbar-h) + var(--filebar-h) + 12px) 0 44px;
+}
