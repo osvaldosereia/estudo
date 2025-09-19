@@ -214,7 +214,7 @@ article::after{
 .art-title { font-weight:600; }
 
 /* Fonte 13px (corpo e cards) */
-article, article * { font-size:13px !important; line-height:1.5; }
+article, article * { font-size:15px !important; line-height:1.45; }
 
 /* Ações internas dos cards (ficam escondidas porque usamos o FAB global) */
 .art-actions{ display:none !important; }
