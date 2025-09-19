@@ -14,22 +14,21 @@
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- CSS externo -->
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- TOP BAR -->
+  <!-- TOP BAR (logo à esquerda + info à direita) -->
   <header class="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
-      <!-- Apenas o botão de informações à direita -->
       <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
         <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
       </button>
     </div>
   </header>
 
-  <!-- FILEBAR -->
+  <!-- BARRA ABAIXO (⭐ Favoritos, 📄 Arquivos, Busca) -->
   <nav class="filebar" aria-label="Documentos">
     <div class="filebar-shell">
       <div class="filebar-left">
@@ -41,7 +40,7 @@
         </button>
       </div>
       <div class="filebar-inner" id="filebarInner">
-        <!-- Barra de busca (agora aqui na barra abaixo) -->
+        <!-- Busca (IDs preservados) -->
         <div class="search">
           <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
           <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
@@ -52,7 +51,7 @@
     </div>
   </nav>
 
-  <!-- MENU "MAIS" (tabs extras) -->
+  <!-- MENU “mais” (se usado no seu app) -->
   <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
 
   <!-- MINI-FINDER -->
@@ -69,21 +68,16 @@
     </button>
   </div>
 
-  <!-- CONTAINER -->
+  <!-- CONTEÚDO -->
   <main class="wrap" id="appWrap" aria-live="polite">
-    <!-- Breadcrumbs / título de página (render dinâmico) -->
     <div class="breadcrumbs" id="breadcrumbs" aria-hidden="true"></div>
-
-    <!-- Lista de cards -->
     <section id="cards" class="cards" aria-live="polite"></section>
-
-    <!-- Loader -->
     <div id="loader" class="loader" aria-hidden="true">
       <div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
   </main>
 
-  <!-- FAB (ações principais globais) -->
+  <!-- FAB (exemplo existente) -->
   <div class="fab" id="fab" aria-label="Ações">
     <button class="fab-btn" id="studyBtn" title="Estudar" aria-label="Estudar">
       <img src="icons/estudar.svg" alt="Estudar">
@@ -111,7 +105,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Categorias/Arquivos (reutilizado pelo ícone Arquivos) -->
+  <!-- MODAL: Categorias/Arquivos (reutilizado pelo botão Arquivos) -->
   <div class="backdrop" id="catBackdrop" aria-hidden="true">
     <div class="cat-modal" role="dialog" aria-modal="true" aria-labelledby="catTitle">
       <div class="modal-head">
@@ -120,16 +114,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="modal-body" id="catBody">
-        <!-- conteúdo carregado do select oculto (#codeSelect) -->
-      </div>
+      <div class="modal-body" id="catBody"></div>
       <div class="modal-foot">
         <button class="btn" id="applyCat">Abrir</button>
       </div>
     </div>
   </div>
 
-  <!-- CATÁLOGO OCULTO (FONTE DE DADOS) -->
+  <!-- CATÁLOGO OCULTO (fonte p/ o modal) -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -146,11 +138,10 @@
     </optgroup>
     <optgroup label="Leis">
       <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
-      <!-- adicione outras conforme seu catálogo -->
     </optgroup>
   </select>
 
-  <!-- MODAL: Estudar (exemplo já existente) -->
+  <!-- MODAL: Estudar (exemplo) -->
   <div class="backdrop" id="studyBackdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle">
       <div class="modal-head">
@@ -168,7 +159,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Anotações (exemplo já existente) -->
+  <!-- MODAL: Anotações (exemplo) -->
   <div class="backdrop" id="noteBackdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="noteTitle">
       <div class="modal-head">
