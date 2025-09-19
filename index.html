@@ -14,7 +14,7 @@
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- CSS externo -->
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,22 +22,21 @@
   <header class="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
-      <!-- Botão Informações (permanece na top bar) -->
       <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
         <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
       </button>
     </div>
   </header>
 
-  <!-- BARRA SECUNDÁRIA (ABAIXO DA TOP BAR) -->
+  <!-- BARRA SECUNDÁRIA (busca central + ícones) -->
   <nav class="filebar" aria-label="Ações rápidas e busca">
     <div class="filebar-shell">
-      <!-- Ícone Arquivos (abre painel textual) -->
+      <!-- Arquivos -->
       <button class="cat-tab" id="catTab" title="Arquivos" aria-label="Arquivos" type="button">
         <img src="icons/arquivo.svg" alt="Arquivos">
       </button>
 
-      <!-- BUSCA CENTRAL -->
+      <!-- Busca -->
       <div class="search" id="searchBar">
         <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
         <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
@@ -45,14 +44,14 @@
         <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
       </div>
 
-      <!-- Ícone Favoritos -->
+      <!-- Favoritos -->
       <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
         <img src="icons/favorito-active.svg" alt="Favoritos">
       </button>
     </div>
   </nav>
 
-  <!-- PAINEL TEXTUAL DE ARQUIVOS (tipo Índice) -->
+  <!-- PAINEL TEXTUAL DE ARQUIVOS (abre ancorado ao botão) -->
   <div class="cat-panel" id="catPanel" role="menu" aria-hidden="true"></div>
 
   <!-- MINI-FINDER -->
@@ -72,11 +71,14 @@
   <!-- CONTEÚDO -->
   <main class="content">
     <div class="container">
+      <!-- Cabeçalho com nome do arquivo (mostrado só em modo arquivo) -->
+      <div id="fileLabel" class="file-label" style="display:none"></div>
+
       <div class="articles" id="articles"></div>
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO (FONTE DE DADOS) -->
+  <!-- CATÁLOGO OCULTO (fonte de dados para Arquivos) -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -159,7 +161,9 @@
     </div>
   </div>
 
-  <!-- FAB de Ações (hambúrguer do card selecionado) -->
+  <!-- Hambúrguer do Índice (criado em JS) -->
+
+  <!-- FAB de Ações (abaixo do hambúrguer Índice) -->
   <button
     id="actionFab"
     title="Ações"
@@ -171,8 +175,8 @@
   </button>
 
   <div id="actionMenu" role="menu" aria-hidden="true">
-    <div class="menu-context" id="actionContext">“—”</div>
-    <button class="menu-btn" data-action="fav">⭐ Favoritar</button>
+    <div class="menu-context line-clamp-2" id="actionContext">“—”</div>
+    <button class="menu-btn" data-action="fav" id="favToggleBtn">⭐ Favoritar</button>
     <button class="menu-btn" data-action="study">📖 Estudar</button>
     <button class="menu-btn" data-action="planalto">🔗 Consultar</button>
   </div>
