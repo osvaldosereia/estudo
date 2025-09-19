@@ -227,6 +227,24 @@
     }
     .icon-btn img { width:14px; height:14px; display:block; opacity:.78; }
 
+/* --- força os ícones para a base em linha, desktop e mobile --- */
+article{
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.art-actions{
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;   /* ou flex-start se preferir alinhado à esquerda */
+  gap: 12px;
+  margin-top: 8px;
+  padding-left: 0;
+  border-top: 1px solid #e9ecf3; /* opcional: linha separando */
+  padding-top: 8px;              /* opcional: respiro entre texto e ícones */
+}
+
+
     /* Mini-finder */
     .finder-pop{
       position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
