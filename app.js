@@ -1110,13 +1110,26 @@ function toggleActionMenu(show){
   if (show === undefined) show = !actionMenu.classList.contains("show");
   actionMenu.classList.toggle("show", show);
   actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
+  // sincroniza ARIA no botão
+  actionFab?.setAttribute("aria-expanded", show ? "true" : "false");
 }
+
 
 actionFab?.addEventListener("click", ()=>{
   const a = getActiveArticle();
   actionCtx.textContent = snippetFromArticle(a?.el, 32); // ajuste o tamanho se quiser
   toggleActionMenu();
 });
+
+// Acessibilidade: abrir/fechar o menu via teclado
+actionFab?.addEventListener("keydown", (e)=>{
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    updateActionPreview(); // mantém o mini-texto do artigo atual
+    toggleActionMenu();
+  }
+});
+
 
 
 document.addEventListener("click", (e)=>{
