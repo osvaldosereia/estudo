@@ -802,12 +802,24 @@ function buildArticleElement(a){
   const actions = document.createElement("div");
   actions.className = "art-actions";
 
-  const favBtn = document.createElement("button");
-  favBtn.className = "icon-btn";
-  favBtn.setAttribute("aria-label","Favoritar");
-  favBtn.dataset.action = "fav";
+ const favBtn = document.createElement("button");
+favBtn.className = "icon-btn";
+favBtn.setAttribute("aria-label", "Favoritar");
+favBtn.dataset.action = "fav";
+
+// id único do artigo
+const id = store.makeId(el.dataset.fileUrl, el.id);
+
+// Se já está nos favoritos → usa estrela ativa
+if (store.isFavorite(id)) {
+  favBtn.innerHTML = '<img src="icons/favorito-active.svg" alt="Favorito ativo">';
+  favBtn.classList.add("active");
+} else {
   favBtn.innerHTML = '<img src="icons/favorito.svg" alt="Favoritar">';
-  actions.appendChild(favBtn);
+}
+
+actions.appendChild(favBtn);
+
 
   const studyBtn = document.createElement("button");
   studyBtn.className = "icon-btn";
