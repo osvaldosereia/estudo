@@ -33,7 +33,7 @@
       --line:#e9ecf3;
       --line-strong:#d7dcea;
       --soft:#f6f7fb;
-      --blue:#2563eb;
+      --blue:#2563eb;        /* azul dos destaques */
       --focus:#9bb6ff;
       --shadow:0 2px 10px rgba(0,0,0,.06);
 
@@ -80,12 +80,11 @@
     .search .clear-x.show{ display:flex; }
     @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
 
-    .search-send{
-      display:none; width:38px; height:38px; border-radius:999px; border:1px solid #d6dbeb; background:#fff; cursor:pointer;
-    }
-    .search-send svg{ width:18px; height:18px; }
-    @media (min-width: 992px){
-      .search-send{ display:inline-grid; place-items:center; }
+    /* Botão Informações (substitui a lupinha) */
+    .info-btn.btn{
+      width:38px; height:38px; border-radius:999px;
+      border:1px solid #d6dbeb; background:#fff; cursor:pointer;
+      display:inline-grid; place-items:center;
     }
 
     /* === Dicas / sugestões em tempo real (autocomplete) === */
@@ -217,7 +216,7 @@
     /* Fonte 13px exigida (corpo e cards) */
     article, article * { font-size:13px !important; line-height:1.5; }
 
-    /* Ações dentro do card */
+    /* Ações dentro do card (mantidas na Etapa 1) */
     .art-actions{
       display:flex; flex-direction:column; align-items:flex-end; gap:8px;
       padding-left:8px;
@@ -226,24 +225,6 @@
       width:32px; height:32px; display:grid; place-items:center; cursor:pointer; border:0; background:transparent; padding:0; color:var(--icon-muted);
     }
     .icon-btn img { width:18px; height:18px; display:block; opacity:.78; }
-
-/* --- força os ícones para a base em linha, desktop e mobile --- */
-article{
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.art-actions{
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;   /* ou flex-start se preferir alinhado à esquerda */
-  gap: 12px;
-  margin-top: 8px;
-  padding-left: 0;
-  border-top: 1px solid #e9ecf3; /* opcional: linha separando */
-  padding-top: 8px;              /* opcional: respiro entre texto e ícones */
-}
-
 
     /* Mini-finder */
     .finder-pop{
@@ -318,16 +299,77 @@ article{
     .index-panel div{ padding: 6px 6px; cursor: pointer; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .index-panel div:hover{ background:#f3f4f6; }
 
+    /* ===== Busca expansível no MOBILE ===== */
     @media (max-width: 768px){
-      .brand{ height:34px; }
-      .filebar-inner{ gap:12px; }
-      .tab{ font-size:13px; }
-      .index-toggle{ right: 8px; }
-      .index-panel{ right: 8px; max-height: 46vh; }
+      /* quando a busca está aberta, some logo e botão info para a busca ocupar toda a faixa */
+      body.search-open .topbar .brand { display: none; }
+      body.search-open #infoBtn { display: none; }
+      body.search-open .topbar .search-wrap{ flex:1; }
+      body.search-open .topbar .search{ width:100%; }
+      body.search-open .topbar .search input{
+        width:100%;
+        border-color:#9bb6ff;
+        box-shadow:0 0 0 3px rgba(155,182,255,.25);
+      }
+      .topbar .search .suggest{ left:0; right:0; max-width:100%; z-index:140; }
       article{ grid-template-columns: 1fr; }
       .art-actions{ flex-direction:row; align-items:center; justify-content:center; gap:12px; margin-top:8px; padding-left:0; }
       .icon-btn{ width:36px; height:36px; }
     }
+/* ===== FABs (índice já existe, este é o de ações) ===== */
+#actionFab{
+  position: fixed;
+  right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + 8px + 48px); /* 48px abaixo do índice */
+  z-index: 151;
+  width: 36px; height: 36px; border-radius: 8px;
+  background: #fff; border: 1px solid #ddd;
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+/* Menu suspenso que abre a partir do actionFab */
+#actionMenu{
+  position: fixed;
+  right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + 8px + 48px + 40px);
+  z-index: 152;
+  background:#fff; border:1px solid #ddd; border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);
+  padding:8px; width: min(260px, 92vw); display:none;
+}
+#actionMenu.show{ display:block; }
+
+#actionMenu .menu-context{
+  font-size:12px; color:#666; margin:4px 6px 8px;
+  max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+#actionMenu .menu-btn{
+  display:block; width:100%; text-align:left;
+  background:transparent; border:0; border-radius:8px;
+  padding:8px 10px; cursor:pointer; font-size:14px;
+}
+#actionMenu .menu-btn:hover{ background:#f6f7fb; }
+
+/* Limpeza visual: esconde os 3 ícones de cada card */
+.art-actions{ display:none !important; }
+
+/* Responsivo: em telas pequenas, empurra os FABs um pouco para dentro */
+@media (max-width: 768px){
+  #actionFab{
+    right: 8px;
+    top: auto;
+    bottom: 76px; /* deixa espaço para dedo, sem cobrir finder */
+  }
+  #actionMenu{
+    right: 8px;
+    top: auto;
+    bottom: 76px; /* menu abre acima do FAB no mobile */
+    width: min(280px, 92vw);
+  }
+}
+
   </style>
 </head>
 <body>
@@ -343,8 +385,10 @@ article{
           <!-- DICAS / SUGESTÕES (autocomplete) -->
           <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
         </div>
-        <button class="search-send btn" id="sendSearch" title="Buscar" aria-label="Buscar" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+
+        <!-- Botão Informações (substitui a antiga lupinha) -->
+        <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
+          <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
         </button>
       </div>
     </div>
@@ -381,7 +425,6 @@ article{
         <path d="M9 6l6 6-6 6"/>
       </svg>
     </button>
-
     <button class="mini-btn" id="closeFinder" title="Fechar (Esc)" aria-label="Fechar" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
@@ -459,24 +502,27 @@ article{
     </div>
   </div>
 
-  <!-- MINI MODAL: CATEGORIAS (Arquivos) -->
-  <div class="cat-backdrop" id="catBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="cat-modal" role="document">
-      <div class="cat-head">
-        <h3 class="cat-title">Filtrar por categoria</h3>
-        <button class="cat-close btn" id="closeCat" aria-label="Fechar">✕</button>
+  <!-- MODAL: INFORMAÇÕES -->
+  <div class="modal-backdrop" id="infoModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="study-head">
+        <h3 class="study-title">Informações</h3>
+        <button class="study-close btn" id="closeInfo" aria-label="Fechar">✕</button>
       </div>
-      <div class="cat-grid" id="catGrid"></div>
+      <div class="info-body">
+        <p>Bem-vindo ao direito.love! Aqui você encontra códigos e leis com leitura rápida, favoritos e ferramentas de estudo.</p>
+        <ul>
+          <li>Use a busca para achar artigos rapidamente.</li>
+          <li>Favoritos salvam trechos para revisão.</li>
+          <li>“Consultar” abre a norma no Planalto.</li>
+        </ul>
+      </div>
     </div>
   </div>
 
-  <!-- ======= ETAPA 2: JS COMPLETO AQUI ======= -->
+  <!-- ======= JS ======= -->
   <script>
-    /* Cole a ETAPA 2/2 (JavaScript) aqui */
-  </script>
-
-  <!-- PWA bootstrap mínimo (ok manter fora do JS principal) -->
-  <script>
+    /* =================== PWA =================== */
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
@@ -486,962 +532,1446 @@ article{
       });
     }
     window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
-  </script>
-</body>
-</html>
-<script>
-/* =================== Refs =================== */
-const els = {
-  brandBtn: document.getElementById("brandBtn"),
-  favTab: document.getElementById("favTab"),
-  catTab: document.getElementById("catTab"),
-  searchInput: document.getElementById("searchInput"),
-  searchSpinner: document.getElementById("searchSpinner"),
-  clearSearch: document.getElementById("clearSearch"),
-  sendSearch: document.getElementById("sendSearch"),
-  searchSuggest: document.getElementById("searchSuggest"),
-  filebarInner: document.getElementById("filebarInner"),
-  moreMenu: document.getElementById("moreMenu"),
-  finderPop: document.getElementById("finderPop"),
-  prevBtn: document.getElementById("prevBtn"),
-  nextBtn: document.getElementById("nextBtn"),
-  closeFinder: document.getElementById("closeFinder"),
-  count: document.getElementById("count"),
-  articles: document.getElementById("articles"),
-  codeSelect: document.getElementById("codeSelect"),
-  studyModal: document.getElementById("studyModal"),
-  closeStudy: document.getElementById("closeStudy"),
-  modalTitle: document.getElementById("modalTitle"),
-  studySub: document.getElementById("studySub"),
-  promptPreview: document.getElementById("promptPreview"),
-  copyPromptBtn: document.getElementById("copyPromptBtn"),
-  toast: document.getElementById("toast"),
-  catBackdrop: document.getElementById("catBackdrop"),
-  closeCat: document.getElementById("closeCat"),
-  catGrid: document.getElementById("catGrid"),
-};
-els.indexToggle = null;
-els.indexPanel = null;
 
-/* =================== Estado + Storage =================== */
-const state = {
-  mode: "favorites",
-  currentFileUrl: null,
-  currentFileLabel: "",
-  rawText: "",
-  items: [],
-  articles: [],
-  currentArticleIdx: -1,
-  currentTokens: [],
-  matchArticles: [],
-  matchIdx: -1,
-  category: "Todos",
-  cache: new Map(),
-  urlToLabel: new Map(),
-};
+    /* =================== Refs =================== */
+    const els = {
+      brandBtn: document.getElementById("brandBtn"),
+      favTab: document.getElementById("favTab"),
+      catTab: document.getElementById("catTab"),
 
-const store = {
-  get(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } },
-  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
-  keyFav: "dl_favorites",
-  keyStud: "dl_studied",
-  keyLast: "dl_last_view",
-  makeId: (fileUrl, htmlId) => `${fileUrl}::${htmlId}`,
-  listFavorites() { return store.get(store.keyFav, []); },
-  isFavorite(id) { return store.listFavorites().some((e) => e.id === id); },
-  addFavorite(entry) { if (!entry?.id || !entry?.text) return; const list = store.listFavorites().filter(e=>e.id!==entry.id); list.unshift({...entry,ts:Date.now()}); store.set(store.keyFav, list); },
-  removeFavorite(id) { const list = store.listFavorites().filter((e) => e.id !== id); store.set(store.keyFav, list); },
-  listStudied() { return store.get(store.keyStud, []); },
-  markStudied(entry) { if (!entry?.id || !entry?.text) return; let list = store.listStudied().filter(e=>e.id!==entry.id); list.unshift({...entry,ts:Date.now()}); if (list.length>50) list = list.slice(0,50); store.set(store.keyStud, list); },
-  isStudied(id) { return store.listStudied().some((e) => e.id === id); },
-  saveLast(partial){ const prev = store.get(store.keyLast, {}); store.set(store.keyLast, { ...prev, ...partial }); },
-  getLast(){ return store.get(store.keyLast, null); },
-  clearLast(){ localStorage.removeItem(store.keyLast); },
-};
+      searchInput: document.getElementById("searchInput"),
+      searchSpinner: document.getElementById("searchSpinner"),
+      clearSearch: document.getElementById("clearSearch"),
+      searchSuggest: document.getElementById("searchSuggest"),
 
-/* =================== Utils =================== */
-function notify(msg="Ok!") {
-  els.toast.textContent = msg;
-  els.toast.classList.add("show");
-  setTimeout(()=>els.toast.classList.remove("show"), 1200);
-}
-async function withBusy(btn, fn){
-  if (btn && btn.classList.contains("busy")) return;
-  if (btn) btn.classList.add("busy");
-  try {
-    const min=220, t0=performance.now();
-    const res = await fn();
-    const dt = performance.now()-t0;
-    if (dt<min) await new Promise(r=>setTimeout(r, min-dt));
-    return res;
-  } finally {
-    if (btn) btn.classList.remove("busy");
-  }
-}
-const sanitizeForLayout = (s)=> s.replace(/\u00A0/g," ").replace(/\t/g," ").replace(/\s+\n/g,"\n");
-function norm(s){
-  return (s||"")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/ç/g,"c")
-    .replace(/(\d)[.,](?=\d)/g,"$1")
-    .toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-}
-const sortByTsDesc = (arr)=>[...arr].sort((a,b)=>(b.ts||0)-(a.ts||0));
+      infoBtn: document.getElementById("infoBtn"),
+      infoModal: document.getElementById("infoModal"),
+      closeInfo: document.getElementById("closeInfo"),
 
-/* =================== Catálogo (select oculto) =================== */
-function buildCatalogMaps(){
-  const sel = els.codeSelect;
-  state.urlToLabel.clear();
-  sel.querySelectorAll("option").forEach((opt)=>{
-    const url = opt.value?.trim();
-    const label = opt.textContent?.trim();
-    if (url) state.urlToLabel.set(url, label);
-  });
-}
-function getCatalogByCategory(){
-  const map = new Map();
-  els.codeSelect.querySelectorAll("optgroup").forEach((og)=>{
-    const cat = og.getAttribute("label")?.trim() || "Outros";
-    const arr=[];
-    og.querySelectorAll("option").forEach((opt)=>{
-      const url = opt.value?.trim();
-      const label = opt.textContent?.trim();
-      if (url) arr.push({label, value:url});
-    });
-    map.set(cat, arr);
-  });
-  return map;
-}
-function getAllOptions(){
-  const out=[];
-  els.codeSelect.querySelectorAll("option").forEach((opt)=>{
-    const url=opt.value?.trim(); const label=opt.textContent?.trim();
-    if (url) out.push({label, value:url});
-  });
-  return out;
-}
+      filebarInner: document.getElementById("filebarInner"),
+      moreMenu: document.getElementById("moreMenu"),
 
-/* =================== Parser =================== */
-function splitIntoBlocks(txt){
-  const cleaned = sanitizeForLayout(
-    txt.replace(/^\uFEFF/,"").replace(/\r\n/g,"\n").replace(/[ \t]+/g," ")
-  );
-  return cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim()).filter(Boolean);
-}
-function parseBlockToItem(block, idx){
-  const lines = block.split(/\n/);
-  const artIdx = lines.findIndex((l)=>/^(Art|S[úu]mula)/i.test(l.trim()));
-  if (artIdx === -1) return { kind:"heading", raw:block, htmlId:`h-${idx}` };
+      finderPop: document.getElementById("finderPop"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      closeFinder: document.getElementById("closeFinder"),
+      count: document.getElementById("count"),
 
-  const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
-  const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
+      articles: document.getElementById("articles"),
 
-  const epigrafe = pre.length ? pre.join("\n") : "";
-  const titleLine = after.shift() || "";
-  const ensureBlank = (txt)=> txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g, (_,a,b)=>`${a}\n${b}`);
-  const bodyText = ensureBlank(after.join("\n"));
+      codeSelect: document.getElementById("codeSelect"),
 
-  const textForStorage = [epigrafe ? `Epígrafe: ${epigrafe}` : "", titleLine, bodyText].filter(Boolean).join("\n");
+      studyModal: document.getElementById("studyModal"),
+      closeStudy: document.getElementById("closeStudy"),
+      modalTitle: document.getElementById("modalTitle"),
+      studySub: document.getElementById("studySub"),
+      promptPreview: document.getElementById("promptPreview"),
+      copyPromptBtn: document.getElementById("copyPromptBtn"),
 
-  return {
-    kind:"article",
-    title: titleLine || `Bloco ${idx+1}`,
-    text: textForStorage,
-    htmlId: `art-${idx}`,
-    _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe },
-  };
-}
-function parseByUrl(url, txt){
-  const blocks = splitIntoBlocks(txt);
-  const items = blocks.map((b,i)=>parseBlockToItem(b,i));
-  let aidx=0;
-  items.forEach((it)=>{ if (it.kind==="article"){ it.htmlId=`art-${aidx}`; it._aidx=aidx; aidx++; } });
-  return items;
-}
+      toast: document.getElementById("toast"),
 
-/* =================== Render =================== */
-function wrapParensIn(root){
-  const re = /\(([^()]{1,200})\)/g;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-  const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
-  nodes.forEach((node)=>{
-    const text=node.nodeValue; if (!re.test(text)){ re.lastIndex=0; return; }
-    re.lastIndex=0; const frag=document.createDocumentFragment(); let last=0,m;
-    while((m=re.exec(text))){
-      const before=text.slice(last,m.index); if (before) frag.appendChild(document.createTextNode(before));
-      const span=document.createElement("span"); span.className="paren"; span.textContent="("+m[1]+")"; frag.appendChild(span);
-      last=re.lastIndex;
+      // Mini modal de categorias
+      catBackdrop: document.getElementById("catBackdrop"),
+      closeCat: document.getElementById("closeCat"),
+      catGrid: document.getElementById("catGrid"),
+    };
+    els.indexToggle = null;
+    els.indexPanel = null;
+
+    /* =================== Estado + Storage =================== */
+    const state = {
+      mode: "favorites", // favorites | file
+      currentFileUrl: null,
+      currentFileLabel: "",
+      rawText: "",
+      items: [],    // headings + articles
+      articles: [], // only articles
+      currentArticleIdx: -1,
+
+      currentTokens: [],
+      matchArticles: [],
+      matchIdx: -1,
+
+      category: "Todos",
+
+      cache: new Map(),
+      urlToLabel: new Map(),
+    };
+
+    const store = {
+      get(k, def) {
+        try { return JSON.parse(localStorage.getItem(k)) ?? def; }
+        catch { return def; }
+      },
+      set(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+
+      keyFav: "dl_favorites",
+      keyStud: "dl_studied",
+      keyLast: "dl_last_view",
+
+      makeId: (fileUrl, htmlId) => `${fileUrl}::${htmlId}`,
+
+      listFavorites() { return store.get(store.keyFav, []); },
+      isFavorite(id) { return store.listFavorites().some((e) => e.id === id); },
+      addFavorite(entry) {
+        if (!entry || !entry.id || !entry.text) return;
+        const list = store.listFavorites().filter((e) => e.id !== entry.id);
+        list.unshift({ ...entry, ts: Date.now() });
+        store.set(store.keyFav, list);
+      },
+      removeFavorite(id) {
+        const list = store.listFavorites().filter((e) => e.id !== id);
+        store.set(store.keyFav, list);
+      },
+
+      listStudied() { return store.get(store.keyStud, []); },
+      markStudied(entry) {
+        if (!entry || !entry.id || !entry.text) return;
+        let list = store.listStudied().filter((e) => e.id !== entry.id);
+        list.unshift({ ...entry, ts: Date.now() });
+        if (list.length > 50) list = list.slice(0, 50);
+        store.set(store.keyStud, list);
+      },
+      isStudied(id) { return store.listStudied().some((e) => e.id === id); },
+
+      saveLast(partial) {
+        const prev = store.get(store.keyLast, {});
+        store.set(store.keyLast, { ...prev, ...partial });
+      },
+      getLast() { return store.get(store.keyLast, null); },
+      clearLast() { localStorage.removeItem(store.keyLast); },
+    };
+
+    /* =================== Utils =================== */
+    function notify(msg = "Ok!") {
+      els.toast.textContent = msg;
+      els.toast.classList.add("show");
+      setTimeout(() => els.toast.classList.remove("show"), 1200);
     }
-    const after=text.slice(last); if (after) frag.appendChild(document.createTextNode(after));
-    node.parentNode.replaceChild(frag, node);
-  });
-}
-function highlightTextNodes(root, tokens){
-  if (!tokens?.length) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-  const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
-  nodes.forEach((node)=>{
-    const txt=node.nodeValue; if (!txt.trim()) return;
-    const frag=document.createDocumentFragment(); const re=/[\p{L}\p{N}]+/gu; let idx=0,m;
-    while((m=re.exec(txt))){
-      const before=txt.slice(idx,m.index); if (before) frag.appendChild(document.createTextNode(before));
-      const word=m[0]; const hit=tokens.some(t=>norm(word).includes(t));
-      if (hit){ const mk=document.createElement("mark"); mk.textContent=word; frag.appendChild(mk); }
-      else frag.appendChild(document.createTextNode(word));
-      idx=re.lastIndex;
-    }
-    const tail=txt.slice(idx); if (tail) frag.appendChild(document.createTextNode(tail));
-    node.parentNode.replaceChild(frag,node);
-  });
-}
-
-function buildHeadingElement(item){
-  const el=document.createElement("div"); el.className="law-heading"; el.id=item.htmlId;
-  const pre=document.createElement("pre"); pre.textContent=item.raw; el.appendChild(pre); return el;
-}
-
-/* ===== Planalto: bases oficiais por documento ===== */
-const planaltoBases = {
-  "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/ConstituicaoCompilado.htm",
-  "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406.htm",
-  "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105compilada.htm",
-  "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848.htm",
-  "Processo Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
-  "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
-  "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
-  "Código Tributário Nacional": "https://www.planalto.gov.br/ccivil_03/leis/l5172.htm",
-  "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
-  "Código Florestal": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm",
-  "Código Penal Militar": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del1001.htm",
-  "Lei Maria da Penha": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11340.htm",
-  "Lei de Execução Penal": "https://www.planalto.gov.br/ccivil_03/leis/l7210.htm",
-  "Lei de Drogas": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11343.htm",
-  "Lei LGPD": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
-  "Marco Civil da Internet": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
-  "Lei dos Crimes Hediondos": "https://www.planalto.gov.br/ccivil_03/leis/l8072.htm",
-  "ECA - Est. da Criança e Adolescente": "https://www.planalto.gov.br/ccivil_03/leis/l8069.htm",
-  "Est. do Desarmamento": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10826.htm",
-  "Est. do Idoso": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10741.htm",
-  "Est. da Juventude": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12852.htm",
-  "Est. da Pessoa com Deficiência": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm",
-  "Est. da Oab": "https://www.planalto.gov.br/ccivil_03/leis/l8906.htm"
-};
-
-/* Gera hash robusto para artigo — tenta #artN e #artNo (1º => 1o) */
-function buildPlanaltoHashFromTitle(titleText){
-  if (!titleText) return "";
-  // pega "Art. 121", "Art. 5º", "Artigo 7º", etc.
-  const m = titleText.match(/Art(?:igo)?\.?\s*(\d+)\s*([ºo]?)/i);
-  if (!m) return "";
-  const n = m[1]; const sufixo = m[2]?.toLowerCase() || "";
-  // duas possibilidades comuns de âncora
-  if (sufixo === "º") return `#art${n}o`; // 1º => #art1o (muito usado no Planalto)
-  return `#art${n}`;
-}
-/* Monta URL final com fallback (abre base se âncora falhar no Planalto) */
-function makePlanaltoUrl(fileLabel, titleText){
-  const base = planaltoBases[fileLabel];
-  if (!base) return null;
-  const h1 = buildPlanaltoHashFromTitle(titleText);
-  let h2 = "";
-  if (h1 && /#art(\d+)$/.test(h1)) {
-    const n = RegExp.$1;
-    h2 = `#art${n}o`;
-  } else if (h1 && /#art(\d+)o$/.test(h1)) {
-    const n = RegExp.$1;
-    h2 = `#art${n}`;
-  }
-  // usamos h1 por padrão; se não rolar, usuário ainda cai na página base
-  return { base, try1: base + (h1 || ""), try2: h2 ? base + h2 : base };
-}
-
-/* ===== Artigos ===== */
-function buildArticleElement(a){
-  const el = document.createElement("article");
-  el.dataset.idx = a._aidx;
-  el.id = a.htmlId || `art-${a._aidx}`;
-  el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || "";
-  el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || "";
-
-  const split = a._split;
-
-  const contentWrap = document.createElement("div");
-  contentWrap.className = "art-content";
-
-  if (split.epigrafe) {
-    const epiTop = document.createElement("div");
-    epiTop.className = "art-epigrafe";
-    epiTop.textContent = split.epigrafe.replace(/<\/?(strong|b)>/gi, "");
-    contentWrap.appendChild(epiTop);
-  }
-
-  const head = document.createElement("div");
-  head.className = "art-head";
-  const titleSpan = document.createElement("span");
-  titleSpan.className = "art-title";
-  titleSpan.textContent = (split.titleText || a.title || "Artigo").replace(/<\/?(strong|b)>/gi, "");
-  head.appendChild(titleSpan);
-  contentWrap.appendChild(head);
-
-  const content = document.createElement("div");
-  content.className = "art-body";
-  let body = (split.body || "")
-    .replace(/<\/?(strong|b)>/gi,"")
-    .replace(/([^\n])(\n§)/g,"$1\n\n§")
-    .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi,"\n$2")
-    .replace(/(^|\n)(\s*[IVXLCDM]{1,12}\s*[-–—.]?)/g,"\n$2")
-    .replace(/(^|\n)(\s*[a-z]\))/g,"\n$2")
-    .replace(/(^|\n)(§\s*[^\n]*)(\n)/g,"$1$2\n\n")
-    .replace(/(^|\n)(Par[aá]grafo[^\n]*)(\n)/gi,"$1$2\n\n")
-    .replace(/(^|\n)([IVXLCDM]{1,12} ?[-–—.]?\s*[^\n]*)(\n)/g,"$1$2\n\n")
-    .replace(/(^|\n)([a-z]\)\s*[^\n]*)(\n)/g,"$1$2\n\n");
-  content.innerHTML = body.replace(/\n/g,"<br>");
-  contentWrap.appendChild(content);
-  el.appendChild(contentWrap);
-
-  const actions = document.createElement("div");
-  actions.className = "art-actions";
-
- const favBtn = document.createElement("button");
-favBtn.className = "icon-btn";
-favBtn.setAttribute("aria-label", "Favoritar");
-favBtn.dataset.action = "fav";
-
-// id único do artigo
-const id = store.makeId(el.dataset.fileUrl, el.id);
-
-// Se já está nos favoritos → usa estrela ativa
-if (store.isFavorite(id)) {
-  favBtn.innerHTML = '<img src="icons/favorito-active.svg" alt="Favorito ativo">';
-  favBtn.classList.add("active");
-} else {
-  favBtn.innerHTML = '<img src="icons/favorito.svg" alt="Favoritar">';
-}
-
-actions.appendChild(favBtn);
-
-
-  const studyBtn = document.createElement("button");
-  studyBtn.className = "icon-btn";
-  studyBtn.setAttribute("aria-label","Estudar com I.A.");
-  studyBtn.dataset.action = "study";
-  studyBtn.innerHTML = '<img src="icons/estudar.svg" alt="Estudar com I.A.">';
-  actions.appendChild(studyBtn);
-
-  // Novo: Ver no Planalto
-  const planBtn = document.createElement("button");
-  planBtn.className = "icon-btn";
-  planBtn.setAttribute("aria-label", "Ver no Planalto");
-  planBtn.dataset.action = "planalto";
-  planBtn.innerHTML = '<img src="icons/link.svg" alt="Ver no Planalto">';
-  actions.appendChild(planBtn);
-
-  if (store.isFavorite(id)) favBtn.classList.add("active");
-  if (store.isStudied(id)) studyBtn.classList.add("active");
-
-  el.appendChild(actions);
-
-  wrapParensIn(el);
-  return el;
-}
-
-function clearArticles(){ els.articles.innerHTML=""; state.currentArticleIdx=-1; }
-
-/* =================== Outline =================== */
-function updateCurrentOutline(){
-  const nodes=[...document.querySelectorAll("article[data-idx]")];
-  if (!nodes.length) return;
-  const topGap=48;
-  const scTop = window.scrollY || document.documentElement.scrollTop || 0;
-  const scBottom = scTop + window.innerHeight;
-  const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
-
-  let targetIdx=-1;
-  if (scTop<=topGap) targetIdx=0;
-  else if (scBottom>=docH-topGap) targetIdx=nodes.length-1;
-  else{
-    const cy=window.innerHeight/2; let best=Infinity, bestIdx=0;
-    nodes.forEach((el,i)=>{
-      const r=el.getBoundingClientRect();
-      if (r.bottom<0 || r.top>window.innerHeight) return;
-      const mid=r.top + r.height/2; const d=Math.abs(mid-cy);
-      if (d<best){ best=d; bestIdx=i; }
-    });
-    targetIdx=bestIdx;
-  }
-  if (targetIdx===-1 || state.currentArticleIdx===targetIdx) return;
-  nodes.forEach(n=>n.classList.remove("in-view"));
-  nodes[targetIdx].classList.add("in-view");
-  state.currentArticleIdx=targetIdx;
-
-  const art=nodes[targetIdx];
-  store.saveLast({ mode: state.mode, fileUrl: state.currentFileUrl, articleId: art?.id || null, scrollY: window.scrollY||0 });
-}
-
-/* =================== Índice =================== */
-function removeIndexUI(){
-  if (els.indexToggle){ els.indexToggle.remove(); els.indexToggle=null; }
-  if (els.indexPanel){ els.indexPanel.remove(); els.indexPanel=null; }
-}
-function buildIndexButton(){
-  removeIndexUI();
-  if (state.mode!=="file") return;
-  const btn=document.createElement("button");
-  btn.className="index-toggle"; btn.type="button"; btn.setAttribute("aria-label","Abrir índice do documento"); btn.textContent="≡";
-  document.body.appendChild(btn); els.indexToggle=btn;
-
-  const panel=document.createElement("div");
-  panel.className="index-panel"; panel.setAttribute("role","menu"); panel.setAttribute("aria-hidden","true");
-  document.body.appendChild(panel); els.indexPanel=panel;
-
-  btn.addEventListener("click", ()=>{
-    const show=!panel.classList.contains("show");
-    panel.classList.toggle("show", show);
-    panel.setAttribute("aria-hidden", show ? "false" : "true");
-  });
-  document.addEventListener("keydown", (e)=>{ if (e.key==="Escape" && els.indexPanel?.classList.contains("show")){ els.indexPanel.classList.remove("show"); els.indexPanel.setAttribute("aria-hidden","true"); } });
-  document.addEventListener("click",(e)=>{
-    if (!els.indexPanel) return;
-    if (els.indexPanel.classList.contains("show")){
-      const onToggle = e.target===els.indexToggle;
-      const inside = e.target.closest && e.target.closest(".index-panel");
-      if (!onToggle && !inside){ els.indexPanel.classList.remove("show"); els.indexPanel.setAttribute("aria-hidden","true"); }
-    }
-  }, {capture:true});
-}
-function renderIndex(){
-  if (!els.indexPanel) return;
-  els.indexPanel.innerHTML="";
-  const headings = state.items.filter(it=>it.kind==="heading");
-  if (!headings.length){ const empty=document.createElement("div"); empty.textContent="Sem índice para este documento."; els.indexPanel.appendChild(empty); return; }
-  headings.forEach((it)=>{
-    const d=document.createElement("div"); const oneLine=it.raw.replace(/\s+/g," ").trim(); d.textContent=oneLine; d.title=oneLine;
-    d.addEventListener("click", ()=>{
-      const target=document.getElementById(it.htmlId);
-      if (target){
-        const topbar=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h"));
-        const filebar=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--filebar-h"));
-        const offset=topbar+filebar+12;
-        const y=target.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top:y, behavior:"smooth" });
+    async function withBusy(btn, fn) {
+      if (btn && btn.classList.contains("busy")) return;
+      if (btn) btn.classList.add("busy");
+      try {
+        const min = 220;
+        const t0 = performance.now();
+        const res = await fn();
+        const dt = performance.now() - t0;
+        if (dt < min) await new Promise((r) => setTimeout(r, min - dt));
+        return res;
+      } finally {
+        if (btn) btn.classList.remove("busy");
       }
-      els.indexPanel.classList.remove("show");
-      els.indexPanel.setAttribute("aria-hidden","true");
-    });
-    els.indexPanel.appendChild(d);
-  });
-}
+    }
 
-/* =================== Render arquivo =================== */
-function renderFileItemsProgressive(items, {chunkSize=30}={}){
-  clearArticles();
-  if (!items.length){ els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>'; removeIndexUI(); return; }
-  const first=Math.min(8, items.length);
-  const frag=document.createDocumentFragment();
-  for (let i=0;i<first;i++){ const it=items[i]; frag.appendChild(it.kind==="heading"?buildHeadingElement(it):buildArticleElement(it)); }
-  els.articles.appendChild(frag); updateCurrentOutline(); buildIndexButton(); renderIndex();
+    const sanitizeForLayout = (s) =>
+      s.replace(/\u00A0/g, " ").replace(/\t/g, " ").replace(/\s+\n/g, "\n");
 
-  let i=first;
-  function appendChunk(){
-    const fr=document.createDocumentFragment(); let added=0;
-    while(i<items.length && added<chunkSize){ const it=items[i]; fr.appendChild(it.kind==="heading"?buildHeadingElement(it):buildArticleElement(it)); i++; added++; }
-    els.articles.appendChild(fr); updateCurrentOutline();
-    if (i<items.length){ if ("requestIdleCallback" in window) requestIdleCallback(appendChunk); else setTimeout(appendChunk, 0); }
-  }
-  if (first<items.length){ if ("requestIdleCallback" in window) requestIdleCallback(appendChunk); else setTimeout(appendChunk, 0); }
-}
-function renderFileItemsAll(items){
-  clearArticles(); const frag=document.createDocumentFragment();
-  items.forEach((it)=>frag.appendChild(it.kind==="heading"?buildHeadingElement(it):buildArticleElement(it)));
-  els.articles.appendChild(frag); updateCurrentOutline(); buildIndexButton(); renderIndex();
-}
+    function norm(s) {
+      return (s || "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/ç/g, "c")
+        .replace(/(\d)[.,](?=\d)/g, "$1")
+        .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    }
 
-/* =================== Favoritos =================== */
-function renderFavorites(){
-  clearArticles();
-  const favs=store.listFavorites();
-  if (!favs.length){ els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>'; removeIndexUI(); return; }
+    function sortByTsDesc(arr) { return [...arr].sort((a, b) => (b.ts || 0) - (a.ts || 0)); }
 
-  const order=getAllOptions().map(o=>o.value);
-  const byFile=new Map();
-  favs.forEach((f)=>{ const key=f.fileLabel||f.fileUrl||"Arquivo"; if (!byFile.has(key)) byFile.set(key,[]); byFile.get(key).push(f); });
-  for (const [k,arr] of byFile.entries()) byFile.set(k, sortByTsDesc(arr));
+    /* =================== Catálogo =================== */
+    function buildCatalogMaps() {
+      const sel = els.codeSelect;
+      state.urlToLabel.clear();
+      sel.querySelectorAll("option").forEach((opt) => {
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) state.urlToLabel.set(url, label);
+      });
+    }
+    function getCatalogByCategory() {
+      const map = new Map();
+      els.codeSelect.querySelectorAll("optgroup").forEach((og) => {
+        const cat = og.getAttribute("label")?.trim() || "Outros";
+        const arr = [];
+        og.querySelectorAll("option").forEach((opt) => {
+          const url = opt.value?.trim();
+          const label = opt.textContent?.trim();
+          if (url) arr.push({ label, value: url });
+        });
+        map.set(cat, arr);
+      });
+      return map;
+    }
+    function getAllOptions() {
+      const out = [];
+      els.codeSelect.querySelectorAll("option").forEach((opt) => {
+        const url = opt.value?.trim();
+        const label = opt.textContent?.trim();
+        if (url) out.push({ label, value: url });
+      });
+      return out;
+    }
 
-  const groups = [...byFile.entries()].sort((a,b)=>{
-    const aUrl=(favs.find(x=>x.fileLabel===a[0])||{}).fileUrl;
-    const bUrl=(favs.find(x=>x.fileLabel===b[0])||{}).fileUrl;
-    const ai=aUrl?order.indexOf(aUrl):Infinity; const bi=bUrl?order.indexOf(bUrl):Infinity;
-    if (ai!==bi) return ai-bi; return a[0].localeCompare(b[0]);
-  });
+    /* =================== Parser =================== */
+    function splitIntoBlocks(txt) {
+      const cleaned = sanitizeForLayout(
+        txt.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ")
+      );
+      const parts = cleaned
+        .split(/^\s*-{5,}\s*$/m)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return parts;
+    }
 
-  const frag=document.createDocumentFragment(); let idx=0;
-  groups.forEach(([label,list])=>{
-    const h=document.createElement("div"); h.className="section-title"; h.textContent=label; frag.appendChild(h);
-    list.forEach((entry)=>{
-      const p=splitIntoBlocks(entry.text); if (!p.length) return;
-      const item=parseBlockToItem(p[0],0); if (!item || item.kind!=="article") return;
-      item._fileUrl=entry.fileUrl; item._fileLabel=entry.fileLabel;
-      item.htmlId = entry.htmlId || item.htmlId;
-      item._aidx = idx++;
-      const el=buildArticleElement(item);
-      el.dataset.fileUrl=entry.fileUrl; el.dataset.fileLabel=entry.fileLabel;
-      const favBtn=el.querySelector('.icon-btn[data-action="fav"]');
-      const id=store.makeId(entry.fileUrl, item.htmlId);
+    function parseBlockToItem(block, idx) {
+      const lines = block.split(/\n/);
+      const artIdx = lines.findIndex((l) => /^(Art|S[úu]mula)/i.test(l.trim()));
+      if (artIdx === -1) {
+        return { kind: "heading", raw: block, htmlId: `h-${idx}` };
+      }
+
+      const pre = lines.slice(0, artIdx).map((s) => s.trim()).filter(Boolean);
+      const after = lines.slice(artIdx).map((s) => s.trim()).filter(Boolean);
+
+      const epigrafe = pre.length ? pre.join("\n") : "";
+      const titleLine = after.shift() || "";
+      const bodyLines = after;
+
+      const ensureBlank = (txt) =>
+        txt.replace(
+          /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+          (_, a, b) => `${a}\n${b}`
+        );
+      const bodyText = ensureBlank(bodyLines.join("\n"));
+
+      const textForStorage = [epigrafe ? `Epígrafe: ${epigrafe}` : "", titleLine, bodyText]
+        .filter(Boolean)
+        .join("\n");
+
+      return {
+        kind: "article",
+        title: titleLine || `Bloco ${idx + 1}`,
+        text: textForStorage,
+        htmlId: `art-${idx}`,
+        _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe },
+      };
+    }
+
+    function parseByUrl(url, txt) {
+      const blocks = splitIntoBlocks(txt);
+      const items = blocks.map((b, i) => parseBlockToItem(b, i));
+      let aidx = 0;
+      items.forEach((it) => {
+        if (it.kind === "article") {
+          it.htmlId = `art-${aidx}`;
+          it._aidx = aidx;
+          aidx++;
+        }
+      });
+      return items;
+    }
+
+    /* =================== Render helpers =================== */
+    function wrapParensIn(root) {
+      const re = /\(([^()]{1,200})\)/g;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) nodes.push(n);
+      nodes.forEach((node) => {
+        const text = node.nodeValue;
+        if (!re.test(text)) { re.lastIndex = 0; return; }
+        re.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = re.exec(text))) {
+          const before = text.slice(last, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+          const span = document.createElement("span");
+          span.className = "paren";
+          span.textContent = "(" + m[1] + ")";
+          frag.appendChild(span);
+          last = re.lastIndex;
+        }
+        const after = text.slice(last);
+        if (after) frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function highlightTextNodes(root, tokens) {
+      if (!tokens || !tokens.length) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) nodes.push(n);
+
+      nodes.forEach((node) => {
+        const txt = node.nodeValue;
+        if (!txt.trim()) return;
+
+        const frag = document.createDocumentFragment();
+        const re = /[\p{L}\p{N}]+/gu;
+        let idx = 0, m;
+        while ((m = re.exec(txt))) {
+          const before = txt.slice(idx, m.index);
+          if (before) frag.appendChild(document.createTextNode(before));
+
+          const word = m[0];
+          const hit = tokens.some((t) => norm(word).includes(t));
+          if (hit) {
+            const mk = document.createElement("mark");
+            mk.textContent = word;
+            frag.appendChild(mk);
+          } else {
+            frag.appendChild(document.createTextNode(word));
+          }
+          idx = re.lastIndex;
+        }
+        const tail = txt.slice(idx);
+        if (tail) frag.appendChild(document.createTextNode(tail));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function buildHeadingElement(item) {
+      const el = document.createElement("div");
+      el.className = "law-heading";
+      el.id = item.htmlId;
+      const pre = document.createElement("pre");
+      pre.textContent = item.raw;
+      el.appendChild(pre);
+      return el;
+    }
+
+    /* ===== Planalto: bases oficiais por documento ===== */
+    const planaltoBases = {
+      "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/ConstituicaoCompilado.htm",
+      "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406.htm",
+      "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105compilada.htm",
+      "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848.htm",
+      "Processo Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
+      "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
+      "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
+      "Código Tributário Nacional": "https://www.planalto.gov.br/ccivil_03/leis/l5172.htm",
+      "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
+      "Código Florestal": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm",
+      "Código Penal Militar": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del1001.htm",
+      "Lei Maria da Penha": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11340.htm",
+      "Lei de Execução Penal": "https://www.planalto.gov.br/ccivil_03/leis/l7210.htm",
+      "Lei de Drogas": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11343.htm",
+      "Lei LGPD": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+      "Marco Civil da Internet": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+      "Lei dos Crimes Hediondos": "https://www.planalto.gov.br/ccivil_03/leis/l8072.htm",
+      "ECA - Est. da Criança e Adolescente": "https://www.planalto.gov.br/ccivil_03/leis/l8069.htm",
+      "Est. do Desarmamento": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10826.htm",
+      "Est. do Idoso": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10741.htm",
+      "Est. da Juventude": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12852.htm",
+      "Est. da Pessoa com Deficiência": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm",
+      "Est. da Oab": "https://www.planalto.gov.br/ccivil_03/leis/l8906.htm"
+    };
+
+    function buildPlanaltoHashFromTitle(titleText){
+      if (!titleText) return "";
+      const m = titleText.match(/Art(?:igo)?\.?\s*(\d+)\s*([ºo]?)/i);
+      if (!m) return "";
+      const n = m[1]; const sufixo = m[2]?.toLowerCase() || "";
+      if (sufixo === "º") return `#art${n}o`;
+      return `#art${n}`;
+    }
+    function makePlanaltoUrl(fileLabel, titleText){
+      const base = planaltoBases[fileLabel];
+      if (!base) return null;
+      const h1 = buildPlanaltoHashFromTitle(titleText);
+      let h2 = "";
+      if (h1 && /#art(\d+)$/.test(h1)) {
+        const n = RegExp.$1;
+        h2 = `#art${n}o`;
+      } else if (h1 && /#art(\d+)o$/.test(h1)) {
+        const n = RegExp.$1;
+        h2 = `#art${n}`;
+      }
+      return { base, try1: base + (h1 || ""), try2: h2 ? base + h2 : base };
+    }
+
+    /* ===== Artigos ===== */
+    function buildArticleElement(a) {
+      const el = document.createElement("article");
+      el.dataset.idx = a._aidx;
+      el.id = a.htmlId || `art-${a._aidx}`;
+      el.dataset.fileUrl = a._fileUrl || state.currentFileUrl || "";
+      el.dataset.fileLabel = a._fileLabel || state.currentFileLabel || "";
+
+      const split = a._split;
+
+      // Conteúdo
+      const contentWrap = document.createElement("div");
+      contentWrap.className = "art-content";
+
+      if (split.epigrafe) {
+        const epiTop = document.createElement("div");
+        epiTop.className = "art-epigrafe";
+        epiTop.textContent = split.epigrafe.replace(/<\/?(strong|b)>/gi, "");
+        contentWrap.appendChild(epiTop);
+      }
+
+      const head = document.createElement("div");
+      head.className = "art-head";
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "art-title";
+      titleSpan.textContent = (split.titleText || a.title || "Artigo").replace(/<\/?(strong|b)>/gi, "");
+      head.appendChild(titleSpan);
+      contentWrap.appendChild(head);
+
+      const content = document.createElement("div");
+      content.className = "art-body";
+      let body = (split.body || "")
+        .replace(/<\/?(strong|b)>/gi,"")
+        .replace(/([^\n])(\n§)/g,"$1\n\n§")
+        .replace(/(^|\n)(\s*(?:§|Par[aá]grafo(?:\s+único)?))/gi,"\n$2")
+        .replace(/(^|\n)(\s*[IVXLCDM]{1,12}\s*[-–—.]?)/g,"\n$2")
+        .replace(/(^|\n)(\s*[a-z]\))/g,"\n$2")
+        .replace(/(^|\n)(§\s*[^\n]*)(\n)/g,"$1$2\n\n")
+        .replace(/(^|\n)(Par[aá]grafo[^\n]*)(\n)/gi,"$1$2\n\n")
+        .replace(/(^|\n)([IVXLCDM]{1,12} ?[-–—.]?\s*[^\n]*)(\n)/g,"$1$2\n\n")
+        .replace(/(^|\n)([a-z]\)\s*[^\n]*)(\n)/g,"$1$2\n\n");
+      content.innerHTML = body.replace(/\n/g,"<br>");
+      contentWrap.appendChild(content);
+      el.appendChild(contentWrap);
+
+      // Ações no card (Etapa 1 mantém)
+      const actions = document.createElement("div");
+      actions.className = "art-actions";
+
+      const favBtn = document.createElement("button");
+      favBtn.className = "icon-btn";
+      favBtn.setAttribute("aria-label", "Favoritar");
+      favBtn.dataset.action = "fav";
+      favBtn.innerHTML = '<img src="icons/favorito.svg" alt="Favoritar">';
+      actions.appendChild(favBtn);
+
+      const studyBtn = document.createElement("button");
+      studyBtn.className = "icon-btn";
+      studyBtn.setAttribute("aria-label","Estudar com I.A.");
+      studyBtn.dataset.action = "study";
+      studyBtn.innerHTML = '<img src="icons/estudar.svg" alt="Estudar com I.A.">';
+      actions.appendChild(studyBtn);
+
+      const planBtn = document.createElement("button");
+      planBtn.className = "icon-btn";
+      planBtn.setAttribute("aria-label", "Ver no Planalto");
+      planBtn.dataset.action = "planalto";
+      planBtn.innerHTML = '<img src="icons/link.svg" alt="Ver no Planalto">';
+      actions.appendChild(planBtn);
+
+      const id = store.makeId(el.dataset.fileUrl, el.id);
       if (store.isFavorite(id)) favBtn.classList.add("active");
-      frag.appendChild(el);
-    });
-  });
-  els.articles.appendChild(frag);
-  window.scrollTo({top:0, behavior:"instant"});
-  state.mode="favorites";
-  store.saveLast({ mode:"favorites", fileUrl:null, scrollY:0, articleId:null });
-  updateCurrentOutline();
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active");
-  removeIndexUI();
-}
+      if (store.isStudied(id)) studyBtn.classList.add("active");
 
-/* =================== Loader =================== */
-async function fetchTextCached(url){
-  if (state.cache.has(url)) return state.cache.get(url);
-  const res = await fetch(url, { cache:"no-cache" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
-  const txt=sanitizeForLayout(await res.text());
-  state.cache.set(url, txt);
-  return txt;
-}
-function addNormalizedFieldToArticles(items){
-  const arts=items.filter(it=>it.kind==="article");
-  arts.forEach((a)=>{
-    const s=a._split;
-    const combo=[s.titleText||"", s.epigrafe||"", ...(s.supra||[]), s.body||""].join(" ");
-    a._norm = norm(combo);
-  });
-  return arts;
-}
-async function loadFile(url, tabBtn){
-  if (!url) return;
-  await withBusy(tabBtn, async ()=>{
-    els.searchSpinner.classList.add("show");
-    try{
-      const txt=await fetchTextCached(url);
-      state.rawText=txt;
-      const items=parseByUrl(url, txt);
-      state.currentFileUrl=url;
-      state.currentFileLabel=state.urlToLabel.get(url) || "Documento";
-      state.items=items;
-      state.articles=addNormalizedFieldToArticles(items);
-      state.mode="file";
+      el.appendChild(actions);
 
-      renderFileItemsProgressive(items);
-      window.scrollTo({ top:0, behavior:"instant" });
-      notify(`Carregado: ${state.currentFileLabel}`);
-      store.saveLast({ mode:"file", fileUrl:url, scrollY:0, articleId:null });
-      els.favTab.classList.remove("active");
-      rebuildSuggestionsIndex();
-    } catch(err){
-      console.error(err);
-      els.articles.innerHTML=`<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${(err&&err.message)||"Erro desconhecido"}</code></div>`;
-      notify("Erro ao carregar arquivo");
+      wrapParensIn(el);
+      return el;
+    }
+
+    function clearArticles() {
+      els.articles.innerHTML = "";
+      state.currentArticleIdx = -1;
+    }
+
+    /* =================== Outline (in-view) =================== */
+    function updateCurrentOutline() {
+      const nodes = Array.from(document.querySelectorAll("article[data-idx]"));
+      if (!nodes.length) return;
+
+      const topGap = 48;
+      const scTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const scBottom = scTop + window.innerHeight;
+      const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+
+      let targetIdx = -1;
+
+      if (scTop <= topGap) targetIdx = 0;
+      else if (scBottom >= docH - topGap) targetIdx = nodes.length - 1;
+      else {
+        const cy = window.innerHeight / 2;
+        let best = Infinity, bestIdx = 0;
+        nodes.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          const mid = r.top + r.height / 2;
+          const d = Math.abs(mid - cy);
+          if (d < best) { best = d; bestIdx = i; }
+        });
+        targetIdx = bestIdx;
+      }
+
+      if (targetIdx === -1) return;
+      if (state.currentArticleIdx === targetIdx) return;
+
+      nodes.forEach((n) => n.classList.remove("in-view"));
+      nodes[targetIdx].classList.add("in-view");
+      state.currentArticleIdx = targetIdx;
+
+      const art = nodes[targetIdx];
+      store.saveLast({
+        mode: state.mode,
+        fileUrl: state.currentFileUrl,
+        articleId: art?.id || null,
+        scrollY: window.scrollY || 0,
+      });
+    }
+
+    /* =================== Índice (hambúrguer existente) =================== */
+    function removeIndexUI() {
+      if (els.indexToggle) { els.indexToggle.remove(); els.indexToggle = null; }
+      if (els.indexPanel) { els.indexPanel.remove(); els.indexPanel = null; }
+    }
+    function buildIndexButton() {
       removeIndexUI();
-    } finally {
-      els.searchSpinner.classList.remove("show");
-    }
-  });
-}
+      if (state.mode !== "file") return;
 
-/* =================== Busca + Sugestões =================== */
-let suggestActiveIndex=-1;
-let suggestionsData=[]; // {id, title, htmlId}
-function rebuildSuggestionsIndex(){
-  suggestionsData = state.articles.map(a=>{
-    const t=a._split?.titleText || a.title || "";
-    const epi=a._split?.epigrafe || "";
-    const title=(t || epi || "Artigo").replace(/<\/?(strong|b)>/gi,"").trim();
-    return { id:a.htmlId, title, htmlId:a.htmlId };
-  });
-}
-function renderSuggestions(list, q){
-  const box=els.searchSuggest; box.innerHTML="";
-  if (!list.length || !q.trim()){ box.classList.remove("show"); return; }
-  const frag=document.createDocumentFragment();
-  list.slice(0,8).forEach((it,i)=>{
-    const div=document.createElement("div");
-    div.className="suggest-item"+(i===suggestActiveIndex?" active":"");
-    div.setAttribute("role","option"); div.dataset.htmlId=it.htmlId;
-    div.innerHTML=`<span class="dot"></span><span>${highlightQuery(it.title, q)}</span>`;
-    div.addEventListener("mousedown",(e)=>{ e.preventDefault(); jumpToArticle(it.htmlId); box.classList.remove("show"); });
-    frag.appendChild(div);
-  });
-  box.appendChild(frag); box.classList.add("show");
-}
-function highlightQuery(text,q){
-  const nq=norm(q); if (!nq) return text;
-  const idx=norm(text).indexOf(nq); if (idx<0) return text;
-  const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i");
-  return text.replace(re,(m)=>`<strong>${m}</strong>`);
-}
-function jumpToArticle(htmlId){
-  const el=document.getElementById(htmlId);
-  if (el){
-    const topbar=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h"));
-    const filebar=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--filebar-h"));
-    const offset=topbar+filebar+12;
-    const y=el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top:y, behavior:"smooth" });
-    updateCurrentOutline();
-  }
-}
-function onSearchInput(){
-  toggleClear();
-  const q=els.searchInput.value||"";
-  if (state.mode!=="file"){ els.searchSuggest.classList.remove("show"); return; }
-  if (!q.trim()){ els.searchSuggest.classList.remove("show"); return; }
-  const nq=norm(q);
-  const cand=suggestionsData.filter(s=>norm(s.title).includes(nq));
-  suggestActiveIndex=-1; renderSuggestions(cand, q);
-}
-async function runLocalSearch(){
-  if (state.mode!=="file"){ notify("Abra um arquivo para buscar."); return; }
-  const q=els.searchInput.value.trim();
-  els.finderPop.classList.add("show");
-  if (!q){
-    renderFileItemsProgressive(state.items);
-    state.matchArticles=[]; state.matchIdx=-1; els.count.textContent="0/0"; els.searchSuggest.classList.remove("show"); return;
-  }
-  els.searchSpinner.classList.add("show");
-  try{
-    const tokens=q.split(/\s+/).filter(Boolean).map(norm);
-    state.currentTokens=tokens;
-    const matchedMeta=state.articles.filter(a=>tokens.every(t=>a._norm.includes(t)));
-    renderFileItemsAll(state.items);
-    requestAnimationFrame(()=>{
-      matchedMeta.forEach((m)=>{ const art=document.getElementById(m.htmlId); if (art) highlightTextNodes(art, tokens); });
-      state.matchArticles = matchedMeta.map(m=>document.getElementById(m.htmlId)).filter(Boolean);
-      if (state.matchArticles.length){ state.matchIdx=0; state.matchArticles[0].scrollIntoView({behavior:"smooth", block:"center"}); }
-      else { state.matchIdx=-1; notify("Nenhum resultado encontrado."); }
-      els.count.textContent = state.matchArticles.length ? `${state.matchIdx+1}/${state.matchArticles.length}` : "0/0";
+      const btn = document.createElement("button");
+      btn.className = "index-toggle";
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Abrir índice do documento");
+      btn.textContent = "≡";
+      document.body.appendChild(btn);
+      els.indexToggle = btn;
+
+      const panel = document.createElement("div");
+      panel.className = "index-panel";
+      panel.setAttribute("role", "menu");
+      panel.setAttribute("aria-hidden", "true");
+      document.body.appendChild(panel);
+      els.indexPanel = panel;
+
+      btn.addEventListener("click", () => {
+        const show = !panel.classList.contains("show");
+        panel.classList.toggle("show", show);
+        panel.setAttribute("aria-hidden", show ? "false" : "true");
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && els.indexPanel && els.indexPanel.classList.contains("show")) {
+          els.indexPanel.classList.remove("show");
+          els.indexPanel.setAttribute("aria-hidden", "true");
+        }
+      });
+      document.addEventListener("click", (e) => {
+        if (!els.indexPanel) return;
+        if (els.indexPanel.classList.contains("show")) {
+          const onToggle = e.target === els.indexToggle;
+          const insidePanel = e.target.closest && e.target.closest(".index-panel");
+          if (!onToggle && !insidePanel) {
+            els.indexPanel.classList.remove("show");
+            els.indexPanel.setAttribute("aria-hidden", "true");
+          }
+        }
+      }, { capture: true });
+    }
+
+    function renderIndex() {
+      if (!els.indexPanel) return;
+      els.indexPanel.innerHTML = "";
+
+      const headings = state.items.filter((it) => it.kind === "heading");
+      if (!headings.length) {
+        const empty = document.createElement("div");
+        empty.textContent = "Sem índice para este documento.";
+        els.indexPanel.appendChild(empty);
+        return;
+      }
+
+      headings.forEach((it) => {
+        const d = document.createElement("div");
+        const oneLine = it.raw.replace(/\s+/g, " ").trim();
+        d.textContent = oneLine;
+        d.title = oneLine;
+
+        d.addEventListener("click", () => {
+          const target = document.getElementById(it.htmlId);
+          if (target) {
+            const topbar = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h"));
+            const filebar = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--filebar-h"));
+            const offset = topbar + filebar + 12;
+            const y = target.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top: y, behavior: "smooth" });
+          }
+          els.indexPanel.classList.remove("show");
+          els.indexPanel.setAttribute("aria-hidden", "true");
+        });
+
+        els.indexPanel.appendChild(d);
+      });
+    }
+
+    /* =================== Render de arquivo =================== */
+    function renderFileItemsProgressive(items, { chunkSize = 30 } = {}) {
+      clearArticles();
+      if (!items.length) {
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
+        removeIndexUI();
+        return;
+      }
+      const first = Math.min(8, items.length);
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < first; i++) {
+        const it = items[i];
+        if (it.kind === "heading") frag.appendChild(buildHeadingElement(it));
+        else frag.appendChild(buildArticleElement(it));
+      }
+      els.articles.appendChild(frag);
       updateCurrentOutline();
-    });
-  } finally {
-    els.searchSpinner.classList.remove("show");
-    els.searchSuggest.classList.remove("show");
-  }
-}
-function toggleClear(){ els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
-function updateCount(){
-  if (!state.matchArticles?.length){ els.count.textContent="0/0"; return; }
-  els.count.textContent=`${state.matchIdx+1}/${state.matchArticles.length}`;
-}
-function gotoNext(){ if (!state.matchArticles?.length) return; state.matchIdx=(state.matchIdx+1)%state.matchArticles.length; const art=state.matchArticles[state.matchIdx]; art.scrollIntoView({behavior:"smooth", block:"center"}); updateCount(); updateCurrentOutline(); }
-function gotoPrev(){ if (!state.matchArticles?.length) return; state.matchIdx=(state.matchIdx-1+state.matchArticles.length)%state.matchArticles.length; const art=state.matchArticles[state.matchIdx]; art.scrollIntoView({behavior:"smooth", block:"center"}); updateCount(); updateCurrentOutline(); }
 
-/* =================== Filebar + Categorias =================== */
-function getVisibleTabsCount(){ return window.matchMedia("(max-width: 768px)").matches ? Infinity : 5; }
-function renderFilebar(category="Todos"){
-  state.category=category;
-  const catalog=getCatalogByCategory();
-  const all=getAllOptions();
-  let options=[];
-  if (category==="Todos") options=all; else if (catalog.has(category)) options=catalog.get(category);
+      // Índice
+      buildIndexButton();
+      renderIndex();
 
-  const frag=document.createDocumentFragment();
-  const mkTab=(label, url=null, extraClass="")=>{
-    const b=document.createElement("button");
-    b.className=`tab ${extraClass}`; b.type="button"; b.textContent=label; b.dataset.url=url||"";
-    b.addEventListener("click", async ()=>{
-      document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-      els.favTab.classList.remove("active");
-      b.classList.add("active");
-      if (url){ await loadFile(url, b); }
-    });
-    return b;
-  };
-
-  const visibleCap=getVisibleTabsCount();
-  if (visibleCap===Infinity) options.forEach(opt=>frag.appendChild(mkTab(opt.label, opt.value)));
-  else{
-    const visible=options.slice(0,visibleCap);
-    const hidden=options.slice(visibleCap);
-    visible.forEach(opt=>frag.appendChild(mkTab(opt.label, opt.value)));
-    if (hidden.length){
-      const more=mkTab("Mais ▾", null, "tab-more");
-      more.addEventListener("click", ()=>{ toggleMoreMenu(hidden, more); });
-      frag.appendChild(more);
+      let i = first;
+      function appendChunk() {
+        const fr = document.createDocumentFragment();
+        let added = 0;
+        while (i < items.length && added < chunkSize) {
+          const it = items[i];
+          if (it.kind === "heading") fr.appendChild(buildHeadingElement(it));
+          else fr.appendChild(buildArticleElement(it));
+          i++; added++;
+        }
+        els.articles.appendChild(fr);
+        updateCurrentOutline();
+        if (i < items.length) {
+          if ("requestIdleCallback" in window) requestIdleCallback(appendChunk);
+          else setTimeout(appendChunk, 0);
+        }
+      }
+      if (first < items.length) {
+        if ("requestIdleCallback" in window) requestIdleCallback(appendChunk);
+        else setTimeout(appendChunk, 0);
+      }
     }
-  }
-  els.filebarInner.innerHTML=""; els.filebarInner.appendChild(frag);
 
-  const last=store.getLast();
-  if (last?.mode==="file" && last?.fileUrl && options.some(o=>o.value===last.fileUrl)){
-    const btn=[...els.filebarInner.querySelectorAll(".tab")].find(t=>t.dataset.url===last.fileUrl);
-    if (btn) btn.classList.add("active");
-  } else els.favTab.classList.add("active");
-}
-function toggleMoreMenu(items, anchorBtn){
-  if (els.moreMenu.style.display==="block"){ els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true"); return; }
-  els.moreMenu.innerHTML="";
-  items.forEach((it)=>{
-    const bi=document.createElement("button");
-    bi.className="more-item"; bi.type="button"; bi.textContent=it.label;
-    bi.addEventListener("click", async ()=>{
-      els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true");
-      document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-      anchorBtn.classList.add("active"); els.favTab.classList.remove("active");
-      await loadFile(it.value, anchorBtn);
-    });
-    els.moreMenu.appendChild(bi);
-  });
-  els.moreMenu.style.display="block"; els.moreMenu.setAttribute("aria-hidden","false");
-}
+    function renderFileItemsAll(items) {
+      clearArticles();
+      const frag = document.createDocumentFragment();
+      items.forEach((it) => {
+        if (it.kind === "heading") frag.appendChild(buildHeadingElement(it));
+        else frag.appendChild(buildArticleElement(it));
+      });
+      els.articles.appendChild(frag);
+      updateCurrentOutline();
 
-/* ===== Mini Modal de Categorias ===== */
-function openCatModal(){
-  const cats=["Todos"];
-  els.codeSelect.querySelectorAll("optgroup").forEach(og=>{ const lbl=og.getAttribute("label")?.trim(); if (lbl) cats.push(lbl); });
-  els.catGrid.innerHTML="";
-  const frag=document.createDocumentFragment();
-  cats.forEach(cat=>{
-    const b=document.createElement("button"); b.className="cat-btn"; b.type="button";
-    b.innerHTML=`<img src="icons/arquivo.svg" alt=""><span class="label">${cat}</span>`;
-    b.addEventListener("click", ()=>{
-      closeCatModal(); renderFilebar(cat); notify(`Filtro: ${cat}`);
-      els.catTab.classList.toggle("active", cat!=="Todos");
-    });
-    frag.appendChild(b);
-  });
-  els.catGrid.appendChild(frag);
-  els.catBackdrop.setAttribute("aria-hidden","false");
-}
-function closeCatModal(){ els.catBackdrop.setAttribute("aria-hidden","true"); }
-
-/* =================== IA =================== */
-function buildPrompt(a){
-  const s=a._split;
-  const supraText = s.supra?.length ? s.supra.join("\n")+"\n" : "";
-  const epiTop = s.epigrafe ? `Epígrafe: ${s.epigrafe}\n\n` : "";
-  const artigo = (s.titleText ? s.titleText+" " : "") + (s.body || "");
-  const tema = s.titleText || a.title || "Artigo";
-  return [
-    "Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ",
-    "Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ",
-    "(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ",
-    "(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ",
-    "(3) Exemplo prático — caso ilustrativo; ",
-    "(4) Princípios relacionados; ",
-    "(5) Pontos de atenção na prática; ",
-    "(6) Erros comuns/pegadinhas; ",
-    "(7) Artigos correlatos. ",
-    "Responda em português claro, objetivo e didático.\n\n",
-    `Tema: "${tema}"\n\n`,
-    epiTop + supraText + artigo,
-    "\n\n💚 direito.love",
-  ].join("");
-}
-function openIA(url){
-  if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true) location.href=url;
-  else window.open(url, "_blank", "noopener,noreferrer");
-}
-function openStudyModal(_title, prompt){
-  els.modalTitle.textContent="Estude com I.A.";
-  els.promptPreview.textContent=prompt;
-  els.studyModal.setAttribute("aria-hidden","false");
-}
-function closeStudyModal(){ els.studyModal.setAttribute("aria-hidden","true"); }
-
-/* =================== Eventos =================== */
-// Home (favoritos)
-els.brandBtn.addEventListener("click", ()=>{
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active"); state.mode="favorites"; renderFavorites(); window.scrollTo({top:0, behavior:"instant"});
-});
-els.favTab.addEventListener("click", ()=>{
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active"); state.mode="favorites"; renderFavorites();
-});
-
-/* Busca */
-function toggleClear(){ els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
-els.searchInput.addEventListener("input", onSearchInput);
-toggleClear();
-els.searchInput.addEventListener("focus", ()=>els.finderPop.classList.add("show"));
-els.closeFinder.addEventListener("click", ()=>{ els.finderPop.classList.remove("show"); els.searchInput.blur(); });
-els.searchInput.addEventListener("keydown", (e)=>{
-  const box=els.searchSuggest;
-  if (box.classList.contains("show")){
-    if (e.key==="ArrowDown" || e.key==="ArrowUp"){
-      e.preventDefault();
-      const items=[...box.querySelectorAll(".suggest-item")]; if (!items.length) return;
-      if (e.key==="ArrowDown") suggestActiveIndex=(suggestActiveIndex+1)%items.length;
-      else suggestActiveIndex=(suggestActiveIndex-1+items.length)%items.length;
-      items.forEach((n,i)=>n.classList.toggle("active", i===suggestActiveIndex));
-      return;
+      buildIndexButton();
+      renderIndex();
     }
-    if (e.key==="Enter" && suggestActiveIndex>=0){
-      e.preventDefault();
-      const sel=box.querySelectorAll(".suggest-item")[suggestActiveIndex];
-      if (sel){ jumpToArticle(sel.dataset.htmlId); box.classList.remove("show"); return; }
+
+    /* =================== Favoritos =================== */
+    function renderFavorites() {
+      clearArticles();
+
+      const favs = store.listFavorites();
+      if (!favs.length) {
+        els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+        removeIndexUI();
+        return;
+      }
+
+      const order = getAllOptions().map((o) => o.value);
+      const byFile = new Map();
+      favs.forEach((f) => {
+        const key = f.fileLabel || f.fileUrl || "Arquivo";
+        if (!byFile.has(key)) byFile.set(key, []);
+        byFile.get(key).push(f);
+      });
+
+      for (const [k, arr] of byFile.entries()) byFile.set(k, sortByTsDesc(arr));
+
+      const groups = Array.from(byFile.entries()).sort((a, b) => {
+        const aUrl = (favs.find((x) => x.fileLabel === a[0]) || {}).fileUrl;
+        const bUrl = (favs.find((x) => x.fileLabel === b[0]) || {}).fileUrl;
+        const ai = aUrl ? order.indexOf(aUrl) : Infinity;
+        const bi = bUrl ? order.indexOf(bUrl) : Infinity;
+        if (ai !== bi) return ai - bi;
+        return a[0].localeCompare(b[0]);
+      });
+
+      const frag = document.createDocumentFragment();
+      let idx = 0;
+
+      groups.forEach(([label, list]) => {
+        const h = document.createElement("div");
+        h.className = "section-title";
+        h.textContent = label;
+        frag.appendChild(h);
+
+        list.forEach((entry) => {
+          const p = splitIntoBlocks(entry.text);
+          if (!p.length) return;
+          const item = parseBlockToItem(p[0], 0);
+          if (!item || item.kind !== "article") return;
+
+          item._fileUrl = entry.fileUrl;
+          item._fileLabel = entry.fileLabel;
+
+          item.htmlId = entry.htmlId || item.htmlId;
+          item._aidx = idx++;
+
+          const el = buildArticleElement(item);
+          el.dataset.fileUrl = entry.fileUrl;
+          el.dataset.fileLabel = entry.fileLabel;
+
+          const favBtn = el.querySelector('.icon-btn[data-action="fav"]');
+          const id = store.makeId(entry.fileUrl, item.htmlId);
+          if (store.isFavorite(id)) favBtn.classList.add("active");
+
+          frag.appendChild(el);
+        });
+      });
+
+      els.articles.appendChild(frag);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      state.mode = "favorites";
+      store.saveLast({ mode: "favorites", fileUrl: null, scrollY: 0, articleId: null });
+      updateCurrentOutline();
+
+      document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+      els.favTab.classList.add("active");
+      removeIndexUI();
     }
-    if (e.key==="Escape") box.classList.remove("show");
+
+    /* =================== Loader =================== */
+    async function fetchTextCached(url) {
+      if (state.cache.has(url)) return state.cache.get(url);
+      const res = await fetch(url, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const txt = sanitizeForLayout(await res.text());
+      state.cache.set(url, txt);
+      return txt;
+    }
+
+    function addNormalizedFieldToArticles(items) {
+      const arts = items.filter((it) => it.kind === "article");
+      arts.forEach((a) => {
+        const s = a._split;
+        const combo = [s.titleText || "", s.epigrafe || "", ...(s.supra || []), s.body || ""].join(" ");
+        a._norm = norm(combo);
+      });
+      return arts;
+    }
+
+    async function loadFile(url, tabBtn) {
+      if (!url) return;
+      await withBusy(tabBtn, async () => {
+        els.searchSpinner.classList.add("show");
+        try {
+          const txt = await fetchTextCached(url);
+          state.rawText = txt;
+          const items = parseByUrl(url, txt);
+          state.currentFileUrl = url;
+          state.currentFileLabel = state.urlToLabel.get(url) || "Documento";
+          state.items = items;
+          state.articles = addNormalizedFieldToArticles(items);
+          state.mode = "file";
+
+          renderFileItemsProgressive(items);
+          window.scrollTo({ top: 0, behavior: "instant" });
+          notify(`Carregado: ${state.currentFileLabel}`);
+
+          store.saveLast({ mode: "file", fileUrl: url, scrollY: 0, articleId: null });
+
+          els.favTab.classList.remove("active");
+          rebuildSuggestionsIndex();
+        } catch (err) {
+          console.error(err);
+          els.articles.innerHTML = `<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">Falha ao carregar:<br><code>${
+            (err && err.message) || "Erro desconhecido"
+          }</code></div>`;
+          notify("Erro ao carregar arquivo");
+          removeIndexUI();
+        } finally {
+          els.searchSpinner.classList.remove("show");
+        }
+      });
+    }
+
+    /* =================== Busca + Sugestões =================== */
+    let suggestActiveIndex = -1;
+    let suggestionsData = []; // {id, title, htmlId}
+
+    function rebuildSuggestionsIndex() {
+      suggestionsData = state.articles.map(a => {
+        const t = a._split?.titleText || a.title || "";
+        const epi = a._split?.epigrafe || "";
+        const title = (t || epi || "Artigo").replace(/<\/?(strong|b)>/gi, "").trim();
+        return { id: a.htmlId, title, htmlId: a.htmlId };
+      });
+    }
+
+    function renderSuggestions(list, q) {
+      const box = els.searchSuggest;
+      box.innerHTML = "";
+      if (!list.length || !q.trim()) { box.classList.remove("show"); return; }
+
+      const frag = document.createDocumentFragment();
+      list.slice(0, 8).forEach((it, i) => {
+        const div = document.createElement("div");
+        div.className = "suggest-item" + (i === suggestActiveIndex ? " active" : "");
+        div.setAttribute("role", "option");
+        div.dataset.htmlId = it.htmlId;
+        div.innerHTML = `<span class="dot"></span><span>${highlightQuery(it.title, q)}</span>`;
+        div.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          jumpToArticle(it.htmlId);
+          box.classList.remove("show");
+        });
+        frag.appendChild(div);
+      });
+      box.appendChild(frag);
+      box.classList.add("show");
+    }
+
+    function highlightQuery(text, q) {
+      const nq = norm(q);
+      if (!nq) return text;
+      const idx = norm(text).indexOf(nq);
+      if (idx < 0) return text;
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      return text.replace(re, (m) => `<strong>${m}</strong>`);
+    }
+
+    function jumpToArticle(htmlId) {
+      const el = document.getElementById(htmlId);
+      if (el) {
+        const topbar = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h"));
+        const filebar = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--filebar-h"));
+        const offset = topbar + filebar + 12;
+        const y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: y, behavior: "smooth" });
+        updateCurrentOutline();
+      }
+    }
+
+    function onSearchInput() {
+      toggleClear();
+      const q = els.searchInput.value || "";
+      if (state.mode !== "file") { els.searchSuggest.classList.remove("show"); return; }
+      if (!q.trim()) { els.searchSuggest.classList.remove("show"); return; }
+
+      const nq = norm(q);
+      const cand = suggestionsData.filter(s => norm(s.title).includes(nq));
+      suggestActiveIndex = -1;
+      renderSuggestions(cand, q);
+    }
+
+    async function runLocalSearch() {
+      if (state.mode !== "file") { notify("Abra um arquivo para buscar."); return; }
+
+      const q = els.searchInput.value.trim();
+      els.finderPop.classList.add("show");
+
+      if (!q) {
+        renderFileItemsProgressive(state.items);
+        state.matchArticles = [];
+        state.matchIdx = -1;
+        els.count.textContent = "0/0";
+        els.searchSuggest.classList.remove("show");
+        return;
+      }
+
+      els.searchSpinner.classList.add("show");
+      try {
+        const tokens = q.split(/\s+/).filter(Boolean).map(norm);
+        state.currentTokens = tokens;
+
+        const matchedMeta = state.articles.filter((a) => tokens.every((t) => a._norm.includes(t)));
+
+        renderFileItemsAll(state.items);
+
+        requestAnimationFrame(() => {
+          matchedMeta.forEach((m) => {
+            const art = document.getElementById(m.htmlId);
+            if (art) highlightTextNodes(art, tokens);
+          });
+
+          state.matchArticles = matchedMeta.map((m) => document.getElementById(m.htmlId)).filter(Boolean);
+
+          if (state.matchArticles.length) {
+            state.matchIdx = 0;
+            state.matchArticles[0].scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            state.matchIdx = -1;
+            notify("Nenhum resultado encontrado.");
+          }
+
+          els.count.textContent = state.matchArticles.length
+            ? `${state.matchIdx + 1}/${state.matchArticles.length}`
+            : "0/0";
+
+          updateCurrentOutline();
+        });
+      } finally {
+        els.searchSpinner.classList.remove("show");
+        els.searchSuggest.classList.remove("show");
+      }
+    }
+
+    function toggleClear() { els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
+    function updateCount() {
+      if (!state.matchArticles || state.matchArticles.length === 0) { els.count.textContent = "0/0"; return; }
+      els.count.textContent = `${state.matchIdx + 1}/${state.matchArticles.length}`;
+    }
+    function gotoNext() {
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({ behavior: "smooth", block: "center" });
+      updateCount(); updateCurrentOutline();
+    }
+    function gotoPrev() {
+      if (!state.matchArticles || state.matchArticles.length === 0) return;
+      state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+      const art = state.matchArticles[state.matchIdx];
+      art.scrollIntoView({ behavior: "smooth", block: "center" });
+      updateCount(); updateCurrentOutline();
+    }
+
+    /* =================== Filebar + Categorias =================== */
+    function getVisibleTabsCount() {
+      return window.matchMedia("(max-width: 768px)").matches ? Infinity : 5;
+    }
+
+    function renderFilebar(category = "Todos") {
+      state.category = category;
+      const catalog = getCatalogByCategory();
+      const all = getAllOptions();
+
+      let options = [];
+      if (category === "Todos") {
+        options = all;
+      } else if (catalog.has(category)) {
+        options = catalog.get(category);
+      }
+
+      const frag = document.createDocumentFragment();
+
+      const mkTab = (label, url = null, extraClass = "") => {
+        const b = document.createElement("button");
+        b.className = `tab ${extraClass}`;
+        b.type = "button";
+        b.textContent = label;
+        b.dataset.url = url || "";
+        b.addEventListener("click", async () => {
+          document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+          els.favTab.classList.remove("active");
+          b.classList.add("active");
+          if (url) { await loadFile(url, b); }
+        });
+        return b;
+      };
+
+      const visibleCap = getVisibleTabsCount();
+      if (visibleCap === Infinity) {
+        options.forEach((opt) => frag.appendChild(mkTab(opt.label, opt.value)));
+      } else {
+        const visible = options.slice(0, visibleCap);
+        const hidden = options.slice(visibleCap);
+        visible.forEach((opt) => frag.appendChild(mkTab(opt.label, opt.value)));
+
+        if (hidden.length) {
+          const more = mkTab("Mais ▾", null, "tab-more");
+          more.addEventListener("click", () => { toggleMoreMenu(hidden, more); });
+          frag.appendChild(more);
+        }
+      }
+
+      els.filebarInner.innerHTML = "";
+      els.filebarInner.appendChild(frag);
+
+      const last = store.getLast();
+      if (last?.mode === "file" && last?.fileUrl && options.some(o => o.value === last.fileUrl)) {
+        const btn = [...els.filebarInner.querySelectorAll(".tab")].find((t) => t.dataset.url === last.fileUrl);
+        if (btn) { btn.classList.add("active"); }
+      } else {
+        els.favTab.classList.add("active");
+      }
+    }
+
+    function toggleMoreMenu(items, anchorBtn) {
+      if (els.moreMenu.style.display === "block") {
+        els.moreMenu.style.display = "none";
+        els.moreMenu.setAttribute("aria-hidden", "true");
+        return;
+      }
+      els.moreMenu.innerHTML = "";
+      items.forEach((it) => {
+        const bi = document.createElement("button");
+        bi.className = "more-item";
+        bi.type = "button";
+        bi.textContent = it.label;
+        bi.addEventListener("click", async () => {
+          els.moreMenu.style.display = "none";
+          els.moreMenu.setAttribute("aria-hidden", "true");
+          document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+          anchorBtn.classList.add("active");
+          els.favTab.classList.remove("active");
+          await loadFile(it.value, anchorBtn);
+        });
+        els.moreMenu.appendChild(bi);
+      });
+      els.moreMenu.style.display = "block";
+      els.moreMenu.setAttribute("aria-hidden", "false");
+    }
+
+    /* ===== Mini Modal de Categorias (Arquivos) ===== */
+    function openCatModal() {
+      const cats = ["Todos"];
+      els.codeSelect.querySelectorAll("optgroup").forEach(og => {
+        const lbl = og.getAttribute("label")?.trim();
+        if (lbl) cats.push(lbl);
+      });
+      els.catGrid.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      cats.forEach(cat => {
+        const b = document.createElement("button");
+        b.className = "cat-btn";
+        b.type = "button";
+        b.innerHTML = `<img src="icons/arquivo.svg" alt=""><span class="label">${cat}</span>`;
+        b.addEventListener("click", () => {
+          closeCatModal();
+          renderFilebar(cat);
+          notify(`Filtro: ${cat}`);
+          els.catTab.classList.toggle("active", cat !== "Todos");
+        });
+        frag.appendChild(b);
+      });
+      els.catGrid.appendChild(frag);
+
+      els.catBackdrop.setAttribute("aria-hidden", "false");
+    }
+    function closeCatModal() {
+      els.catBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    /* =================== IA =================== */
+    function buildPrompt(a) {
+      const split = a._split;
+      const supraText = split.supra && split.supra.length ? split.supra.join("\n") + "\n" : "";
+      const epiTop = split.epigrafe ? `Epígrafe: ${split.epigrafe}\n\n` : "";
+      const artigo = (split.titleText ? split.titleText + " " : "") + (split.body || "");
+      const tema = split.titleText || a.title || "Artigo";
+      return [
+        "Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ",
+        "Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ",
+        "(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ",
+        "(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ",
+        "(3) Exemplo prático — caso ilustrativo; ",
+        "(4) Princípios relacionados; ",
+        "(5) Pontos de atenção na prática; ",
+        "(6) Erros comuns/pegadinhas; ",
+        "(7) Artigos correlatos. ",
+        "Responda em português claro, objetivo e didático.\n\n",
+        `Tema: "${tema}"\n\n`,
+        epiTop + supraText + artigo,
+        "\n\n💚 direito.love",
+      ].join("");
+    }
+    function openIA(url) {
+      if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true) location.href = url;
+      else window.open(url, "_blank", "noopener,noreferrer");
+    }
+    function openStudyModal(_title, prompt) {
+      els.modalTitle.textContent = "Estude com I.A.";
+      els.promptPreview.textContent = prompt;
+      els.studyModal.setAttribute("aria-hidden", "false");
+    }
+    function closeStudyModal() { els.studyModal.setAttribute("aria-hidden", "true"); }
+
+    /* =================== Eventos =================== */
+    // Home (favoritos)
+    els.brandBtn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+      els.favTab.classList.add("active");
+      state.mode = "favorites";
+      renderFavorites();
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+    els.favTab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((c) => c.classList.remove("active"));
+      els.favTab.classList.add("active");
+      state.mode = "favorites";
+      renderFavorites();
+    });
+
+    /* Busca — input, clear, sugestões + expansão mobile */
+    function toggleClear() { els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
+    els.searchInput.addEventListener("input", onSearchInput);
+    toggleClear();
+
+    els.searchInput.addEventListener("focus", () => {
+      // expande no mobile
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.body.classList.add("search-open");
+      }
+      els.finderPop.classList.add("show");
+    });
+    els.closeFinder.addEventListener("click", () => { els.finderPop.classList.remove("show"); els.searchInput.blur(); });
+
+    els.searchInput.addEventListener("keydown", (e) => {
+      const box = els.searchSuggest;
+      if (box.classList.contains("show")) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          const items = [...box.querySelectorAll(".suggest-item")];
+          if (!items.length) return;
+          if (e.key === "ArrowDown") suggestActiveIndex = (suggestActiveIndex + 1) % items.length;
+          else suggestActiveIndex = (suggestActiveIndex - 1 + items.length) % items.length;
+          items.forEach((n, i) => n.classList.toggle("active", i === suggestActiveIndex));
+          return;
+        }
+        if (e.key === "Enter" && suggestActiveIndex >= 0) {
+          e.preventDefault();
+          const sel = box.querySelectorAll(".suggest-item")[suggestActiveIndex];
+          if (sel) {
+            jumpToArticle(sel.dataset.htmlId);
+            box.classList.remove("show");
+            return;
+          }
+        }
+        if (e.key === "Escape") {
+          box.classList.remove("show");
+        }
+      }
+
+      if (e.key === "Enter") { e.preventDefault(); withBusy(null, runLocalSearch); }
+      else if (e.key === "Escape") {
+        els.searchInput.blur();
+        els.finderPop.classList.remove("show");
+        document.body.classList.remove("search-open");
+      }
+    });
+
+    els.clearSearch.addEventListener("click", () => {
+      els.searchInput.value = "";
+      toggleClear();
+      els.searchSuggest.classList.remove("show");
+      runLocalSearch();
+    });
+
+    // recolhe busca ao perder foco (mobile)
+    els.searchInput.addEventListener("blur", () => {
+      if (!window.matchMedia("(max-width: 768px)").matches) return;
+      setTimeout(() => { document.body.classList.remove("search-open"); }, 120);
+    });
+
+    /* Próximo/Anterior nas ocorrências */
+    els.nextBtn.addEventListener("click", () => gotoNext());
+    els.prevBtn.addEventListener("click", () => gotoPrev());
+
+    /* Atalhos globais */
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey && e.key.toLowerCase() === "k") || (e.key === "/" && !e.metaKey && !e.ctrlKey)) {
+        e.preventDefault(); els.searchInput.focus(); els.searchInput.select();
+      }
+      if (e.key === "F3" || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "g")) { e.preventDefault(); gotoNext(); }
+      if ((e.shiftKey && e.key === "F3") || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "g")) { e.preventDefault(); gotoPrev(); }
+      if (e.key === "Escape") {
+        els.finderPop.classList.remove("show");
+        els.searchSuggest.classList.remove("show");
+        document.body.classList.remove("search-open");
+        if (els.studyModal.getAttribute("aria-hidden") === "false") closeStudyModal();
+        if (els.infoModal.getAttribute("aria-hidden") === "false") els.infoModal.setAttribute("aria-hidden","true");
+        els.moreMenu.style.display = "none"; els.moreMenu.setAttribute("aria-hidden", "true");
+        if (els.indexPanel) { els.indexPanel.classList.remove("show"); els.indexPanel.setAttribute("aria-hidden", "true"); }
+        closeCatModal();
+      }
+    });
+
+    /* Modal Estudar */
+    els.closeStudy.addEventListener("click", closeStudyModal);
+    els.studyModal.addEventListener("click", (e) => { if (e.target === els.studyModal) closeStudyModal(); });
+    document.querySelectorAll(".ia-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const url = e.currentTarget.dataset.url;
+        const prompt = els.promptPreview.textContent || "";
+        try { await navigator.clipboard.writeText(prompt); notify("✅ Prompt copiado!"); }
+        catch { notify("⚠️ Não consegui copiar, copie manualmente."); }
+        openIA(url);
+      });
+    });
+    els.copyPromptBtn.addEventListener("click", (e) => {
+      withBusy(e.currentTarget, async () => {
+        try { await navigator.clipboard.writeText(els.promptPreview.textContent || ""); notify("✅ Prompt copiado!"); }
+        catch { notify("Copie manualmente."); }
+      });
+    });
+
+    /* Modal Informações */
+    function openInfoModal(){ els.infoModal.setAttribute("aria-hidden","false"); }
+    function closeInfoModal(){ els.infoModal.setAttribute("aria-hidden","true"); }
+    els.infoBtn?.addEventListener("click", openInfoModal);
+    els.closeInfo?.addEventListener("click", closeInfoModal);
+    els.infoModal?.addEventListener("click", (e)=>{ if (e.target===els.infoModal) closeInfoModal(); });
+
+    /* Ações dentro dos cards (fav + study + planalto) */
+    els.articles.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".icon-btn"); if (!btn) return;
+      const artEl = e.target.closest("article"); if (!artEl) return;
+
+      const aidx = Number(artEl?.dataset.idx);
+      const a = state.mode === "file" ? state.articles.find((x) => x._aidx === aidx) : null;
+
+      const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
+
+      const entry = {
+        id,
+        fileUrl: artEl.dataset.fileUrl,
+        fileLabel: artEl.dataset.fileLabel,
+        htmlId: artEl.id,
+        text:
+          state.mode === "file"
+            ? (a?.text || "")
+            : (() => {
+                const fav = store.listFavorites().find((e) => e.id === id);
+                const stud = store.listStudied().find((e) => e.id === id);
+                return fav?.text || stud?.text || "";
+              })(),
+      };
+
+      if (btn.dataset.action === "study") {
+        await withBusy(btn, async () => {
+          const useArticle =
+            state.mode === "file"
+              ? a
+              : {
+                  text: entry.text,
+                  _split: splitIntoBlocks(entry.text)[0]
+                    ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
+                    : { supra: [], titleText: "Artigo", body: entry.text, epigrafe: "" },
+                  title: "Artigo",
+                };
+          if (!useArticle?.text) { notify("Não consegui capturar o texto deste artigo."); return; }
+          const prompt = buildPrompt(useArticle);
+          store.markStudied(entry);
+          btn.classList.add("active");
+          openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
+        });
+      }
+
+      if (btn.dataset.action === "fav") {
+        await withBusy(btn, async () => {
+          if (store.isFavorite(id)) {
+            store.removeFavorite(id);
+            btn.classList.remove("active");
+            notify("⭐ Removido dos favoritos");
+
+            if (state.mode === "favorites") {
+              artEl.remove();
+              if (!els.articles.querySelector("article")) {
+                els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+              }
+            }
+          } else {
+            if (!entry.text) { notify("Abra o arquivo para favoritar este artigo."); return; }
+            store.addFavorite(entry);
+            btn.classList.add("active");
+            notify("⭐ Adicionado aos favoritos");
+          }
+        });
+      }
+
+      if (btn.dataset.action === "planalto") {
+        const titleText = a?._split?.titleText || "";
+        const combo = makePlanaltoUrl(artEl.dataset.fileLabel, titleText);
+        if (!combo) { notify("Código/lei não mapeado para Planalto."); return; }
+        window.open(combo.try1, "_blank", "noopener,noreferrer");
+      }
+    });
+
+    /* Listener global do menu "Mais" */
+    document.addEventListener("click", (e) => {
+      if (!els.moreMenu.contains(e.target) && !e.target.closest(".tab-more")) {
+        els.moreMenu.style.display = "none";
+        els.moreMenu.setAttribute("aria-hidden", "true");
+      }
+    }, { capture: true });
+
+    /* Scroll e resize */
+    window.addEventListener("scroll", () => {
+      updateCurrentOutline();
+      const last = store.getLast();
+      if (last) store.saveLast({ scrollY: window.scrollY || 0 });
+    }, { passive: true });
+    window.addEventListener("resize", updateCurrentOutline, { passive: true });
+
+    /* =================== Cat Modal events =================== */
+    els.catTab.addEventListener("click", openCatModal);
+    els.closeCat.addEventListener("click", closeCatModal);
+    els.catBackdrop.addEventListener("click", (e) => { if (e.target === els.catBackdrop) closeCatModal(); });
+
+    /* =================== Restauração =================== */
+    function restoreViewAfterRender() {
+      const last = store.getLast();
+      if (!last) return;
+
+      if (last.articleId) {
+        let tries = 0;
+        const max = 20;
+        const tick = () => {
+          const el = document.getElementById(last.articleId);
+          if (el) {
+            el.scrollIntoView({ behavior: "instant", block: "center" });
+            updateCurrentOutline();
+          } else if (tries++ < max) {
+            setTimeout(tick, 100);
+          } else if (typeof last.scrollY === "number") {
+            window.scrollTo({ top: last.scrollY, behavior: "instant" });
+          }
+        };
+        tick();
+      } else if (typeof last.scrollY === "number") {
+        window.scrollTo({ top: last.scrollY, behavior: "instant" });
+      }
+    }
+<!-- FAB de Ações -->
+<button id="actionFab" title="Ações" aria-label="Ações">
+  <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
+</button>
+
+<!-- Menu de Ações -->
+<div id="actionMenu" role="menu" aria-hidden="true">
+  <div class="menu-context" id="actionContext">“—”</div>
+  <button class="menu-btn" data-action="fav">⭐ Favoritar</button>
+  <button class="menu-btn" data-action="study">📖 Estudar</button>
+  <button class="menu-btn" data-action="planalto">🔗 Consultar</button>
+</div>
+/* ===== FAB de Ações ===== */
+const actionFab   = document.getElementById("actionFab");
+const actionMenu  = document.getElementById("actionMenu");
+const actionCtx   = document.getElementById("actionContext");
+
+function getActiveArticle(){
+  // prioriza o .in-view
+  let el = document.querySelector("article.in-view");
+  if (!el){
+    // fallback: primeiro article visível
+    el = document.querySelector("article[data-idx]");
   }
-  if (e.key==="Enter"){ e.preventDefault(); withBusy(els.sendSearch, runLocalSearch); }
-  else if (e.key==="Escape"){ els.searchInput.blur(); els.finderPop.classList.remove("show"); }
-});
-els.sendSearch.addEventListener("click",(e)=>withBusy(e.currentTarget, runLocalSearch));
-els.clearSearch.addEventListener("click", ()=>{
-  els.searchInput.value=""; toggleClear(); els.searchSuggest.classList.remove("show"); runLocalSearch();
+  if (!el) return null;
+  const idx = Number(el.dataset.idx);
+  const meta = state.articles.find(x=>x._aidx===idx);
+  return { el, meta };
+}
+
+function snippetFromArticle(el){
+  const txt = el?.querySelector(".art-body")?.innerText?.trim() || "";
+  // pega os primeiros 14-16 caracteres úteis
+  const s = txt.replace(/\s+/g, " ").slice(0, 16);
+  return s ? `“${s}…”` : "“—”";
+}
+
+function toggleActionMenu(show){
+  if (show===undefined) show = !actionMenu.classList.contains("show");
+  actionMenu.classList.toggle("show", show);
+  actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
+}
+
+actionFab?.addEventListener("click", ()=>{
+  const a = getActiveArticle();
+  actionCtx.textContent = snippetFromArticle(a?.el);
+  toggleActionMenu();
 });
 
-/* Próximo/Anterior nas ocorrências */
-els.nextBtn.addEventListener("click", ()=>gotoNext());
-els.prevBtn.addEventListener("click", ()=>gotoPrev());
-
-/* Atalhos globais */
-document.addEventListener("keydown",(e)=>{
-  if ((e.ctrlKey && e.key.toLowerCase()==="k") || (e.key==="/" && !e.metaKey && !e.ctrlKey)){ e.preventDefault(); els.searchInput.focus(); els.searchInput.select(); }
-  if (e.key==="F3" || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==="g")){ e.preventDefault(); gotoNext(); }
-  if ((e.shiftKey && e.key==="F3") || (e.ctrlKey && e.shiftKey && e.key.toLowerCase()==="g")){ e.preventDefault(); gotoPrev(); }
-  if (e.key==="Escape"){
-    els.finderPop.classList.remove("show");
-    if (els.studyModal.getAttribute("aria-hidden")==="false") closeStudyModal();
-    els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true");
-    if (els.indexPanel){ els.indexPanel.classList.remove("show"); els.indexPanel.setAttribute("aria-hidden","true"); }
-    closeCatModal();
+document.addEventListener("click", (e)=>{
+  if (!actionMenu.contains(e.target) && e.target!==actionFab && !actionFab.contains(e.target)){
+    toggleActionMenu(false);
   }
 });
+window.addEventListener("scroll", ()=>{
+  if (actionMenu.classList.contains("show")) toggleActionMenu(false);
+}, {passive:true});
 
-/* Modal Estudar */
-els.closeStudy.addEventListener("click", closeStudyModal);
-els.studyModal.addEventListener("click",(e)=>{ if (e.target===els.studyModal) closeStudyModal(); });
-document.querySelectorAll(".ia-btn").forEach((btn)=>{
-  btn.addEventListener("click", async (e)=>{
-    const url=e.currentTarget.dataset.url;
-    const prompt=els.promptPreview.textContent||"";
-    try{ await navigator.clipboard.writeText(prompt); notify("✅ Prompt copiado!"); }
-    catch{ notify("⚠️ Não consegui copiar, copie manualmente."); }
-    openIA(url);
-  });
-});
-els.copyPromptBtn.addEventListener("click",(e)=>{
-  withBusy(e.currentTarget, async ()=>{
-    try{ await navigator.clipboard.writeText(els.promptPreview.textContent||""); notify("✅ Prompt copiado!"); }
-    catch{ notify("Copie manualmente."); }
-  });
-});
+/* Clique nas ações do menu */
+actionMenu?.addEventListener("click", async (e)=>{
+  const btn = e.target.closest(".menu-btn");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const a = getActiveArticle();
+  if (!a?.el) { notify("Nenhum artigo ativo."); return; }
 
-/* Ações dentro dos cards (fav + study + planalto) */
-els.articles.addEventListener("click", async (e)=>{
-  const btn=e.target.closest(".icon-btn"); if (!btn) return;
-  const artEl=e.target.closest("article"); if (!artEl) return;
+  const artEl = a.el;
+  const meta = a.meta;
+  const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
 
-  const aidx=Number(artEl?.dataset.idx);
-  const a=state.mode==="file" ? state.articles.find(x=>x._aidx===aidx) : null;
-  const id=store.makeId(artEl.dataset.fileUrl, artEl.id);
-
-  const entry={
+  const entry = {
     id,
     fileUrl: artEl.dataset.fileUrl,
     fileLabel: artEl.dataset.fileLabel,
     htmlId: artEl.id,
-    text: state.mode==="file" ? (a?.text||"") : (()=>{ const fav=store.listFavorites().find(e=>e.id===id); const stud=store.listStudied().find(e=>e.id===id); return fav?.text || stud?.text || ""; })(),
+    text: meta ? meta.text : (()=> {
+      const fav = store.listFavorites().find(e=>e.id===id);
+      const stud= store.listStudied().find(e=>e.id===id);
+      return fav?.text || stud?.text || "";
+    })(),
   };
 
-  if (btn.dataset.action==="study"){
-    await withBusy(btn, async ()=>{
-      const useArticle = state.mode==="file" ? a : {
-        text: entry.text,
-        _split: splitIntoBlocks(entry.text)[0]
-          ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
-          : { supra:[], titleText:"Artigo", body:entry.text, epigrafe:"" },
-        title: "Artigo",
-      };
-      if (!useArticle?.text){ notify("Não consegui capturar o texto deste artigo."); return; }
-      const prompt=buildPrompt(useArticle);
-      store.markStudied(entry);
-      btn.classList.add("active");
-      openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
-    });
+  if (action==="study"){
+    const useArticle = meta || (entry.text ? {
+      text: entry.text,
+      _split: splitIntoBlocks(entry.text)[0]
+        ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
+        : { supra:[], titleText:"Artigo", body:entry.text, epigrafe:"" },
+      title: "Artigo",
+    } : null);
+    if (!useArticle?.text){ notify("Não consegui capturar o texto deste artigo."); return; }
+    const prompt = buildPrompt(useArticle);
+    store.markStudied(entry);
+    openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
+    toggleActionMenu(false);
+    return;
   }
 
-  if (btn.dataset.action==="fav"){
-    await withBusy(btn, async ()=>{
-      if (store.isFavorite(id)){
-        store.removeFavorite(id); btn.classList.remove("active"); notify("⭐ Removido dos favoritos");
-        if (state.mode==="favorites"){
-          artEl.remove();
-          if (!els.articles.querySelector("article")){
-            els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
-          }
-        }
-      } else {
-        if (!entry.text){ notify("Abra o arquivo para favoritar este artigo."); return; }
-        store.addFavorite(entry); btn.classList.add("active"); notify("⭐ Adicionado aos favoritos");
-      }
-    });
+  if (action==="fav"){
+    if (store.isFavorite(id)){
+      store.removeFavorite(id);
+      notify("⭐ Removido dos favoritos");
+    } else {
+      if (!entry.text){ notify("Abra o arquivo para favoritar este artigo."); return; }
+      store.addFavorite(entry);
+      notify("⭐ Adicionado aos favoritos");
+    }
+    toggleActionMenu(false);
+    return;
   }
 
-  if (btn.dataset.action==="planalto"){
-    const titleText = a?._split?.titleText || ""; // ex.: "Art. 5º"
+  if (action==="planalto"){
+    const titleText = meta?._split?.titleText || "";
     const combo = makePlanaltoUrl(artEl.dataset.fileLabel, titleText);
     if (!combo){ notify("Código/lei não mapeado para Planalto."); return; }
-    // sempre abrimos try1; se a âncora não existir, o navegador cai na base da mesma forma
     window.open(combo.try1, "_blank", "noopener,noreferrer");
+    toggleActionMenu(false);
+    return;
   }
 });
 
-/* Listener global do menu "Mais" */
-document.addEventListener("click",(e)=>{
-  if (!els.moreMenu.contains(e.target) && !e.target.closest(".tab-more")){
-    els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true");
-  }
-}, {capture:true});
+    /* =================== Boot =================== */
+    async function boot() {
+      buildCatalogMaps();
+      renderFilebar("Todos"); // inicia com todas as categorias
 
-/* Scroll e resize */
-window.addEventListener("scroll", ()=>{
-  updateCurrentOutline();
-  const last=store.getLast(); if (last) store.saveLast({ scrollY: window.scrollY||0 });
-}, {passive:true});
-window.addEventListener("resize", updateCurrentOutline, {passive:true});
+      const last = store.getLast();
+      if (last?.mode === "file" && last?.fileUrl) {
+        const btn = [...els.filebarInner.querySelectorAll(".tab")].find((t) => t.dataset.url === last.fileUrl);
+        if (btn) { btn.classList.add("active"); }
+        await loadFile(last.fileUrl, btn || null);
+        restoreViewAfterRender();
+      } else {
+        els.favTab.classList.add("active");
+        renderFavorites();
+        restoreViewAfterRender();
+      }
 
-/* =================== Cat Modal events =================== */
-els.catTab.addEventListener("click", openCatModal);
-els.closeCat.addEventListener("click", closeCatModal);
-els.catBackdrop.addEventListener("click", (e)=>{ if (e.target===els.catBackdrop) closeCatModal(); });
-
-/* =================== Restauração =================== */
-function restoreViewAfterRender(){
-  const last=store.getLast(); if (!last) return;
-  if (last.articleId){
-    let tries=0, max=20;
-    const tick=()=>{
-      const el=document.getElementById(last.articleId);
-      if (el){ el.scrollIntoView({behavior:"instant", block:"center"}); updateCurrentOutline(); }
-      else if (tries++<max) setTimeout(tick,100);
-      else if (typeof last.scrollY==="number") window.scrollTo({top:last.scrollY, behavior:"instant"});
-    };
-    tick();
-  } else if (typeof last.scrollY==="number"){
-    window.scrollTo({top:last.scrollY, behavior:"instant"});
-  }
-}
-
-/* =================== Boot =================== */
-async function boot(){
-  buildCatalogMaps();
-  renderFilebar("Todos");
-
-  const last=store.getLast();
-  if (last?.mode==="file" && last?.fileUrl){
-    const btn=[...els.filebarInner.querySelectorAll(".tab")].find(t=>t.dataset.url===last.fileUrl);
-    if (btn) btn.classList.add("active");
-    await loadFile(last.fileUrl, btn||null);
-    restoreViewAfterRender();
-  } else {
-    els.favTab.classList.add("active");
-    renderFavorites();
-    restoreViewAfterRender();
-  }
-  rebuildSuggestionsIndex();
-}
-boot();
-</script>
+      rebuildSuggestionsIndex();
+    }
+    boot();
+  </script>
+</body>
+</html>
