@@ -51,15 +51,13 @@ const els = {
   // Toast
   toast: document.getElementById("toast"),
 
-  // Mini modal de categorias
-  catBackdrop: document.getElementById("catBackdrop"),
-  closeCat: document.getElementById("closeCat"),
-  catGrid: document.getElementById("catGrid"),
-
-  // FAB
+  // Painéis (Índice + Arquivos textual)
+  // Índice é criado dinamicamente; Arquivos fica no HTML
   actionFab: document.getElementById("actionFab"),
   actionMenu: document.getElementById("actionMenu"),
   actionContext: document.getElementById("actionContext"),
+
+  catPanel: document.getElementById("catPanel"),
 };
 els.indexToggle = null;
 els.indexPanel = null;
@@ -837,34 +835,37 @@ function gotoPrev(){
   updateCount(); updateCurrentOutline();
 }
 
-/* =================== Mini Modal de Categorias =================== */
-function openCat(){
-  els.catBackdrop.setAttribute("aria-hidden","false");
+/* =================== Painel textual de Arquivos (sem backdrop) =================== */
+function toggleCatPanel(force){
+  const show = (force !== undefined) ? !!force : !els.catPanel.classList.contains("show");
+  els.catPanel.classList.toggle("show", show);
+  els.catPanel.setAttribute("aria-hidden", show ? "false" : "true");
 }
-function closeCatModal(){
-  els.catBackdrop.setAttribute("aria-hidden","true");
-}
-function mountCatGrid(){
+function buildCatPanel(){
   const map = getCatalogByCategory();
   const frag = document.createDocumentFragment();
+
+  els.catPanel.innerHTML = "";
+
   for (const [cat, arr] of map.entries()){
     const h = document.createElement("div");
-    h.className = "section-title";
+    h.className = "cat-h";
     h.textContent = cat;
     frag.appendChild(h);
+
     arr.forEach(({label, value})=>{
-      const btn = document.createElement("button");
-      btn.className="cat-btn";
-      btn.innerHTML = `<img src="icons/arquivo.svg" alt=""><span class="label">${label}</span>`;
-      btn.addEventListener("click", async ()=>{
-        closeCatModal();
-        await loadFile(value, btn);
+      const item = document.createElement("div");
+      item.className = "cat-item";
+      item.textContent = "– " + label; // só texto
+      item.addEventListener("click", async ()=>{
+        toggleCatPanel(false);
+        await loadFile(value, item);
       });
-      frag.appendChild(btn);
+      frag.appendChild(item);
     });
   }
-  els.catGrid.innerHTML="";
-  els.catGrid.appendChild(frag);
+
+  els.catPanel.appendChild(frag);
 }
 
 /* =================== FAB (ações do artigo em foco) =================== */
@@ -934,8 +935,25 @@ function bindEvents(){
   els.closeInfo?.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","true"));
 
   // Barra secundária
-  els.catTab?.addEventListener("click", ()=>{ mountCatGrid(); openCat(); });
+  els.catTab?.addEventListener("click", ()=>{
+    if (!els.catPanel.innerHTML.trim()) buildCatPanel();
+    toggleCatPanel();
+  });
   els.favTab?.addEventListener("click", renderFavorites);
+
+  // Fecha painel Arquivos com ESC e clique fora
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape" && els.catPanel.classList.contains("show")){
+      toggleCatPanel(false);
+    }
+  });
+  document.addEventListener("click", (e)=>{
+    if (els.catPanel.classList.contains("show")){
+      const inside = e.target.closest && e.target.closest("#catPanel");
+      const hitCat = e.target.closest && e.target.closest("#catTab");
+      if (!inside && !hitCat) toggleCatPanel(false);
+    }
+  }, {capture:true});
 
   // Busca
   els.searchInput?.addEventListener("input", onSearchInput);
@@ -959,16 +977,12 @@ function bindEvents(){
   els.closeStudy?.addEventListener("click", ()=> els.studyModal.setAttribute("aria-hidden","true"));
   els.copyPromptBtn?.addEventListener("click", async ()=>{
     const txt = els.promptPreview.textContent || "";
-    try { await navigator.clipboard.writeText(txt); notify("✅ Prompt copiado!"); }
+    try { await navigator.clipboard.writeText(txt); notify("✅ O prompt foi copiado!"); }
     catch { notify("Não foi possível copiar."); }
   });
   document.querySelectorAll(".ia-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{ window.open(btn.dataset.url, "_blank"); });
   });
-
-  // Modal categorias
-  els.closeCat?.addEventListener("click", closeCatModal);
-  els.catBackdrop?.addEventListener("click", (e)=>{ if (e.target===els.catBackdrop) closeCatModal(); });
 
   // FAB
   els.actionFab?.addEventListener("click", ()=> toggleActionMenu());
@@ -994,13 +1008,12 @@ function bindEvents(){
   buildCatalogMaps();
   bindEvents();
 
-  // Inicia em Favoritos (como combinado)
+  // Inicia em Favoritos
   renderFavorites();
 
   // Restaura último arquivo, se quiser (opcional)
   const last = store.getLast();
   if (last?.mode==="file" && last.fileUrl){
-    // comentar a linha abaixo caso deseje sempre começar em Favoritos
     // loadFile(last.fileUrl);
   }
 })();
