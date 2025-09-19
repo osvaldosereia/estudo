@@ -790,16 +790,53 @@ async function runLocalSearch(){
     renderFileItemsAll(state.items);
 
     requestAnimationFrame(()=>{
+      // destaca palavras
       matchedMeta.forEach((m)=>{
         const art = document.getElementById(m.htmlId);
         if (art) highlightTextNodes(art, tokens);
       });
 
+      // cria a lista de nós dos artigos encontrados
       state.matchArticles = matchedMeta.map(m => document.getElementById(m.htmlId)).filter(Boolean);
 
+      // navega para o primeiro, se houver
       if (state.matchArticles.length){
         state.matchIdx = 0;
-        state.matchArticles[0].scrollIntoView({behavior:"smooth", block
+        state.matchArticles[0].scrollIntoView({ behavior:"smooth", block:"center" });
+      } else {
+        state.matchIdx = -1;
+        notify("Nenhum resultado com todas as palavras.");
+      }
+
+      updateCount();
+      updateCurrentOutline();
+    });
+  } finally {
+    els.searchSpinner.classList.remove("show");
+    els.searchSuggest.classList.remove("show");
+  }
+}
+
+/* Contador e navegação entre ocorrências */
+function updateCount(){
+  if (!state.matchArticles?.length){ els.count.textContent = "0/0"; return; }
+  els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
+}
+function gotoNext(){
+  if (!state.matchArticles?.length) return;
+  state.matchIdx = (state.matchIdx + 1) % state.matchArticles.length;
+  const art = state.matchArticles[state.matchIdx];
+  art.scrollIntoView({ behavior:"smooth", block:"center" });
+  updateCount(); updateCurrentOutline();
+}
+function gotoPrev(){
+  if (!state.matchArticles?.length) return;
+  state.matchIdx = (state.matchIdx - 1 + state.matchArticles.length) % state.matchArticles.length;
+  const art = state.matchArticles[state.matchIdx];
+  art.scrollIntoView({ behavior:"smooth", block:"center" });
+  updateCount(); updateCurrentOutline();
+}
+
           
 /* =================== Filebar + Categorias =================== */
 function getVisibleTabsCount(){ return window.matchMedia("(max-width: 768px)").matches ? Infinity : 5; }
