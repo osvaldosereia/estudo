@@ -666,36 +666,74 @@ async function loadFile(url, tabBtn){
 }
 
 /* =================== Busca + Sugestões =================== */
-let suggestActiveIndex=-1;
-let suggestionsData=[]; // {id, title, htmlId}
+let suggestActiveIndex = -1;
+let suggestionsData = []; // {id, title, htmlId}
+
+/* Índice de sugestões (título limpo de cada artigo) */
 function rebuildSuggestionsIndex(){
   suggestionsData = state.articles.map(a=>{
-    const t=a._split?.titleText || a.title || "";
-    const epi=a._split?.epigrafe || "";
-    const title=(t || epi || "Artigo").replace(/<\/?(strong|b)>/gi,"").trim();
+    const t   = a._split?.titleText || a.title || "";
+    const epi = a._split?.epigrafe   || "";
+    const title = (t || epi || "Artigo").replace(/<\/?(strong|b)>/gi,"").trim();
     return { id:a.htmlId, title, htmlId:a.htmlId };
   });
 }
-function renderSuggestions(list, q){
-  const box=els.searchSuggest; box.innerHTML="";
-  if (!list.length || !q.trim()){ box.classList.remove("show"); return; }
-  const frag=document.createDocumentFragment();
-  list.slice(0,8).forEach((it,i)=>{
-    const div=document.createElement("div");
-    div.className="suggest-item"+(i===suggestActiveIndex?" active":"");
-    div.setAttribute("role","option"); div.dataset.htmlId=it.htmlId;
-    div.innerHTML=`<span class="dot"></span><span>${highlightQuery(it.title, q)}</span>`;
-    div.addEventListener("mousedown",(e)=>{ e.preventDefault(); jumpToArticle(it.htmlId); box.classList.remove("show"); });
-    frag.appendChild(div);
+
+/* ===== NOVO: tokens da consulta (>=3 letras; números >=1) ===== */
+function buildQueryTokens(q) {
+  return (q || "")
+    .split(/\s+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .filter(tok => (/\d/.test(tok) ? tok.length >= 1 : tok.length >= 3))
+    .map(norm);
+}
+
+/* Destaque que aceita vários tokens normalizados */
+function highlightQuery(text, qOrTokens) {
+  const tokens = Array.isArray(qOrTokens) ? qOrTokens : buildQueryTokens(qOrTokens);
+  if (!tokens.length) return text;
+  return text.replace(/([\p{L}\p{N}]+)/gu, (w) => {
+    const hit = tokens.some(t => norm(w).includes(t));
+    return hit ? `<strong>${w}</strong>` : w;
   });
-  box.appendChild(frag); box.classList.add("show");
 }
-function highlightQuery(text,q){
-  const nq=norm(q); if (!nq) return text;
-  const idx=norm(text).indexOf(nq); if (idx<0) return text;
-  const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i");
-  return text.replace(re,(m)=>`<strong>${m}</strong>`);
+
+/* Sugestões: título + prévia do início do card */
+function renderSuggestions(list, tokens) {
+  const box = els.searchSuggest;
+  box.innerHTML = "";
+  if (!list.length) { box.classList.remove("show"); return; }
+
+  const frag = document.createDocumentFragment();
+  list.slice(0, 8).forEach((it, i) => {
+    const btn = document.createElement("button");
+    btn.className = "suggest-item" + (i === suggestActiveIndex ? " active" : "");
+    btn.setAttribute("role", "option");
+    btn.type = "button";
+    btn.dataset.htmlId = it.htmlId;
+
+    const safeTitle = highlightQuery(it.title, tokens);
+    const el = document.getElementById(it.htmlId);
+    const bodyTxt = el?.querySelector(".art-body")?.innerText || "";
+    const snip = bodyTxt.replace(/\s+/g, " ").slice(0, 120);
+
+    btn.innerHTML = `
+      <div class="sug-title">${safeTitle}</div>
+      <p class="sug-snippet">${snip}</p>
+    `;
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      jumpToArticle(it.htmlId);
+      box.classList.remove("show");
+    });
+    frag.appendChild(btn);
+  });
+
+  box.appendChild(frag);
+  box.classList.add("show");
 }
+
 function jumpToArticle(htmlId){
   const el=document.getElementById(htmlId);
   if (el){
@@ -707,50 +745,62 @@ function jumpToArticle(htmlId){
     updateCurrentOutline();
   }
 }
+
+/* Input da busca -> usa tokens e exige TODOS os termos no título das sugestões */
 function onSearchInput(){
   toggleClear();
-  const q=els.searchInput.value||"";
-  if (state.mode!=="file"){ els.searchSuggest.classList.remove("show"); return; }
-  if (!q.trim()){ els.searchSuggest.classList.remove("show"); return; }
-  const nq=norm(q);
-  const cand=suggestionsData.filter(s=>norm(s.title).includes(nq));
-  suggestActiveIndex=-1; renderSuggestions(cand, q);
+  const q = els.searchInput.value || "";
+  if (state.mode !== "file"){ els.searchSuggest.classList.remove("show"); return; }
+
+  const tokens = buildQueryTokens(q);
+  if (!tokens.length){ els.searchSuggest.classList.remove("show"); return; }
+
+  const list = suggestionsData.filter(s => {
+    const nTitle = norm(s.title);
+    return tokens.every(t => nTitle.includes(t));
+  });
+
+  suggestActiveIndex = -1;
+  renderSuggestions(list, tokens);
 }
+
+/* Busca local nos cards -> exige TODOS os tokens (AND) */
 async function runLocalSearch(){
-  if (state.mode!=="file"){ notify("Abra um arquivo para buscar."); return; }
-  const q=els.searchInput.value.trim();
+  if (state.mode !== "file"){ notify("Abra um arquivo para buscar."); return; }
+
+  const q = els.searchInput.value.trim();
   els.finderPop.classList.add("show");
-  if (!q){
+
+  const tokens = buildQueryTokens(q);
+  if (!tokens.length){
     renderFileItemsProgressive(state.items);
-    state.matchArticles=[]; state.matchIdx=-1; els.count.textContent="0/0"; els.searchSuggest.classList.remove("show"); return;
+    state.matchArticles = []; state.matchIdx = -1;
+    els.count.textContent = "0/0";
+    els.searchSuggest.classList.remove("show");
+    return;
   }
+
   els.searchSpinner.classList.add("show");
   try{
-    const tokens=q.split(/\s+/).filter(Boolean).map(norm);
-    state.currentTokens=tokens;
-    const matchedMeta=state.articles.filter(a=>tokens.every(t=>a._norm.includes(t)));
-    renderFileItemsAll(state.items);
-    requestAnimationFrame(()=>{
-      matchedMeta.forEach((m)=>{ const art=document.getElementById(m.htmlId); if (art) highlightTextNodes(art, tokens); });
-      state.matchArticles = matchedMeta.map(m=>document.getElementById(m.htmlId)).filter(Boolean);
-      if (state.matchArticles.length){ state.matchIdx=0; state.matchArticles[0].scrollIntoView({behavior:"smooth", block:"center"}); }
-      else { state.matchIdx=-1; notify("Nenhum resultado encontrado."); }
-      els.count.textContent = state.matchArticles.length ? `${state.matchIdx+1}/${state.matchArticles.length}` : "0/0";
-      updateCurrentOutline();
-    });
-  } finally {
-    els.searchSpinner.classList.remove("show");
-    els.searchSuggest.classList.remove("show");
-  }
-}
-function toggleClear(){ els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
-function updateCount(){
-  if (!state.matchArticles?.length){ els.count.textContent="0/0"; return; }
-  els.count.textContent=`${state.matchIdx+1}/${state.matchArticles.length}`;
-}
-function gotoNext(){ if (!state.matchArticles?.length) return; state.matchIdx=(state.matchIdx+1)%state.matchArticles.length; const art=state.matchArticles[state.matchIdx]; art.scrollIntoView({behavior:"smooth", block:"center"}); updateCount(); updateCurrentOutline(); }
-function gotoPrev(){ if (!state.matchArticles?.length) return; state.matchIdx=(state.matchIdx-1+state.matchArticles.length)%state.matchArticles.length; const art=state.matchArticles[state.matchIdx]; art.scrollIntoView({behavior:"smooth", block:"center"}); updateCount(); updateCurrentOutline(); }
+    state.currentTokens = tokens;
 
+    // AND entre os tokens
+    const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
+
+    renderFileItemsAll(state.items);
+
+    requestAnimationFrame(()=>{
+      matchedMeta.forEach((m)=>{
+        const art = document.getElementById(m.htmlId);
+        if (art) highlightTextNodes(art, tokens);
+      });
+
+      state.matchArticles = matchedMeta.map(m => document.getElementById(m.htmlId)).filter(Boolean);
+
+      if (state.matchArticles.length){
+        state.matchIdx = 0;
+        state.matchArticles[0].scrollIntoView({behavior:"smooth", block
+          
 /* =================== Filebar + Categorias =================== */
 function getVisibleTabsCount(){ return window.matchMedia("(max-width: 768px)").matches ? Infinity : 5; }
 function renderFilebar(category="Todos"){
