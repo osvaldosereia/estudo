@@ -836,7 +836,6 @@ actions.appendChild(favBtn);
   planBtn.innerHTML = '<img src="icons/link.svg" alt="Ver no Planalto">';
   actions.appendChild(planBtn);
 
-  const id = store.makeId(el.dataset.fileUrl, el.id);
   if (store.isFavorite(id)) favBtn.classList.add("active");
   if (store.isStudied(id)) studyBtn.classList.add("active");
 
