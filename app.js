@@ -860,7 +860,7 @@ els.searchInput.addEventListener("keydown", (e)=>{
   if (box.classList.contains("show")){
     if (e.key==="ArrowDown" || e.key==="ArrowUp"){
       e.preventDefault();
-      const items=[...box.querySelectorAll(".suggest-item")]; if (!items.length) return;
+      const items = [...box.querySelectorAll(".suggest-item")]; if (!items.length) return;
       if (e.key==="ArrowDown") suggestActiveIndex=(suggestActiveIndex+1)%items.length;
       else suggestActiveIndex=(suggestActiveIndex-1+items.length)%items.length;
       items.forEach((n,i)=>n.classList.toggle("active", i===suggestActiveIndex));
@@ -1171,7 +1171,7 @@ async function boot() {
 
   const last = store.getLast();
   if (last?.mode === "file" && last?.fileUrl) {
-    const btn = [...els.filebarInner.querySelectorAll(".tab")].find((t) => t.dataset.url === last.fileUrl);
+const btn = [...els.filebarInner.querySelectorAll(".tab")].find(t => t.dataset.url === last.fileUrl);
     if (btn) { btn.classList.add("active"); }
     await loadFile(last.fileUrl, btn || null);
     restoreViewAfterRender();
