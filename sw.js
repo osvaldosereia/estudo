@@ -1,64 +1,50 @@
-// sw.js - Service Worker revisado
-const CACHE_NAME = "direito-love-v34"; // 🔄 altere a versão SEMPRE que fizer update
-const FILES_TO_CACHE = [
+// sw.js — cache básico
+const CACHE = "direito-love-v1";
+const ASSETS = [
   "./",
   "./index.html",
+  "./style.css",
+  "./app.js",
   "./manifest.webmanifest",
+  // ícones mínimos
   "./icons/favicon-32.png",
   "./icons/favicon-192.png",
-  "./icons/apple-touch-icon.png"
+  "./icons/apple-touch-icon.png",
 ];
 
-// Instalação
-self.addEventListener("install", (event) => {
-  self.skipWaiting(); // força ativação imediata
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
-  );
+self.addEventListener("install", (e) => {
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
 });
 
-// Ativação
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(
-        keyList.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key); // 🔥 remove caches antigos
-          }
-        })
-      );
-    }).then(() => self.clients.claim()) // 🔄 assume imediatamente
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
   );
+  self.clients.claim();
 });
 
-// Fetch
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-
-  // Para HTML (navegação), tenta rede primeiro
-  if (req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // Para estáticos (CSS, JS, imagens): cache-first
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+// Network-first para HTML; cache-first para estáticos
+self.addEventListener("fetch", (e) => {
+  const req = e.request;
+  const isHTML = req.headers.get("accept")?.includes("text/html");
+  if (isHTML) {
+    e.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
-      });
-    })
-  );
+      }).catch(() => caches.match(req).then((r) => r || caches.match("./index.html")))
+    );
+  } else {
+    e.respondWith(
+      caches.match(req).then((r) => r || fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return res;
+      }))
+    );
+  }
 });
