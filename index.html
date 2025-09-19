@@ -22,6 +22,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
+      <!-- Apenas o botão de informações à direita -->
       <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
         <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
       </button>
@@ -39,7 +40,8 @@
           <img src="icons/arquivo.svg" alt="Arquivos">
         </button>
       </div>
-      <div class="filebar-search">
+      <div class="filebar-inner" id="filebarInner">
+        <!-- Barra de busca (agora aqui na barra abaixo) -->
         <div class="search">
           <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
           <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
@@ -47,7 +49,6 @@
           <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
         </div>
       </div>
-      <div class="filebar-inner" id="filebarInner"></div>
     </div>
   </nav>
 
@@ -61,79 +62,131 @@
     </button>
     <div class="mini-count" aria-live="polite"><span id="count">0/0</span></div>
     <button class="mini-btn" id="nextBtn" title="Próximo (F3 / Ctrl+G)" aria-label="Próximo" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
     </button>
     <button class="mini-btn" id="closeFinder" title="Fechar (Esc)" aria-label="Fechar" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
   </div>
 
-  <!-- CONTEÚDO -->
-  <main class="content">
-    <div class="container">
-      <h2 id="pageTitle" class="page-title" style="display:none"></h2>
-      ...
-      <select id="codeSelect" class="sr-only" aria-hidden="true" tabindex="-1">
-        <optgroup label="Códigos">
-          <option value="data/codigos/CF88.txt">Const. Federal 1988</option>
-          <option value="data/codigos/codigo_civil.txt">Código Civil</option>
-          <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
-          <option value="data/codigos/codigo_penal.txt">Código Penal</option>
-          <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
-          <option value="data/codigos/CDC.txt">CDC</option>
-          <option value="data/codigos/CLT.txt">CLT</option>
-          <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
-          <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
-          <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-          <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
-        </optgroup>
-        <optgroup label="Leis">
-          <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
-          <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
-          <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
-          <option value="data/leis/lei_de_acesso_a_informacao.txt">Lei LGPD</option>
-        </optgroup>
-        <optgroup label="Estatutos">
-          <option value="data/estatutos/ECA.txt">ECA - Est. da Criança e Adolescente</option>
-          <option value="data/estatutoS/estatuto_oab.txt">Estatuto da Oab</option>
-        </optgroup>
-        </select>
+  <!-- CONTAINER -->
+  <main class="wrap" id="appWrap" aria-live="polite">
+    <!-- Breadcrumbs / título de página (render dinâmico) -->
+    <div class="breadcrumbs" id="breadcrumbs" aria-hidden="true"></div>
 
-      <!-- Lista de artigos/cards -->
-      <section id="articles" aria-live="polite"></section>
+    <!-- Lista de cards -->
+    <section id="cards" class="cards" aria-live="polite"></section>
+
+    <!-- Loader -->
+    <div id="loader" class="loader" aria-hidden="true">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
   </main>
 
-  <!-- MODAL: CATEGORIAS -->
-  <div class="cat-backdrop" id="catBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="cat-modal" role="document">
-      <div class="cat-head">
-        <h3 class="cat-title">Categorias</h3>
-        <button class="cat-close" id="closeCat" aria-label="Fechar">✕</button>
+  <!-- FAB (ações principais globais) -->
+  <div class="fab" id="fab" aria-label="Ações">
+    <button class="fab-btn" id="studyBtn" title="Estudar" aria-label="Estudar">
+      <img src="icons/estudar.svg" alt="Estudar">
+    </button>
+    <button class="fab-btn" id="noteBtn" title="Anotações" aria-label="Anotações">
+      <img src="icons/nota.svg" alt="Anotações">
+    </button>
+  </div>
+
+  <!-- MODAL: Informações -->
+  <div class="backdrop" id="infoBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+      <div class="modal-head">
+        <h2 id="infoTitle">Informações</h2>
+        <button class="modal-x" id="closeInfo" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <div class="cat-grid" id="catGrid"></div>
+      <div class="modal-body">
+        <p>Bem-vindo ao direito.love — leitor jurídico otimizado para estudo.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="okInfo">Ok</button>
+      </div>
     </div>
   </div>
 
-  <!-- FAB de Ações (hambúrguer do card selecionado) -->
-  <button
-  id="actionFab"
-  title="Ações"
-  aria-label="Ações"
-  aria-haspopup="menu"
-  aria-controls="actionMenu"
-  aria-expanded="false">
-  <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
-</button>
+  <!-- MODAL: Categorias/Arquivos (reutilizado pelo ícone Arquivos) -->
+  <div class="backdrop" id="catBackdrop" aria-hidden="true">
+    <div class="cat-modal" role="dialog" aria-modal="true" aria-labelledby="catTitle">
+      <div class="modal-head">
+        <h2 id="catTitle">Categorias e Arquivos</h2>
+        <button class="modal-x" id="closeCat" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="catBody">
+        <!-- conteúdo carregado do select oculto (#codeSelect) -->
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="applyCat">Abrir</button>
+      </div>
+    </div>
+  </div>
 
-  <div id="actionMenu" role="menu" aria-hidden="true">
-    <div class="menu-context" id="actionContext">“—”</div>
-    <button class="menu-btn" data-action="fav">⭐ Favoritar</button>
-    <button class="menu-btn" data-action="study">📖 Estudar</button>
-    <button class="menu-btn" data-action="planalto">🔗 Consultar</button>
+  <!-- CATÁLOGO OCULTO (FONTE DE DADOS) -->
+  <select id="codeSelect" title="Arquivos" style="display:none">
+    <option value="">—</option>
+    <optgroup label="Códigos">
+      <option value="data/codigos/CF88.txt">CF88</option>
+      <option value="data/codigos/codigo_civil.txt">Código Civil</option>
+      <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
+      <option value="data/codigos/codigo_penal.txt">Código Penal</option>
+      <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
+      <option value="data/codigos/CDC.txt">CDC</option>
+      <option value="data/codigos/CLT.txt">CLT</option>
+      <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
+      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
+      <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
+    </optgroup>
+    <optgroup label="Leis">
+      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+      <!-- adicione outras conforme seu catálogo -->
+    </optgroup>
+  </select>
+
+  <!-- MODAL: Estudar (exemplo já existente) -->
+  <div class="backdrop" id="studyBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle">
+      <div class="modal-head">
+        <h2 id="studyTitle">Estudar</h2>
+        <button class="modal-x" id="closeStudy" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea id="studyInput" rows="5" placeholder="Cole aqui o item, artigo ou tema para estudar…"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="studyGo">Gerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Anotações (exemplo já existente) -->
+  <div class="backdrop" id="noteBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="noteTitle">
+      <div class="modal-head">
+        <h2 id="noteTitle">Anotações</h2>
+        <button class="modal-x" id="closeNote" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea id="noteInput" rows="5" placeholder="Escreva suas anotações aqui…"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="saveNote">Salvar</button>
+      </div>
+    </div>
   </div>
 
   <!-- JS -->
-  <script src="app.js"></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
