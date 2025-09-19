@@ -1196,12 +1196,13 @@ actionMenu?.addEventListener("click", async (e)=>{
 /* =================== Boot =================== */
 async function boot() {
   buildCatalogMaps();
-  renderFilebar("Todos");
+  renderFilebar("Todos"); // inicia com todas as categorias
 
   const last = store.getLast();
   if (last?.mode === "file" && last?.fileUrl) {
-const btn = [...els.filebarInner.querySelectorAll(".tab")].find(t => t.dataset.url === last.fileUrl);
-    if (btn) { btn.classList.add("active"); }
+    const btn = [...els.filebarInner.querySelectorAll(".tab")]
+      .find((t) => t.dataset.url === last.fileUrl);
+    if (btn) btn.classList.add("active");
     await loadFile(last.fileUrl, btn || null);
     restoreViewAfterRender();
   } else {
@@ -1211,5 +1212,9 @@ const btn = [...els.filebarInner.querySelectorAll(".tab")].find(t => t.dataset.u
   }
 
   rebuildSuggestionsIndex();
+
+  // >>> mantém o mini-texto do FAB sincronizado logo no carregamento
+  updateActionPreview();
+
 }
 boot();
