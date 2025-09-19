@@ -385,42 +385,51 @@ function buildArticleElement(a){
 function clearArticles(){ els.articles.innerHTML=""; state.currentArticleIdx=-1; }
 
 /* =================== Outline (in-view) =================== */
-function updateCurrentOutline(){
-  const nodes=[...document.querySelectorAll("article[data-idx]")];
+function updateCurrentOutline() {
+  const nodes = Array.from(document.querySelectorAll("article[data-idx]"));
   if (!nodes.length) return;
 
-  const topGap=48;
+  const topGap = 48;
   const scTop = window.scrollY || document.documentElement.scrollTop || 0;
   const scBottom = scTop + window.innerHeight;
   const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
 
-  let targetIdx=-1;
-  if (scTop<=topGap) targetIdx=0;
-  else if (scBottom>=docH-topGap) targetIdx=nodes.length-1;
-  else{
-    const cy=window.innerHeight/2; let best=Infinity, bestIdx=0;
-    nodes.forEach((el,i)=>{
-      const r=el.getBoundingClientRect();
-      if (r.bottom<0 || r.top>window.innerHeight) return;
-      const mid=r.top + r.height/2; const d=Math.abs(mid-cy);
-      if (d<best){ best=d; bestIdx=i; }
+  let targetIdx = -1;
+
+  if (scTop <= topGap) targetIdx = 0;
+  else if (scBottom >= docH - topGap) targetIdx = nodes.length - 1;
+  else {
+    const cy = window.innerHeight / 2;
+    let best = Infinity, bestIdx = 0;
+    nodes.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      const mid = r.top + r.height / 2;
+      const d = Math.abs(mid - cy);
+      if (d < best) { best = d; bestIdx = i; }
     });
-    targetIdx=bestIdx;
+    targetIdx = bestIdx;
   }
-  if (targetIdx===-1 || state.currentArticleIdx===targetIdx) return;
 
-  nodes.forEach((n)=>n.classList.remove("in-view"));
+  if (targetIdx === -1) return;
+  if (state.currentArticleIdx === targetIdx) return;
+
+  nodes.forEach((n) => n.classList.remove("in-view"));
   nodes[targetIdx].classList.add("in-view");
-  state.currentArticleIdx=targetIdx;
+  state.currentArticleIdx = targetIdx;
 
-  const art=nodes[targetIdx];
+  const art = nodes[targetIdx];
   store.saveLast({
     mode: state.mode,
     fileUrl: state.currentFileUrl,
     articleId: art?.id || null,
-    scrollY: window.scrollY||0,
+    scrollY: window.scrollY || 0,
   });
+
+  // <<< mantém o mini-texto do FAB sincronizado com o card ativo
+  updateActionPreview();
 }
+
 
 /* =================== Índice (hambúrguer) =================== */
 function removeIndexUI(){
@@ -1089,6 +1098,12 @@ function snippetFromArticle(el, max = 28){
   if (!raw) return "“—”";
   const cut = raw.length > max ? raw.slice(0, max) + "…" : raw;
   return `“${cut}”`;
+}
+
+function updateActionPreview(){
+  if (!actionCtx) return;
+  const a = getActiveArticle();
+  actionCtx.textContent = snippetFromArticle(a?.el, 32);
 }
 
 function toggleActionMenu(show){
