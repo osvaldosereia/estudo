@@ -22,38 +22,35 @@
   <header class="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
-      <div class="search-wrap">
-        <div class="search">
-          <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
-          <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
-          <button class="clear-x" id="clearSearch" title="Limpar busca" aria-label="Limpar busca">✕</button>
-          <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
-        </div>
-        <!-- Botão Informações -->
-        <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
-          <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
-        </button>
-      </div>
+      <!-- Botão Informações (permanece na top bar) -->
+      <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
+        <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
+      </button>
     </div>
   </header>
 
-  <!-- FILEBAR -->
-  <nav class="filebar" aria-label="Documentos">
+  <!-- BARRA SECUNDÁRIA (ABAIXO DA TOP BAR) -->
+  <nav class="filebar" aria-label="Ações rápidas e busca">
     <div class="filebar-shell">
-      <div class="filebar-left">
-        <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
-          <img src="icons/favorito-active.svg" alt="Favoritos">
-        </button>
-        <button class="cat-tab" id="catTab" title="Arquivos (filtrar por categoria)" aria-label="Arquivos" type="button">
-          <img src="icons/arquivo.svg" alt="Arquivos">
-        </button>
+      <!-- Ícone Arquivos (abre modal de categorias/arquivos) -->
+      <button class="cat-tab" id="catTab" title="Arquivos" aria-label="Arquivos" type="button">
+        <img src="icons/arquivo.svg" alt="Arquivos">
+      </button>
+
+      <!-- BUSCA CENTRAL -->
+      <div class="search" id="searchBar">
+        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
+        <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+        <button class="clear-x" id="clearSearch" title="Limpar busca" aria-label="Limpar busca">✕</button>
+        <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
       </div>
-      <div class="filebar-inner" id="filebarInner"></div>
+
+      <!-- Ícone Favoritos -->
+      <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
+        <img src="icons/favorito-active.svg" alt="Favoritos">
+      </button>
     </div>
   </nav>
-
-  <!-- MENU "MAIS" (tabs extras) -->
-  <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
 
   <!-- MINI-FINDER -->
   <div class="finder-pop" id="finderPop" aria-live="polite">
@@ -106,7 +103,7 @@
       <option value="data/estatutos/estatuto_do_idoso.txt">Est. do Idoso</option>
       <option value="data/estatutos/estatuto_da_juventude.txt">Est. da Juventude</option>
       <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Est. da Pessoa com Deficiência</option>
-      <option value="data/estatutoS/estatuto_oab.txt">Est. da Oab</option>
+      <option value="data/estatutos/estatuto_oab.txt">Est. da Oab</option>
     </optgroup>
     <optgroup label="Súmulas">
       <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
@@ -149,7 +146,7 @@
         <button class="study-close btn" id="closeInfo" aria-label="Fechar">✕</button>
       </div>
       <div class="info-body">
-        <p>Bem-vindo ao direito.love! Aqui você encontra conteúdos que são essenciais para o seu estudo. Favorite e utilize nosso prompt rápido para estudar com o auxílio de I.A.</p>
+        <p>Bem-vindo ao direito.love! Aqui você encontra conteúdos essenciais para o seu estudo. Favorite e use o prompt rápido para estudar com I.A.</p>
         <ul>
           <li>Use a busca para achar artigos rapidamente.</li>
           <li>Favoritos salvam trechos para revisão.</li>
@@ -172,14 +169,14 @@
 
   <!-- FAB de Ações (hambúrguer do card selecionado) -->
   <button
-  id="actionFab"
-  title="Ações"
-  aria-label="Ações"
-  aria-haspopup="menu"
-  aria-controls="actionMenu"
-  aria-expanded="false">
-  <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
-</button>
+    id="actionFab"
+    title="Ações"
+    aria-label="Ações"
+    aria-haspopup="menu"
+    aria-controls="actionMenu"
+    aria-expanded="false">
+    <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
+  </button>
 
   <div id="actionMenu" role="menu" aria-hidden="true">
     <div class="menu-context" id="actionContext">“—”</div>
