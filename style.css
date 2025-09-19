@@ -69,6 +69,38 @@ button,input,select{font:inherit}
   display:inline-grid; place-items:center;
 }
 
+/* ===== Autocomplete (sugestões — título + prévia) ===== */
+.suggest{
+  position:absolute; left:0; right:0; top:40px;
+  background:#fff; border:1px solid #e7eaf3; border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  padding:6px; z-index:140; display:none;
+  max-height:56vh; overflow:auto;
+}
+.suggest.show{ display:block; }
+
+.suggest-item{
+  display:block; width:100%; text-align:left;
+  padding:10px 12px; border-radius:8px; cursor:pointer;
+  background:transparent; border:0;
+}
+.suggest-item + .suggest-item{ border-top:1px solid #eef1f6; }
+.suggest-item:hover, .suggest-item.active{ background:#f6f7fb; }
+
+.sug-title{
+  font-weight:600; color:#0f172a; margin:0 0 2px 0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sug-snippet{
+  font-size:12px; color:#475569; margin:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Mobile (sugestões) */
+@media (max-width: 768px){
+  .suggest{ left:0; right:0; max-width:100%; max-height:60vh; }
+}
+
 /* ===== Filebar ===== */
 .filebar{
   position:fixed; top:var(--topbar-h); left:0; right:0; height:var(--filebar-h);
