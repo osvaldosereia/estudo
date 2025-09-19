@@ -32,7 +32,7 @@
   <!-- BARRA SECUNDÁRIA (ABAIXO DA TOP BAR) -->
   <nav class="filebar" aria-label="Ações rápidas e busca">
     <div class="filebar-shell">
-      <!-- Ícone Arquivos (abre modal de categorias/arquivos) -->
+      <!-- Ícone Arquivos (abre painel textual) -->
       <button class="cat-tab" id="catTab" title="Arquivos" aria-label="Arquivos" type="button">
         <img src="icons/arquivo.svg" alt="Arquivos">
       </button>
@@ -51,6 +51,9 @@
       </button>
     </div>
   </nav>
+
+  <!-- PAINEL TEXTUAL DE ARQUIVOS (tipo Índice) -->
+  <div class="cat-panel" id="catPanel" role="menu" aria-hidden="true"></div>
 
   <!-- MINI-FINDER -->
   <div class="finder-pop" id="finderPop" aria-live="polite">
@@ -153,17 +156,6 @@
           <li>“Consultar” abre a norma no site do Planalto.</li>
         </ul>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CATEGORIAS -->
-  <div class="cat-backdrop" id="catBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="cat-modal" role="document">
-      <div class="cat-head">
-        <h3 class="cat-title">Categorias</h3>
-        <button class="cat-close" id="closeCat" aria-label="Fechar">✕</button>
-      </div>
-      <div class="cat-grid" id="catGrid"></div>
     </div>
   </div>
 
