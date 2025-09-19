@@ -21,7 +21,7 @@ const els = {
   catTab: document.getElementById("catTab"),
   favTab: document.getElementById("favTab"),
 
-  // Busca (agora na barra secundária)
+  // Busca
   searchInput: document.getElementById("searchInput"),
   searchSpinner: document.getElementById("searchSpinner"),
   clearSearch: document.getElementById("clearSearch"),
@@ -35,6 +35,7 @@ const els = {
   count: document.getElementById("count"),
 
   // Conteúdo
+  fileLabel: document.getElementById("fileLabel"),
   articles: document.getElementById("articles"),
 
   // Catálogo
@@ -51,11 +52,11 @@ const els = {
   // Toast
   toast: document.getElementById("toast"),
 
-  // Painéis (Índice + Arquivos textual)
-  // Índice é criado dinamicamente; Arquivos fica no HTML
+  // Painéis / menus
   actionFab: document.getElementById("actionFab"),
   actionMenu: document.getElementById("actionMenu"),
   actionContext: document.getElementById("actionContext"),
+  favToggleBtn: document.getElementById("favToggleBtn"),
 
   catPanel: document.getElementById("catPanel"),
 };
@@ -68,15 +69,13 @@ const state = {
   currentFileUrl: null,
   currentFileLabel: "",
   rawText: "",
-  items: [],    // headings + articles
-  articles: [], // only articles
+  items: [],
+  articles: [],
   currentArticleIdx: -1,
 
   currentTokens: [],
   matchArticles: [],
   matchIdx: -1,
-
-  category: "Todos",
 
   cache: new Map(),
   urlToLabel: new Map(),
@@ -127,7 +126,7 @@ const store = {
 function notify(msg = "Ok!") {
   els.toast.textContent = msg;
   els.toast.classList.add("show");
-  setTimeout(() => els.toast.classList.remove("show"), 1200);
+  setTimeout(() => els.toast.classList.remove("show"), 1400);
 }
 async function withBusy(btn, fn) {
   if (btn && btn.classList.contains("busy")) return;
@@ -194,7 +193,6 @@ function splitIntoBlocks(txt) {
   );
   return cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim()).filter(Boolean);
 }
-
 function parseBlockToItem(block, idx) {
   const lines = block.split(/\n/);
 
@@ -232,7 +230,6 @@ function parseBlockToItem(block, idx) {
     _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe },
   };
 }
-
 function parseByUrl(url, txt){
   const blocks = splitIntoBlocks(txt);
   const items  = blocks.map((b,i)=>parseBlockToItem(b,i));
@@ -536,6 +533,10 @@ function renderIndex(){
 /* =================== Render arquivo =================== */
 function renderFileItemsProgressive(items, {chunkSize=30}={}){
   clearArticles();
+  // Cabeçalho azul com nome do arquivo
+  els.fileLabel.style.display = "block";
+  els.fileLabel.textContent = state.currentFileLabel || "Documento";
+
   if (!items.length){
     els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">🤔 Nada aqui.</div>';
     removeIndexUI(); return;
@@ -565,6 +566,9 @@ function renderFileItemsProgressive(items, {chunkSize=30}={}){
 }
 function renderFileItemsAll(items){
   clearArticles();
+  els.fileLabel.style.display = "block";
+  els.fileLabel.textContent = state.currentFileLabel || "Documento";
+
   const frag=document.createDocumentFragment();
   items.forEach((it)=>frag.appendChild(it.kind==="heading" ? buildHeadingElement(it) : buildArticleElement(it)));
   els.articles.appendChild(frag); updateCurrentOutline();
@@ -574,6 +578,8 @@ function renderFileItemsAll(items){
 /* =================== Favoritos =================== */
 function renderFavorites(){
   clearArticles();
+  els.fileLabel.style.display = "none";
+
   const favs=store.listFavorites();
   if (!favs.length){
     els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
@@ -679,7 +685,6 @@ function rebuildSuggestionsIndex(){
     return { id:a.htmlId, title, htmlId:a.htmlId };
   });
 }
-
 function buildQueryTokens(q) {
   return (q || "")
     .split(/\s+/)
@@ -688,7 +693,6 @@ function buildQueryTokens(q) {
     .filter(tok => (/\d/.test(tok) ? tok.length >= 1 : tok.length >= 3))
     .map(norm);
 }
-
 function highlightQuery(text, qOrTokens) {
   const tokens = Array.isArray(qOrTokens) ? qOrTokens : buildQueryTokens(qOrTokens);
   if (!tokens.length) return text;
@@ -697,7 +701,6 @@ function highlightQuery(text, qOrTokens) {
     return hit ? `<strong>${w}</strong>` : w;
   });
 }
-
 function renderSuggestions(list, tokens) {
   const box = els.searchSuggest;
   box.innerHTML = "";
@@ -731,7 +734,6 @@ function renderSuggestions(list, tokens) {
   box.appendChild(frag);
   box.classList.add("show");
 }
-
 function jumpToArticle(htmlId){
   const el=document.getElementById(htmlId);
   if (el){
@@ -743,12 +745,10 @@ function jumpToArticle(htmlId){
     updateCurrentOutline();
   }
 }
-
 function toggleClear(){
   const has = (els.searchInput.value || "").length>0;
   els.clearSearch.classList.toggle("show", has);
 }
-
 function onSearchInput(){
   toggleClear();
   const q = els.searchInput.value || "";
@@ -765,7 +765,6 @@ function onSearchInput(){
   suggestActiveIndex = -1;
   renderSuggestions(list, tokens);
 }
-
 async function runLocalSearch(){
   if (state.mode !== "file"){ notify("Abra um arquivo para buscar."); return; }
 
@@ -815,7 +814,6 @@ async function runLocalSearch(){
     els.searchSuggest.classList.remove("show");
   }
 }
-
 function updateCount(){
   if (!state.matchArticles?.length){ els.count.textContent = "0/0"; return; }
   els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
@@ -835,9 +833,48 @@ function gotoPrev(){
   updateCount(); updateCurrentOutline();
 }
 
-/* =================== Painel textual de Arquivos (sem backdrop) =================== */
+/* =================== Painel textual de Arquivos (ancorado ao botão) =================== */
+function positionCatPanel() {
+  // posiciona o painel próximo ao botão Arquivos
+  const btn = els.catTab;
+  const panel = els.catPanel;
+  if (!btn || !panel) return;
+
+  // deixar visível para medir
+  const prevDisp = panel.style.display;
+  const prevVis  = panel.style.visibility;
+  panel.style.visibility = "hidden";
+  panel.style.display = "block";
+
+  const r = btn.getBoundingClientRect();
+  const pW = panel.offsetWidth;
+  const pH = panel.offsetHeight;
+
+  let left = r.left;
+  let top  = r.bottom + 8;
+
+  // não sair da tela
+  const maxLeft = window.innerWidth - pW - 8;
+  if (left > maxLeft) left = Math.max(8, maxLeft);
+  if (top + pH > window.innerHeight - 8) {
+    // se não couber para baixo, tenta colar acima
+    top = Math.max(8, r.top - pH - 8);
+  }
+
+  panel.style.left = `${Math.max(8, left)}px`;
+  panel.style.top  = `${Math.max(8, top)}px`;
+  panel.style.right = "auto";
+
+  // restaura visibilidade
+  panel.style.display = prevDisp || "";
+  panel.style.visibility = prevVis || "";
+}
 function toggleCatPanel(force){
   const show = (force !== undefined) ? !!force : !els.catPanel.classList.contains("show");
+  if (show) {
+    if (!els.catPanel.innerHTML.trim()) buildCatPanel();
+    positionCatPanel();
+  }
   els.catPanel.classList.toggle("show", show);
   els.catPanel.setAttribute("aria-hidden", show ? "false" : "true");
 }
@@ -873,9 +910,17 @@ function updateActionPreview(){
   const node = document.querySelector("article.in-view");
   const title = node?.querySelector(".art-title")?.textContent?.trim() || "—";
   els.actionContext.textContent = title;
+
+  // Atualiza rótulo do botão Favoritar/Remover
+  const htmlId = node?.id;
+  const fileUrl = node?.dataset.fileUrl || state.currentFileUrl || "";
+  const id = htmlId ? store.makeId(fileUrl, htmlId) : null;
+  const isFav = id ? store.isFavorite(id) : false;
+  if (els.favToggleBtn) els.favToggleBtn.textContent = isFav ? "⭐ Remover dos favoritos" : "⭐ Favoritar";
 }
 function toggleActionMenu(force){
   const show = (force !== undefined) ? !!force : els.actionMenu.getAttribute("aria-hidden")==="true";
+  if (show) updateActionPreview();
   els.actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
   els.actionFab.setAttribute("aria-expanded", show ? "true" : "false");
 }
@@ -891,10 +936,12 @@ function handleAction(action){
     if (store.isFavorite(id)){
       store.removeFavorite(id);
       notify("Removido dos favoritos");
+      if (els.favToggleBtn) els.favToggleBtn.textContent = "⭐ Favoritar";
     } else {
       const text = node.innerText || "";
       store.addFavorite({ id, htmlId, fileUrl, fileLabel, text });
       notify("Adicionado aos favoritos");
+      if (els.favToggleBtn) els.favToggleBtn.textContent = "⭐ Remover dos favoritos";
     }
   } else if (action==="study"){
     const title = node.querySelector(".art-title")?.textContent?.trim() || "Artigo";
@@ -921,7 +968,6 @@ ${body}
     const titleText = node.querySelector(".art-title")?.textContent?.trim() || "";
     const m = makePlanaltoUrl(fileLabel, titleText);
     if (!m) return notify("Documento não mapeado para o Planalto.");
-    // tenta #artN e #artNo
     window.open(m.try1, "_blank") || window.location.assign(m.try1);
     setTimeout(()=>{ window.open(m.try2, "_blank"); }, 350);
   }
@@ -931,22 +977,32 @@ ${body}
 function bindEvents(){
   // Topbar
   els.brandBtn?.addEventListener("click", renderFavorites);
+
+  // Info modal
   els.infoBtn?.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","false"));
   els.closeInfo?.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","true"));
+  els.infoModal?.addEventListener("click", (e)=>{
+    if (e.target === els.infoModal) els.infoModal.setAttribute("aria-hidden","true");
+  });
+  document.addEventListener("keydown", (e)=>{
+    if (e.key==="Escape"){
+      els.infoModal?.setAttribute("aria-hidden","true");
+      els.studyModal?.setAttribute("aria-hidden","true");
+      if (els.catPanel?.classList.contains("show")) toggleCatPanel(false);
+    }
+  });
 
   // Barra secundária
   els.catTab?.addEventListener("click", ()=>{
-    if (!els.catPanel.innerHTML.trim()) buildCatPanel();
     toggleCatPanel();
   });
   els.favTab?.addEventListener("click", renderFavorites);
 
-  // Fecha painel Arquivos com ESC e clique fora
-  document.addEventListener("keydown", (e)=>{
-    if (e.key === "Escape" && els.catPanel.classList.contains("show")){
-      toggleCatPanel(false);
-    }
-  });
+  // Reposiciona painel Arquivos ao redimensionar/scroll se estiver aberto
+  window.addEventListener("resize", ()=>{ if (els.catPanel.classList.contains("show")) positionCatPanel(); });
+  window.addEventListener("scroll", ()=>{ if (els.catPanel.classList.contains("show")) positionCatPanel(); }, {passive:true});
+
+  // Fecha painel Arquivos com clique fora
   document.addEventListener("click", (e)=>{
     if (els.catPanel.classList.contains("show")){
       const inside = e.target.closest && e.target.closest("#catPanel");
@@ -975,9 +1031,12 @@ function bindEvents(){
 
   // Modal estudo
   els.closeStudy?.addEventListener("click", ()=> els.studyModal.setAttribute("aria-hidden","true"));
+  els.studyModal?.addEventListener("click", (e)=>{
+    if (e.target === els.studyModal) els.studyModal.setAttribute("aria-hidden","true");
+  });
   els.copyPromptBtn?.addEventListener("click", async ()=>{
     const txt = els.promptPreview.textContent || "";
-    try { await navigator.clipboard.writeText(txt); notify("✅ O prompt foi copiado!"); }
+    try { await navigator.clipboard.writeText(txt); notify("✅ Prompt copiado!"); }
     catch { notify("Não foi possível copiar."); }
   });
   document.querySelectorAll(".ia-btn").forEach(btn=>{
@@ -1011,7 +1070,7 @@ function bindEvents(){
   // Inicia em Favoritos
   renderFavorites();
 
-  // Restaura último arquivo, se quiser (opcional)
+  // Restaura último arquivo (opcional)
   const last = store.getLast();
   if (last?.mode==="file" && last.fileUrl){
     // loadFile(last.fileUrl);
