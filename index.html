@@ -171,9 +171,16 @@
   </div>
 
   <!-- FAB de Ações (hambúrguer do card selecionado) -->
-  <button id="actionFab" title="Ações" aria-label="Ações">
-    <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
-  </button>
+  <button
+  id="actionFab"
+  title="Ações"
+  aria-label="Ações"
+  aria-haspopup="menu"
+  aria-controls="actionMenu"
+  aria-expanded="false">
+  <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
+</button>
+
   <div id="actionMenu" role="menu" aria-hidden="true">
     <div class="menu-context" id="actionContext">“—”</div>
     <button class="menu-btn" data-action="fav">⭐ Favoritar</button>
