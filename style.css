@@ -211,7 +211,7 @@ article::after{
 }
 .art-content{ min-width:0; }
 .art-head{ margin: 0 0 6px; }
-.art-title { font-weight:500; }
+.art-title { font-weight:400; }
 
 /* Fonte 15px (corpo e cards) */
 article, article * { font-size:15px !important; line-height:1.45; }
