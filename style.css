@@ -1,335 +1,290 @@
-/* =========================================================
-   direito.love — style.css
-   Foco desta versão: Top Bar (logo + info) e Filebar (⭐, 📄, busca)
-   Mantive o resto minimalista e neutro para não interferir no site.
-   ========================================================= */
+/* =================== PWA =================== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((reg) => console.log("✅ SW", reg.scope))
+      .catch((err) => console.error("❌ SW", err));
+  });
+}
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
 
-/* ---------- Reset leve e base tipográfica ---------- */
-* { box-sizing: border-box; }
-html, body {
-  margin: 0;
-  padding: 0;
-}
-body {
-  -webkit-text-size-adjust: none;
-  text-size-adjust: none;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 13px; /* pedido recorrente do projeto */
-  line-height: 1.45;
-  background: #fff;
-  color: #111;
-}
+/* =================== Refs =================== */
+const els = {
+  brandBtn: document.getElementById("brandBtn"),
+  infoBtn: document.getElementById("infoBtn"),
+  infoBackdrop: document.getElementById("infoBackdrop"),
+  closeInfo: document.getElementById("closeInfo"),
+  okInfo: document.getElementById("okInfo"),
 
-/* Links genéricos */
-a { color: inherit; text-decoration: none; }
-button { font: inherit; cursor: pointer; border: 0; background: transparent; }
+  favTab: document.getElementById("favTab"),
+  catTab: document.getElementById("catTab"),
+  filebarInner: document.getElementById("filebarInner"),
 
-/* Utilitários */
-.hidden { display: none !important; }
-.visually-hidden {
-  position: absolute !important; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
-}
+  searchInput: document.getElementById("searchInput"),
+  searchSpinner: document.getElementById("searchSpinner"),
+  clearSearch: document.getElementById("clearSearch"),
+  searchSuggest: document.getElementById("searchSuggest"),
 
-/* =========================================
-   TOP BAR (apenas logo à esquerda + info à direita)
-   NÃO altero cor de fundo nem altura — só layout.
-   ========================================= */
-.topbar {
-  /* NÃO definir background nem height aqui (mantém do tema atual) */
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-.topbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px; /* espaçamento interno só para respirar */
-}
-.topbar .brand {
-  height: 28px; /* mantém visual próximo do padrão; ajuste se quiser maior */
-  display: block;
-}
-.info-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  transition: transform .08s ease;
-}
-.info-btn:active { transform: scale(0.96); }
+  finderPop: document.getElementById("finderPop"),
+  prevBtn: document.getElementById("prevBtn"),
+  nextBtn: document.getElementById("nextBtn"),
+  closeFinder: document.getElementById("closeFinder"),
+  count: document.getElementById("count"),
 
-/* =========================================
-   FILEBAR (barra logo abaixo da Top Bar)
-   Conteúdo: ⭐ Favoritos, 📄 Arquivos, Busca (com lupa)
-   ========================================= */
-.filebar {
-  position: sticky;
-  top: calc(0px + 0px); /* gruda logo abaixo da topbar */
-  z-index: 999;
-  backdrop-filter: saturate(1.2) blur(0px);
-  /* Evito definir cores para não brigar com seu tema */
-}
-.filebar-shell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-}
-.filebar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.fav-tab, .cat-tab {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  transition: transform .08s ease;
-}
-.fav-tab:active, .cat-tab:active { transform: scale(0.96); }
-.fav-tab img, .cat-tab img {
-  width: 20px; height: 20px; display: block;
-}
+  cards: document.getElementById("cards"),
 
-/* A área que abriga a busca */
-.filebar-inner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 160px;
-}
+  catBackdrop: document.getElementById("catBackdrop"),
+  closeCat: document.getElementById("closeCat"),
+  applyCat: document.getElementById("applyCat"),
+  catBody: document.getElementById("catBody"),
+  codeSelect: document.getElementById("codeSelect"),
 
-/* Busca (mesmos IDs usados no JS, só reposicionada aqui) */
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  max-width: 560px; /* não expande infinito, como você pediu */
-}
-.search input[type="search"] {
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 10px;
-  padding: 0 34px 0 12px; /* espaço p/ botão limpar à direita */
-  outline: none;
-  background: #fff;
-}
-.search input[type="search"]::placeholder { color: #777; }
+  toast: document.getElementById("toast"),
+};
 
-/* spinner da busca */
-.spinner {
-  position: absolute;
-  right: 28px;
-  width: 14px; height: 14px;
-  border: 2px solid rgba(0,0,0,0.15);
-  border-top-color: rgba(0,0,0,0.6);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-  display: none;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Toast leve (se não existir) */
+(function ensureToast(){
+  if (!els.toast) {
+    const t = document.createElement("div");
+    t.id = "toast";
+    t.style.cssText = `
+      position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+      background:#111; color:#fff; padding:8px 12px; border-radius:10px;
+      font-size:12px; opacity:0; pointer-events:none; transition:opacity .2s;
+      z-index:2000;
+    `;
+    document.body.appendChild(t);
+    els.toast = t;
+  }
+})();
 
-/* botão limpar (X) */
-.clear-x {
-  position: absolute;
-  right: 6px;
-  width: 22px; height: 22px;
-  border-radius: 6px;
-  display: grid; place-items: center;
-  background: #f3f3f3;
-  font-size: 12px;
-  line-height: 1;
-  user-select: none;
-}
-.clear-x:active { transform: scale(0.96); }
+/* =================== Estado =================== */
+const state = {
+  matches: [],
+  matchIdx: -1,
+  selectedUrl: null,
+};
 
-/* sugestões de busca (dropdown) */
-.suggest {
-  position: absolute;
-  top: 40px; /* abaixo do input */
-  left: 0;
-  right: 0;
-  max-height: 300px;
-  overflow: auto;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  display: none; /* controlado via JS */
-  z-index: 10;
+/* =================== Utils =================== */
+function notify(msg="Ok!") {
+  if (!els.toast) return;
+  els.toast.textContent = msg;
+  els.toast.style.opacity = "1";
+  setTimeout(()=> { els.toast.style.opacity = "0"; }, 1200);
 }
-.suggest [role="option"],
-.suggest .item {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-.suggest [role="option"]:last-child,
-.suggest .item:last-child { border-bottom: 0; }
-.suggest [role="option"]:hover,
-.suggest .item:hover {
-  background: #f7f7f7;
-}
+function debounce(fn, ms=200){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
 
-/* =========================================
-   MINI-FINDER (contador flutuante da busca no texto)
-   ========================================= */
-.finder-pop {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-.finder-pop .mini-btn {
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  display: grid; place-items: center;
-}
-.finder-pop .mini-count { min-width: 42px; text-align: center; }
+/* =============== TOP BAR: modal de informações =============== */
+function openInfoModal(){ els.infoBackdrop?.setAttribute("aria-hidden","false"); }
+function closeInfoModal(){ els.infoBackdrop?.setAttribute("aria-hidden","true"); }
+els.infoBtn?.addEventListener("click", openInfoModal);
+els.closeInfo?.addEventListener("click", closeInfoModal);
+els.okInfo?.addEventListener("click", closeInfoModal);
+els.infoBackdrop?.addEventListener("click", (e)=>{ if (e.target === els.infoBackdrop) closeInfoModal(); });
 
-/* =========================================
-   CONTAINER PRINCIPAL
-   ========================================= */
-.wrap {
-  width: min(980px, 100%);
-  margin: 0 auto;
-  padding: 12px;
-}
-.breadcrumbs {
-  font-size: 12px;
-  color: #666;
-  margin: 8px 0 12px 0;
-}
+/* ====== BARRA ABAIXO: Favoritos ====== */
+els.favTab?.addEventListener("click", ()=>{
+  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
+  els.favTab.classList.add("active");
+  notify("Favoritos");
+});
 
-/* Cards de artigos (neutro, não mexe em estilos existentes além do básico) */
-.cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+/* =================== Modal de Categorias/Arquivos =================== */
+function openCatModal(){
+  if (!els.codeSelect || !els.catBody) { notify("Catálogo indisponível."); return; }
+
+  els.catBody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  [...els.codeSelect.querySelectorAll("optgroup")].forEach((og)=>{
+    const group = document.createElement("div");
+    group.className = "group";
+
+    const title = document.createElement("div");
+    title.className = "group-title";
+    title.textContent = og.getAttribute("label") || "Outros";
+    group.appendChild(title);
+
+    [...og.querySelectorAll("option")].forEach((opt)=>{
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "item";
+      item.setAttribute("data-url", opt.value);
+      item.setAttribute("data-label", opt.textContent.trim());
+      item.innerHTML = `
+        <span>${opt.textContent.trim()}</span>
+        <span style="font-size:12px;opacity:.65;">abrir</span>
+      `;
+      item.addEventListener("click", ()=>{
+        [...els.catBody.querySelectorAll(".item")].forEach(i=>i.classList.remove("selected"));
+        item.classList.add("selected");
+        state.selectedUrl = opt.value;
+      });
+      group.appendChild(item);
+    });
+
+    frag.appendChild(group);
+  });
+
+  els.catBody.appendChild(frag);
+  state.selectedUrl = null;
+  els.catBackdrop.setAttribute("aria-hidden","false");
 }
-@media (min-width: 768px) {
-  .cards { gap: 12px; }
+function closeCatModal(){ els.catBackdrop?.setAttribute("aria-hidden","true"); }
+
+els.catTab?.addEventListener("click", openCatModal);
+els.closeCat?.addEventListener("click", closeCatModal);
+els.catBackdrop?.addEventListener("click", (e)=>{ if (e.target === els.catBackdrop) closeCatModal(); });
+
+els.applyCat?.addEventListener("click", async ()=>{
+  if (!state.selectedUrl) { notify("Selecione um arquivo."); return; }
+  closeCatModal();
+  window.dispatchEvent(new CustomEvent("dl.open-file", { detail: { url: state.selectedUrl } }));
+  notify("Abrindo arquivo…");
+});
+
+/* =================== Busca com highlight + mini-finder =================== */
+const HIGHLIGHT_TAG = "mark-dl";
+
+function clearHighlights(){
+  if (!els.cards) return;
+  els.cards.querySelectorAll(HIGHLIGHT_TAG).forEach(m=>{
+    const parent = m.parentNode;
+    parent.replaceChild(document.createTextNode(m.textContent), m);
+    parent.normalize();
+  });
 }
-.card {
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 12px;
-  background: #fff;
-  padding: 12px;
+function doSearch(q){
+  if (!els.cards) return;
+  clearHighlights();
+  state.matches = [];
+  state.matchIdx = -1;
+
+  const needle = (q||"").trim();
+  if (!needle) { updateFinderUI(); return; }
+
+  const walker = document.createTreeWalker(els.cards, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const txt = node.nodeValue;
+      if (!txt || !txt.trim()) return NodeFilter.FILTER_REJECT;
+      return txt.toLowerCase().includes(needle.toLowerCase())
+        ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+
+  const toHighlight = [];
+  while (walker.nextNode()) toHighlight.push(walker.currentNode);
+
+  toHighlight.forEach(node=>{
+    const idx = node.nodeValue.toLowerCase().indexOf(needle.toLowerCase());
+    if (idx < 0) return;
+    const before = node.nodeValue.slice(0, idx);
+    const match = node.nodeValue.slice(idx, idx + needle.length);
+    const after  = node.nodeValue.slice(idx + needle.length);
+
+    const mark = document.createElement(HIGHLIGHT_TAG);
+    mark.textContent = match;
+
+    const frag = document.createDocumentFragment();
+    if (before) frag.appendChild(document.createTextNode(before));
+    frag.appendChild(mark);
+    if (after)  frag.appendChild(document.createTextNode(after));
+
+    node.parentNode.replaceChild(frag, node);
+    state.matches.push(mark);
+  });
+
+  if (state.matches.length) {
+    state.matchIdx = 0;
+    scrollToMatch(0);
+  }
+  updateFinderUI();
+}
+const debouncedSearch = debounce((q)=>{
+  if (els.searchSpinner) els.searchSpinner.style.display = q ? "block" : "none";
+  doSearch(q);
+  if (els.searchSpinner) els.searchSpinner.style.display = "none";
+}, 180);
+
+function updateFinderUI(){
+  if (!els.finderPop || !els.count) return;
+  const total = state.matches.length;
+  const idx = state.matchIdx >= 0 ? state.matchIdx+1 : 0;
+  els.count.textContent = `${idx}/${total}`;
+  els.finderPop.style.display = total ? "flex" : "none";
+}
+function scrollToMatch(i){
+  const m = state.matches[i];
+  if (!m) return;
+  m.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+function goNext(){
+  if (!state.matches.length) return;
+  state.matchIdx = (state.matchIdx + 1) % state.matches.length;
+  scrollToMatch(state.matchIdx);
+  updateFinderUI();
+}
+function goPrev(){
+  if (!state.matches.length) return;
+  state.matchIdx = (state.matchIdx - 1 + state.matches.length) % state.matches.length;
+  scrollToMatch(state.matchIdx);
+  updateFinderUI();
 }
 
-/* Loader básico */
-.loader { display: none; gap: 6px; align-items: center; justify-content: center; padding: 16px; }
-.loader .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: #ccc; opacity: .8;
-  animation: bounce 1s infinite ease-in-out;
-}
-.loader .dot:nth-child(2) { animation-delay: .15s; }
-.loader .dot:nth-child(3) { animation-delay: .3s; }
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0.8); }
-  40% { transform: scale(1); }
-}
+els.searchInput?.addEventListener("input", (e)=> debouncedSearch(e.target.value));
+els.clearSearch?.addEventListener("click", ()=>{
+  if (!els.searchInput) return;
+  els.searchInput.value = "";
+  debouncedSearch("");
+});
+els.nextBtn?.addEventListener("click", goNext);
+els.prevBtn?.addEventListener("click", goPrev);
+els.closeFinder?.addEventListener("click", ()=>{
+  clearHighlights(); state.matches=[]; state.matchIdx=-1; updateFinderUI();
+});
 
-/* =========================================
-   FAB (ações principais globais) — neutro
-   ========================================= */
-.fab {
-  position: fixed;
-  right: 16px;
-  bottom: 72px; /* deixa espaço p/ finder */
-  display: flex; flex-direction: column; gap: 10px;
-  z-index: 950;
-}
-.fab-btn {
-  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
-  background: #fff; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-.fab-btn img { width: 22px; height: 22px; display: block; }
+/* Atalhos */
+document.addEventListener("keydown", (e)=>{
+  if ((e.key === "F3") || (e.ctrlKey && (e.key.toLowerCase() === "g"))) {
+    e.preventDefault(); goNext(); return;
+  }
+  if ((e.shiftKey && e.key === "F3") || (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === "g"))) {
+    e.preventDefault(); goPrev(); return;
+  }
+  if (e.key === "/" || (e.ctrlKey && e.key.toLowerCase()==="k")) {
+    if (document.activeElement !== els.searchInput) {
+      e.preventDefault();
+      els.searchInput?.focus();
+      els.searchInput?.select();
+    }
+  }
+});
 
-/* =========================================
-   MODAIS (Informações, Categorias, etc.)
-   ========================================= */
-.backdrop {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: none;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 30px 12px;
-  z-index: 1100;
-}
-.backdrop[aria-hidden="false"] { display: flex; }
+/* =================== Bridges =================== */
+window.addEventListener("dl.open-file", (e)=>{
+  const { url } = e.detail || {};
+  if (!url) return;
+  if (window.dlOpenFile) {
+    window.dlOpenFile(url);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+});
+window.renderFilebar = function noop(){};
+window.dlUI = {
+  openCatalog: openCatModal,
+  closeCatalog: closeCatModal,
+  focusSearch(){ els.searchInput?.focus(); },
+  notify,
+};
 
-.modal, .cat-modal {
-  width: min(680px, 100%);
-  background: #fff;
-  border-radius: 14px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.18);
-  overflow: hidden;
-}
-.modal-head, .modal-foot {
-  padding: 12px;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-.modal-foot { border-top: 1px solid rgba(0,0,0,0.06); border-bottom: 0; }
-.modal-body { padding: 12px; }
-.modal-x {
-  width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
-}
-
-.btn {
-  padding: 8px 12px; border-radius: 10px; background: #111; color: #fff;
-}
-
-/* Corpo do modal de categorias (lista derivada do <select>) */
-#catBody .group { margin: 8px 0 14px 0; }
-#catBody .group-title { font-weight: 600; margin-bottom: 6px; }
-#catBody .item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 10px; margin-bottom: 8px; background: #fff;
-}
-
-/* =========================================
-   Acessibilidade / Estados
-   ========================================= */
-:focus-visible { outline: 2px solid #4c9ffe; outline-offset: 2px; }
-
-/* =========================================
-   Ajustes finos para evitar “pintar” o resto do site
-   ========================================= */
-/* Não forçar cores de Top Bar: apenas garante layout */
-.topbar, .filebar {
-  background: inherit;
-}
-
-/* Mostrar spinner/sugestões quando controlados via JS */
-.search.loading #searchSpinner { display: block; }
-.search.has-suggest #searchSuggest { display: block; }
-
-/* Evita que o dropdown de sugestões fique atrás de outros elementos */
-.filebar, .filebar * { z-index: 1; }
-.suggest { z-index: 10; }
-
-/* =========================================================
-   FIM
-   ========================================================= */
+/* =================== Boot =================== */
+(function boot(){
+  if (els.favTab) {
+    document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
+    els.favTab.classList.add("active");
+  }
+  clearHighlights(); updateFinderUI();
+  console.log("✅ UI ajustada: Top Bar e barra abaixo (⭐, 📄, busca). Restante intacto.");
+})();
