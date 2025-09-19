@@ -186,38 +186,59 @@ function splitIntoBlocks(txt) {
   );
   return cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim()).filter(Boolean);
 }
+
 function parseBlockToItem(block, idx) {
   const lines = block.split(/\n/);
-  const artIdx = lines.findIndex((l) => /^(Art|S[úu]mula)/i.test(l.trim()));
-  if (artIdx === -1) return { kind:"heading", raw:block, htmlId:`h-${idx}` };
 
-  const pre = lines.slice(0, artIdx).map((s)=>s.trim()).filter(Boolean);
+  // ✅ Agora detecta: Preâmbulo/Preambulo, Art./Artigo e Súmula
+  const artIdx = lines.findIndex((l) =>
+    /^(Pre[aâ]mbulo|Art(?:igo)?\.?|S[úu]mula)/i.test(l.trim())
+  );
+
+  if (artIdx === -1) {
+    return { kind: "heading", raw: block, htmlId: `h-${idx}` };
+  }
+
+  const pre   = lines.slice(0, artIdx).map((s)=>s.trim()).filter(Boolean);
   const after = lines.slice(artIdx).map((s)=>s.trim()).filter(Boolean);
 
-  const epigrafe = pre.length ? pre.join("\n") : "";
+  const epigrafe  = pre.length ? pre.join("\n") : "";
   const titleLine = after.shift() || "";
+
   const ensureBlank = (txt)=>
-    txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g, (_,a,b)=>`${a}\n${b}`);
+    txt.replace(
+      /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
+      (_,a,b)=>`${a}\n${b}`
+    );
+
   const bodyText = ensureBlank(after.join("\n"));
 
   const textForStorage = [epigrafe ? `Epígrafe: ${epigrafe}` : "", titleLine, bodyText]
     .filter(Boolean).join("\n");
 
   return {
-    kind:"article",
+    kind: "article",
     title: titleLine || `Bloco ${idx+1}`,
     text: textForStorage,
     htmlId: `art-${idx}`,
     _split: { supra: [], titleText: titleLine, body: bodyText, epigrafe },
   };
 }
+
 function parseByUrl(url, txt){
   const blocks = splitIntoBlocks(txt);
-  const items = blocks.map((b,i)=>parseBlockToItem(b,i));
-  let aidx=0;
-  items.forEach((it)=>{ if (it.kind==="article"){ it.htmlId=`art-${aidx}`; it._aidx=aidx; aidx++; } });
+  const items  = blocks.map((b,i)=>parseBlockToItem(b,i));
+  let aidx = 0;
+  items.forEach((it)=>{
+    if (it.kind === "article"){
+      it.htmlId = `art-${aidx}`;
+      it._aidx  = aidx;
+      aidx++;
+    }
+  });
   return items;
 }
+
 
 /* =================== Render helpers =================== */
 function wrapParensIn(root){
