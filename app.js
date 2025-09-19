@@ -838,64 +838,215 @@ function gotoPrev(){
 }
 
           
-/* =================== Filebar + Categorias =================== */
-function getVisibleTabsCount(){ return window.matchMedia("(max-width: 768px)").matches ? Infinity : 5; }
-function renderFilebar(category="Todos"){
-  state.category=category;
-  const catalog=getCatalogByCategory();
-  const all=getAllOptions();
-  let options=[];
-  if (category==="Todos") options=all; else if (catalog.has(category)) options=catalog.get(category);
+/* =================== Filebar + Categorias (layout dinâmico por largura) =================== */
 
-  const frag=document.createDocumentFragment();
-  const mkTab=(label, url=null, extraClass="")=>{
-    const b=document.createElement("button");
-    b.className=`tab ${extraClass}`; b.type="button"; b.textContent=label; b.dataset.url=url||"";
-    b.addEventListener("click", async ()=>{
-      document.querySelectorAll(".tab").forEach((c)=>c.classList.remove("active"));
-      els.favTab.classList.remove("active");
-      b.classList.add("active");
-      if (url){ await loadFile(url, b); }
-    });
-    return b;
-  };
+// Guarda a lista de opções atual da categoria ativa para relayout
+let _currentFilebarOptions = [];
+let _currentCategory = "Todos";
+let _lastActiveUrl = null;
 
-  const visibleCap=getVisibleTabsCount();
-  if (visibleCap===Infinity) options.forEach(opt=>frag.appendChild(mkTab(opt.label, opt.value)));
-  else{
-    const visible=options.slice(0,visibleCap);
-    const hidden=options.slice(visibleCap);
-    visible.forEach(opt=>frag.appendChild(mkTab(opt.label, opt.value)));
-    if (hidden.length){
-      const more=mkTab("Mais ▾", null, "tab-more");
-      more.addEventListener("click", ()=>{ toggleMoreMenu(hidden, more); });
-      frag.appendChild(more);
-    }
-  }
-  els.filebarInner.innerHTML=""; els.filebarInner.appendChild(frag);
-
-  const last=store.getLast();
-  if (last?.mode==="file" && last?.fileUrl && options.some(o=>o.value===last.fileUrl)){
-    const btn=[...els.filebarInner.querySelectorAll(".tab")].find(t=>t.dataset.url===last.fileUrl);
-    if (btn) btn.classList.add("active");
-  } else els.favTab.classList.add("active");
+function buildCatalogMaps() {
+  const sel = els.codeSelect;
+  state.urlToLabel.clear();
+  sel.querySelectorAll("option").forEach((opt) => {
+    const url = opt.value?.trim();
+    const label = opt.textContent?.trim();
+    if (url) state.urlToLabel.set(url, label);
+  });
 }
-function toggleMoreMenu(items, anchorBtn){
-  if (els.moreMenu.style.display==="block"){ els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true"); return; }
-  els.moreMenu.innerHTML="";
-  items.forEach((it)=>{
-    const bi=document.createElement("button");
-    bi.className="more-item"; bi.type="button"; bi.textContent=it.label;
+
+function getCatalogByCategory() {
+  const map = new Map();
+  els.codeSelect.querySelectorAll("optgroup").forEach((og) => {
+    const cat = og.getAttribute("label")?.trim() || "Outros";
+    const arr = [];
+    og.querySelectorAll("option").forEach((opt) => {
+      const url = opt.value?.trim();
+      const label = opt.textContent?.trim();
+      if (url) arr.push({ label, value: url });
+    });
+    map.set(cat, arr);
+  });
+  return map;
+}
+function getAllOptions() {
+  const out = [];
+  els.codeSelect.querySelectorAll("option").forEach((opt) => {
+    const url = opt.value?.trim();
+    const label = opt.textContent?.trim();
+    if (url) out.push({ label, value: url });
+  });
+  return out;
+}
+
+// Cria um botão de aba com listener para carregar o arquivo
+function makeTab(label, url=null, extraClass="") {
+  const b = document.createElement("button");
+  b.className = `tab ${extraClass}`.trim();
+  b.type = "button";
+  b.textContent = label;
+  b.dataset.url = url || "";
+
+  b.addEventListener("click", async ()=>{
+    document.querySelectorAll(".tab").forEach((c)=>c.classList.remove("active"));
+    els.favTab.classList.remove("active");
+    b.classList.add("active");
+    _lastActiveUrl = url || null;
+    if (url){ await loadFile(url, b); }
+  });
+
+  return b;
+}
+
+// Monta o menu "Mais" com os itens ocultos
+function mountMoreMenu(hiddenItems, anchorBtn){
+  els.moreMenu.innerHTML = "";
+  hiddenItems.forEach((it)=>{
+    const bi = document.createElement("button");
+    bi.className = "more-item"; bi.type = "button"; bi.textContent = it.label;
     bi.addEventListener("click", async ()=>{
-      els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true");
-      document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
+      els.moreMenu.style.display="none";
+      els.moreMenu.setAttribute("aria-hidden","true");
+      document.querySelectorAll(".tab").forEach((c)=>c.classList.remove("active"));
       anchorBtn.classList.add("active"); els.favTab.classList.remove("active");
+      _lastActiveUrl = it.value;
       await loadFile(it.value, anchorBtn);
     });
     els.moreMenu.appendChild(bi);
   });
-  els.moreMenu.style.display="block"; els.moreMenu.setAttribute("aria-hidden","false");
 }
+
+// Alterna a visibilidade do menu "Mais"
+function toggleMoreMenu(hiddenItems, anchorBtn){
+  if (els.moreMenu.style.display==="block"){
+    els.moreMenu.style.display="none";
+    els.moreMenu.setAttribute("aria-hidden","true");
+    return;
+  }
+  mountMoreMenu(hiddenItems, anchorBtn);
+  els.moreMenu.style.display="block";
+  els.moreMenu.setAttribute("aria-hidden","false");
+}
+
+/**
+ * Faz o layout das tabs por largura:
+ * - cria todas temporariamente para medir
+ * - reserva espaço para o botão "Mais ▾"
+ * - decide quais ficam visíveis e quais vão para o menu
+ */
+function layoutTabsByWidth(options){
+  const wrap = els.filebarInner;
+  wrap.innerHTML = "";
+
+  // 1) Cria todas as tabs (sem "Mais") para medir
+  const tempTabs = options.map(opt => makeTab(opt.label, opt.value));
+  const frag = document.createDocumentFragment();
+  tempTabs.forEach(t => frag.appendChild(t));
+  wrap.appendChild(frag);
+
+  // 2) Cria botão "Mais" (oculto inicialmente) para medir largura dele também
+  const moreBtn = makeTab("Mais ▾", null, "tab-more");
+  // handler abre/fecha menu
+  let hiddenItems = [];
+  moreBtn.addEventListener("click", ()=> toggleMoreMenu(hiddenItems, moreBtn));
+
+  // Inserimos para medir a largura real do botão
+  wrap.appendChild(moreBtn);
+
+  // 3) Mede larguras
+  const wrapW = wrap.clientWidth;
+  const moreW = moreBtn.getBoundingClientRect().width;
+  const gapReserve = 8; // pequeno respiro
+  const maxW = wrapW - moreW - gapReserve;
+
+  // 4) Decide quantas cabem
+  let used = 0;
+  let cutIndex = tempTabs.length; // por padrão, cabem todas
+  for (let i=0; i<tempTabs.length; i++){
+    const w = tempTabs[i].getBoundingClientRect().width;
+    if (used + w <= maxW){
+      used += w;
+    } else {
+      cutIndex = i; // a partir daqui vai pro "Mais"
+      break;
+    }
+  }
+
+  // 5) Reconstrói DOM final: visíveis + "Mais" (se precisar)
+  wrap.innerHTML = "";
+  const finalFrag = document.createDocumentFragment();
+
+  const visible = tempTabs.slice(0, cutIndex);
+  hiddenItems = options.slice(cutIndex);
+
+  // Garante pelo menos 1 visível quando houver itens
+  if (!visible.length && options.length){
+    visible.push(tempTabs[0]);
+    hiddenItems = options.slice(1);
+  }
+
+  visible.forEach(t => finalFrag.appendChild(t));
+
+  if (hiddenItems.length){
+    finalFrag.appendChild(moreBtn);
+  }
+
+  wrap.appendChild(finalFrag);
+
+  // Reaplica "active" na aba do último arquivo aberto, se existir na barra
+  if (_lastActiveUrl){
+    const btn = [...wrap.querySelectorAll(".tab")].find(t=>t.dataset.url===_lastActiveUrl);
+    if (btn) btn.classList.add("active");
+  } else {
+    // Se não houver último, marca favoritos por padrão (comportamento anterior)
+    els.favTab.classList.add("active");
+  }
+
+  // Fecha o menu se a janela for redimensionada
+  els.moreMenu.style.display="none";
+  els.moreMenu.setAttribute("aria-hidden","true");
+}
+
+/**
+ * Renderiza a filebar para uma categoria e chama o layout responsivo
+ */
+function renderFilebar(category="Todos"){
+  state.category = category;
+  _currentCategory = category;
+
+  const catalog = getCatalogByCategory();
+  const all = getAllOptions();
+  let options = [];
+  if (category==="Todos") options = all;
+  else if (catalog.has(category)) options = catalog.get(category);
+
+  _currentFilebarOptions = options;
+
+  // monta provisório: a lógica de layoutTabsByWidth fará o layout final
+  layoutTabsByWidth(options);
+
+  // Restaura seleção da última aba (se existir nas opções)
+  const last = store.getLast();
+  if (last?.mode==="file" && last?.fileUrl && options.some(o=>o.value===last.fileUrl)){
+    _lastActiveUrl = last.fileUrl;
+    const btn=[...els.filebarInner.querySelectorAll(".tab")].find(t=>t.dataset.url===last.fileUrl);
+    if (btn) btn.classList.add("active");
+  } else if (!_lastActiveUrl) {
+    els.favTab.classList.add("active");
+  }
+}
+
+// Recalcula o layout quando a janela mudar de tamanho
+let _relayoutRaf = null;
+window.addEventListener("resize", ()=>{
+  if (_relayoutRaf) cancelAnimationFrame(_relayoutRaf);
+  _relayoutRaf = requestAnimationFrame(()=>{
+    if (_currentFilebarOptions?.length){
+      layoutTabsByWidth(_currentFilebarOptions);
+    }
+  });
+}, { passive:true });
+
 
 /* ===== Mini Modal de Categorias ===== */
 function openCatModal(){
