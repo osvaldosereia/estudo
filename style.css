@@ -315,15 +315,15 @@ article, article * { font-size:13px !important; line-height:1.5; }
   z-index: 151;
   width: 36px; height: 36px; border-radius: 8px;
 
-  /* CORRIGIDO: usar o mesmo azul da barra */
-  background: var(--blue);
-  border: 1px solid var(--blue);
+  /* Fundo cinza claro + borda azul */
+  background: var(--soft);            /* #f6f7fb */
+  border: 1px solid var(--blue);      /* #2563eb */
 
   display: grid; place-items: center; cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
-/* deixa o ícone branco no FAB azul (opcional) */
-#actionFab img{ filter: invert(1) brightness(2); }
+/* Se o ícone ficar muito escuro no fundo claro, comente a linha abaixo */
+#actionFab img{ filter: none; }
 
 #actionMenu{
   position: fixed;
@@ -345,6 +345,7 @@ article, article * { font-size:13px !important; line-height:1.5; }
   padding:8px 10px; cursor:pointer; font-size:14px;
 }
 #actionMenu .menu-btn:hover{ background:#f6f7fb; }
+
 
 
 /* ===== Mobile: alinhar o FAB no mesmo lugar do desktop (logo abaixo do índice) ===== */
