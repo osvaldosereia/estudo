@@ -21,32 +21,24 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-inner">
-      <!-- Logo à esquerda -->
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
-
-      <!-- Ações à direita: Favoritos + Informações -->
-      <div class="topbar-actions">
-        <button class="fav-top btn" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
-          <img src="icons/favorito-active.svg" alt="Favoritos" width="18" height="18">
-        </button>
-        <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
-          <img src="icons/info.svg" alt="Informações" width="18" height="18">
-        </button>
-      </div>
+      <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
+        <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
+      </button>
     </div>
   </header>
 
-  <!-- BARRA MENU -->
-  <nav class="filebar" aria-label="Menu">
+  <!-- FILEBAR -->
+  <nav class="filebar" aria-label="Documentos">
     <div class="filebar-shell">
-      <!-- Ícone Arquivos abre modal de categorias/arquivos -->
       <div class="filebar-left">
-        <button class="cat-tab" id="catTab" title="Arquivos (categorias e documentos)" aria-label="Arquivos" type="button">
-          <img src="icons/arquivo.svg" alt="Arquivos" width="15" height="15">
+        <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
+          <img src="icons/favorito-active.svg" alt="Favoritos">
+        </button>
+        <button class="cat-tab" id="catTab" title="Arquivos (filtrar por categoria)" aria-label="Arquivos" type="button">
+          <img src="icons/arquivo.svg" alt="Arquivos">
         </button>
       </div>
-
-      <!-- Busca fixa na barra de menu -->
       <div class="filebar-search">
         <div class="search">
           <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
@@ -55,13 +47,11 @@
           <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
         </div>
       </div>
-
-      <!-- Mantido oculto: área de tabs (não exibiremos agora, mas não quebra o JS) -->
-      <div class="filebar-inner" id="filebarInner" aria-hidden="true"></div>
+      <div class="filebar-inner" id="filebarInner"></div>
     </div>
   </nav>
 
-  <!-- MENU "MAIS" (se um dia voltar a usar tabs) -->
+  <!-- MENU "MAIS" (tabs extras) -->
   <div class="more-menu" id="moreMenu" role="menu" aria-hidden="true"></div>
 
   <!-- MINI-FINDER -->
@@ -81,122 +71,69 @@
   <!-- CONTEÚDO -->
   <main class="content">
     <div class="container">
-      <!-- Título da página atual (Favoritos, Código Civil, etc.) -->
-      <div class="page-title" id="pageTitle">Favoritos</div>
+      <h2 id="pageTitle" class="page-title" style="display:none"></h2>
+      ...
+      <select id="codeSelect" class="sr-only" aria-hidden="true" tabindex="-1">
+        <optgroup label="Códigos">
+          <option value="data/codigos/codigo_civil.txt">Código Civil</option>
+          <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
+          <option value="data/codigos/codigo_penal.txt">Código Penal</option>
+          <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
+          <option value="data/codigos/CDC.txt">CDC</option>
+          <option value="data/codigos/CLT.txt">CLT</option>
+          <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
+          <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
+          <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
+          <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
+        </optgroup>
+        <optgroup label="Leis">
+          <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+          <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
+          <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
+          <option value="data/leis/lei_lgpd.txt">Lei LGPD</option>
+          <option value="data/leis/marco_civil_da_internet.txt">Marco Civil da Internet</option>
+          <option value="data/leis/crimes_hediondos.txt">Lei dos Crimes Hediondos</option>
+        </optgroup>
+        <optgroup label="Estatutos">
+          <option value="data/estatutos/ECA.txt">ECA - Est. da Criança e Adolescente</option>
+          <option value="data/estatutos/estatuto_do_desarmamento.txt">Est. do Desarmamento</option>
+          <option value="data/estatutos/estatuto_do_idoso.txt">Est. do Idoso</option>
+          <option value="data/estatutos/estatuto_da_juventude.txt">Est. da Juventude</option>
+          <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Est. da Pessoa com Deficiência</option>
+          <option value="data/estatutoS/estatuto_oab.txt">Est. da Oab</option>
+        </optgroup>
+        <optgroup label="Súmulas">
+          <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
+          <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
+        </optgroup>
+      </select>
 
-      <div class="articles" id="articles"></div>
+      <!-- Lista de artigos/cards -->
+      <section id="articles" aria-live="polite"></section>
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO (fonte para montar Categorias/Arquivos) -->
-  <select id="codeSelect" title="Arquivos" style="display:none">
-    <option value="">—</option>
-
-    <optgroup label="Códigos">
-      <option value="data/codigos/CF88.txt">CF88</option>
-      <option value="data/codigos/codigo_civil.txt">Código Civil</option>
-      <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
-      <option value="data/codigos/codigo_penal.txt">Código Penal</option>
-      <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
-      <option value="data/codigos/CDC.txt">CDC</option>
-      <option value="data/codigos/CLT.txt">CLT</option>
-      <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
-      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
-      <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
-    </optgroup>
-
-    <optgroup label="Leis">
-      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
-      <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
-      <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
-      <option value="data/leis/lei_lgpd.txt">Lei LGPD</option>
-      <option value="data/leis/marco_civil_da_internet.txt">Marco Civil da Internet</option>
-      <option value="data/leis/crimes_hediondos.txt">Lei dos Crimes Hediondos</option>
-    </optgroup>
-
-    <optgroup label="Estatutos">
-      <option value="data/estatutos/ECA.txt">ECA - Est. da Criança e Adolescente</option>
-      <option value="data/estatutos/estatuto_do_desarmamento.txt">Est. do Desarmamento</option>
-      <option value="data/estatutos/estatuto_do_idoso.txt">Est. do Idoso</option>
-      <option value="data/estatutos/estatuto_da_juventude.txt">Est. da Juventude</option>
-      <option value="data/estatutos/estatuto_da_pessoa_com_deficiencia.txt">Est. da Pessoa com Deficiência</option>
-      <option value="data/estatutoS/estatuto_oab.txt">Est. da Oab</option>
-    </optgroup>
-
-    <optgroup label="Súmulas">
-      <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
-      <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
-    </optgroup>
-
-    <optgroup label="Princípios">
-      <option value="data/principios/principios_do_direito.txt">Princípios (Rol Exemplificativo)</option>
-    </optgroup>
-  </select>
-
-  <!-- TOAST -->
-  <div class="toast" id="toast" role="status" aria-live="polite">Ok!</div>
-
-  <!-- MODAL: ESTUDAR COM I.A. -->
-  <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
-      <div class="study-head">
-        <h3 id="modalTitle" class="study-title">Estude com I.A.</h3>
-        <button class="study-close btn" id="closeStudy" aria-label="Fechar">✕</button>
-      </div>
-      <p class="study-sub" id="studySub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
-      <pre class="prompt-box" id="promptPreview"></pre>
-      <div class="ia-grid">
-        <button class="ia-btn btn" data-url="https://chat.openai.com/">ChatGPT</button>
-        <button class="ia-btn btn" data-url="https://gemini.google.com/">Gemini</button>
-        <button class="ia-btn btn" data-url="https://copilot.microsoft.com/">Copilot</button>
-        <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
-      </div>
-      <div class="copy-prompt">
-        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: INFORMAÇÕES -->
-  <div class="modal-backdrop" id="infoModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
-      <div class="study-head">
-        <h3 class="study-title">Informações</h3>
-        <button class="study-close btn" id="closeInfo" aria-label="Fechar">✕</button>
-      </div>
-      <div class="info-body">
-        <p>Bem-vindo ao direito.love! Aqui você encontra conteúdos que são essenciais para o seu estudo. Favorite e utilize nosso prompt rápido para estudar com o auxílio de I.A.</p>
-        <ul>
-          <li>Use a busca para achar artigos rapidamente.</li>
-          <li>Favoritos salvam trechos para revisão.</li>
-          <li>“Consultar” abre a norma no site do Planalto.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CATEGORIAS/ARQUIVOS -->
+  <!-- MODAL: CATEGORIAS -->
   <div class="cat-backdrop" id="catBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="cat-modal" role="document">
       <div class="cat-head">
-        <h3 class="cat-title">Categorias e Arquivos</h3>
+        <h3 class="cat-title">Categorias</h3>
         <button class="cat-close" id="closeCat" aria-label="Fechar">✕</button>
       </div>
       <div class="cat-grid" id="catGrid"></div>
     </div>
   </div>
 
-  <!-- FAB de Ações do card ativo -->
+  <!-- FAB de Ações (hambúrguer do card selecionado) -->
   <button
-    id="actionFab"
-    title="Ações"
-    aria-label="Ações"
-    aria-haspopup="menu"
-    aria-controls="actionMenu"
-    aria-expanded="false">
-    <img src="icons/hamburger-acao.svg" alt="Ações" width="18" height="18">
-  </button>
+  id="actionFab"
+  title="Ações"
+  aria-label="Ações"
+  aria-haspopup="menu"
+  aria-controls="actionMenu"
+  aria-expanded="false">
+  <img src="icons/hamburger-acao.svg" alt="Ações" style="width:18px;height:18px;display:block;">
+</button>
 
   <div id="actionMenu" role="menu" aria-hidden="true">
     <div class="menu-context" id="actionContext">“—”</div>
