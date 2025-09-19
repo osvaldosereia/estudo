@@ -339,17 +339,17 @@ article, article * { font-size:13px !important; line-height:1.5; }
 }
 #actionMenu .menu-btn:hover{ background:#f6f7fb; }
 
-/* Mobile: FAB fica na base e menu abre acima dele */
+/* ===== Mobile: alinhar o FAB no mesmo lugar do desktop (logo abaixo do índice) ===== */
 @media (max-width: 768px){
   #actionFab{
-    right: 8px;
-    top: auto;
-    bottom: 76px;
+    right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+    top:   calc(var(--topbar-h) + var(--filebar-h) + 8px + 48px);
+    bottom: auto;
   }
   #actionMenu{
-    right: 8px;
-    top: auto;
-    bottom: 76px;
+    right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+    top:   calc(var(--topbar-h) + var(--filebar-h) + 8px + 48px + 40px);
+    bottom: auto;
     width: min(280px, 92vw);
   }
 }
