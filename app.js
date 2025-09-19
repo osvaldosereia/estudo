@@ -264,7 +264,7 @@ const planaltoBases = {
   "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
   "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
   "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
-  "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
+  "Código Penal": "https://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del3689.htm",
   "Processo Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
   "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
   "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
