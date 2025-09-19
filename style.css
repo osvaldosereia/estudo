@@ -25,6 +25,31 @@ button,input,select{font:inherit}
   --icon-muted: rgba(0,0,0,.55);
 }
 
+/* ===== Tipografia dos CARDS (Desktop x Mobile via variáveis) ===== */
+
+/* Desktop (padrão) */
+:root{
+  /* tamanhos base dos cards no DESKTOP */
+  --card-fs:        15px;   /* corpo do card */
+  --card-line:      1.5;    /* altura de linha */
+
+  --card-title-fs:  1.05rem; /* título do artigo */
+  --card-epi-fs:    0.97rem; /* epígrafe */
+  --card-meta-fs:   0.97rem; /* cabeçalho/meta */
+}
+
+/* MOBILE (≤768px) — personalize independente do desktop */
+@media (max-width: 768px){
+  :root{
+    --card-fs:        16px;   /* corpo no mobile */
+    --card-line:      1.6;
+
+    --card-title-fs:  1.10rem;
+    --card-epi-fs:    1.00rem;
+    --card-meta-fs:   1.00rem;
+  }
+}
+
 /* ===== Topbar ===== */
 .topbar{
   position:fixed; inset:0 0 auto 0; height:var(--topbar-h);
@@ -203,18 +228,21 @@ article{
   position:relative; scroll-margin: calc(var(--topbar-h) + var(--filebar-h) + 20px);
   border-left:3px solid transparent; transition:border-color .15s;
   display:grid; grid-template-columns: 1fr auto; column-gap:12px; align-items:start;
+
+  /* Tipografia dos cards via variáveis */
+  font-size: var(--card-fs);
+  line-height: var(--card-line);
 }
 article.in-view{ border-left-color: var(--blue); }
 article::after{
   content:""; display:block; grid-column:1 / -1; width:96%; height:2px; background:var(--line-strong);
   position:absolute; left:2%; bottom:0;
 }
-.art-content{ min-width:0; }
-.art-head{ margin: 0 0 6px; }
-.art-title { font-weight:400; }
-
-/* Fonte 15px (corpo e cards) */
-article, article * { font-size:15px !important; line-height:1.45; }
+.art-content{ min-width:0; font-size:1rem; }
+.art-head{ margin: 0 0 6px; font-size: var(--card-meta-fs); }
+.art-title { font-weight:400; font-size: var(--card-title-fs); }
+.art-epigrafe{ font-size: var(--card-epi-fs); }
+.art-body{ font-size:1rem; }
 
 /* Ações internas dos cards (ficam escondidas porque usamos o FAB global) */
 .art-actions{ display:none !important; }
@@ -322,7 +350,7 @@ article, article * { font-size:15px !important; line-height:1.45; }
   display: grid; place-items: center; cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
-/* Se o ícone ficar muito escuro no fundo claro, comente a linha abaixo */
+/* Se o ícone ficar muito escuro no fundo claro, remova o filtro abaixo */
 #actionFab img{ filter: none; }
 
 #actionMenu{
@@ -345,8 +373,6 @@ article, article * { font-size:15px !important; line-height:1.45; }
   padding:8px 10px; cursor:pointer; font-size:14px;
 }
 #actionMenu .menu-btn:hover{ background:#f6f7fb; }
-
-
 
 /* ===== Mobile: alinhar o FAB no mesmo lugar do desktop (logo abaixo do índice) ===== */
 @media (max-width: 768px){
