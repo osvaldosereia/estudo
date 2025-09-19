@@ -23,6 +23,10 @@ button,input,select{font:inherit}
   --shadow:0 2px 10px rgba(0,0,0,.06);
 
   --icon-muted: rgba(0,0,0,.55);
+
+  /* auxiliares para posicionar botões no topo direito */
+  --idx-btn-size: 36px;
+  --idx-gap: 8px;
 }
 
 /* Tipografia dos CARDS */
@@ -205,15 +209,15 @@ article::after{
 /* ===== Índice (Hambúrguer do índice) ===== */
 .index-toggle{
   position: fixed;
-  top: calc(var(--topbar-h) + var(--filebar-h) + 8px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + var(--idx-gap));
   right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
   z-index: 150;
-  width: 36px; height: 36px; border-radius: 8px; background: #fff; border: 1px solid #ddd;
+  width: var(--idx-btn-size); height: var(--idx-btn-size); border-radius: 8px; background: #fff; border: 1px solid #ddd;
   display: grid; place-items: center; cursor: pointer;
 }
 .index-panel{
   position: fixed;
-  top: calc(var(--topbar-h) + var(--filebar-h) + 56px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + var(--idx-btn-size) + (var(--idx-gap) * 2));
   right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
   z-index: 150;
   width: min(360px, 92vw); max-height: 50vh; overflow: auto;
@@ -224,14 +228,38 @@ article::after{
 .index-panel > div{ padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .index-panel > div:hover{ background: #f6f7fb; }
 
+/* ===== Painel textual de Arquivos (idêntico ao Índice) ===== */
+.cat-panel{
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--filebar-h) + var(--idx-btn-size) + (var(--idx-gap) * 2));
+  right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+  z-index: 150;
+  width: min(360px, 92vw); max-height: 50vh; overflow: auto;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 12px 28px rgba(0,0,0,.15);
+  padding: 8px; display: none;
+}
+.cat-panel.show{ display:block; }
+.cat-panel .cat-h{ font-weight:600; padding:8px 10px; color:#0f172a; }
+.cat-panel .cat-item{
+  padding:8px 10px; border-radius:8px; cursor:pointer;
+}
+.cat-panel .cat-item:hover{ background:#f6f7fb; }
+
 /* ===== FAB (ações do artigo em foco) ===== */
+/* Reposicionado logo abaixo do hambúrguer Índice */
 #actionFab{
-  position:fixed; right:16px; bottom:16px; z-index:260;
+  position:fixed;
+  right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + var(--idx-btn-size) + (var(--idx-gap) * 3) + 4px);
+  z-index:260;
   width:48px; height:48px; border-radius:14px; background:#fff; border:1px solid #e7eaf3; box-shadow:0 10px 26px rgba(0,0,0,.16);
   display:grid; place-items:center; cursor:pointer;
 }
 #actionMenu{
-  position:fixed; right:16px; bottom:72px; z-index:260;
+  position:fixed;
+  right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
+  top: calc(var(--topbar-h) + var(--filebar-h) + var(--idx-btn-size) + (var(--idx-gap) * 3) + 60px);
+  z-index:260;
   background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.14);
   padding:8px; display:none; min-width:220px;
 }
