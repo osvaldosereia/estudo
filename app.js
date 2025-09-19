@@ -11,32 +11,36 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
 
 /* =================== Refs =================== */
 const els = {
+  // Topbar
   brandBtn: document.getElementById("brandBtn"),
-  favTab: document.getElementById("favTab"),
-  catTab: document.getElementById("catTab"),
+  infoBtn: document.getElementById("infoBtn"),
+  infoModal: document.getElementById("infoModal"),
+  closeInfo: document.getElementById("closeInfo"),
 
+  // Barra secundária
+  catTab: document.getElementById("catTab"),
+  favTab: document.getElementById("favTab"),
+
+  // Busca (agora na barra secundária)
   searchInput: document.getElementById("searchInput"),
   searchSpinner: document.getElementById("searchSpinner"),
   clearSearch: document.getElementById("clearSearch"),
   searchSuggest: document.getElementById("searchSuggest"),
 
-  infoBtn: document.getElementById("infoBtn"),
-  infoModal: document.getElementById("infoModal"),
-  closeInfo: document.getElementById("closeInfo"),
-
-  filebarInner: document.getElementById("filebarInner"),
-  moreMenu: document.getElementById("moreMenu"),
-
+  // Mini-finder
   finderPop: document.getElementById("finderPop"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
   closeFinder: document.getElementById("closeFinder"),
   count: document.getElementById("count"),
 
+  // Conteúdo
   articles: document.getElementById("articles"),
 
+  // Catálogo
   codeSelect: document.getElementById("codeSelect"),
 
+  // Modal estudo
   studyModal: document.getElementById("studyModal"),
   closeStudy: document.getElementById("closeStudy"),
   modalTitle: document.getElementById("modalTitle"),
@@ -44,12 +48,18 @@ const els = {
   promptPreview: document.getElementById("promptPreview"),
   copyPromptBtn: document.getElementById("copyPromptBtn"),
 
+  // Toast
   toast: document.getElementById("toast"),
 
   // Mini modal de categorias
   catBackdrop: document.getElementById("catBackdrop"),
   closeCat: document.getElementById("closeCat"),
   catGrid: document.getElementById("catGrid"),
+
+  // FAB
+  actionFab: document.getElementById("actionFab"),
+  actionMenu: document.getElementById("actionMenu"),
+  actionContext: document.getElementById("actionContext"),
 };
 els.indexToggle = null;
 els.indexPanel = null;
@@ -190,7 +200,7 @@ function splitIntoBlocks(txt) {
 function parseBlockToItem(block, idx) {
   const lines = block.split(/\n/);
 
-  // ✅ Agora detecta: Preâmbulo/Preambulo, Art./Artigo e Súmula
+  // Detecta: Preâmbulo/Preambulo, Art./Artigo e Súmula
   const artIdx = lines.findIndex((l) =>
     /^(Pre[aâ]mbulo|Art(?:igo)?\.?|S[úu]mula)/i.test(l.trim())
   );
@@ -238,7 +248,6 @@ function parseByUrl(url, txt){
   });
   return items;
 }
-
 
 /* =================== Render helpers =================== */
 function wrapParensIn(root){
@@ -369,7 +378,7 @@ function buildArticleElement(a){
   contentWrap.appendChild(content);
   el.appendChild(contentWrap);
 
-  // (mantemos a estrutura, mas escondida pelo CSS — usamos o FAB global)
+  // Botões internos (mantidos, porém ocultos via CSS)
   const actions = document.createElement("div");
   actions.className = "art-actions";
 
@@ -447,10 +456,8 @@ function updateCurrentOutline() {
     scrollY: window.scrollY || 0,
   });
 
-  // <<< mantém o mini-texto do FAB sincronizado com o card ativo
   updateActionPreview();
 }
-
 
 /* =================== Índice (hambúrguer) =================== */
 function removeIndexUI(){
@@ -609,8 +616,6 @@ function renderFavorites(){
   state.mode="favorites";
   store.saveLast({ mode:"favorites", fileUrl:null, scrollY:0, articleId:null });
   updateCurrentOutline();
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active");
   removeIndexUI();
 }
 
@@ -632,9 +637,9 @@ function addNormalizedFieldToArticles(items){
   });
   return arts;
 }
-async function loadFile(url, tabBtn){
+async function loadFile(url, triggerBtn){
   if (!url) return;
-  await withBusy(tabBtn, async ()=>{
+  await withBusy(triggerBtn, async ()=>{
     els.searchSpinner.classList.add("show");
     try{
       const txt=await fetchTextCached(url);
@@ -651,7 +656,6 @@ async function loadFile(url, tabBtn){
       notify(`Carregado: ${state.currentFileLabel}`);
 
       store.saveLast({ mode:"file", fileUrl:url, scrollY:0, articleId:null });
-      els.favTab.classList.remove("active");
       rebuildSuggestionsIndex();
     } catch(err){
       console.error(err);
@@ -669,7 +673,6 @@ async function loadFile(url, tabBtn){
 let suggestActiveIndex = -1;
 let suggestionsData = []; // {id, title, htmlId}
 
-/* Índice de sugestões (título limpo de cada artigo) */
 function rebuildSuggestionsIndex(){
   suggestionsData = state.articles.map(a=>{
     const t   = a._split?.titleText || a.title || "";
@@ -679,7 +682,6 @@ function rebuildSuggestionsIndex(){
   });
 }
 
-/* ===== NOVO: tokens da consulta (>=3 letras; números >=1) ===== */
 function buildQueryTokens(q) {
   return (q || "")
     .split(/\s+/)
@@ -689,7 +691,6 @@ function buildQueryTokens(q) {
     .map(norm);
 }
 
-/* Destaque que aceita vários tokens normalizados */
 function highlightQuery(text, qOrTokens) {
   const tokens = Array.isArray(qOrTokens) ? qOrTokens : buildQueryTokens(qOrTokens);
   if (!tokens.length) return text;
@@ -699,7 +700,6 @@ function highlightQuery(text, qOrTokens) {
   });
 }
 
-/* Sugestões: título + prévia do início do card */
 function renderSuggestions(list, tokens) {
   const box = els.searchSuggest;
   box.innerHTML = "";
@@ -746,7 +746,11 @@ function jumpToArticle(htmlId){
   }
 }
 
-/* Input da busca -> usa tokens e exige TODOS os termos no título das sugestões */
+function toggleClear(){
+  const has = (els.searchInput.value || "").length>0;
+  els.clearSearch.classList.toggle("show", has);
+}
+
 function onSearchInput(){
   toggleClear();
   const q = els.searchInput.value || "";
@@ -764,7 +768,6 @@ function onSearchInput(){
   renderSuggestions(list, tokens);
 }
 
-/* Busca local nos cards -> exige TODOS os tokens (AND) */
 async function runLocalSearch(){
   if (state.mode !== "file"){ notify("Abra um arquivo para buscar."); return; }
 
@@ -784,22 +787,20 @@ async function runLocalSearch(){
   try{
     state.currentTokens = tokens;
 
-    // AND entre os tokens
+    // AND
     const matchedMeta = state.articles.filter(a => tokens.every(t => a._norm.includes(t)));
 
     renderFileItemsAll(state.items);
 
     requestAnimationFrame(()=>{
-      // destaca palavras
+      // destaca
       matchedMeta.forEach((m)=>{
         const art = document.getElementById(m.htmlId);
         if (art) highlightTextNodes(art, tokens);
       });
 
-      // cria a lista de nós dos artigos encontrados
       state.matchArticles = matchedMeta.map(m => document.getElementById(m.htmlId)).filter(Boolean);
 
-      // navega para o primeiro, se houver
       if (state.matchArticles.length){
         state.matchIdx = 0;
         state.matchArticles[0].scrollIntoView({ behavior:"smooth", block:"center" });
@@ -817,7 +818,6 @@ async function runLocalSearch(){
   }
 }
 
-/* Contador e navegação entre ocorrências */
 function updateCount(){
   if (!state.matchArticles?.length){ els.count.textContent = "0/0"; return; }
   els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
@@ -837,657 +837,170 @@ function gotoPrev(){
   updateCount(); updateCurrentOutline();
 }
 
-          
-/* =================== Filebar + Categorias (layout dinâmico por largura) =================== */
-
-// Guarda a lista de opções atual da categoria ativa para relayout
-let _currentFilebarOptions = [];
-let _currentCategory = "Todos";
-let _lastActiveUrl = null;
-
-function buildCatalogMaps() {
-  const sel = els.codeSelect;
-  state.urlToLabel.clear();
-  sel.querySelectorAll("option").forEach((opt) => {
-    const url = opt.value?.trim();
-    const label = opt.textContent?.trim();
-    if (url) state.urlToLabel.set(url, label);
-  });
-}
-
-function getCatalogByCategory() {
-  const map = new Map();
-  els.codeSelect.querySelectorAll("optgroup").forEach((og) => {
-    const cat = og.getAttribute("label")?.trim() || "Outros";
-    const arr = [];
-    og.querySelectorAll("option").forEach((opt) => {
-      const url = opt.value?.trim();
-      const label = opt.textContent?.trim();
-      if (url) arr.push({ label, value: url });
-    });
-    map.set(cat, arr);
-  });
-  return map;
-}
-function getAllOptions() {
-  const out = [];
-  els.codeSelect.querySelectorAll("option").forEach((opt) => {
-    const url = opt.value?.trim();
-    const label = opt.textContent?.trim();
-    if (url) out.push({ label, value: url });
-  });
-  return out;
-}
-
-// Cria um botão de aba com listener para carregar o arquivo
-function makeTab(label, url=null, extraClass="") {
-  const b = document.createElement("button");
-  b.className = `tab ${extraClass}`.trim();
-  b.type = "button";
-  b.textContent = label;
-  b.dataset.url = url || "";
-
-  b.addEventListener("click", async ()=>{
-    document.querySelectorAll(".tab").forEach((c)=>c.classList.remove("active"));
-    els.favTab.classList.remove("active");
-    b.classList.add("active");
-    _lastActiveUrl = url || null;
-    if (url){ await loadFile(url, b); }
-  });
-
-  return b;
-}
-
-// Monta o menu "Mais" com os itens ocultos
-function mountMoreMenu(hiddenItems, anchorBtn){
-  els.moreMenu.innerHTML = "";
-  hiddenItems.forEach((it)=>{
-    const bi = document.createElement("button");
-    bi.className = "more-item"; bi.type = "button"; bi.textContent = it.label;
-    bi.addEventListener("click", async ()=>{
-      els.moreMenu.style.display="none";
-      els.moreMenu.setAttribute("aria-hidden","true");
-      document.querySelectorAll(".tab").forEach((c)=>c.classList.remove("active"));
-      anchorBtn.classList.add("active"); els.favTab.classList.remove("active");
-      _lastActiveUrl = it.value;
-      await loadFile(it.value, anchorBtn);
-    });
-    els.moreMenu.appendChild(bi);
-  });
-}
-
-// Alterna a visibilidade do menu "Mais"
-function toggleMoreMenu(hiddenItems, anchorBtn){
-  if (els.moreMenu.style.display==="block"){
-    els.moreMenu.style.display="none";
-    els.moreMenu.setAttribute("aria-hidden","true");
-    return;
-  }
-  mountMoreMenu(hiddenItems, anchorBtn);
-  els.moreMenu.style.display="block";
-  els.moreMenu.setAttribute("aria-hidden","false");
-}
-
-/**
- * Faz o layout das tabs por largura:
- * - cria todas temporariamente para medir
- * - reserva espaço para o botão "Mais ▾"
- * - decide quais ficam visíveis e quais vão para o menu
- */
-function layoutTabsByWidth(options){
-  const wrap = els.filebarInner;
-  wrap.innerHTML = "";
-
-  // 1) criar tabs temporárias + botão "Mais" só para medir
-  const tempTabs = options.map(opt => makeTab(opt.label, opt.value));
-  const frag = document.createDocumentFragment();
-  tempTabs.forEach(t => frag.appendChild(t));
-  wrap.appendChild(frag);
-
-  const moreBtn = makeTab("Mais ▾", null, "tab-more");
-  let hiddenItems = [];
-  moreBtn.addEventListener("click", ()=> toggleMoreMenu(hiddenItems, moreBtn));
-  wrap.appendChild(moreBtn); // precisa estar no DOM para medir largura real
-
-  // 2) medições
-  const style = getComputedStyle(wrap);
-  const gapPx = parseFloat(style.gap || style.columnGap || 0) || 0; // gap entre as tabs
-  const wrapW = wrap.clientWidth;
-  const moreW = moreBtn.getBoundingClientRect().width;
-
-  // 3) assumimos inicialmente que o "Mais" será necessário,
-  //    então reservamos espaço para (gap antes do Mais) + (largura do Mais)
-  const limit = wrapW - (gapPx + moreW);
-
-  // largura acumulada com gaps entre as VISÍVEIS
-  let used = 0;
-  let cutIndex = tempTabs.length; // por padrão, todos cabem
-
-  for (let i = 0; i < tempTabs.length; i++) {
-    const w = tempTabs[i].getBoundingClientRect().width;
-    const withGap = used > 0 ? used + gapPx + w : used + w;
-    if (withGap <= limit) {
-      used = withGap;
-    } else {
-      cutIndex = i; // a partir daqui vai para o "Mais"
-      break;
-    }
-  }
-
-  // 4) se TODO MUNDO coube mesmo reservando o "Mais", então não precisamos dele
-  const everybodyFits = (cutIndex === tempTabs.length);
-  wrap.innerHTML = "";
-  const finalFrag = document.createDocumentFragment();
-
-  if (everybodyFits) {
-    // monta tudo sem "Mais"
-    tempTabs.forEach(t => finalFrag.appendChild(t));
-    hiddenItems = [];
-  } else {
-    // mantém apenas os visíveis + "Mais"
-    const visible = tempTabs.slice(0, Math.max(1, cutIndex)); // garante 1 visível
-    hiddenItems = options.slice(visible.length);
-
-    visible.forEach(t => finalFrag.appendChild(t));
-    finalFrag.appendChild(moreBtn);
-  }
-
-  wrap.appendChild(finalFrag);
-
-  // re-aplica "active" se a aba estiver visível
-  if (_lastActiveUrl){
-    const btn = [...wrap.querySelectorAll(".tab")].find(t=>t.dataset.url===_lastActiveUrl);
-    if (btn) btn.classList.add("active");
-  } else {
-    els.favTab.classList.add("active");
-  }
-
-  // fecha o menu ao relayout
-  els.moreMenu.style.display="none";
-  els.moreMenu.setAttribute("aria-hidden","true");
-}
-
-
-/**
- * Renderiza a filebar para uma categoria e chama o layout responsivo
- */
-function renderFilebar(category="Todos"){
-  state.category = category;
-  _currentCategory = category;
-
-  const catalog = getCatalogByCategory();
-  const all = getAllOptions();
-  let options = [];
-  if (category==="Todos") options = all;
-  else if (catalog.has(category)) options = catalog.get(category);
-
-  _currentFilebarOptions = options;
-
-  // monta provisório: a lógica de layoutTabsByWidth fará o layout final
-  layoutTabsByWidth(options);
-
-  // Restaura seleção da última aba (se existir nas opções)
-  const last = store.getLast();
-  if (last?.mode==="file" && last?.fileUrl && options.some(o=>o.value===last.fileUrl)){
-    _lastActiveUrl = last.fileUrl;
-    const btn=[...els.filebarInner.querySelectorAll(".tab")].find(t=>t.dataset.url===last.fileUrl);
-    if (btn) btn.classList.add("active");
-  } else if (!_lastActiveUrl) {
-    els.favTab.classList.add("active");
-  }
-}
-
-// Recalcula o layout quando a janela mudar de tamanho
-let _relayoutRaf = null;
-window.addEventListener("resize", ()=>{
-  if (_relayoutRaf) cancelAnimationFrame(_relayoutRaf);
-  _relayoutRaf = requestAnimationFrame(()=>{
-    if (_currentFilebarOptions?.length){
-      layoutTabsByWidth(_currentFilebarOptions);
-    }
-  });
-}, { passive:true });
-
-
-/* ===== Mini Modal de Categorias ===== */
-function openCatModal(){
-  const cats=["Todos"];
-  els.codeSelect.querySelectorAll("optgroup").forEach(og=>{ const lbl=og.getAttribute("label")?.trim(); if (lbl) cats.push(lbl); });
-  els.catGrid.innerHTML="";
-  const frag=document.createDocumentFragment();
-  cats.forEach(cat=>{
-    const b=document.createElement("button"); b.className="cat-btn"; b.type="button";
-    b.innerHTML=`<img src="icons/arquivo.svg" alt=""><span class="label">${cat}</span>`;
-    b.addEventListener("click", ()=>{
-      closeCatModal(); renderFilebar(cat); notify(`Filtro: ${cat}`);
-      els.catTab.classList.toggle("active", cat!=="Todos");
-    });
-    frag.appendChild(b);
-  });
-  els.catGrid.appendChild(frag);
+/* =================== Mini Modal de Categorias =================== */
+function openCat(){
   els.catBackdrop.setAttribute("aria-hidden","false");
 }
-function closeCatModal(){ els.catBackdrop.setAttribute("aria-hidden","true"); }
-
-/* =================== IA =================== */
-function buildPrompt(a){
-  const s=a._split;
-  const supraText = s.supra?.length ? s.supra.join("\n")+"\n" : "";
-  const epiTop = s.epigrafe ? `Epígrafe: ${s.epigrafe}\n\n` : "";
-  const artigo = (s.titleText ? s.titleText+" " : "") + (s.body || "");
-  const tema = s.titleText || a.title || "Artigo";
-  return [
-    "Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo completo. ",
-    "Explique detalhadamente o artigo, súmula ou tema apresentado (sem reescrevê-lo na resposta), seguindo obrigatoriamente esta estrutura: ",
-    "(1) Conceito detalhado — caput, parágrafos, incisos e alíneas, com base em doutrina e jurisprudência majoritária; ",
-    "(2) Checklist e dicas para provas — tópicos objetivos a memorizar; ",
-    "(3) Exemplo prático — caso ilustrativo; ",
-    "(4) Princípios relacionados; ",
-    "(5) Pontos de atenção na prática; ",
-    "(6) Erros comuns/pegadinhas; ",
-    "(7) Artigos correlatos. ",
-    "Responda em português claro, objetivo e didático.\n\n",
-    `Tema: "${tema}"\n\n`,
-    epiTop + supraText + artigo,
-    "\n\n💚 direito.love",
-  ].join("");
+function closeCatModal(){
+  els.catBackdrop.setAttribute("aria-hidden","true");
 }
-function openIA(url){
-  if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true) location.href=url;
-  else window.open(url, "_blank", "noopener,noreferrer");
-}
-function openStudyModal(_title, prompt){
-  els.modalTitle.textContent="Estude com I.A.";
-  els.promptPreview.textContent=prompt;
-  els.studyModal.setAttribute("aria-hidden","false");
-}
-function closeStudyModal(){ els.studyModal.setAttribute("aria-hidden","true"); }
-
-/* =================== Eventos =================== */
-// Home (favoritos)
-els.brandBtn.addEventListener("click", ()=>{
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active"); state.mode="favorites"; renderFavorites(); window.scrollTo({top:0, behavior:"instant"});
-});
-els.favTab.addEventListener("click", ()=>{
-  document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active"); state.mode="favorites"; renderFavorites();
-});
-
-/* Busca */
-function toggleClear(){ els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
-els.searchInput.addEventListener("input", onSearchInput);
-toggleClear();
-
-els.searchInput.addEventListener("focus", ()=>{
-  if (window.matchMedia("(max-width: 768px)").matches) document.body.classList.add("search-open");
-  els.finderPop.classList.add("show");
-});
-els.closeFinder.addEventListener("click", ()=>{ els.finderPop.classList.remove("show"); els.searchInput.blur(); });
-els.searchInput.addEventListener("keydown", (e)=>{
-  const box=els.searchSuggest;
-  if (box.classList.contains("show")){
-    if (e.key==="ArrowDown" || e.key==="ArrowUp"){
-      e.preventDefault();
-      const items = [...box.querySelectorAll(".suggest-item")]; if (!items.length) return;
-      if (e.key==="ArrowDown") suggestActiveIndex=(suggestActiveIndex+1)%items.length;
-      else suggestActiveIndex=(suggestActiveIndex-1+items.length)%items.length;
-      items.forEach((n,i)=>n.classList.toggle("active", i===suggestActiveIndex));
-      return;
-    }
-    if (e.key==="Enter" && suggestActiveIndex>=0){
-      e.preventDefault();
-      const sel=box.querySelectorAll(".suggest-item")[suggestActiveIndex];
-      if (sel){ jumpToArticle(sel.dataset.htmlId); box.classList.remove("show"); return; }
-    }
-    if (e.key==="Escape") box.classList.remove("show");
-  }
-  if (e.key==="Enter"){ e.preventDefault(); withBusy(null, runLocalSearch); }
-  else if (e.key==="Escape"){ els.searchInput.blur(); els.finderPop.classList.remove("show"); document.body.classList.remove("search-open"); }
-});
-els.clearSearch.addEventListener("click", ()=>{
-  els.searchInput.value=""; toggleClear(); els.searchSuggest.classList.remove("show"); runLocalSearch();
-});
-// recolhe busca ao perder foco (mobile)
-els.searchInput.addEventListener("blur", ()=>{
-  if (!window.matchMedia("(max-width: 768px)").matches) return;
-  setTimeout(()=>{ document.body.classList.remove("search-open"); }, 120);
-});
-
-/* Próximo/Anterior nas ocorrências */
-els.nextBtn.addEventListener("click", ()=>gotoNext());
-els.prevBtn.addEventListener("click", ()=>gotoPrev());
-
-/* Atalhos globais */
-document.addEventListener("keydown",(e)=>{
-  if ((e.ctrlKey && e.key.toLowerCase()==="k") || (e.key==="/" && !e.metaKey && !e.ctrlKey)){ e.preventDefault(); els.searchInput.focus(); els.searchInput.select(); }
-  if (e.key==="F3" || (e.ctrlKey && !e.shiftKey && e.key.toLowerCase()==="g")){ e.preventDefault(); gotoNext(); }
-  if ((e.shiftKey && e.key==="F3") || (e.ctrlKey && e.shiftKey && e.key.toLowerCase()==="g")){ e.preventDefault(); gotoPrev(); }
-  if (e.key==="Escape"){
-    els.finderPop.classList.remove("show");
-    els.searchSuggest.classList.remove("show");
-    document.body.classList.remove("search-open");
-    if (els.studyModal.getAttribute("aria-hidden")==="false") closeStudyModal();
-    if (els.infoModal.getAttribute("aria-hidden")==="false") els.infoModal.setAttribute("aria-hidden","true");
-    els.moreMenu.style.display="none"; els.moreMenu.setAttribute("aria-hidden","true");
-    if (els.indexPanel){ els.indexPanel.classList.remove("show"); els.indexPanel.setAttribute("aria-hidden","true"); }
-    closeCatModal();
-  }
-});
-
-/* Modal Estudar */
-els.closeStudy.addEventListener("click", closeStudyModal);
-els.studyModal.addEventListener("click",(e)=>{ if (e.target===els.studyModal) closeStudyModal(); });
-document.querySelectorAll(".ia-btn").forEach((btn)=>{
-  btn.addEventListener("click", async (e)=>{
-    const url=e.currentTarget.dataset.url;
-    const prompt=els.promptPreview.textContent||"";
-    try{ await navigator.clipboard.writeText(prompt); notify("✅ Prompt copiado!"); }
-    catch{ notify("⚠️ Não consegui copiar, copie manualmente."); }
-    openIA(url);
-  });
-});
-els.copyPromptBtn.addEventListener("click",(e)=>{
-  withBusy(e.currentTarget, async ()=>{
-    try{ await navigator.clipboard.writeText(els.promptPreview.textContent||""); notify("✅ Prompt copiado!"); }
-    catch{ notify("Copie manualmente."); }
-  });
-});
-
-/* Modal Informações */
-function openInfoModal(){ els.infoModal.setAttribute("aria-hidden","false"); }
-function closeInfoModal(){ els.infoModal.setAttribute("aria-hidden","true"); }
-els.infoBtn?.addEventListener("click", openInfoModal);
-els.closeInfo?.addEventListener("click", closeInfoModal);
-els.infoModal?.addEventListener("click", (e)=>{ if (e.target===els.infoModal) closeInfoModal(); });
-
-/* Ações dentro dos cards (fav + study + planalto) */
-els.articles.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".icon-btn"); if (!btn) return;
-  const artEl = e.target.closest("article"); if (!artEl) return;
-
-  const aidx = Number(artEl?.dataset.idx);
-  const a = state.mode === "file" ? state.articles.find((x) => x._aidx === aidx) : null;
-
-  const id = store.makeId(artEl.dataset.fileUrl, artEl.id);
-
-  const entry = {
-    id,
-    fileUrl: artEl.dataset.fileUrl,
-    fileLabel: artEl.dataset.fileLabel,
-    htmlId: artEl.id,
-    text:
-      state.mode === "file"
-        ? (a?.text || "")
-        : (() => {
-            const fav = store.listFavorites().find((e) => e.id === id);
-            const stud = store.listStudied().find((e) => e.id === id);
-            return fav?.text || stud?.text || "";
-          })(),
-  };
-
-  if (btn.dataset.action === "study") {
-    await withBusy(btn, async () => {
-      const useArticle =
-        state.mode === "file"
-          ? a
-          : {
-              text: entry.text,
-              _split: splitIntoBlocks(entry.text)[0]
-                ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
-                : { supra: [], titleText: "Artigo", body: entry.text, epigrafe: "" },
-              title: "Artigo",
-            };
-      if (!useArticle?.text) { notify("Não consegui capturar o texto deste artigo."); return; }
-      const prompt = buildPrompt(useArticle);
-      store.markStudied(entry);
-      btn.classList.add("active");
-      openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
+function mountCatGrid(){
+  const map = getCatalogByCategory();
+  const frag = document.createDocumentFragment();
+  for (const [cat, arr] of map.entries()){
+    const h = document.createElement("div");
+    h.className = "section-title";
+    h.textContent = cat;
+    frag.appendChild(h);
+    arr.forEach(({label, value})=>{
+      const btn = document.createElement("button");
+      btn.className="cat-btn";
+      btn.innerHTML = `<img src="icons/arquivo.svg" alt=""><span class="label">${label}</span>`;
+      btn.addEventListener("click", async ()=>{
+        closeCatModal();
+        await loadFile(value, btn);
+      });
+      frag.appendChild(btn);
     });
   }
-
-  if (btn.dataset.action === "fav") {
-    await withBusy(btn, async () => {
-      if (store.isFavorite(id)) {
-        store.removeFavorite(id);
-        btn.classList.remove("active");
-        notify("⭐ Removido dos favoritos");
-
-        if (state.mode === "favorites") {
-          artEl.remove();
-          if (!els.articles.querySelector("article")) {
-            els.articles.innerHTML = '<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
-          }
-        }
-      } else {
-        if (!entry.text) { notify("Abra o arquivo para favoritar este artigo."); return; }
-        store.addFavorite(entry);
-        btn.classList.add("active");
-        notify("⭐ Adicionado aos favoritos");
-      }
-    });
-  }
-
-  if (btn.dataset.action === "planalto") {
-    const titleText = a?._split?.titleText || "";
-    const combo = makePlanaltoUrl(artEl.dataset.fileLabel, titleText);
-    if (!combo) { notify("Código/lei não mapeado para Planalto."); return; }
-    window.open(combo.try1, "_blank", "noopener,noreferrer");
-  }
-});
-
-/* Listener global do menu "Mais" */
-document.addEventListener("click", (e) => {
-  if (!els.moreMenu.contains(e.target) && !e.target.closest(".tab-more")) {
-    els.moreMenu.style.display = "none";
-    els.moreMenu.setAttribute("aria-hidden", "true");
-  }
-}, { capture: true });
-
-/* Scroll e resize */
-window.addEventListener("scroll", () => {
-  updateCurrentOutline();
-  const last = store.getLast();
-  if (last) store.saveLast({ scrollY: window.scrollY || 0 });
-}, { passive: true });
-
-window.addEventListener("resize", updateCurrentOutline, { passive: true });
-
-/* ===== Mini Modal de Categorias (Arquivos) ===== */
-els.catTab.addEventListener("click", openCatModal);
-els.closeCat.addEventListener("click", closeCatModal);
-els.catBackdrop.addEventListener("click", (e) => { if (e.target === els.catBackdrop) closeCatModal(); });
-
-/* =================== Restauração =================== */
-function restoreViewAfterRender() {
-  const last = store.getLast();
-  if (!last) return;
-
-  if (last.articleId) {
-    let tries = 0;
-    const max = 20;
-    const tick = () => {
-      const el = document.getElementById(last.articleId);
-      if (el) {
-        el.scrollIntoView({ behavior: "instant", block: "center" });
-        updateCurrentOutline();
-      } else if (tries++ < max) {
-        setTimeout(tick, 100);
-      } else if (typeof last.scrollY === "number") {
-        window.scrollTo({ top: last.scrollY, behavior: "instant" });
-      }
-    };
-    tick();
-  } else if (typeof last.scrollY === "number") {
-    window.scrollTo({ top: last.scrollY, behavior: "instant" });
-  }
+  els.catGrid.innerHTML="";
+  els.catGrid.appendChild(frag);
 }
 
-/* ===== FAB de Ações (flutuante) ===== */
-const actionFab  = document.getElementById("actionFab");
-const actionMenu = document.getElementById("actionMenu");
-const actionCtx  = document.getElementById("actionContext");
-
-function getActiveArticle(){
-  // prioriza o .in-view
-  let el = document.querySelector("article.in-view");
-  if (!el){
-    // fallback: primeiro article visível
-    el = document.querySelector("article[data-idx]");
-  }
-  if (!el) return null;
-  const idx  = Number(el.dataset.idx);
-  const meta = state.articles.find(x => x._aidx === idx);
-  return { el, meta };
-}
-
-/* Pega o texto de cabeçalho do card (título/cabeçalho/1ª linha do corpo) */
-function getArticleHeaderText(el){
-  if (!el) return "";
-  const t1 = el.querySelector(".art-title")?.innerText?.trim();
-  if (t1) return t1;
-  const t2 = el.querySelector(".art-head")?.innerText?.trim();
-  if (t2) return t2;
-  const first = (el.querySelector(".art-body")?.innerText || "").trim().split("\n")[0];
-  return first || "";
-}
-
-/* Monta o snippet curto com aspas e reticências */
-function snippetFromArticle(el, max = 28){
-  const raw = getArticleHeaderText(el).replace(/\s+/g, " ");
-  if (!raw) return "“—”";
-  const cut = raw.length > max ? raw.slice(0, max) + "…" : raw;
-  return `“${cut}”`;
-}
-
+/* =================== FAB (ações do artigo em foco) =================== */
 function updateActionPreview(){
-  if (!actionCtx) return;
-  const a = getActiveArticle();
-  actionCtx.textContent = snippetFromArticle(a?.el, 32);
+  const node = document.querySelector("article.in-view");
+  const title = node?.querySelector(".art-title")?.textContent?.trim() || "—";
+  els.actionContext.textContent = title;
 }
-
-function toggleActionMenu(show){
-  if (show === undefined) show = !actionMenu.classList.contains("show");
-  actionMenu.classList.toggle("show", show);
-  actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
-  // sincroniza ARIA no botão
-  actionFab?.setAttribute("aria-expanded", show ? "true" : "false");
+function toggleActionMenu(force){
+  const show = (force !== undefined) ? !!force : els.actionMenu.getAttribute("aria-hidden")==="true";
+  els.actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
+  els.actionFab.setAttribute("aria-expanded", show ? "true" : "false");
 }
+function handleAction(action){
+  const node = document.querySelector("article.in-view");
+  if (!node) return notify("Nenhum artigo em foco.");
+  const htmlId = node.id;
+  const fileUrl = node.dataset.fileUrl || state.currentFileUrl || "";
+  const fileLabel = node.dataset.fileLabel || state.currentFileLabel || "";
+  const id = store.makeId(fileUrl, htmlId);
 
-
-actionFab?.addEventListener("click", ()=>{
-  const a = getActiveArticle();
-  actionCtx.textContent = snippetFromArticle(a?.el, 32); // ajuste o tamanho se quiser
-  toggleActionMenu();
-});
-
-// Acessibilidade: abrir/fechar o menu via teclado
-actionFab?.addEventListener("keydown", (e)=>{
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    updateActionPreview(); // mantém o mini-texto do artigo atual
-    toggleActionMenu();
-  }
-});
-
-
-
-document.addEventListener("click", (e)=>{
-  if (!actionMenu) return;
-  if (!actionMenu.contains(e.target) && e.target !== actionFab && !actionFab?.contains(e.target)){
-    toggleActionMenu(false);
-  }
-});
-
-window.addEventListener("scroll", ()=>{
-  if (actionMenu?.classList.contains("show")) toggleActionMenu(false);
-}, { passive: true });
-
-/* Clique nas ações do menu flutuante */
-actionMenu?.addEventListener("click", async (e)=>{
-  const btn = e.target.closest(".menu-btn");
-  if (!btn) return;
-  const action = btn.dataset.action;
-  const a = getActiveArticle();
-  if (!a?.el) { notify("Nenhum artigo ativo."); return; }
-
-  const artEl = a.el;
-  const meta  = a.meta;
-  const id    = store.makeId(artEl.dataset.fileUrl, artEl.id);
-
-  const entry = {
-    id,
-    fileUrl: artEl.dataset.fileUrl,
-    fileLabel: artEl.dataset.fileLabel,
-    htmlId: artEl.id,
-    text: meta ? meta.text : (() => {
-      const fav  = store.listFavorites().find(e => e.id === id);
-      const stud = store.listStudied().find(e => e.id === id);
-      return fav?.text || stud?.text || "";
-    })(),
-  };
-
-  if (action === "study"){
-    const useArticle = meta || (entry.text ? {
-      text: entry.text,
-      _split: splitIntoBlocks(entry.text)[0]
-        ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
-        : { supra:[], titleText:"Artigo", body:entry.text, epigrafe:"" },
-      title: "Artigo",
-    } : null);
-    if (!useArticle?.text){ notify("Não consegui capturar o texto deste artigo."); return; }
-    const prompt = buildPrompt(useArticle);
-    store.markStudied(entry);
-    openStudyModal(useArticle._split?.titleText || useArticle.title || "Artigo", prompt);
-    toggleActionMenu(false);
-    return;
-  }
-
-  if (action === "fav"){
+  if (action==="fav"){
     if (store.isFavorite(id)){
       store.removeFavorite(id);
-      notify("⭐ Removido dos favoritos");
+      notify("Removido dos favoritos");
     } else {
-      if (!entry.text){ notify("Abra o arquivo para favoritar este artigo."); return; }
-      store.addFavorite(entry);
-      notify("⭐ Adicionado aos favoritos");
+      const text = node.innerText || "";
+      store.addFavorite({ id, htmlId, fileUrl, fileLabel, text });
+      notify("Adicionado aos favoritos");
     }
-    toggleActionMenu(false);
-    return;
-  }
+  } else if (action==="study"){
+    const title = node.querySelector(".art-title")?.textContent?.trim() || "Artigo";
+    const body  = node.querySelector(".art-body")?.innerText?.trim() || "";
+    const epi   = node.querySelector(".art-epigrafe")?.innerText?.trim() || "";
+    const supra = epi ? `Epígrafe: ${epi}\n` : "";
+    const tema  = title;
+    const prompt =
+`Assuma a persona de um professor de Direito experiente convidado pelo direito.love e prepare um material de estudo.
+Explique detalhadamente o artigo, súmula ou tema abaixo, sem reescrevê-lo, cobrindo:
+(1) conceito detalhado; (2) checklist para provas; (3) mini exemplo prático;
+(4) princípios relacionados; (5) pontos de atenção; (6) erros comuns; (7) artigos correlatos.
+Responda em português claro, objetivo e didático.
 
-  if (action === "planalto"){
-    const titleText = meta?._split?.titleText || "";
-    const combo = makePlanaltoUrl(artEl.dataset.fileLabel, titleText);
-    if (!combo){ notify("Código/lei não mapeado para Planalto."); return; }
-    window.open(combo.try1, "_blank", "noopener,noreferrer");
-    toggleActionMenu(false);
-    return;
+Tema: "${tema}"
+
+${supra}${title}
+${body}
+
+💚 direito.love`;
+    els.promptPreview.textContent = prompt;
+    els.studyModal.setAttribute("aria-hidden","false");
+  } else if (action==="planalto"){
+    const titleText = node.querySelector(".art-title")?.textContent?.trim() || "";
+    const m = makePlanaltoUrl(fileLabel, titleText);
+    if (!m) return notify("Documento não mapeado para o Planalto.");
+    // tenta #artN e #artNo
+    window.open(m.try1, "_blank") || window.location.assign(m.try1);
+    setTimeout(()=>{ window.open(m.try2, "_blank"); }, 350);
   }
-});
+}
+
+/* =================== Eventos =================== */
+function bindEvents(){
+  // Topbar
+  els.brandBtn?.addEventListener("click", renderFavorites);
+  els.infoBtn?.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","false"));
+  els.closeInfo?.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","true"));
+
+  // Barra secundária
+  els.catTab?.addEventListener("click", ()=>{ mountCatGrid(); openCat(); });
+  els.favTab?.addEventListener("click", renderFavorites);
+
+  // Busca
+  els.searchInput?.addEventListener("input", onSearchInput);
+  els.searchInput?.addEventListener("keydown", (e)=>{
+    if (e.key==="Enter"){ runLocalSearch(); }
+    else if (e.key==="Escape"){ els.searchSuggest.classList.remove("show"); }
+  });
+  els.clearSearch?.addEventListener("click", ()=>{
+    els.searchInput.value=""; toggleClear(); els.searchSuggest.classList.remove("show");
+  });
+  document.addEventListener("click", (e)=>{
+    if (!e.target.closest(".search")) els.searchSuggest.classList.remove("show");
+  });
+
+  // Mini-finder
+  els.prevBtn?.addEventListener("click", gotoPrev);
+  els.nextBtn?.addEventListener("click", gotoNext);
+  els.closeFinder?.addEventListener("click", ()=> els.finderPop.classList.remove("show"));
+
+  // Modal estudo
+  els.closeStudy?.addEventListener("click", ()=> els.studyModal.setAttribute("aria-hidden","true"));
+  els.copyPromptBtn?.addEventListener("click", async ()=>{
+    const txt = els.promptPreview.textContent || "";
+    try { await navigator.clipboard.writeText(txt); notify("✅ Prompt copiado!"); }
+    catch { notify("Não foi possível copiar."); }
+  });
+  document.querySelectorAll(".ia-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ window.open(btn.dataset.url, "_blank"); });
+  });
+
+  // Modal categorias
+  els.closeCat?.addEventListener("click", closeCatModal);
+  els.catBackdrop?.addEventListener("click", (e)=>{ if (e.target===els.catBackdrop) closeCatModal(); });
+
+  // FAB
+  els.actionFab?.addEventListener("click", ()=> toggleActionMenu());
+  document.getElementById("actionMenu")?.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".menu-btn");
+    if (!btn) return;
+    handleAction(btn.dataset.action);
+    toggleActionMenu(false);
+  });
+  document.addEventListener("click", (e)=>{
+    if (!e.target.closest("#actionMenu") && !e.target.closest("#actionFab")){
+      toggleActionMenu(false);
+    }
+  });
+
+  // Scroll / Outline
+  window.addEventListener("scroll", updateCurrentOutline, {passive:true});
+  window.addEventListener("resize", updateCurrentOutline);
+}
 
 /* =================== Boot =================== */
-async function boot() {
+(function init(){
   buildCatalogMaps();
-  renderFilebar("Todos"); // inicia com todas as categorias
+  bindEvents();
 
+  // Inicia em Favoritos (como combinado)
+  renderFavorites();
+
+  // Restaura último arquivo, se quiser (opcional)
   const last = store.getLast();
-  if (last?.mode === "file" && last?.fileUrl) {
-    const btn = [...els.filebarInner.querySelectorAll(".tab")]
-      .find((t) => t.dataset.url === last.fileUrl);
-    if (btn) btn.classList.add("active");
-    await loadFile(last.fileUrl, btn || null);
-    restoreViewAfterRender();
-  } else {
-    els.favTab.classList.add("active");
-    renderFavorites();
-    restoreViewAfterRender();
+  if (last?.mode==="file" && last.fileUrl){
+    // comentar a linha abaixo caso deseje sempre começar em Favoritos
+    // loadFile(last.fileUrl);
   }
-
-  rebuildSuggestionsIndex();
-
-  // >>> mantém o mini-texto do FAB sincronizado logo no carregamento
-  updateActionPreview();
-
-}
-boot();
+})();
