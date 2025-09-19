@@ -1,3 +1,13 @@
+/* =========================================================
+   direito.love — app.js (versão revisada completa)
+   - UX/UI alinhado com: TopBar minimalista + Barra Menu (Fav, Arquivos, Busca)
+   - Modal "Arquivos" com Categorias → Arquivos
+   - Busca só com arquivo aberto; em Favoritos: "Selecione um arquivo para buscar."
+   - FAB/hambúrguer secundário alterna "⭐ Favoritar" ↔ "⭐ Remover"
+   - Parser e renderização inclusos (cards)
+   - Título de página dinâmico
+========================================================= */
+
 /* =================== PWA =================== */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -7,40 +17,51 @@ if ("serviceWorker" in navigator) {
       .catch((err) => console.error("❌ SW", err));
   });
 }
+// Evita prompt automático (PWA)
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); });
 
-/* =================== Refs =================== */
+/* =================== Elements =================== */
 const els = {
+  // Topbar
   brandBtn: document.getElementById("brandBtn"),
+  infoBtn: document.getElementById("infoBtn"),
+  infoModal: document.getElementById("infoModal"),
+  closeInfo: document.getElementById("closeInfo"),
+
+  // Barra Menu
   favTab: document.getElementById("favTab"),
   catTab: document.getElementById("catTab"),
+  filebarInner: document.getElementById("filebarInner"),
 
+  // Busca
   searchInput: document.getElementById("searchInput"),
   searchSpinner: document.getElementById("searchSpinner"),
   clearSearch: document.getElementById("clearSearch"),
   searchSuggest: document.getElementById("searchSuggest"),
 
-  infoBtn: document.getElementById("infoBtn"),
-  infoModal: document.getElementById("infoModal"),
-  closeInfo: document.getElementById("closeInfo"),
-
-  filebarInner: document.getElementById("filebarInner"),
-  moreMenu: document.getElementById("moreMenu"),
-
+  // Mini finder
   finderPop: document.getElementById("finderPop"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
   closeFinder: document.getElementById("closeFinder"),
   count: document.getElementById("count"),
 
+  // Conteúdo
+  pageTitle: document.getElementById("pageTitle"),
   articles: document.getElementById("articles"),
   codeSelect: document.getElementById("codeSelect"),
 
-  actionFab: document.getElementById("actionFab"),
+  // Modal Categorias
+  catBackdrop: document.getElementById("catBackdrop"),
+  closeCat: document.getElementById("closeCat"),
+  catGrid: document.getElementById("catGrid"),
 
+  // FAB e menu de ações (hambúrguer secundário)
+  actionFab: document.getElementById("actionFab"),
   actionMenu: document.getElementById("actionMenu"),
   actionContext: document.getElementById("actionContext"),
 
+  // Outros opcionais
   studyModal: document.getElementById("studyModal"),
   closeStudy: document.getElementById("closeStudy"),
   modalTitle: document.getElementById("modalTitle"),
@@ -48,33 +69,28 @@ const els = {
   promptPreview: document.getElementById("promptPreview"),
   copyPromptBtn: document.getElementById("copyPromptBtn"),
 
+  moreMenu: document.getElementById("moreMenu"),
   toast: document.getElementById("toast"),
-
-  // Mini modal de categorias
-  catBackdrop: document.getElementById("catBackdrop"),
-  closeCat: document.getElementById("closeCat"),
-  catGrid: document.getElementById("catGrid"),
-
-  // NOVO: título de página
-  pageTitle: document.getElementById("pageTitle"),
 };
 els.indexToggle = null;
 els.indexPanel = null;
 
 /* =================== Estado + Storage =================== */
 const state = {
-  mode: "favorites", // favorites | file
+  mode: "favorites", // "favorites" | "file"
   currentFileUrl: null,
   currentFileLabel: "",
   rawText: "",
-  items: [],    // headings + articles
-  articles: [], // only articles
+  items: [],     // headings + articles
+  articles: [],  // somente artigos
   currentArticleIdx: -1,
 
+  // busca
   currentTokens: [],
   matchArticles: [],
   matchIdx: -1,
 
+  // caches
   cache: new Map(),
   urlToLabel: new Map(),
 };
@@ -123,9 +139,13 @@ const store = {
 
 /* =================== Utils =================== */
 function notify(msg = "Ok!") {
-  els.toast.textContent = msg;
-  els.toast.classList.add("show");
-  setTimeout(() => els.toast.classList.remove("show"), 1200);
+  if (els.toast) {
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    setTimeout(() => els.toast.classList.remove("show"), 1200);
+  } else {
+    console.log("ℹ️", msg);
+  }
 }
 function setPageTitle(text){
   const el = els.pageTitle;
@@ -147,7 +167,7 @@ async function withBusy(btn, fn) {
   }
 }
 const sanitizeForLayout = (s) =>
-  s.replace(/\u00A0/g, " ").replace(/\t/g, " ").replace(/\s+\n/g, "\n");
+  (s || "").replace(/\u00A0/g, " ").replace(/\t/g, " ").replace(/[ \t]+\n/g, "\n").trim();
 function norm(s) {
   return (s || "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -160,6 +180,7 @@ const sortByTsDesc = (arr)=>[...arr].sort((a,b)=>(b.ts||0)-(a.ts||0));
 /* =================== Catálogo =================== */
 function buildCatalogMaps() {
   const sel = els.codeSelect;
+  if (!sel) return;
   state.urlToLabel.clear();
   sel.querySelectorAll("option").forEach((opt) => {
     const url = opt.value?.trim();
@@ -169,7 +190,9 @@ function buildCatalogMaps() {
 }
 function getCatalogByCategory() {
   const map = new Map();
-  els.codeSelect.querySelectorAll("optgroup").forEach((og) => {
+  const sel = els.codeSelect;
+  if (!sel) return map;
+  sel.querySelectorAll("optgroup").forEach((og) => {
     const cat = og.getAttribute("label")?.trim() || "Outros";
     const arr = [];
     og.querySelectorAll("option").forEach((opt) => {
@@ -182,63 +205,161 @@ function getCatalogByCategory() {
   return map;
 }
 function getAllOptions() {
+  if (!els.codeSelect) return [];
   return [...els.codeSelect.querySelectorAll("option")];
 }
 function getOptionsByCategory(catLabel){
+  if (!els.codeSelect) return [];
   const og = [...els.codeSelect.querySelectorAll("optgroup")]
     .find((g) => (g.getAttribute("label")||"").trim() === catLabel);
   return og ? [...og.querySelectorAll("option")] : [];
 }
 
-/* =================== Parser =================== */
-/* ... (toda a sua lógica de split/parse existente permanece aqui — omitida neste resumo por tamanho)
-   O arquivo completo preserva o parser, renderização progressiva e índice. */
-
-/* =================== Planalto helpers =================== */
-const planaltoMap = {
-  "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
-  "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
-  "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
-  "Código Penal": "https://www.planalto.gov.br/ccivil_03/Decreto-Lei/Del3689.htm",
-  "Processo Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
-  "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
-  "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
-  "Código Tributário Nacional": "https://www.planalto.gov.br/ccivil_03/leis/l5172.htm",
-  "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
-  "Código Florestal": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm",
-  "Código Penal Militar": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del1001.htm",
-  "Lei Maria da Penha": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11340.htm",
-  "Lei de Execução Penal": "https://www.planalto.gov.br/ccivil_03/leis/l7210.htm",
-  "Lei de Drogas": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11343.htm",
-  "Lei LGPD": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
-  "Marco Civil da Internet": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
-  "Lei dos Crimes Hediondos": "https://www.planalto.gov.br/ccivil_03/leis/l8072.htm",
-  "ECA - Est. da Criança e Adolescente": "https://www.planalto.gov.br/ccivil_03/leis/l8069.htm",
-  "Est. do Desarmamento": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10826.htm",
-  "Est. do Idoso": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10741.htm",
-  "Est. da Juventude": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12852.htm",
-  "Est. da Pessoa com Deficiência": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm",
-  "Est. da Oab": "https://www.planalto.gov.br/ccivil_03/leis/l8906.htm"
-};
-function buildPlanaltoHashFromTitle(titleText){
-  if (!titleText) return "";
-  const m = titleText.match(/Art(?:igo)?\.?\s*(\d+)\s*([ºo]?)/i);
-  if (!m) return "";
-  const n = m[1]; const sufixo = m[2]?.toLowerCase() || "";
-  if (sufixo === "º") return `#art${n}o`;
-  if (sufixo === "o")  return `#art${n}o`;
-  return `#art${n}`;
-}
-function makePlanaltoUrl(fileLabel, titleText){
-  const base = planaltoMap[fileLabel];
-  if (!base) return null;
-  const hash = buildPlanaltoHashFromTitle(titleText);
-  return { try1: base + hash, base };
+/* =================== Parser (completo e independente) =================== */
+// Divide texto pelos separadores "-----" (em linha própria)
+function splitIntoBlocks(txt){
+  const cleaned = sanitizeForLayout(
+    (txt || "")
+      .replace(/^\uFEFF/, "")
+      .replace(/\r\n/g, "\n")
+      .replace(/[ \t]+/g, " ")
+  );
+  const parts = cleaned.split(/^\s*-{5,}\s*$/m).map(s => s.trim());
+  return parts.filter(Boolean);
 }
 
-/* =================== Render helpers (cards, etc.) =================== */
-/* ... (preserva toda a sua renderização de artigos e headings, incluindo
-   buildArticleElement, renderFileItemsProgressive, renderFileItemsAll, etc.) */
+// Constrói um item "article" simples a partir de um bloco
+function parseBlockToItem(block, idx, fileLabel = "Documento"){
+  const lines = (block || "").split(/\n/).map(l => l.trim());
+  const filtered = lines.filter(Boolean);
+  const titleLine = filtered[0] || `Artigo ${idx+1}`;
+  const body = filtered.slice(1).join("\n").trim();
+
+  return {
+    kind: "article",
+    title: titleLine,
+    text: block,
+    htmlId: `art-${idx}`,
+    _split: {
+      supra: [],
+      epigrafe: "",
+      titleText: titleLine,
+      body: body || block
+    },
+    _aidx: idx,
+    fileLabel
+  };
+}
+
+// Parser por URL — hoje igual para todo mundo (padrão "-----")
+function parseByUrl(url, txt){
+  const blocks = splitIntoBlocks(txt);
+  if (!blocks.length) return [parseBlockToItem(txt, 0)];
+  return blocks.map((b, i) => parseBlockToItem(b, i, state.urlToLabel.get(url) || "Documento"));
+}
+
+/* =================== Render =================== */
+function buildArticleElement(item){
+  const el = document.createElement("article");
+  el.className = "card";
+  el.id = item.htmlId;
+  el.dataset.idx = item._aidx ?? 0;
+  el.dataset.fileLabel = state.currentFileLabel || item.fileLabel || "Documento";
+  el.dataset.fileUrl   = state.currentFileUrl || "";
+
+  const header = document.createElement("header");
+  header.innerHTML = (item._split?.titleText || item.title || "Artigo");
+
+  const epigrafe = document.createElement("div");
+  epigrafe.className = "card-epigrafe";
+  const epi = (item._split?.epigrafe || "").trim();
+  if (epi) epigrafe.textContent = epi; else epigrafe.style.display = "none";
+
+  const body = document.createElement("div");
+  body.className = "card-body";
+  body.innerHTML = (item._split?.body || item.text || "")
+    .replace(/\n{2,}/g, "\n\n")
+    .replace(/\n/g, "<br>");
+
+  const actions = document.createElement("div");
+  actions.className = "card-actions";
+  const fav = document.createElement("button");
+  fav.className = "icon-btn";
+  fav.dataset.action = "fav";
+  fav.textContent = "⭐";
+  fav.title = "Favoritar";
+  fav.addEventListener("click", ()=>{
+    const id = store.makeId(el.dataset.fileUrl, el.id);
+    if (store.isFavorite(id)){
+      store.removeFavorite(id);
+      fav.classList.remove("active");
+      notify("⭐ Removido dos favoritos");
+      if (state.mode === "favorites") renderFavorites();
+    } else {
+      store.addFavorite({
+        id,
+        fileUrl: el.dataset.fileUrl,
+        fileLabel: el.dataset.fileLabel,
+        htmlId: el.id,
+        text: item.text
+      });
+      fav.classList.add("active");
+      notify("⭐ Adicionado aos favoritos");
+    }
+    updateActionPreview();
+  });
+  actions.appendChild(fav);
+
+  el.appendChild(header);
+  el.appendChild(epigrafe);
+  el.appendChild(body);
+  el.appendChild(actions);
+  return el;
+}
+
+function clearArticles(){ if (els.articles) els.articles.innerHTML=""; }
+
+function renderFileItemsProgressive(items){
+  if (!els.articles) return;
+  const frag = document.createDocumentFragment();
+  items.forEach(it=>{
+    if (it.kind === "article"){
+      frag.appendChild(buildArticleElement(it));
+    }
+  });
+  els.articles.innerHTML = "";
+  els.articles.appendChild(frag);
+  const first = els.articles.querySelector("article.card");
+  if (first) first.classList.add("in-view");
+}
+
+function renderFileItemsAll(items){
+  // para esta versão, o "all" = mesmo do progressive
+  renderFileItemsProgressive(items);
+}
+
+/* highlight para busca */
+function highlightTextNodes(root, tokens){
+  if (!root || !tokens?.length) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const texts = [];
+  while (walker.nextNode()) texts.push(walker.currentNode);
+  texts.forEach(node=>{
+    const t = node.nodeValue;
+    if (!t || !t.trim()) return;
+    let html = t;
+    tokens.forEach(tok=>{
+      if (!tok) return;
+      const re = new RegExp(`(${tok.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')})`, "gi");
+      html = html.replace(re, "<strong>$1</strong>");
+    });
+    if (html !== t){
+      const span = document.createElement("span");
+      span.innerHTML = html;
+      node.parentNode.replaceChild(span, node);
+    }
+  });
+}
 
 /* =================== Seleção do artigo visível =================== */
 function updateCurrentOutline(){
@@ -268,11 +389,10 @@ function updateCurrentOutline(){
     scrollY: window.scrollY || 0,
   });
 
-  // mantém o mini-texto e o label Favoritar/Remover do FAB sincronizados
   updateActionPreview();
 }
 
-/* =================== Índice (hambúrguer) =================== */
+/* =================== Índice (≡) opcional =================== */
 function removeIndexUI(){
   if (els.indexToggle){ els.indexToggle.remove(); els.indexToggle=null; }
   if (els.indexPanel){ els.indexPanel.remove(); els.indexPanel=null; }
@@ -297,26 +417,21 @@ function buildIndexButton(){
   btn.addEventListener("click", ()=> panel.classList.toggle("show"));
 }
 
+/* =================== Filebar tabs helper (simples) =================== */
+function arrangeTabsWithMore(wrap, tabs){
+  // Nesta versão, apenas insere todos (a barra de arquivos está oculta no CSS).
+  tabs.forEach(b => wrap.appendChild(b));
+}
+
 /* =================== Abrir arquivo =================== */
-function clearArticles(){ els.articles.innerHTML=""; }
-function renderFilebar(category){
-  const options = category==="Todos" ? getAllOptions() : getOptionsByCategory(category);
-  const wrap = els.filebarInner;
-  wrap.innerHTML = "";
-
-  const tabs = options.map((opt)=>{
-    const btn = document.createElement("button");
-    btn.className = "tab";
-    btn.type = "button";
-    btn.dataset.url = opt.value;
-    btn.textContent = opt.textContent;
-    btn.title = opt.textContent;
-    btn.addEventListener("click", ()=> loadFile(opt.value, btn));
-    return btn;
+function addNormalizedFieldToArticles(items){
+  const arts=items.filter(it=>it.kind==="article");
+  arts.forEach((a)=>{
+    const s=a._split || {};
+    const combo=[s.titleText||"", s.epigrafe||"", ...(s.supra||[]), s.body||""].join(" ");
+    a._norm = norm(combo);
   });
-
-  // lógica de colunas + "Mais" (preservada)
-  arrangeTabsWithMore(wrap, tabs);
+  return arts;
 }
 
 async function fetchTextCached(url){
@@ -327,19 +442,11 @@ async function fetchTextCached(url){
   state.cache.set(url, txt);
   return txt;
 }
-function addNormalizedFieldToArticles(items){
-  const arts=items.filter(it=>it.kind==="article");
-  arts.forEach((a)=>{
-    const s=a._split;
-    const combo=[s.titleText||"", s.epigrafe||"", ...(s.supra||[]), s.body||""].join(" ");
-    a._norm = norm(combo);
-  });
-  return arts;
-}
+
 async function loadFile(url, tabBtn){
   if (!url) return;
   await withBusy(tabBtn, async ()=>{
-    els.searchSpinner.classList.add("show");
+    els.searchSpinner?.classList.add("show");
     try{
       const txt=await fetchTextCached(url);
       state.rawText=txt;
@@ -363,7 +470,7 @@ async function loadFile(url, tabBtn){
       console.error(err);
       notify("Falha ao carregar arquivo.");
     } finally{
-      els.searchSpinner.classList.remove("show");
+      els.searchSpinner?.classList.remove("show");
     }
   });
 }
@@ -374,12 +481,17 @@ function renderFavorites(){
   setPageTitle("Favoritos");
   const favs=store.listFavorites();
   if (!favs.length){
-    els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
+    if (els.articles)
+      els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">⭐ Nada nos favoritos ainda.</div>';
     removeIndexUI(); return;
   }
   const order=getAllOptions().map(o=>o.value);
   const byFile=new Map();
-  favs.forEach((f)=>{ const key=f.fileLabel||f.fileUrl||"Arquivo"; if (!byFile.has(key)) byFile.set(key,[]); byFile.get(key).push(f); });
+  favs.forEach((f)=>{
+    const key=f.fileLabel||f.fileUrl||"Arquivo";
+    if (!byFile.has(key)) byFile.set(key,[]);
+    byFile.get(key).push(f);
+  });
   for (const [k,arr] of byFile.entries()) byFile.set(k, sortByTsDesc(arr));
 
   const groups = [...byFile.entries()].sort((a,b)=>{
@@ -400,29 +512,36 @@ function renderFavorites(){
     arr.forEach((entry)=>{
       const item = {
         kind:"article",
-        title: entry.text.slice(0,48)+"…",
+        title: entry.text.split("\n")[0] || "Artigo",
         text: entry.text,
         _split: { supra:[], titleText: entry.text.split("\n")[0] || "Artigo", body: entry.text, epigrafe:"" },
         htmlId: entry.htmlId || `fav-${idx}`,
+        _aidx: idx
       };
-      item._aidx = idx++;
       const el=buildArticleElement(item);
       el.dataset.fileUrl=entry.fileUrl; el.dataset.fileLabel=entry.fileLabel;
+
+      // marca favorito ativo
       const favBtn=el.querySelector('.icon-btn[data-action="fav"]');
-      const id=store.makeId(entry.fileUrl, item.htmlId);
-      if (store.isFavorite(id)) favBtn.classList.add("active");
+      const id=store.makeId(entry.fileUrl, el.id);
+      if (store.isFavorite(id)) favBtn?.classList.add("active");
+
       frag.appendChild(el);
+      idx++;
     });
   });
 
-  els.articles.innerHTML="";
-  els.articles.appendChild(frag);
+  if (els.articles){
+    els.articles.innerHTML="";
+    els.articles.appendChild(frag);
+  }
   removeIndexUI();
 }
 
 /* =================== Sugestões e Busca =================== */
 let suggestActiveIndex = -1;
 let suggestionsData = []; // {id, title, htmlId}
+
 function rebuildSuggestionsIndex(){
   suggestionsData = state.articles.map(a=>{
     const t   = a._split?.titleText || a.title || "";
@@ -449,6 +568,7 @@ function highlightQuery(text, qOrTokens) {
 }
 function renderSuggestions(list, tokens) {
   const box = els.searchSuggest;
+  if (!box) return;
   box.innerHTML = "";
   if (!list.length) { box.classList.remove("show"); return; }
 
@@ -471,24 +591,28 @@ function renderSuggestions(list, tokens) {
   box.appendChild(frag);
   box.classList.add("show");
 }
-function toggleClear(){ els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
+function toggleClear(){ if (els.clearSearch && els.searchInput) els.clearSearch.classList.toggle("show", !!els.searchInput.value); }
 
 /* Input da busca */
 function onSearchInput(){
   toggleClear();
-  const q = els.searchInput.value || "";
-  if (state.mode !== "file"){ els.searchSuggest.classList.remove("show"); if ((els.searchInput.value||"").trim()) notify("Selecione um arquivo para buscar."); return; }
+  const q = (els.searchInput?.value || "");
+  if (state.mode !== "file"){
+    els.searchSuggest?.classList.remove("show");
+    if (q.trim()) notify("Selecione um arquivo para buscar.");
+    return;
+  }
 
   const tokens = buildQueryTokens(q);
   if (!tokens.length){
     renderFileItemsProgressive(state.items);
     state.matchArticles = []; state.matchIdx = -1;
-    els.count.textContent = "0/0";
-    els.searchSuggest.classList.remove("show");
+    if (els.count) els.count.textContent = "0/0";
+    els.searchSuggest?.classList.remove("show");
     return;
   }
 
-  els.searchSpinner.classList.add("show");
+  els.searchSpinner?.classList.add("show");
   try{
     state.currentTokens = tokens;
 
@@ -524,12 +648,13 @@ function onSearchInput(){
       renderSuggestions(list, tokens);
     });
   } finally {
-    els.searchSpinner.classList.remove("show");
+    els.searchSpinner?.classList.remove("show");
   }
 }
 
 /* Contador e navegação entre ocorrências */
 function updateCount(){
+  if (!els.count) return;
   if (!state.matchArticles?.length){ els.count.textContent = "0/0"; return; }
   els.count.textContent = `${state.matchIdx+1}/${state.matchArticles.length}`;
 }
@@ -548,48 +673,46 @@ function gotoPrev(){
   updateCount(); updateCurrentOutline();
 }
 
-/* =================== Filebar: tabs + botão "Mais" =================== */
-/* ... (preserva lógica de distribuição e menu “Mais”) */
-
 /* =================== Mini Finder (float) =================== */
 els.prevBtn?.addEventListener("click", gotoPrev);
 els.nextBtn?.addEventListener("click", gotoNext);
-els.closeFinder?.addEventListener("click", ()=> els.finderPop.classList.remove("show"));
+els.closeFinder?.addEventListener("click", ()=> els.finderPop?.classList.remove("show"));
 
-/* =================== Barra superior e favoritos =================== */
-els.brandBtn.addEventListener("click", ()=>{
+/* =================== Topbar/Favoritos =================== */
+els.brandBtn?.addEventListener("click", ()=>{
   document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active");
+  els.favTab?.classList.add("active");
   state.mode="favorites"; renderFavorites(); window.scrollTo({top:0, behavior:"instant"});
 });
-els.favTab.addEventListener("click", ()=>{
+els.favTab?.addEventListener("click", ()=>{
   document.querySelectorAll(".tab").forEach(c=>c.classList.remove("active"));
-  els.favTab.classList.add("active"); state.mode="favorites"; renderFavorites();
+  els.favTab?.classList.add("active"); state.mode="favorites"; renderFavorites();
 });
 
-/* Busca */
-els.searchInput.addEventListener("input", onSearchInput);
+/* Busca UI */
+els.searchInput?.addEventListener("input", onSearchInput);
 toggleClear();
 
-els.searchInput.addEventListener("focus", ()=>{
+els.searchInput?.addEventListener("focus", ()=>{
   if (window.matchMedia("(max-width: 768px)").matches) document.body.classList.add("search-open");
-  els.finderPop.classList.add("show");
+  els.finderPop?.classList.add("show");
 });
-els.searchInput.addEventListener("blur", ()=>{
+els.searchInput?.addEventListener("blur", ()=>{
   if (window.matchMedia("(max-width: 768px)").matches) document.body.classList.remove("search-open");
 });
-els.clearSearch.addEventListener("click", ()=>{
+els.clearSearch?.addEventListener("click", ()=>{
+  if (!els.searchInput) return;
   els.searchInput.value="";
-  els.searchSuggest.classList.remove("show");
+  els.searchSuggest?.classList.remove("show");
   toggleClear();
   if (state.mode==="file") {
     renderFileItemsProgressive(state.items);
     state.matchArticles=[]; state.matchIdx=-1; updateCount();
   }
 });
-els.searchInput.addEventListener("keydown", (e)=>{
+els.searchInput?.addEventListener("keydown", (e)=>{
   const box = els.searchSuggest;
-  if (box.classList.contains("show")){
+  if (box?.classList.contains("show")){
     if (e.key==="ArrowDown" || e.key==="ArrowUp"){
       e.preventDefault();
       const items = [...box.querySelectorAll(".suggest-item")]; if (!items.length) return;
@@ -628,8 +751,10 @@ function jumpToArticle(htmlId){
 /* =================== Modal de Categorias (Arquivos) =================== */
 function openCatModal(){
   const catMap = getCatalogByCategory();
+  if (!els.catGrid) return;
   els.catGrid.innerHTML = "";
   const frag = document.createDocumentFragment();
+
   for (const [cat, arr] of catMap.entries()){
     const g = document.createElement("div");
     g.className = "cat-group";
@@ -637,6 +762,7 @@ function openCatModal(){
     h.className = "cat-h";
     h.textContent = cat;
     g.appendChild(h);
+
     const ul = document.createElement("div");
     ul.className = "cat-list";
     arr.forEach(({url,label})=>{
@@ -645,7 +771,7 @@ function openCatModal(){
       b.addEventListener("click", ()=>{
         closeCatModal();
         const tabBtn=[...document.querySelectorAll(".tab")].find(t=>t.dataset.url===url) || null;
-        loadFile(url, tabBtn);
+        loadFile(url, tabBtn); // ← carrega o arquivo ao clicar
       });
       ul.appendChild(b);
     });
@@ -653,25 +779,48 @@ function openCatModal(){
     frag.appendChild(g);
   }
   els.catGrid.appendChild(frag);
-  els.catBackdrop.setAttribute("aria-hidden","false");
+  els.catBackdrop?.setAttribute("aria-hidden","false");
 }
-function closeCatModal(){ els.catBackdrop.setAttribute("aria-hidden","true"); }
+function closeCatModal(){ els.catBackdrop?.setAttribute("aria-hidden","true"); }
 
-/* =================== IA =================== */
-/* ... (preserva buildPrompt, openStudyModal, etc.) */
+els.catTab?.addEventListener("click", openCatModal);
+els.closeCat?.addEventListener("click", closeCatModal);
+els.catBackdrop?.addEventListener("click", (e) => { if (e.target === els.catBackdrop) closeCatModal(); });
+
+/* =================== IA (stubs seguros) =================== */
+// Placeholders para evitar erros se o seu HTML não incluir esses modais
+function buildPrompt(articleMeta){
+  const title = articleMeta?._split?.titleText || articleMeta?.title || "Artigo";
+  const body  = articleMeta?._split?.body || articleMeta?.text || "";
+  return `Explique didaticamente o seguinte artigo:\n\n${title}\n\n${body}\n\n💚 direito.love`;
+}
+function openStudyModal(title, prompt){
+  if (els.studyModal && els.modalTitle && els.promptPreview){
+    els.modalTitle.textContent = title || "Artigo";
+    els.promptPreview.value = prompt || "";
+    els.studyModal.setAttribute("aria-hidden","false");
+  } else {
+    navigator.clipboard?.writeText(prompt || "").then(()=> notify("Prompt copiado."));
+  }
+}
+els.copyPromptBtn?.addEventListener("click", ()=>{
+  const text = els.promptPreview?.value || "";
+  navigator.clipboard?.writeText(text).then(()=> notify("Prompt copiado."));
+});
+els.closeStudy?.addEventListener("click", ()=> els.studyModal?.setAttribute("aria-hidden","true"));
 
 /* =================== Ações do FAB (hambúrguer secundário) =================== */
-let actionMenu = document.getElementById("actionMenu");
-const actionCtx  = document.getElementById("actionContext");
+const actionFab = els.actionFab;
+const actionMenu = els.actionMenu;
 
 function getActiveArticle(){
-  // prioriza o .in-view
+  // Prioriza o .in-view
   let el = document.querySelector("article.in-view");
   if (!el){
-    // fallback: primeiro article visível
     el = document.querySelector("article[data-idx]");
   }
   if (!el) return null;
+
   const idx  = Number(el.dataset.idx);
   const meta = state.articles.find(x => x._aidx === idx);
   return { el, meta };
@@ -684,9 +833,9 @@ function snippetFromArticle(el, max=32){
   return `“${cut}”`;
 }
 function updateActionPreview(){
-  if (!actionCtx) return;
+  if (!els.actionContext) return;
   const a = getActiveArticle();
-  actionCtx.textContent = snippetFromArticle(a?.el, 32);
+  els.actionContext.textContent = snippetFromArticle(a?.el, 32);
   const favBtn = document.querySelector('#actionMenu [data-action="fav"]');
   if (favBtn && a?.el){
     const id = store.makeId(a.el.dataset.fileUrl, a.el.id);
@@ -694,17 +843,14 @@ function updateActionPreview(){
   }
 }
 function toggleActionMenu(show){
+  if (!actionMenu) return;
   if (show === undefined) show = !actionMenu.classList.contains("show");
   actionMenu.classList.toggle("show", show);
   actionMenu.setAttribute("aria-hidden", show ? "false" : "true");
-  const actionFab = els.actionFab;
   actionFab?.setAttribute("aria-expanded", show ? "true" : "false");
 }
-
-const actionFab = els.actionFab;
 actionFab?.addEventListener("click", ()=>{
-  const a = getActiveArticle();
-  actionCtx.textContent = snippetFromArticle(a?.el, 32); // preview
+  updateActionPreview();
   toggleActionMenu();
 });
 actionFab?.addEventListener("keydown", (e)=>{
@@ -714,7 +860,6 @@ actionFab?.addEventListener("keydown", (e)=>{
     toggleActionMenu();
   }
 });
-
 document.addEventListener("click", (e)=>{
   if (!actionMenu) return;
   if (!actionMenu.contains(e.target) && e.target !== actionFab && !actionFab?.contains(e.target)){
@@ -752,9 +897,7 @@ actionMenu?.addEventListener("click", async (ev)=>{
   if (action === "study"){
     const useArticle = meta || (entry.text ? {
       text: entry.text,
-      _split: splitIntoBlocks(entry.text)[0]
-        ? parseBlockToItem(splitIntoBlocks(entry.text)[0], 0)._split
-        : { supra:[], titleText:"Artigo", body:entry.text, epigrafe:"" },
+      _split: { supra:[], titleText:"Artigo", body:entry.text, epigrafe:"" },
       title: "Artigo",
     } : null);
     if (!useArticle?.text){ notify("Não consegui capturar o texto deste artigo."); return; }
@@ -769,9 +912,7 @@ actionMenu?.addEventListener("click", async (ev)=>{
     if (store.isFavorite(id)){
       store.removeFavorite(id);
       notify("⭐ Removido dos favoritos");
-      // Atualiza ícone no card
       artEl.querySelector('.icon-btn[data-action="fav"]')?.classList.remove("active");
-      // Se estiver em Favoritos, re-renderiza a lista
       if (state.mode === "favorites") { renderFavorites(); }
     } else {
       if (!entry.text){ notify("Abra o arquivo para favoritar este artigo."); return; }
@@ -785,26 +926,49 @@ actionMenu?.addEventListener("click", async (ev)=>{
   }
 
   if (action === "planalto"){
-    const titleText = meta?._split?.titleText || "";
-    const combo = makePlanaltoUrl(artEl.dataset.fileLabel, titleText);
-    if (!combo){ notify("Código/lei não mapeado para Planalto."); return; }
-    window.open(combo.try1, "_blank", "noopener,noreferrer");
+    // Link simples para a lei/código no Planalto (base por rótulo)
+    const base = planaltoMap[artEl.dataset.fileLabel];
+    const url = base || null;
+    if (!url){ notify("Código/lei não mapeado para Planalto."); return; }
+    window.open(url, "_blank", "noopener,noreferrer");
     toggleActionMenu(false);
     return;
   }
 });
 
-/* =================== Atalhos de teclado =================== */
+/* =================== Planalto (bases simples) =================== */
+const planaltoMap = {
+  "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
+  "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+  "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
+  "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm",
+  "Processo Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
+  "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
+  "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
+  "Código Tributário Nacional": "https://www.planalto.gov.br/ccivil_03/leis/l5172.htm",
+  "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
+  "Código Florestal": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm",
+  "Código Penal Militar": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del1001.htm",
+  "Lei Maria da Penha": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11340.htm",
+  "Lei de Execução Penal": "https://www.planalto.gov.br/ccivil_03/leis/l7210.htm",
+  "Lei de Drogas": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11343.htm",
+  "Lei LGPD": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+  "Marco Civil da Internet": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+  "Lei dos Crimes Hediondos": "https://www.planalto.gov.br/ccivil_03/leis/l8072.htm",
+  "ECA - Est. da Criança e Adolescente": "https://www.planalto.gov.br/ccivil_03/leis/l8069.htm",
+  "Est. do Desarmamento": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10826.htm",
+  "Est. do Idoso": "https://www.planalto.gov.br/ccivil_03/leis/2003/l10741.htm",
+  "Est. da Juventude": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12852.htm",
+  "Est. da Pessoa com Deficiência": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm",
+  "Est. da Oab": "https://www.planalto.gov.br/ccivil_03/leis/l8906.htm"
+};
+
+/* =================== Teclado global =================== */
 document.addEventListener("keydown", (e)=>{
   if (e.key === "F3" || (e.ctrlKey && e.key.toLowerCase() === "g")) { e.preventDefault(); gotoNext(); }
   if ((e.shiftKey && e.key === "F3") || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "g")) { e.preventDefault(); gotoPrev(); }
-  if (e.key === "Escape"){ els.searchSuggest.classList.remove("show"); }
+  if (e.key === "Escape"){ els.searchSuggest?.classList.remove("show"); }
 });
-
-/* =================== Categorias (Arquivos) ===== */
-els.catTab.addEventListener("click", openCatModal);
-els.closeCat.addEventListener("click", closeCatModal);
-els.catBackdrop.addEventListener("click", (e) => { if (e.target === els.catBackdrop) closeCatModal(); });
 
 /* =================== Restauração =================== */
 function restoreViewAfterRender() {
@@ -825,26 +989,48 @@ function restoreViewAfterRender() {
 }
 
 /* =================== Boot =================== */
+function renderFilebar(category){
+  // Mantemos a área oculta por CSS, mas deixo a função consistente
+  const options = category==="Todos" ? getAllOptions() : getOptionsByCategory(category);
+  const wrap = els.filebarInner;
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  const tabs = options.map((opt)=>{
+    const btn = document.createElement("button");
+    btn.className = "tab";
+    btn.type = "button";
+    btn.dataset.url = opt.value;
+    btn.textContent = opt.textContent;
+    btn.title = opt.textContent;
+    btn.addEventListener("click", ()=> loadFile(opt.value, btn));
+    return btn;
+  });
+  arrangeTabsWithMore(wrap, tabs);
+}
+
 async function boot() {
   buildCatalogMaps();
-  renderFilebar("Todos"); // inicia com todas as categorias
+  renderFilebar("Todos"); // usamos o modal de categorias; esta linha apenas prepara eventuais tabs
 
   const last = store.getLast();
   if (last?.mode === "file" && last?.fileUrl) {
-    const btn = [...els.filebarInner.querySelectorAll(".tab")]
+    const btn = [...(els.filebarInner?.querySelectorAll(".tab")||[])]
       .find((t) => t.dataset.url === last.fileUrl) || null;
     await loadFile(last.fileUrl, btn || null);
     restoreViewAfterRender();
   } else {
-    els.favTab.classList.add("active");
+    els.favTab?.classList.add("active");
     renderFavorites();
     restoreViewAfterRender();
   }
 
   rebuildSuggestionsIndex();
-
-  // mantém o mini-texto/label do FAB sincronizado no carregamento
   updateActionPreview();
-
 }
 boot();
+
+/* =================== Scroll listener para artigo em foco =================== */
+window.addEventListener("scroll", () => {
+  if (state.mode === "file") updateCurrentOutline();
+});
