@@ -439,7 +439,8 @@ async function openReader(item) {
       h4.textContent = `${a.title} — ${a.source}`;
       const txt = document.createElement("div");
       txt.className = "a-body";
-      txt.textContent = addRespirationsForDisplay(a.text); // só respiros visuais
+const displayText = (a.body && a.body.trim()) ? a.body : a.text;
+txt.textContent = addRespirationsForDisplay(displayText); // só respiros visuais
       body.append(h4, txt);
 
       row.append(chk, body);
