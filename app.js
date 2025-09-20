@@ -34,7 +34,7 @@ const els = {
   // Catálogo
   codeSelect: document.getElementById("codeSelect"),
 
-  // Modal estudo
+  // Modais centrais
   studyModal: document.getElementById("studyModal"),
   closeStudy: document.getElementById("closeStudy"),
   modalTitle: document.getElementById("modalTitle"),
@@ -42,19 +42,25 @@ const els = {
   promptPreview: document.getElementById("promptPreview"),
   copyPromptBtn: document.getElementById("copyPromptBtn"),
 
-  // Modais
+  // Popovers (arquivos/listas/salvar)
   filesModal: document.getElementById("filesModal"),
+  filesPopover: document.getElementById("filesPopover"),
+  filesArrow: document.getElementById("filesArrow"),
   closeFiles: document.getElementById("closeFiles"),
   filesSearch: document.getElementById("filesSearch"),
   filesBody: document.getElementById("filesBody"),
 
   listsModal: document.getElementById("listsModal"),
+  listsPopover: document.getElementById("listsPopover"),
+  listsArrow: document.getElementById("listsArrow"),
   closeLists: document.getElementById("closeLists"),
   newListName: document.getElementById("newListName"),
   createListBtn: document.getElementById("createListBtn"),
   listsBody: document.getElementById("listsBody"),
 
   saveModal: document.getElementById("saveModal"),
+  savePopover: document.getElementById("savePopover"),
+  saveArrow: document.getElementById("saveArrow"),
   closeSave: document.getElementById("closeSave"),
   saveNewListName: document.getElementById("saveNewListName"),
   saveCreateListBtn: document.getElementById("saveCreateListBtn"),
@@ -92,6 +98,9 @@ const state = {
 
   // lista atual aberta (quando em modo lists)
   currentList: null, // {id,name,items:[]}
+
+  // âncora de popover ativa
+  currentAnchor: null,
 };
 
 const store = {
@@ -224,10 +233,7 @@ function parseBlockToItem(block, idx) {
   const titleLine = after.shift() || "";
 
   const ensureBlank = (txt)=>
-    txt.replace(
-      /([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g,
-      (_,a,b)=>`${a}\n${b}`
-    );
+    txt.replace(/([^\n])\n(§|Par[aá]grafo|[IVXLCDM]+\s*[-–—.]|[a-z]\))/g, (_,a,b)=>`${a}\n${b}`);
   const bodyText = ensureBlank(after.join("\n"));
   const textForStorage = [epigrafe ? `Epígrafe: ${epigrafe}` : "", titleLine, bodyText]
     .filter(Boolean).join("\n");
@@ -387,7 +393,7 @@ function buildArticleElement(a){
 }
 function clearArticles(){ els.articles.innerHTML=""; state.currentArticleIdx=-1; }
 
-/* =================== Outline (in-view) — robusto =================== */
+/* =================== Outline (in-view) =================== */
 let _scrollRAF = null;
 function updateCurrentOutline() {
   const nodes = Array.from(document.querySelectorAll("article[data-idx]"));
@@ -430,10 +436,7 @@ function updateCurrentOutline() {
 }
 function onScrollThrottled(){
   if (_scrollRAF) return;
-  _scrollRAF = requestAnimationFrame(()=>{
-    _scrollRAF = null;
-    updateCurrentOutline();
-  });
+  _scrollRAF = requestAnimationFrame(()=>{ _scrollRAF = null; updateCurrentOutline(); });
 }
 window.addEventListener("scroll", onScrollThrottled, { passive:true });
 window.addEventListener("resize", onScrollThrottled);
@@ -686,13 +689,92 @@ async function runLocalSearch(){
   }
 }
 
-/* =================== Arquivos: modal =================== */
-function openFilesModal(){
-  buildFilesModal(); els.filesModal.setAttribute("aria-hidden","false");
+/* =================== Popover core =================== */
+function anchorPopover({backdrop, panel, arrow, anchorEl, placement="bottom-start", gap=8}){
+  if (!backdrop || !panel || !anchorEl) return;
+  const rect = anchorEl.getBoundingClientRect();
+  let x = rect.left, y = rect.bottom + gap;
+
+  // largura e limites
+  const pw = panel.offsetWidth || 360;
+  const ph = panel.offsetHeight || 300;
+  const vw = window.innerWidth, vh = window.innerHeight;
+
+  if (placement.startsWith("bottom")){
+    y = Math.min(y, vh - ph - 12);
+  }
+  if (placement.endsWith("start")){
+    x = Math.max(12, Math.min(x, vw - pw - 12));
+  } else if (placement.endsWith("end")){
+    x = Math.max(12, Math.min(rect.right - pw, vw - pw - 12));
+  }
+
+  panel.style.left = `${x}px`;
+  panel.style.top  = `${y}px`;
+
+  if (arrow){
+    const ax = Math.min(Math.max(rect.left + rect.width/2 - 7, x + 12), x + pw - 24);
+    const ay = y - 7; // acima do popover
+    arrow.style.left = `${ax}px`;
+    arrow.style.top  = `${ay}px`;
+  }
 }
-function closeFilesModal(){
-  els.filesModal.setAttribute("aria-hidden","true");
+function openPopover(backdrop){
+  if (!backdrop) return;
+  backdrop.setAttribute("aria-hidden","false");
 }
+function closePopover(backdrop){
+  if (!backdrop) return;
+  backdrop.setAttribute("aria-hidden","true");
+}
+
+/* =================== Arquivos: popover =================== */
+function openFilesModal(anchorEl){
+  buildFilesModal();
+  anchorPopover({backdrop:els.filesModal, panel:els.filesPopover, arrow:els.filesArrow, anchorEl, placement:"bottom-start", gap:8});
+  openPopover(els.filesModal);
+  state.currentAnchor = anchorEl;
+}
+function closeFilesModal(){ closePopover(els.filesModal); }
+
+/* =================== Listas: popover =================== */
+function openListsModal(anchorEl){
+  renderListsModal();
+  anchorPopover({backdrop:els.listsModal, panel:els.listsPopover, arrow:els.listsArrow, anchorEl, placement:"bottom-end", gap:8});
+  openPopover(els.listsModal);
+  state.currentAnchor = anchorEl;
+}
+function closeListsModal(){ closePopover(els.listsModal); }
+
+/* =================== Salvar em lista: popover =================== */
+function openSaveModalFor(entry, anchorEl){
+  state.pendingSave = entry;
+  renderSaveLists();
+  anchorPopover({backdrop:els.saveModal, panel:els.savePopover, arrow:els.saveArrow, anchorEl, placement:"bottom-end", gap:8});
+  openPopover(els.saveModal);
+  state.currentAnchor = anchorEl;
+}
+function closeSaveModal(){
+  closePopover(els.saveModal);
+  state.pendingSave = null;
+}
+
+/* Reposiciona popovers ativos em scroll/resize */
+function repositionActivePopovers(){
+  if (els.filesModal.getAttribute("aria-hidden")==="false" && state.currentAnchor){
+    anchorPopover({backdrop:els.filesModal, panel:els.filesPopover, arrow:els.filesArrow, anchorEl:state.currentAnchor, placement:"bottom-start", gap:8});
+  }
+  if (els.listsModal.getAttribute("aria-hidden")==="false" && state.currentAnchor){
+    anchorPopover({backdrop:els.listsModal, panel:els.listsPopover, arrow:els.listsArrow, anchorEl:state.currentAnchor, placement:"bottom-end", gap:8});
+  }
+  if (els.saveModal.getAttribute("aria-hidden")==="false" && state.currentAnchor){
+    anchorPopover({backdrop:els.saveModal, panel:els.savePopover, arrow:els.saveArrow, anchorEl:state.currentAnchor, placement:"bottom-end", gap:8});
+  }
+}
+window.addEventListener("resize", repositionActivePopovers);
+window.addEventListener("scroll", repositionActivePopovers, { passive:true });
+
+/* =================== Build de conteúdos (arquivos/listas/salvar) =================== */
 function buildFilesModal(){
   const map = getCatalogByCategory();
   const q = (els.filesSearch.value || "").trim().toLowerCase();
@@ -706,17 +788,13 @@ function buildFilesModal(){
       .forEach(({label,value})=>{
         const item = document.createElement("div");
         item.className = "files-item"; item.textContent = label;
-        item.addEventListener("click", ()=> loadFile(value, item));
+        item.addEventListener("click", ()=> { loadFile(value, item); closeFilesModal(); });
         group.appendChild(item);
       });
     frag.appendChild(group);
   }
   els.filesBody.appendChild(frag);
 }
-
-/* =================== Listas: modal principal =================== */
-function openListsModal(){ renderListsModal(); els.listsModal.setAttribute("aria-hidden","false"); }
-function closeListsModal(){ els.listsModal.setAttribute("aria-hidden","true"); }
 function renderListsModal(){
   const lists = store.listLists();
   els.listsBody.innerHTML = "";
@@ -739,20 +817,6 @@ function renderListsModal(){
   });
   els.listsBody.appendChild(frag);
 }
-function btn(label, onClick){
-  const b=document.createElement("button"); b.className="small-btn"; b.textContent=label; b.addEventListener("click", onClick); return b;
-}
-
-/* =================== Salvar em lista (mini-modal) =================== */
-function openSaveModalFor(entry){
-  state.pendingSave = entry;
-  renderSaveLists();
-  els.saveModal.setAttribute("aria-hidden","false");
-}
-function closeSaveModal(){
-  els.saveModal.setAttribute("aria-hidden","true");
-  state.pendingSave = null;
-}
 function renderSaveLists(){
   const lists = store.listLists();
   const body = els.saveListsBody;
@@ -765,15 +829,24 @@ function renderSaveLists(){
   lists.forEach((l)=>{
     const row = document.createElement("div"); row.className="save-row";
     const label = document.createElement("div"); label.textContent = `${l.name} (${l.items.length})`;
-    const add = btn("Adicionar", ()=>{
+    const addBtn = btn("Adicionar", ()=>{
       if (!state.pendingSave) return;
       store.addToList(l.id, state.pendingSave);
       notify(`Salvo em: ${l.name}`); closeSaveModal();
     });
-    row.append(label, add);
+    // Clique na linha inteira também salva
+    row.addEventListener("click", ()=>{
+      if (!state.pendingSave) return;
+      store.addToList(l.id, state.pendingSave);
+      notify(`Salvo em: ${l.name}`); closeSaveModal();
+    });
+    row.append(label, addBtn);
     frag.appendChild(row);
   });
   body.appendChild(frag);
+}
+function btn(label, onClick){
+  const b=document.createElement("button"); b.className="small-btn"; b.textContent=label; b.addEventListener("click", (e)=>{ e.stopPropagation(); onClick(); }); return b;
 }
 
 /* =================== Ações / FAB =================== */
@@ -794,7 +867,7 @@ function updateActionMenuForMode(){
       studyAllBtn.dataset.action = "studyAll";
       studyAllBtn.textContent = "🧩 Estudar todos";
       els.actionMenu.appendChild(studyAllBtn);
-      studyAllBtn.addEventListener("click", ()=> handleAction("studyAll"));
+      studyAllBtn.addEventListener("click", (e)=> handleAction("studyAll", e.currentTarget));
     }
     studyAllBtn.style.display = "block";
   } else {
@@ -848,7 +921,7 @@ ${parts.join("\n\n")}
 
 💚 direito.love`;
 }
-function handleAction(action){
+function handleAction(action, anchorEl){
   const node = document.querySelector("article.in-view");
   if (!node && action!=="studyAll") return notify("Nenhum artigo em foco.");
 
@@ -858,7 +931,7 @@ function handleAction(action){
     const fileLabel = node.dataset.fileLabel || state.currentFileLabel || "";
     const id = `${fileUrl}::${htmlId}`;
     const text = node.innerText || "";
-    openSaveModalFor({ id, htmlId, fileUrl, fileLabel, text });
+    openSaveModalFor({ id, htmlId, fileUrl, fileLabel, text }, anchorEl || els.actionFab);
 
   } else if (action==="study"){
     const title = node.querySelector(".art-title")?.textContent?.trim() || "Artigo";
@@ -893,17 +966,17 @@ function handleAction(action){
 // Topbar
 els.infoBtn.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","false"));
 els.closeInfo.addEventListener("click", ()=> els.infoModal.setAttribute("aria-hidden","true"));
-els.brandBtn.addEventListener("click", ()=> { renderListsModal(); openListsModal(); });
+els.brandBtn.addEventListener("click", ()=> { renderListsModal(); openListsModal(els.brandBtn); });
 
 // Barra secundária
-els.catTab.addEventListener("click", openFilesModal);
-els.favTab.addEventListener("click", openListsModal);
+els.catTab.addEventListener("click", ()=> openFilesModal(els.catTab));
+els.favTab.addEventListener("click", ()=> openListsModal(els.favTab));
 
-// Arquivos modal
+// Arquivos popover
 els.closeFiles.addEventListener("click", closeFilesModal);
 els.filesSearch?.addEventListener("input", buildFilesModal);
 
-// Listas modal
+// Listas popover
 els.closeLists.addEventListener("click", closeListsModal);
 els.createListBtn.addEventListener("click", ()=>{
   const name = (els.newListName.value||"").trim();
@@ -911,7 +984,7 @@ els.createListBtn.addEventListener("click", ()=>{
   store.createList(name); els.newListName.value=""; renderListsModal(); notify("Lista criada");
 });
 
-// Mini-modal salvar
+// Salvar popover
 els.closeSave.addEventListener("click", closeSaveModal);
 els.saveCreateListBtn.addEventListener("click", ()=>{
   const name = (els.saveNewListName.value||"").trim();
@@ -921,11 +994,14 @@ els.saveCreateListBtn.addEventListener("click", ()=>{
   renderSaveLists();
 });
 
+// Fechar popovers clicando fora
+[els.filesModal, els.listsModal, els.saveModal].forEach(backdrop=>{
+  backdrop.addEventListener("click",(e)=>{ if (e.target===backdrop) closePopover(backdrop); });
+});
+
 // Busca
 els.searchInput.addEventListener("input", onSearchInput);
-els.searchInput.addEventListener("keydown", (e)=>{
-  if (e.key==="Enter") runLocalSearch();
-});
+els.searchInput.addEventListener("keydown", (e)=>{ if (e.key==="Enter") runLocalSearch(); });
 els.clearSearch.addEventListener("click", ()=>{ els.searchInput.value=""; onSearchInput(); });
 
 // Ações / FAB
@@ -940,7 +1016,7 @@ document.addEventListener("click",(e)=>{
 els.actionMenu.addEventListener("click",(e)=>{
   const btn = e.target.closest(".menu-btn");
   if (!btn) return;
-  handleAction(btn.dataset.action);
+  handleAction(btn.dataset.action, btn); // passa âncora do item clicado
 });
 
 // IA buttons
@@ -964,7 +1040,8 @@ function buildCatalogMapsAndRestore(){
     loadFile(last.fileUrl);
   } else {
     renderListsModal();
-    openListsModal();
+    // abre como popover próximo ao botão de estrela (ou à marca)
+    openListsModal(els.favTab);
   }
 }
 buildCatalogMapsAndRestore();
