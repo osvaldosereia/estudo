@@ -4,18 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
-
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ffffff">
-
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- TOP BAR (logo ESQ, busca DIR) -->
+  <!-- TOP BAR -->
   <header class="topbar" role="banner">
     <div class="wrap">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
@@ -26,7 +23,7 @@
     </div>
   </header>
 
-  <!-- Catálogo oculto: mapeia os .txt do /data -->
+  <!-- Catálogo de arquivos (oculto) -->
   <select id="codeSelect" hidden>
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -55,14 +52,14 @@
     </optgroup>
   </select>
 
-  <!-- PILHA DE RESULTADOS (novas buscas sobem para o topo) -->
+  <!-- PILHA DE RESULTADOS -->
   <main class="content">
     <div class="wrap">
       <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
     </div>
   </main>
 
-  <!-- BARRA INFERIOR (dentro do wrap) -->
+  <!-- BARRA INFERIOR -->
   <footer class="bottombar" role="contentinfo">
     <div class="wrap bar-inner">
       <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>ESTUDAR</button>
@@ -70,20 +67,9 @@
     </div>
   </footer>
 
-  <!-- BOTTOM-SHEET: VER SELECIONADOS -->
-  <div id="selectedSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
-    <div class="sheet-card">
-      <div class="sheet-head">
-        <strong id="sheetTitle">Selecionados (máx. 6)</strong>
-        <button class="icon-btn" data-close-sheet aria-label="Fechar">✕</button>
-      </div>
-      <ul id="selectedList" class="sel-list"></ul>
-    </div>
-    <div class="sheet-backdrop" data-close-sheet></div>
-  </div>
-
-  <!-- MODAL LEITOR (central) -->
+  <!-- MODAL: LEITOR -->
   <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
         <strong id="readerTitle">Leitor</strong>
@@ -92,11 +78,11 @@
       </div>
       <div class="modal-body" id="readerBody" tabindex="0"></div>
     </div>
-    <div class="modal-backdrop" data-close-modal></div>
   </div>
 
-  <!-- MODAL ESTUDAR (central, mesmo padrão) -->
+  <!-- MODAL: ESTUDAR -->
   <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
+    <div class="modal-backdrop" data-close-study></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
         <strong id="studyTitle">Estudar com I.A.</strong>
@@ -116,7 +102,20 @@
         </div>
       </div>
     </div>
-    <div class="modal-backdrop" data-close-study></div>
+  </div>
+
+  <!-- MODAL: VER SELECIONADOS (central) -->
+  <div id="selectedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selTitle" hidden>
+    <div class="modal-backdrop" data-close-sel></div>
+    <div class="modal-card" role="document">
+      <div class="modal-head">
+        <strong id="selTitle">Selecionados (máx. 6)</strong>
+        <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <ul id="selectedList" class="sel-list"></ul>
+      </div>
+    </div>
   </div>
 
   <!-- TOASTS -->
