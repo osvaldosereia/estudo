@@ -4,15 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
+
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ffffff">
+
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- TOP BAR -->
+  <!-- TOP BAR (white) -->
   <header class="topbar" role="banner">
     <div class="wrap">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
@@ -52,18 +55,18 @@
     </optgroup>
   </select>
 
-  <!-- PILHA DE RESULTADOS -->
+  <!-- RESULTADOS (fundo cinza claro) -->
   <main class="content">
     <div class="wrap">
       <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
     </div>
   </main>
 
-  <!-- BARRA INFERIOR -->
+  <!-- BARRA INFERIOR (um tom acima do fundo) -->
   <footer class="bottombar" role="contentinfo">
     <div class="wrap bar-inner">
-      <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>ESTUDAR</button>
-      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – VER</button>
+      <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
+      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – Ver</button>
     </div>
   </footer>
 
@@ -72,7 +75,7 @@
     <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
-        <strong id="readerTitle">Leitor</strong>
+        <span id="readerTitle" class="title">Leitor</span>
         <div class="modal-meta"><span id="selCount">0/6</span></div>
         <button class="icon-btn" data-close-modal aria-label="Fechar">✕</button>
       </div>
@@ -85,17 +88,17 @@
     <div class="modal-backdrop" data-close-study></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
-        <strong id="studyTitle">Estudar com I.A.</strong>
+        <span id="studyTitle" class="title">Estudar com I.A.</span>
         <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <p class="study-sub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
+        <p class="muted">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
         <pre id="promptPreview" class="prompt-box"></pre>
         <div class="ia-grid">
-          <a class="ia-btn btn" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
-          <a class="ia-btn btn" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
-          <a class="ia-btn btn" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
-          <a class="ia-btn btn" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
+          <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
+          <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
+          <a class="chip" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
+          <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
         <div class="copy-prompt">
           <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
@@ -104,12 +107,12 @@
     </div>
   </div>
 
-  <!-- MODAL: VER SELECIONADOS (central) -->
+  <!-- MODAL: VER SELECIONADOS -->
   <div id="selectedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selTitle" hidden>
     <div class="modal-backdrop" data-close-sel></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
-        <strong id="selTitle">Selecionados (máx. 6)</strong>
+        <span id="selTitle" class="title">Selecionados (máx. 6)</span>
         <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
