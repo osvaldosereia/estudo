@@ -255,17 +255,23 @@ article::after{
 }
 .modal-backdrop[aria-hidden="false"]{ display:block; }
 .modal{
-  width:min(780px, 92vw); margin: calc(var(--topbar-h) + var(--filebar-h) + 20px) auto 24px;
+  width:min(780px, 92vw);
+  margin: 16px auto;
   background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow: var(--shadow-strong);
   padding:12px;
+  /* Novo: evita “sumir pela base” no mobile */
+  max-height: calc(100dvh - 32px);
+  overflow:auto;
 }
-.study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:0; background:#fff; z-index:1; padding-bottom:4px; }
 .study-title{ margin:0; font-size:1.05rem; font-weight:600; }
 .study-close.btn{
   width:32px; height:32px; border-radius:8px; border:1px solid var(--btn-border); background:#fff; cursor:pointer; display:grid; place-items:center;
 }
 .prompt-box{
   white-space:pre-wrap; background:#f9fafb; border:1px solid #eef1f6; border-radius:10px; padding:10px; margin:10px 0;
+  max-height: 48vh; /* segura o conteúdo */
+  overflow: auto;
 }
 .ia-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
 .ia-btn.btn{
@@ -273,16 +279,16 @@ article::after{
 }
 .copy-prompt{ display:flex; justify-content:flex-end; }
 
-/* ===== Arquivos: MODAL NOVO ===== */
+/* ===== Arquivos: MODAL ===== */
 .files-body{ display:grid; grid-template-columns: 1fr; gap:8px; max-height:60vh; overflow:auto; }
-.files-search{ margin: 8px 0 4px; }
+.files-search{ margin: 8px 0 4px; position:sticky; top:0; background:#fff; z-index:1; padding-top:4px; }
 .files-search input{ width:100%; height:36px; border:1px solid #cfd4e2; border-radius:10px; padding:0 10px; }
 .files-group{ border:1px solid #eef1f6; border-radius:10px; padding:6px; }
 .files-group h4{ margin:6px 6px 8px; font-size:.92rem; color:#0f172a; }
 .files-item{ padding:8px 10px; border-radius:8px; cursor:pointer; }
 .files-item:hover{ background:#f6f7fb; }
 
-/* ===== Listas (Favoritos 2.0) ===== */
+/* ===== Listas ===== */
 .list-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:8px; border:1px solid #eef1f6; }
 .list-row + .list-row{ margin-top:8px; }
 .list-name{ font-weight:600; }
