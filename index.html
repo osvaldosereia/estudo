@@ -22,7 +22,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Listas)">
-      <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
+      <button class="btn" id="infoBtn" title="Informações" aria-label="Informações" type="button" style="width:36px;height:36px">
         <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
       </button>
     </div>
@@ -103,7 +103,7 @@
   <!-- TOAST -->
   <div class="toast" id="toast" role="status" aria-live="polite">Ok!</div>
 
-  <!-- MODAL: ESTUDAR COM I.A. (médio) -->
+  <!-- MODAIS CENTRAIS -->
   <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal modal--md" role="document">
       <div class="study-head">
@@ -124,7 +124,6 @@
     </div>
   </div>
 
-  <!-- MODAL: INFORMAÇÕES (pequeno) -->
   <div class="modal-backdrop" id="infoModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal modal--sm" role="document">
       <div class="study-head">
@@ -137,48 +136,49 @@
     </div>
   </div>
 
-  <!-- MODAL: ARQUIVOS (médio) -->
-  <div class="modal-backdrop" id="filesModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal modal--md" role="document">
-      <div class="study-head">
-        <h3 class="study-title">Arquivos</h3>
-        <button class="study-close btn" id="closeFiles" aria-label="Fechar">✕</button>
+  <!-- POPOVER: ARQUIVOS -->
+  <div class="popover-backdrop" id="filesModal" aria-hidden="true">
+    <div class="popover popover--sm" id="filesPopover" role="dialog" aria-modal="true">
+      <div class="popover-head">
+        <h4 class="popover-title">Arquivos</h4>
+        <button class="popover-close btn" id="closeFiles" aria-label="Fechar">✕</button>
       </div>
       <div class="files-search"><input id="filesSearch" type="search" placeholder="Filtrar por nome…"></div>
       <div class="files-body" id="filesBody"></div>
     </div>
+    <div class="pop-arrow" id="filesArrow" aria-hidden="true"></div>
   </div>
 
-  <!-- MODAL: LISTAS (médio) -->
-  <div class="modal-backdrop" id="listsModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal modal--md" role="document">
-      <div class="study-head">
-        <h3 class="study-title">Suas listas</h3>
-        <button class="study-close btn" id="closeLists" aria-label="Fechar">✕</button>
+  <!-- POPOVER: LISTAS -->
+  <div class="popover-backdrop" id="listsModal" aria-hidden="true">
+    <div class="popover popover--sm" id="listsPopover" role="dialog" aria-modal="true">
+      <div class="popover-head">
+        <h4 class="popover-title">Suas listas</h4>
+        <button class="popover-close btn" id="closeLists" aria-label="Fechar">✕</button>
       </div>
-      <div class="input-inline" style="margin:8px 0 10px">
+      <div class="input-inline">
         <input id="newListName" type="text" placeholder="Criar nova lista…">
         <button class="small-btn" id="createListBtn">Criar</button>
       </div>
       <div id="listsBody"></div>
     </div>
+    <div class="pop-arrow" id="listsArrow" aria-hidden="true"></div>
   </div>
 
-  <!-- MINI-MODAL: SALVAR EM LISTA (pequeno) -->
-  <div class="modal-backdrop" id="saveModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal modal--sm" role="document">
-      <div class="study-head">
-        <h3 class="study-title">Salvar em lista</h3>
-        <button class="study-close btn" id="closeSave" aria-label="Fechar">✕</button>
+  <!-- POPOVER: SALVAR EM LISTA -->
+  <div class="popover-backdrop" id="saveModal" aria-hidden="true">
+    <div class="popover popover--sm" id="savePopover" role="dialog" aria-modal="true">
+      <div class="popover-head">
+        <h4 class="popover-title">Salvar em lista</h4>
+        <button class="popover-close btn" id="closeSave" aria-label="Fechar">✕</button>
       </div>
-      <div class="save-body">
-        <div class="input-inline" style="margin:8px 0 10px">
-          <input id="saveNewListName" type="text" placeholder="Criar nova lista…">
-          <button class="small-btn" id="saveCreateListBtn">Criar</button>
-        </div>
-        <div id="saveListsBody"></div>
+      <div class="input-inline">
+        <input id="saveNewListName" type="text" placeholder="Criar nova lista…">
+        <button class="small-btn" id="saveCreateListBtn">Criar</button>
       </div>
+      <div class="save-body" id="saveListsBody"></div>
     </div>
+    <div class="pop-arrow" id="saveArrow" aria-hidden="true"></div>
   </div>
 
   <!-- FAB de Ações -->
