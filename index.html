@@ -59,7 +59,7 @@
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO (fonte para Arquivos) -->
+  <!-- CATÁLOGO OCULTO -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -103,30 +103,30 @@
   <!-- TOAST -->
   <div class="toast" id="toast" role="status" aria-live="polite">Ok!</div>
 
-  <!-- MODAL: ESTUDAR COM I.A. -->
+  <!-- MODAL: ESTUDAR COM I.A. (médio) -->
   <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
+    <div class="modal modal--md" role="document">
       <div class="study-head">
         <h3 id="modalTitle" class="study-title">Estude com I.A.</h3>
         <button class="study-close btn" id="closeStudy" aria-label="Fechar">✕</button>
       </div>
-      <p class="study-sub" id="studySub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
+      <p class="study-sub" id="studySub" style="margin:6px 0 8px">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
       <pre class="prompt-box" id="promptPreview"></pre>
       <div class="ia-grid">
-        <button class="ia-btn btn" data-url="https://chat.openai.com/">ChatGPT</button>
-        <button class="ia-btn btn" data-url="https://gemini.google.com/">Gemini</button>
-        <button class="ia-btn btn" data-url="https://copilot.microsoft.com/">Copilot</button>
-        <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
+        <button class="ia-btn btn soft" data-url="https://chat.openai.com/">ChatGPT</button>
+        <button class="ia-btn btn soft" data-url="https://gemini.google.com/">Gemini</button>
+        <button class="ia-btn btn soft" data-url="https://copilot.microsoft.com/">Copilot</button>
+        <button class="ia-btn btn soft" data-url="https://www.perplexity.ai/">Perplexity</button>
       </div>
-      <div class="copy-prompt">
-        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
+      <div class="actions-row">
+        <button class="btn primary" id="copyPromptBtn">Copiar prompt</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: INFORMAÇÕES -->
+  <!-- MODAL: INFORMAÇÕES (pequeno) -->
   <div class="modal-backdrop" id="infoModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
+    <div class="modal modal--sm" role="document">
       <div class="study-head">
         <h3 class="study-title">Informações</h3>
         <button class="study-close btn" id="closeInfo" aria-label="Fechar">✕</button>
@@ -137,9 +137,9 @@
     </div>
   </div>
 
-  <!-- MODAL: ARQUIVOS (melhorado) -->
+  <!-- MODAL: ARQUIVOS (médio) -->
   <div class="modal-backdrop" id="filesModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
+    <div class="modal modal--md" role="document">
       <div class="study-head">
         <h3 class="study-title">Arquivos</h3>
         <button class="study-close btn" id="closeFiles" aria-label="Fechar">✕</button>
@@ -149,9 +149,9 @@
     </div>
   </div>
 
-  <!-- MODAL: LISTAS (abrir/gerenciar) -->
+  <!-- MODAL: LISTAS (médio) -->
   <div class="modal-backdrop" id="listsModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
+    <div class="modal modal--md" role="document">
       <div class="study-head">
         <h3 class="study-title">Suas listas</h3>
         <button class="study-close btn" id="closeLists" aria-label="Fechar">✕</button>
@@ -164,9 +164,9 @@
     </div>
   </div>
 
-  <!-- MINI-MODAL: SALVAR EM LISTA (criar + adicionar) -->
+  <!-- MINI-MODAL: SALVAR EM LISTA (pequeno) -->
   <div class="modal-backdrop" id="saveModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document" style="max-width:560px">
+    <div class="modal modal--sm" role="document">
       <div class="study-head">
         <h3 class="study-title">Salvar em lista</h3>
         <button class="study-close btn" id="closeSave" aria-label="Fechar">✕</button>
@@ -181,7 +181,7 @@
     </div>
   </div>
 
-  <!-- FAB de Ações (SEM ÍNDICE) -->
+  <!-- FAB de Ações -->
   <button
     id="actionFab"
     title="Ações"
