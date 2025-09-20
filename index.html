@@ -21,14 +21,14 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-inner">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Favoritos)">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início (Listas)">
       <button class="info-btn btn" id="infoBtn" title="Informações" aria-label="Informações" type="button">
         <img src="icons/info.svg" alt="Informações" style="width:18px;height:18px;display:block;">
       </button>
     </div>
   </header>
 
-  <!-- BARRA SECUNDÁRIA (busca central + ícones) -->
+  <!-- BARRA SECUNDÁRIA -->
   <nav class="filebar" aria-label="Ações rápidas e busca">
     <div class="filebar-shell">
       <!-- Arquivos -->
@@ -44,41 +44,22 @@
         <div class="suggest" id="searchSuggest" role="listbox" aria-label="Sugestões de artigos"></div>
       </div>
 
-      <!-- Favoritos -->
-      <button class="fav-tab" id="favTab" title="Favoritos" aria-label="Favoritos" type="button">
-        <img src="icons/favorito-active.svg" alt="Favoritos">
+      <!-- Listas -->
+      <button class="fav-tab" id="favTab" title="Listas" aria-label="Listas" type="button">
+        <img src="icons/favorito-active.svg" alt="Listas">
       </button>
     </div>
   </nav>
 
-  <!-- PAINEL TEXTUAL DE ARQUIVOS (abre ancorado ao botão) -->
-  <div class="cat-panel" id="catPanel" role="menu" aria-hidden="true"></div>
-
-  <!-- MINI-FINDER -->
-  <div class="finder-pop" id="finderPop" aria-live="polite">
-    <button class="mini-btn" id="prevBtn" title="Anterior (Shift+F3 / Ctrl+Shift+G)" aria-label="Anterior" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <div class="mini-count" aria-live="polite"><span id="count">0/0</span></div>
-    <button class="mini-btn" id="nextBtn" title="Próximo (F3 / Ctrl+G)" aria-label="Próximo" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </button>
-    <button class="mini-btn" id="closeFinder" title="Fechar (Esc)" aria-label="Fechar" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-  </div>
-
   <!-- CONTEÚDO -->
   <main class="content">
     <div class="container">
-      <!-- Cabeçalho com nome do arquivo (mostrado só em modo arquivo) -->
       <div id="fileLabel" class="file-label" style="display:none"></div>
-
       <div class="articles" id="articles"></div>
     </div>
   </main>
 
-  <!-- CATÁLOGO OCULTO (fonte de dados para Arquivos) -->
+  <!-- CATÁLOGO OCULTO (fonte para Arquivos) -->
   <select id="codeSelect" title="Arquivos" style="display:none">
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -151,19 +132,56 @@
         <button class="study-close btn" id="closeInfo" aria-label="Fechar">✕</button>
       </div>
       <div class="info-body">
-        <p>Bem-vindo ao direito.love! Aqui você encontra conteúdos essenciais para o seu estudo. Favorite e use o prompt rápido para estudar com I.A.</p>
-        <ul>
-          <li>Use a busca para achar artigos rapidamente.</li>
-          <li>Favoritos salvam trechos para revisão.</li>
-          <li>“Consultar” abre a norma no site do Planalto.</li>
-        </ul>
+        <p>Bem-vindo ao direito.love! Use o campo de busca após abrir um arquivo. Salve artigos em listas para revisar depois.</p>
       </div>
     </div>
   </div>
 
-  <!-- Hambúrguer do Índice (criado em JS) -->
+  <!-- MODAL: ARQUIVOS (melhorado) -->
+  <div class="modal-backdrop" id="filesModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="study-head">
+        <h3 class="study-title">Arquivos</h3>
+        <button class="study-close btn" id="closeFiles" aria-label="Fechar">✕</button>
+      </div>
+      <div class="files-search"><input id="filesSearch" type="search" placeholder="Filtrar por nome…"></div>
+      <div class="files-body" id="filesBody"></div>
+    </div>
+  </div>
 
-  <!-- FAB de Ações (abaixo do hambúrguer Índice) -->
+  <!-- MODAL: LISTAS (abrir/gerenciar) -->
+  <div class="modal-backdrop" id="listsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="study-head">
+        <h3 class="study-title">Suas listas</h3>
+        <button class="study-close btn" id="closeLists" aria-label="Fechar">✕</button>
+      </div>
+      <div class="input-inline" style="margin:8px 0 10px">
+        <input id="newListName" type="text" placeholder="Criar nova lista…">
+        <button class="small-btn" id="createListBtn">Criar</button>
+      </div>
+      <div id="listsBody"></div>
+    </div>
+  </div>
+
+  <!-- MINI-MODAL: SALVAR EM LISTA (criar + adicionar) -->
+  <div class="modal-backdrop" id="saveModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" style="max-width:560px">
+      <div class="study-head">
+        <h3 class="study-title">Salvar em lista</h3>
+        <button class="study-close btn" id="closeSave" aria-label="Fechar">✕</button>
+      </div>
+      <div class="save-body">
+        <div class="input-inline" style="margin:8px 0 10px">
+          <input id="saveNewListName" type="text" placeholder="Criar nova lista…">
+          <button class="small-btn" id="saveCreateListBtn">Criar</button>
+        </div>
+        <div id="saveListsBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAB de Ações (SEM ÍNDICE) -->
   <button
     id="actionFab"
     title="Ações"
@@ -176,7 +194,7 @@
 
   <div id="actionMenu" role="menu" aria-hidden="true">
     <div class="menu-context line-clamp-2" id="actionContext">“—”</div>
-    <button class="menu-btn" data-action="fav" id="favToggleBtn">⭐ Favoritar</button>
+    <button class="menu-btn" data-action="save" id="saveToListBtn">💾 Salvar em lista</button>
     <button class="menu-btn" data-action="study">📖 Estudar</button>
     <button class="menu-btn" data-action="planalto">🔗 Consultar</button>
   </div>
