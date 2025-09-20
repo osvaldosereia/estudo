@@ -42,7 +42,7 @@ const els = {
   promptPreview: document.getElementById("promptPreview"),
   copyPromptBtn: document.getElementById("copyPromptBtn"),
 
-  // Popovers (arquivos/listas/salvar)
+  // Popovers
   filesModal: document.getElementById("filesModal"),
   filesPopover: document.getElementById("filesPopover"),
   filesArrow: document.getElementById("filesArrow"),
@@ -75,6 +75,11 @@ const els = {
   actionContext: document.getElementById("actionContext"),
   saveToListBtn: document.getElementById("saveToListBtn"),
 };
+
+/* =================== Config UX (fallback estável) =================== */
+// Se false, exibe Arquivos/Lista/Salvar como MODAIS CENTRAIS pequenos (estáveis).
+// Quando quiser popovers ancorados, mude para true.
+const POPUPS_ENABLED = false;
 
 /* =================== Estado + Storage =================== */
 const state = {
@@ -695,14 +700,11 @@ function anchorPopover({backdrop, panel, arrow, anchorEl, placement="bottom-star
   const rect = anchorEl.getBoundingClientRect();
   let x = rect.left, y = rect.bottom + gap;
 
-  // largura e limites
   const pw = panel.offsetWidth || 360;
   const ph = panel.offsetHeight || 300;
   const vw = window.innerWidth, vh = window.innerHeight;
 
-  if (placement.startsWith("bottom")){
-    y = Math.min(y, vh - ph - 12);
-  }
+  if (placement.startsWith("bottom")) y = Math.min(y, vh - ph - 12);
   if (placement.endsWith("start")){
     x = Math.max(12, Math.min(x, vw - pw - 12));
   } else if (placement.endsWith("end")){
@@ -714,53 +716,73 @@ function anchorPopover({backdrop, panel, arrow, anchorEl, placement="bottom-star
 
   if (arrow){
     const ax = Math.min(Math.max(rect.left + rect.width/2 - 7, x + 12), x + pw - 24);
-    const ay = y - 7; // acima do popover
+    const ay = y - 7;
     arrow.style.left = `${ax}px`;
     arrow.style.top  = `${ay}px`;
   }
 }
-function openPopover(backdrop){
-  if (!backdrop) return;
-  backdrop.setAttribute("aria-hidden","false");
-}
-function closePopover(backdrop){
-  if (!backdrop) return;
-  backdrop.setAttribute("aria-hidden","true");
-}
+function openPopover(backdrop){ if (backdrop) backdrop.setAttribute("aria-hidden","false"); }
+function closePopover(backdrop){ if (backdrop) backdrop.setAttribute("aria-hidden","true"); }
 
-/* =================== Arquivos: popover =================== */
+/* =================== Arquivos: abrir/fechar =================== */
 function openFilesModal(anchorEl){
   buildFilesModal();
-  anchorPopover({backdrop:els.filesModal, panel:els.filesPopover, arrow:els.filesArrow, anchorEl, placement:"bottom-start", gap:8});
-  openPopover(els.filesModal);
-  state.currentAnchor = anchorEl;
+  if (POPUPS_ENABLED) {
+    anchorPopover({backdrop:els.filesModal, panel:els.filesPopover, arrow:els.filesArrow, anchorEl, placement:"bottom-start", gap:8});
+    openPopover(els.filesModal);
+    state.currentAnchor = anchorEl;
+  } else {
+    els.filesModal.classList.add("as-modal");
+    els.filesModal.setAttribute("aria-hidden","false");
+  }
 }
-function closeFilesModal(){ closePopover(els.filesModal); }
+function closeFilesModal(){
+  if (POPUPS_ENABLED) closePopover(els.filesModal);
+  else els.filesModal.setAttribute("aria-hidden","true");
+  requestAnimationFrame(updateCurrentOutline);
+}
 
-/* =================== Listas: popover =================== */
+/* =================== Listas: abrir/fechar =================== */
 function openListsModal(anchorEl){
   renderListsModal();
-  anchorPopover({backdrop:els.listsModal, panel:els.listsPopover, arrow:els.listsArrow, anchorEl, placement:"bottom-end", gap:8});
-  openPopover(els.listsModal);
-  state.currentAnchor = anchorEl;
+  if (POPUPS_ENABLED) {
+    anchorPopover({backdrop:els.listsModal, panel:els.listsPopover, arrow:els.listsArrow, anchorEl, placement:"bottom-end", gap:8});
+    openPopover(els.listsModal);
+    state.currentAnchor = anchorEl;
+  } else {
+    els.listsModal.classList.add("as-modal");
+    els.listsModal.setAttribute("aria-hidden","false");
+  }
 }
-function closeListsModal(){ closePopover(els.listsModal); }
+function closeListsModal(){
+  if (POPUPS_ENABLED) closePopover(els.listsModal);
+  else els.listsModal.setAttribute("aria-hidden","true");
+  requestAnimationFrame(updateCurrentOutline);
+}
 
-/* =================== Salvar em lista: popover =================== */
+/* =================== Salvar em lista: abrir/fechar =================== */
 function openSaveModalFor(entry, anchorEl){
   state.pendingSave = entry;
   renderSaveLists();
-  anchorPopover({backdrop:els.saveModal, panel:els.savePopover, arrow:els.saveArrow, anchorEl, placement:"bottom-end", gap:8});
-  openPopover(els.saveModal);
-  state.currentAnchor = anchorEl;
+  if (POPUPS_ENABLED) {
+    anchorPopover({backdrop:els.saveModal, panel:els.savePopover, arrow:els.saveArrow, anchorEl, placement:"bottom-end", gap:8});
+    openPopover(els.saveModal);
+    state.currentAnchor = anchorEl;
+  } else {
+    els.saveModal.classList.add("as-modal");
+    els.saveModal.setAttribute("aria-hidden","false");
+  }
 }
 function closeSaveModal(){
-  closePopover(els.saveModal);
+  if (POPUPS_ENABLED) closePopover(els.saveModal);
+  else els.saveModal.setAttribute("aria-hidden","true");
   state.pendingSave = null;
+  requestAnimationFrame(updateCurrentOutline);
 }
 
 /* Reposiciona popovers ativos em scroll/resize */
 function repositionActivePopovers(){
+  if (!POPUPS_ENABLED) return;
   if (els.filesModal.getAttribute("aria-hidden")==="false" && state.currentAnchor){
     anchorPopover({backdrop:els.filesModal, panel:els.filesPopover, arrow:els.filesArrow, anchorEl:state.currentAnchor, placement:"bottom-start", gap:8});
   }
@@ -774,7 +796,7 @@ function repositionActivePopovers(){
 window.addEventListener("resize", repositionActivePopovers);
 window.addEventListener("scroll", repositionActivePopovers, { passive:true });
 
-/* =================== Build de conteúdos (arquivos/listas/salvar) =================== */
+/* =================== Build de conteúdos =================== */
 function buildFilesModal(){
   const map = getCatalogByCategory();
   const q = (els.filesSearch.value || "").trim().toLowerCase();
@@ -833,12 +855,14 @@ function renderSaveLists(){
       if (!state.pendingSave) return;
       store.addToList(l.id, state.pendingSave);
       notify(`Salvo em: ${l.name}`); closeSaveModal();
+      requestAnimationFrame(updateCurrentOutline);
     });
     // Clique na linha inteira também salva
     row.addEventListener("click", ()=>{
       if (!state.pendingSave) return;
       store.addToList(l.id, state.pendingSave);
       notify(`Salvo em: ${l.name}`); closeSaveModal();
+      requestAnimationFrame(updateCurrentOutline);
     });
     row.append(label, addBtn);
     frag.appendChild(row);
@@ -972,11 +996,11 @@ els.brandBtn.addEventListener("click", ()=> { renderListsModal(); openListsModal
 els.catTab.addEventListener("click", ()=> openFilesModal(els.catTab));
 els.favTab.addEventListener("click", ()=> openListsModal(els.favTab));
 
-// Arquivos popover
+// Arquivos popover/modal
 els.closeFiles.addEventListener("click", closeFilesModal);
 els.filesSearch?.addEventListener("input", buildFilesModal);
 
-// Listas popover
+// Listas popover/modal
 els.closeLists.addEventListener("click", closeListsModal);
 els.createListBtn.addEventListener("click", ()=>{
   const name = (els.newListName.value||"").trim();
@@ -984,7 +1008,7 @@ els.createListBtn.addEventListener("click", ()=>{
   store.createList(name); els.newListName.value=""; renderListsModal(); notify("Lista criada");
 });
 
-// Salvar popover
+// Salvar popover/modal
 els.closeSave.addEventListener("click", closeSaveModal);
 els.saveCreateListBtn.addEventListener("click", ()=>{
   const name = (els.saveNewListName.value||"").trim();
@@ -996,7 +1020,21 @@ els.saveCreateListBtn.addEventListener("click", ()=>{
 
 // Fechar popovers clicando fora
 [els.filesModal, els.listsModal, els.saveModal].forEach(backdrop=>{
-  backdrop.addEventListener("click",(e)=>{ if (e.target===backdrop) closePopover(backdrop); });
+  backdrop.addEventListener("click",(e)=>{
+    if (e.target===backdrop) { closePopover(backdrop); requestAnimationFrame(updateCurrentOutline); }
+  });
+});
+
+// ESC fecha tudo
+document.addEventListener("keydown",(e)=>{
+  if (e.key !== "Escape") return;
+  if (els.studyModal.getAttribute("aria-hidden")==="false") els.studyModal.setAttribute("aria-hidden","true");
+  if (els.infoModal.getAttribute("aria-hidden")==="false") els.infoModal.setAttribute("aria-hidden","true");
+  [els.filesModal, els.listsModal, els.saveModal].forEach(b=>{
+    if (b.getAttribute("aria-hidden")==="false") closePopover(b);
+  });
+  toggleActionMenu(false);
+  requestAnimationFrame(updateCurrentOutline);
 });
 
 // Busca
@@ -1016,7 +1054,7 @@ document.addEventListener("click",(e)=>{
 els.actionMenu.addEventListener("click",(e)=>{
   const btn = e.target.closest(".menu-btn");
   if (!btn) return;
-  handleAction(btn.dataset.action, btn); // passa âncora do item clicado
+  handleAction(btn.dataset.action, btn);
 });
 
 // IA buttons
@@ -1040,7 +1078,7 @@ function buildCatalogMapsAndRestore(){
     loadFile(last.fileUrl);
   } else {
     renderListsModal();
-    // abre como popover próximo ao botão de estrela (ou à marca)
+    // fallback: abre como modal central estável
     openListsModal(els.favTab);
   }
 }
