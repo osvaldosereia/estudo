@@ -50,18 +50,18 @@ const els = {
 /* ---------- estado global ---------- */
 const MAX_SEL = 6;
 const CARD_CHAR_LIMIT = 250;
-const PREV_MAX = 60; // preview de itens nos modais
+const PREV_MAX = 60; // preview nos modais
 
 const state = {
-  selected: new Map(), // id -> item
-  cacheTxt: new Map(), // url -> string
-  cacheParsed: new Map(), // url -> items[]
+  selected: new Map(),   // id -> item
+  cacheTxt: new Map(),   // url -> string
+  cacheParsed: new Map(),// url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null,     // estudo
-  promptQTpl: null,    // questões
-  pendingObs: "",      // observação “Incluir”
+  promptTpl: null,       // estudo
+  promptQTpl: null,      // questões
+  pendingObs: "",        // observação incluída
   studyIncluded: new Set(),     // ids incluídos no modal Estudar
-  questionsIncluded: new Set(), // ids incluídos no modal Criar Questões
+  questionsIncluded: new Set(), // ids incluídos no modal Questões
 };
 
 /* ---------- util ---------- */
@@ -72,7 +72,6 @@ function toast(msg) {
   els.toasts.appendChild(el);
   setTimeout(() => el.remove(), 2000);
 }
-
 function updateBottom() {
   const n = state.selected.size;
   els.viewBtn.textContent = `${n} Selecionados – Ver`;
@@ -80,7 +79,6 @@ function updateBottom() {
   els.questionsBtn.disabled = n === 0;
   els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
-
 function norm(s) {
   return (s || "")
     .normalize("NFD")
@@ -95,7 +93,7 @@ function escHTML(s) {
 }
 
 /* ---------- catálogo (label -> url) ---------- */
-(function () {
+(() => {
   els.codeSelect.querySelectorAll("option").forEach((opt) => {
     const url = opt.value?.trim();
     const label = opt.textContent?.trim();
@@ -103,7 +101,7 @@ function escHTML(s) {
   });
 })();
 
-/* ---------- fetch/parse dos arquivos ---------- */
+/* ---------- fetch/parse de arquivos ---------- */
 function sanitize(s) {
   return s.replace(/\u00A0/g, " ")
     .replace(/\r\n/g, "\n")
@@ -125,7 +123,7 @@ function splitBlocks(txt) {
     .filter(Boolean);
 }
 
-/* anti-duplicação + ajustes de visual */
+/* anti-duplicação + “respiros” + limpeza */
 function normCmp(s) {
   return (s || "")
     .toLowerCase()
@@ -135,20 +133,30 @@ function normCmp(s) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// RESPIROS ROBUSTOS (parágrafos, incisos, alíneas, títulos)
 function addRespirations(body) {
   if (!body) return "";
-  const lines = body.split(/\n+/);
+
+  const RX_INCISO = /^(?:[IVXLCDM]{1,8})(?:\s*(?:[-–—]|\.|\)))(?:\s+|$)/;                 // I -, II –, III —, IV., V)
+  const RX_PARAGR = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[uú]nico|\d+)\s*[ºo]?)(?:\s*[:.-])?(?:\s+|$)/i; // § 1º / § 2 o / Parágrafo único
+  const RX_ALINEA = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;                           // a), b., c -, d —
+  const RX_TITULO = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO)\b/i;
+
+  const lines = String(body).replace(/\r\n/g, "\n").split("\n");
   const out = [];
-  for (const ln of lines) {
-    const trimmed = ln.trim();
-    const isInciso = /^[IVXLCDM]+\s*[-–—]/.test(trimmed);
-    const isParagrafo = /^§\s*\d+|^Par[aá]grafo\s*(?:[uú]nico|\d+)/i.test(trimmed);
-    const isAlinea = /^[a-z]\)\s+/.test(trimmed);
-    if ((isInciso || isParagrafo || isAlinea) && out.length) out.push(""); // linha em branco
-    out.push(trimmed);
+
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i].trim();
+    const isMarker = RX_PARAGR.test(ln) || RX_INCISO.test(ln) || RX_ALINEA.test(ln) || RX_TITULO.test(ln);
+    if (isMarker && out.length && out[out.length - 1] !== "") out.push(""); // respiro
+    out.push(ln);
   }
-  return out.join("\n");
+
+  // compacta múltiplos vazios
+  return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
+
 function stripParens(s) {
   return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
 }
@@ -216,17 +224,17 @@ async function loadPromptTemplate() {
   }
   return state.promptTpl;
 }
-/* somente este caminho para “Criar Questões” */
+/* SOMENTE este caminho para “Criar Questões” */
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompt/prompt_questoes.txt";
+  const PATH = "data/prompts/prompt_questoes.txt";
   try {
     const r = await fetch(PATH, { cache: "no-cache" });
     if (!r.ok) throw new Error();
     state.promptQTpl = (await r.text()).trim();
   } catch {
     state.promptQTpl = "";
-    toast("Não encontrei data/prompt/prompt_questoes.txt");
+    toast("Não encontrei data/prompts/prompt_questoes.txt");
   }
   return state.promptQTpl;
 }
@@ -406,9 +414,7 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
-  // 1) remove parênteses
   const noParens = stripParens(fullText || "");
-  // 2) limita
   const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
   return highlight(escHTML(truncated), tokens);
 }
@@ -443,7 +449,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
-      // mostrar texto completo sem parênteses e com “respiros”
       const full = stripParens(addRespirations(item.text));
       body.textContent = full;
       toggle.textContent = "ocultar";
@@ -605,26 +610,21 @@ els.viewBtn.addEventListener("click", () => {
 /* ---------- Estudar: lista e prompt ---------- */
 els.studyBtn.addEventListener("click", async () => {
   if (!state.selected.size) return;
-  // por padrão: incluir todos
-  state.studyIncluded = new Set([...state.selected.keys()]);
+  state.studyIncluded = new Set([...state.selected.keys()]); // incluir todos por padrão
   buildMiniList(els.studyList, state.studyIncluded);
   showModal(els.studyModal);
-  // copia já ao abrir (com todos os selecionados)
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
 });
-
 els.studyUpdate.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
   toast("Lista atualizada e prompt copiado.");
 });
-
 els.copyPromptBtn?.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
 });
-
 async function buildStudyPrompt(includedSet) {
   const tpl = await loadPromptTemplate();
   const parts = [tpl.trim(), ""];
@@ -661,11 +661,9 @@ els.includeObsBtn?.addEventListener("click", () => {
   state.pendingObs = (els.questionsObs.value || "").trim();
   toast("Observação incluída.");
 });
-
 async function buildQuestionsPrompt(includedSet) {
   const tpl = await loadQuestionsTemplate();
 
-  // Preferências (checkboxes)
   const opts = Array.from(document.querySelectorAll(".qopt"))
     .filter((i) => i.checked)
     .map((i) => i.value);
