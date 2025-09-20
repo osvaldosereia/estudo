@@ -38,6 +38,7 @@ const state = {
   cacheTxt: new Map(),      // url -> txt
   cacheParsed: new Map(),   // url -> items[]
   urlToLabel: new Map(),
+  promptTpl: null,          // template carregado de data/prompt/prompt_estudar.txt
 };
 
 /* util */
@@ -49,12 +50,15 @@ function toast(msg){
 }
 function updateBottom(){
   const n = state.selected.size;
-  els.viewBtn.textContent = `${n} Selecionados – VER`;
+  els.viewBtn.textContent = `${n} Selecionados – Ver`;
   els.studyBtn.disabled = n===0;
   els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 function norm(s){
   return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ç/g,"c").toLowerCase();
+}
+function escHTML(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 /* catálogo */
@@ -90,8 +94,8 @@ function parseBlock(block, idx){
   return {
     kind:"article",
     title: title || `Bloco ${idx+1}`,
-    text: [epigrafe?`Epígrafe: ${epigrafe}`:"", title, body].filter(Boolean).join("\n"),
-    bodyOnly: body,                       // <- só o corpo (útil pros cards)
+    text: [epigrafe?`Epígrafe: ${epigrafe}`:"", title, body].filter(Boolean).join("\n"), // completo
+    bodyOnly: body,  // só corpo (pra evitar repetição em prévias e prompt)
     htmlId:`art-${idx}`,
     _split:{titleText:title, epigrafe, body}
   };
@@ -105,6 +109,18 @@ async function parseFile(url){
   return items;
 }
 
+/* carregar template do prompt */
+async function loadPromptTemplate(){
+  if (state.promptTpl) return state.promptTpl;
+  try{
+    const tpl = await fetchText("data/prompt/prompt_estudar.txt");
+    state.promptTpl = tpl.trim();
+  }catch{
+    state.promptTpl = "Você é uma I.A. jurídica. A partir dos artigos abaixo, organize o estudo, explique em linguagem simples e aponte jurisprudência relevante.\n";
+  }
+  return state.promptTpl;
+}
+
 /* busca */
 els.form.addEventListener("submit", e=>{e.preventDefault(); doSearch();});
 els.q.addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); doSearch();} });
@@ -112,13 +128,16 @@ els.q.addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); d
 async function doSearch(){
   const term = (els.q.value||"").trim(); if(!term) return;
 
+  // nova pesquisa substitui a anterior (não mexe na seleção)
+  els.stack.innerHTML = "";
+
   els.stack.setAttribute("aria-busy","true");
   const skel = document.createElement("section");
   skel.className = "block";
   const t = document.createElement("div"); t.className="block-title"; t.textContent=`Busca: ‘${term}’ (…)`;
   skel.appendChild(t);
   for(let i=0;i<2;i++){ const s=document.createElement("div"); s.className="skel block"; skel.appendChild(s); }
-  els.stack.prepend(skel);
+  els.stack.append(skel);
   els.spinner.classList.add("show");
 
   try{
@@ -138,8 +157,8 @@ async function doSearch(){
               id: `${url}::${it.htmlId}`,
               title: it._split.titleText || it.title,
               source: label,
-              text: it.text,
-              preview: it.bodyOnly,
+              text: it.text,              // completo
+              body: it.bodyOnly,          // só corpo
               fileUrl: url,
               htmlId: it.htmlId
             });
@@ -149,7 +168,7 @@ async function doSearch(){
     }
 
     skel.remove();
-    renderBlock(term, results);
+    renderBlock(term, results, tokens);
   } finally {
     els.stack.setAttribute("aria-busy","false");
     els.spinner.classList.remove("show");
@@ -157,7 +176,7 @@ async function doSearch(){
   }
 }
 
-function renderBlock(term, items){
+function renderBlock(term, items, tokens){
   const block = document.createElement("section");
   block.className = "block";
   const title = document.createElement("div");
@@ -171,12 +190,22 @@ function renderBlock(term, items){
     empty.textContent = `Nada por aqui com ‘${term}’. Tente outra palavra.`;
     block.appendChild(empty);
   } else {
-    items.forEach(it=> block.appendChild(renderCard(it)));
+    items.forEach(it=> block.appendChild(renderCard(it, tokens)));
   }
-  els.stack.prepend(block);
+  els.stack.append(block);
 }
 
-function renderCard(item){
+function highlight(text, tokens){
+  let safe = escHTML(text);
+  tokens.forEach(t=>{
+    if(!t) return;
+    const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,"gi");
+    safe = safe.replace(re, '<mark>$1</mark>');
+  });
+  return safe;
+}
+
+function renderCard(item, tokens){
   const card = document.createElement("article");
   card.className = "card";
   card.dataset.id = item.id;
@@ -191,14 +220,15 @@ function renderCard(item){
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  body.textContent = item.preview || item.text;
+  body.innerHTML = highlight(item.body || item.text, tokens); // 2 linhas + highlight
 
   const actions = document.createElement("div"); actions.className="actions";
   const toggle = document.createElement("button"); toggle.className="toggle"; toggle.textContent="ver texto";
   toggle.addEventListener("click", ()=>{
     const collapsed = body.classList.toggle("is-collapsed");
     toggle.textContent = collapsed ? "ver texto" : "ocultar";
-    body.textContent = collapsed ? (item.preview || item.text) : item.text;
+    body.innerHTML = collapsed ? highlight(item.body || item.text, tokens)
+                               : highlight(item.text, tokens);
   });
 
   [h3].forEach(el=>{ el.style.cursor="pointer"; el.addEventListener("click", ()=>openReader(item)); });
@@ -216,7 +246,7 @@ function renderCard(item){
     if(state.selected.has(item.id)){ state.selected.delete(item.id); toast(`Removido (${state.selected.size}/${MAX_SEL}).`);}
     else{
       if(state.selected.size>=MAX_SEL){toast("⚠️ Limite de 6 artigos.");return;}
-      state.selected.set(item.id,item); toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
+      state.selected.set(item.id,{...item}); toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
     sync(); updateBottom();
   });
@@ -268,7 +298,7 @@ function renderArticleRow(a, fileUrl, sourceLabel){
     title:a._split.titleText || a.title,
     source:sourceLabel,
     text:[a._split.epigrafe?`Epígrafe: ${a._split.epigrafe}`:"", a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"),
-    preview:a._split.body||"",
+    body:a._split.body||"",
     fileUrl, htmlId:a.htmlId
   };
   const sync=()=>{ chk.dataset.checked = state.selected.has(itemRef.id) ? "true":"false"; };
@@ -292,7 +322,7 @@ function renderArticleRow(a, fileUrl, sourceLabel){
   return row;
 }
 
-/* MODAIS: abrir/fechar */
+/* MODAIS helpers */
 function showModal(el){ el.hidden=false; document.body.style.overflow="hidden"; }
 function hideModal(el){ el.hidden=true; document.body.style.overflow=""; }
 
@@ -318,7 +348,7 @@ els.viewBtn.addEventListener("click", ()=>{
   els.selectedList.innerHTML = "";
   for (const [id, it] of state.selected.entries()){
     const li = document.createElement("li");
-    li.innerHTML = `<span>${it.title} — <em>${it.source}</em></span>`;
+    li.innerHTML = `<span>${escHTML(it.title)} — <em>${escHTML(it.source)}</em></span>`;
     const del = document.createElement("button");
     del.className = "icon-btn"; del.textContent = "✕";
     del.addEventListener("click", ()=>{
@@ -334,9 +364,9 @@ els.viewBtn.addEventListener("click", ()=>{
 });
 
 /* ESTUDAR */
-els.studyBtn.addEventListener("click", ()=>{
+els.studyBtn.addEventListener("click", async ()=>{
   if(!state.selected.size) return;
-  const prompt = buildPrompt();
+  const prompt = await buildPrompt();
   openStudyModal(prompt);
   navigator.clipboard?.writeText(prompt).then(
     ()=> toast("✅ Prompt copiado. Cole na sua IA preferida."),
@@ -348,16 +378,16 @@ els.copyPromptBtn?.addEventListener("click", ()=>{
   navigator.clipboard?.writeText(txt).then(()=> toast("✅ Copiado!"));
 });
 
-function buildPrompt(){
-  const topBlock = document.querySelector(".block .block-title")?.textContent || "Estudo jurídico";
-  const parts = [`Tema base: ${topBlock.replace(/^Busca:\s*/,"")}`,""];
+async function buildPrompt(){
+  const tpl = await loadPromptTemplate();
+  const parts = [tpl.trim(), ""];
   let i=1;
   for(const it of state.selected.values()){
+    // heading com o título + corpo (sem repetir título)
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text,"");
+    parts.push(it.body || it.text, "");  // somente corpo evita a repetição que você reportou
     if(i++>=MAX_SEL) break;
   }
-  parts.push("Gere um novo prompt em https://direito.love");
   return parts.join("\n");
 }
 function openStudyModal(prompt){
