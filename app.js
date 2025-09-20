@@ -1,9 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09 • estável)
-   Regras:
-   1) Cada card = bloco entre linhas "-----"
-   2) Texto preservado como no .txt (parênteses incluídos)
-   3) "Respiros" (linhas em branco) apenas na visualização do leitor
+   direito.love — app.js (revisado)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -13,66 +9,47 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-/* ---------- helpers ---------- */
+/* ---------- helpers DOM ---------- */
 const $ = (s) => document.querySelector(s);
-
 const els = {
-  /* topo/busca */
+  // busca / resultados
   form: $("#searchForm"),
   q: $("#searchInput"),
   spinner: $("#searchSpinner"),
   stack: $("#resultsStack"),
-  brand: $("#brandBtn"),
   codeSelect: $("#codeSelect"),
+  toasts: $("#toasts"),
+  brand: $("#brand"),
 
-  /* barra inferior */
-  studyBtn: $("#studyBtn"),
-  questionsBtn: $("#questionsBtn"),
-  viewBtn: $("#viewBtn"),
-
-  /* leitor */
+  // leitor (modal)
   readerModal: $("#readerModal"),
-  readerBody: $("#readerBody"),
   readerTitle: $("#readerTitle"),
+  readerBody: $("#readerBody"),
   selCount: $("#selCount"),
 
-  /* selecionados */
+  // “ver selecionados”
+  viewBtn: $("#viewBtn"),
   selectedModal: $("#selectedModal"),
   selectedStack: $("#selectedStack"),
 
-  /* estudar */
+  // estudar / questões (se existirem na página)
+  studyBtn: $("#studyBtn"),
   studyModal: $("#studyModal"),
   studyList: $("#studyList"),
-  studyUpdate: $("#studyUpdate"),
-  copyPromptBtn: $("#copyPromptBtn"),
-
-  /* criar questões */
+  questionsBtn: $("#questionsBtn"),
   questionsModal: $("#questionsModal"),
-  questionsList: $("#questionsList"),
-  questionsUpdate: $("#questionsUpdate"),
-  copyQuestionsBtn: $("#copyQuestionsBtn"),
-  includeObsBtn: $("#includeObsBtn"),
-  questionsObs: $("#questionsObs"),
-
-  /* toasts */
-  toasts: $("#toasts"),
 };
 
-/* ---------- estado ---------- */
 const MAX_SEL = 6;
-const CARD_CHAR_LIMIT = 250;
-const PREV_MAX = 60;
+const CARD_CHAR_LIMIT = 200; // preview em cards
+const PREV_MAX_LINES = 6;
 
+/* ---------- estado ---------- */
 const state = {
   selected: new Map(),     // id -> item
   cacheTxt: new Map(),     // url -> string
   cacheParsed: new Map(),  // url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null,         // estudo
-  promptQTpl: null,        // questões
-  pendingObs: "",          // obs do usuário (questões)
-  studyIncluded: new Set(),
-  questionsIncluded: new Set(),
 };
 
 /* ---------- util ---------- */
@@ -80,9 +57,10 @@ function toast(msg) {
   const el = document.createElement("div");
   el.className = "toast";
   el.textContent = msg;
-  els.toasts.appendChild(el);
+  els.toasts?.appendChild(el);
   setTimeout(() => el.remove(), 2400);
 }
+
 function updateBottom() {
   const n = state.selected.size;
   els.viewBtn && (els.viewBtn.textContent = `${n} Selecionados – Ver`);
@@ -90,57 +68,106 @@ function updateBottom() {
   els.questionsBtn && (els.questionsBtn.disabled = n === 0);
   els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
 }
-function norm(s) {
+
+/** Normaliza acentos e pontuação básica */
+function baseNorm(s) {
   return (s || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
-function escHTML(s) {
-  return (s || "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[m]));
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[“”"']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-/* ---------- catálogo (select) ---------- */
-/* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
-function toRawGitHub(url){
-  if(!url) return url;
-  const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
-  if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
-  return url;
+/** Converte 1.000 -> 1000, 2.345.678 -> 2345678 */
+function normalizeThousands(s) {
+  return s.replace(/(?<=^|\D)(\d{1,3}(?:\.\d{3})+)(?=\D|$)/g, (m) => m.replace(/\./g, ""));
 }
-(() => {
-  els.codeSelect?.querySelectorAll("option").forEach((opt) => {
-    let url = (opt.value || "").trim();
-    const label = (opt.textContent || "").trim();
-    if (!url) return;
-    url = encodeURI(toRawGitHub(url));
-    opt.value = url; // corrige no DOM (evita 404 e caracteres especiais)
-    state.urlToLabel.set(label, url);
-  });
-})();
 
-/* ---------- fetch/parse ---------- */
-function sanitize(s) {
-  return String(s)
-    .replace(/\uFEFF/g, "")      // BOM
-    .replace(/\u00A0/g, " ")     // NBSP
-    .replace(/\r\n?/g, "\n")     // EOL
-    .replace(/[ \t]+\n/g, "\n"); // ws final
+/** Normalização para indexação / busca */
+function norm(s) {
+  return normalizeThousands(
+    baseNorm(String(s))
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+  );
 }
+
+/** Tokenização conforme regras:
+ * - palavras com 3+ letras
+ * - números com 1 a 4 dígitos
+ */
+function tokenize(query) {
+  const q = norm(query);
+  const words = q.split(/\s+/).filter(Boolean);
+  const tokens = [];
+  for (const w of words) {
+    if (/^\d{1,4}$/.test(w)) {
+      tokens.push(w);
+    } else if (/^\p{L}{3,}$/u.test(w)) {
+      tokens.push(w);
+    }
+  }
+  return Array.from(new Set(tokens)); // únicos p/ buscar
+}
+
+/** Realça TODAS as ocorrências dos tokens dentro de um texto (case/acentos-insensitive) */
+function highlightAll(htmlText, tokens) {
+  if (!tokens?.length) return htmlText;
+
+  // cria um regex global que respeita números e palavras
+  const parts = tokens
+    .map((t) =>
+      t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape
+    )
+    .filter(Boolean);
+
+  if (!parts.length) return htmlText;
+
+  // flag u para unicode, i para case-insensitive, g para global
+  const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
+
+  // Para comparação sem acento, vamos substituir via função que compara normalizado
+  // Estratégia: percorre o texto plain e reconstrói com tags.
+  const text = htmlText;
+  let out = "";
+  let last = 0;
+
+  // Precisamos trabalhar sobre versão sem HTML. Como o corpo que passamos aqui é plain (inserimos via textContent e depois transformamos), fica ok.
+  // Se vier com <br>, vamos comparar sobre o texto “visível”.
+  const plain = text;
+
+  let m;
+  while ((m = rx.exec(plain)) !== null) {
+    const start = m.index;
+    const end = rx.lastIndex;
+    out += plain.slice(last, start);
+    out += `<mark class="hl">${plain.slice(start, end)}</mark>`;
+    last = end;
+  }
+  out += plain.slice(last);
+  return out;
+}
+
+/** Sanitiza texto bruto */
+function sanitize(txt) {
+  return (txt || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+\n/g, "\n");
+}
+
+/** Busca texto de arquivo com cache */
 async function fetchText(url) {
-  url = encodeURI(url);
-  if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
-  const r = await fetch(url, { cache: "no-cache" });
-  if (!r.ok) throw new Error(`fetch-fail ${r.status} ${url}`);
+  const u = encodeURI(url);
+  if (state.cacheTxt.has(u)) return state.cacheTxt.get(u);
+  const r = await fetch(u, { cache: "no-cache" });
+  if (!r.ok) throw new Error(`fetch-fail ${r.status} ${u}`);
   const t = sanitize(await r.text());
-  state.cacheTxt.set(url, t);
+  state.cacheTxt.set(u, t);
   return t;
 }
 
-/* Split: cada linha com 5+ hifens (-----) separa blocos */
+/** Split: linhas com 5+ hifens (-----) separam blocos */
 function splitBlocks(txt) {
   return sanitize(txt)
     .split(/^\s*-{5,}\s*$/m)
@@ -148,346 +175,220 @@ function splitBlocks(txt) {
     .filter(Boolean);
 }
 
-/* Parser minimalista: título = 1ª linha; corpo = resto (preservado) */
+/** Parser:
+ * título = 1ª linha não vazia
+ * body   = restante (preservado)
+ * text   = título + "\n" + body (para index)
+ */
 function parseBlock(block, idx, fileUrl, sourceLabel) {
   const lines = block.split("\n");
   const firstIdx = lines.findIndex((l) => l.trim().length > 0);
-  const first = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
-  const rest  = lines.slice(firstIdx + 1).join("\n").trim();
-  const full  = [first, rest].filter(Boolean).join("\n");
+  const title = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
+  const body = lines.slice(firstIdx + 1).join("\n").trim();
+  const text = body ? `${title}\n${body}` : title;
+
+  // id estável: url#idx
+  const id = `${fileUrl}#${idx}`;
 
   return {
-    id: `${fileUrl}::art-${idx}`,
-    htmlId: `art-${idx}`,
-    source: sourceLabel,
-    title: first,
-    body: rest,
-    text: full, // título + corpo
+    id,
+    title,
+    body,     // SEM título
+    text,     // título + corpo (para busca)
+    source: sourceLabel || fileUrl,
     fileUrl,
   };
 }
 
-async function parseFile(url, sourceLabel) {
+/** Parse de um arquivo completo */
+async function parseFile(url, label) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
   const blocks = splitBlocks(txt);
-  const items = blocks.map((b, i) => parseBlock(b, i, url, sourceLabel));
+  const items = blocks.map((b, i) => parseBlock(b, i, url, label));
   state.cacheParsed.set(url, items);
   return items;
 }
 
-/* ---------- "Respiros" (só no leitor) ---------- */
-/* Insere linha em branco ANTES de marcadores no INÍCIO da linha,
-   sem alterar o texto original na fonte (apenas para exibição). */
-function addRespirationsForDisplay(s) {
-  if (!s) return "";
-  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
-  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/i;
-  const RX_ALINEA  = /^[a-z](?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
-  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
-
-  const lines = String(s).replace(/\r\n?/g, "\n").split("\n");
-  const out = [];
-  for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i].trim();
-    const isMarker =
-      RX_PARAGR.test(ln) ||
-      RX_INCISO.test(ln) ||
-      RX_ALINEA.test(ln) ||
-      RX_TITULO.test(ln);
-
-    if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
-    if (ln === "" && out.length && out[out.length - 1] === "") continue;
-
-    out.push(ln);
-  }
-  return out.join("\n");
-}
-
-/* ---------- templates de prompt ---------- */
-async function loadPromptTemplate() {
-  if (state.promptTpl) return state.promptTpl;
-  const CANDIDATES = [
-    "data/prompts/prompt_estudar.txt",
-    "data/prompt/prompt_estudar.txt",
-  ];
-  for (const p of CANDIDATES) {
-    try {
-      const r = await fetch(p, { cache: "no-cache" });
-      if (r.ok) { state.promptTpl = (await r.text()).trim(); return state.promptTpl; }
-    } catch {}
-  }
-  state.promptTpl = "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos blocos abaixo.\n";
-  return state.promptTpl;
-}
-async function loadQuestionsTemplate() {
-  if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompts/prompt_questoes.txt";
-  try {
-    const r = await fetch(PATH, { cache: "no-cache" });
-    if (!r.ok) throw new Error();
-    state.promptQTpl = (await r.text()).trim();
-  } catch {
-    state.promptQTpl = "";
-    toast("Não encontrei data/prompts/prompt_questoes.txt");
-  }
-  return state.promptQTpl;
-}
-
 /* ---------- busca ---------- */
-els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
-els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
-
-async function doSearch() {
-  const term = (els.q.value || "").trim();
-  if (!term) return;
-
+async function search(term) {
   els.stack.innerHTML = "";
-  els.stack.setAttribute("aria-busy", "true");
-  const skel = document.createElement("section");
-  skel.className = "block";
-  const t = document.createElement("div");
-  t.className = "block-title";
-  t.textContent = `Busca: ‘${term}’ (…)`;
-  skel.appendChild(t);
-  for (let i = 0; i < 2; i++) {
-    const s = document.createElement("div"); s.className = "skel block"; skel.appendChild(s);
+  if (!term || !term.trim()) {
+    toast("Digite um termo.");
+    return;
   }
-  els.stack.append(skel);
+
+  const tokens = tokenize(term);
+  if (!tokens.length) {
+    toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
+    return;
+  }
+
+  // skeleton
+  const sk = document.createElement("div");
+  sk.className = "skel";
+  els.stack.appendChild(sk);
   els.spinner?.classList.add("show");
 
-  try {
-    const tokens = term.split(/\s+/).filter(Boolean).map(norm);
+  // opções (todos os arquivos do select)
+  const options = Array.from(els.codeSelect?.querySelectorAll("option") || [])
+    .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
+    .filter((o) => o.url);
 
-    const results = [];
-    const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
-      .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
-      .filter((o) => o.url);
-
-    for (const { url, label } of allOptions) {
-      try {
-        const items = await parseFile(url, label);
-        items.forEach((it) => {
-          const bag = norm(it.text);
-          const ok = tokens.every((t) => bag.includes(t));
-          if (ok) results.push(it);
-        });
-      } catch (e) {
-        toast(`⚠️ Não carreguei: ${label}`);
-        console.warn("Falha ao buscar:", e);
+  const results = [];
+  for (const { url, label } of options) {
+    try {
+      const items = await parseFile(url, label);
+      for (const it of items) {
+        const bag = norm(it.text);
+        // todos os tokens precisam aparecer
+        const ok = tokens.every((t) => bag.includes(t));
+        if (ok) results.push(it);
       }
+    } catch (err) {
+      console.warn("Falha ao carregar:", url, err);
+      toast(`Falha ao carregar: ${label}`);
     }
-
-    skel.remove();
-    renderBlock(term, results, tokens);
-    toast(`${results.length} resultado(s) encontrados.`);
-  } finally {
-    els.stack.setAttribute("aria-busy", "false");
-    els.spinner?.classList.remove("show");
-    els.q?.select();
   }
-}
 
-function renderBlock(term, items, tokens) {
-  const block = document.createElement("section");
-  block.className = "block";
-  const title = document.createElement("div");
-  title.className = "block-title";
-  title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
-  block.appendChild(title);
+  els.spinner?.classList.remove("show");
+  sk.remove();
 
-  if (!items.length) {
+  if (!results.length) {
     const empty = document.createElement("div");
     empty.className = "block-empty";
-    empty.textContent = `Nada por aqui com ‘${term}’. Tente outra palavra.`;
-    block.appendChild(empty);
-  } else {
-    items.forEach((it) => block.appendChild(renderCard(it, tokens)));
+    empty.textContent = "Nenhum resultado.";
+    els.stack.appendChild(empty);
+    return;
   }
-  els.stack.append(block);
+
+  // render
+  const frag = document.createDocumentFragment();
+  for (const it of results) {
+    frag.appendChild(renderCard(it, tokens, { context: "results" }));
+  }
+  els.stack.appendChild(frag);
 }
 
 /* ---------- cards ---------- */
-function highlight(text, tokens) {
-  let safe = escHTML(text || "");
-  tokens.forEach((t) => {
-    if (!t) return;
-    const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-    safe = safe.replace(re, "<mark>$1</mark>");
-  });
-  return safe;
+function truncateText(s, n = CARD_CHAR_LIMIT) {
+  if (!s) return "";
+  const clean = s.replace(/\s+/g, " ").trim();
+  if (clean.length <= n) return clean;
+  return clean.slice(0, n - 1) + "…";
 }
-function truncatedHTML(fullText, tokens) {
-  const base = fullText || "";
-  // corta em limite sem quebrar no meio da palavra
-  let out = base.slice(0, CARD_CHAR_LIMIT);
-  const cut = out.lastIndexOf(" ");
-  if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
-    out = out.slice(0, cut) + "…";
-  } else if (base.length > CARD_CHAR_LIMIT) {
-    out = out.trim() + "…";
-  }
-  return highlight(escHTML(out), tokens);
-}
+
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
-  card.dataset.id = item.id;
 
-  const left = document.createElement("div");
+  // título (sem duplicação)
+  const h = document.createElement("h4");
+  h.className = "card-title";
+  h.textContent = item.title;
 
-  const pill = document.createElement("a");
-  pill.href = "#";
-  pill.className = "pill";
-  pill.textContent = item.source;
-  pill.addEventListener("click", (e) => { e.preventDefault(); openReader(item); });
+  // preview: usa SÓ body, com limite de 200 chars
+  const preview = document.createElement("p");
+  preview.className = "card-prev";
 
-  const body = document.createElement("div");
-  body.className = "body is-collapsed";
-  body.innerHTML = truncatedHTML(item.text, tokens);
-  body.style.cursor = "pointer";
-  body.addEventListener("click", () => openReader(item));
+  // preview plain → vira HTML com marcações
+  const prevText = truncateText(item.body || "", CARD_CHAR_LIMIT);
+  preview.innerHTML = tokens.length ? highlightAll(prevText, tokens) : prevText;
 
-  const actions = document.createElement("div");
-  actions.className = "actions";
-  const toggle = document.createElement("button");
-  toggle.className = "toggle";
-  toggle.textContent = "ver texto";
-  toggle.addEventListener("click", () => {
-    const collapsed = body.classList.toggle("is-collapsed");
-    if (collapsed) {
-      body.innerHTML = truncatedHTML(item.text, tokens);
-      toggle.textContent = "ver texto";
-    } else {
-      body.textContent = item.text; // texto integral
-      toggle.textContent = "ocultar";
-    }
-  });
+  // rodapé com ações
+  const footer = document.createElement("div");
+  footer.className = "card-foo";
 
-  left.append(pill, body, actions);
-  actions.append(toggle);
+  const meta = document.createElement("span");
+  meta.className = "card-meta";
+  meta.textContent = item.source;
 
-  const chk = document.createElement("button");
-  chk.className = "chk";
-  chk.setAttribute("aria-label", "Selecionar bloco");
-  chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
-  sync();
-  chk.addEventListener("click", () => {
+  const btnOpen = document.createElement("button");
+  btnOpen.className = "btn";
+  btnOpen.textContent = "ver texto";
+  btnOpen.addEventListener("click", () => openReader(item, tokens));
+
+  const btnSel = document.createElement("button");
+  btnSel.className = "btn ghost";
+  btnSel.textContent = state.selected.has(item.id) ? "remover" : "selecionar";
+  btnSel.addEventListener("click", () => {
     if (state.selected.has(item.id)) {
       state.selected.delete(item.id);
+      btnSel.textContent = "selecionar";
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
       if (ctx.context === "selected") card.remove();
     } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
+      if (state.selected.size >= MAX_SEL) {
+        toast("Limite de 6 blocos.");
+        return;
+      }
       state.selected.set(item.id, { ...item });
+      btnSel.textContent = "remover";
       toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
-    sync();
     updateBottom();
   });
 
-  card.append(left, chk);
+  footer.append(meta, btnOpen, btnSel);
+  card.append(h, preview, footer);
   return card;
 }
 
-/* ---------- Leitor (modal) ---------- */
-async function openReader(item) {
-  els.readerTitle && (els.readerTitle.textContent = item.source);
-  els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-  els.readerBody && (els.readerBody.innerHTML = "");
-  showModal(els.readerModal);
-
-  // skeleton
-  for (let i = 0; i < 3; i++) {
-    const s = document.createElement("div");
-    s.className = "skel block";
-    s.style.margin = "10px 0";
-    els.readerBody.appendChild(s);
-  }
-
-  try {
-    const items = await parseFile(item.fileUrl, item.source);
-    els.readerBody.innerHTML = "";
-    items.forEach((a) => {
-      const row = document.createElement("div");
-      row.className = "article";
-      row.id = a.htmlId;
-
-      const chk = document.createElement("button");
-      chk.className = "chk a-chk";
-      chk.setAttribute("aria-label", "Selecionar bloco");
-      chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const sync = () => { chk.dataset.checked = state.selected.has(a.id) ? "true" : "false"; };
-      sync();
-      chk.addEventListener("click", () => {
-        if (state.selected.has(a.id)) {
-          state.selected.delete(a.id);
-          toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
-        } else {
-          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
-          state.selected.set(a.id, a);
-          toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
-        }
-        els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-        sync();
-        updateBottom();
-      });
-
-      const body = document.createElement("div");
-      const h4 = document.createElement("h4");
-      h4.textContent = `${a.title} — ${a.source}`;
-      const txt = document.createElement("div");
-      txt.className = "a-body";
-const displayText = (a.body && a.body.trim()) ? a.body : a.text;
-txt.textContent = addRespirationsForDisplay(displayText); // só respiros visuais
-      body.append(h4, txt);
-
-      row.append(chk, body);
-      els.readerBody.appendChild(row);
-    });
-
-    const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
-    if (anchor) {
-      anchor.scrollIntoView({ block: "center", behavior: "instant" });
-      anchor.classList.add("highlight");
-      setTimeout(() => anchor.classList.remove("highlight"), 1800);
-    }
-    els.readerBody.focus();
-  } catch (e) {
-    toast("Erro ao abrir o arquivo. Veja o console.");
-    console.warn(e);
-    hideModal(els.readerModal);
-  }
+/* ---------- leitor (modal de leitura única) ---------- */
+function showModal(modalEl) {
+  if (!modalEl) return;
+  modalEl.hidden = false;
+  modalEl.classList.add("open");
+}
+function hideModal(modalEl) {
+  if (!modalEl) return;
+  modalEl.classList.remove("open");
+  modalEl.hidden = true;
 }
 
-/* ---------- MODAIS ---------- */
-function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
-function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflow = ""; } }
+/** Leitor: elimina título duplicado.
+ * h4 = item.title
+ * body = APENAS item.body (sem repetir o título)
+ * highlight aplicado no body.
+ */
+async function openReader(item, tokens = []) {
+  if (!els.readerModal) return;
+  els.readerTitle.textContent = item.title;
+  els.readerBody.innerHTML = "";
 
+  const body = (item.body && item.body.trim()) ? item.body : ""; // nunca usa text aqui
+  const textHtml = tokens.length ? highlightAll(body, tokens) : body;
+
+  // transforma \n em <br> (visual)
+  const html = textHtml.split("\n").map((l) => l || "").join("<br>");
+  const container = document.createElement("div");
+  container.className = "reader-text";
+  container.innerHTML = html;
+
+  els.readerBody.appendChild(container);
+  showModal(els.readerModal);
+}
+
+/* Fecha modais por clique no backdrop ou ESC */
 document.addEventListener("click", (e) => {
-  if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
-  if (e.target.matches("[data-close-study]")) hideModal(els.studyModal);
-  if (e.target.matches("[data-close-questions]")) hideModal(els.questionsModal);
-  if (e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
-
-  if (els.readerModal && e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
-  if (els.studyModal && e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
-  if (els.questionsModal && e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
-  if (els.selectedModal && e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
+  const backdrop = e.target.closest(".modal-backdrop");
+  if (!backdrop) return;
+  const modal = backdrop.parentElement;
+  hideModal(modal);
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    if (els.readerModal && !els.readerModal.hidden) hideModal(els.readerModal);
-    if (els.studyModal && !els.studyModal.hidden) hideModal(els.studyModal);
-    if (els.questionsModal && !els.questionsModal.hidden) hideModal(els.questionsModal);
-    if (els.selectedModal && !els.selectedModal.hidden) hideModal(els.selectedModal);
+    [els.readerModal, els.selectedModal, els.studyModal, els.questionsModal]
+      .filter(Boolean)
+      .forEach((m) => { if (!m.hidden) hideModal(m); });
   }
 });
 
-/* ---------- VER SELECIONADOS ---------- */
+/* ---------- VER SELECIONADOS (sem título duplicado) ---------- */
 els.viewBtn?.addEventListener("click", () => {
+  if (!els.selectedModal) return;
   els.selectedStack.innerHTML = "";
+
   if (!state.selected.size) {
     const empty = document.createElement("div");
     empty.className = "block-empty";
@@ -495,135 +396,21 @@ els.viewBtn?.addEventListener("click", () => {
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
-      const card = renderCard(it, [], { context: "selected" });
-      els.selectedStack.appendChild(card);
+      els.selectedStack.appendChild(renderCard(it, [], { context: "selected" }));
     }
   }
+
   showModal(els.selectedModal);
 });
 
-/* ---------- Estudar ---------- */
-els.studyBtn?.addEventListener("click", async () => {
-  if (!state.selected.size) return;
-  state.studyIncluded = new Set([...state.selected.keys()]);
-  buildMiniList(els.studyList, state.studyIncluded);
-  showModal(els.studyModal);
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
+/* ---------- busca: submit ---------- */
+els.form?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = els.q?.value || "";
+  search(q);
 });
-els.studyUpdate?.addEventListener("click", async () => {
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
-  toast("Lista atualizada e prompt copiado.");
-});
-els.copyPromptBtn?.addEventListener("click", async () => {
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
-});
-async function buildStudyPrompt(includedSet) {
-  const tpl = await loadPromptTemplate();
-  const parts = [tpl.trim(), ""];
-  let i = 1;
-  for (const id of includedSet) {
-    const it = state.selected.get(id);
-    if (!it) continue;
-    parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, ""); // texto integral
-    if (i++ >= MAX_SEL) break;
-  }
-  return parts.join("\n");
-}
 
-/* ---------- Criar Questões ---------- */
-els.questionsBtn?.addEventListener("click", async () => {
-  if (!state.selected.size) return;
-  state.questionsIncluded = new Set([...state.selected.keys()]);
-  buildMiniList(els.questionsList, state.questionsIncluded);
-  showModal(els.questionsModal);
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-});
-els.questionsUpdate?.addEventListener("click", async () => {
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-  toast("Lista atualizada e prompt copiado.");
-});
-els.copyQuestionsBtn?.addEventListener("click", async () => {
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-});
-els.includeObsBtn?.addEventListener("click", () => {
-  state.pendingObs = (els.questionsObs.value || "").trim();
-  toast("Observação incluída.");
-});
-async function buildQuestionsPrompt(includedSet) {
-  const tpl = await loadQuestionsTemplate();
-
-  const opts = Array.from(document.querySelectorAll(".qopt"))
-    .filter((i) => i.checked)
-    .map((i) => i.value);
-  const prefLines = [];
-  if (opts.includes("casos2"))         prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))            prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas"))     prefLines.push("- Misture os entendimentos para criar pegadinhas.");
-  const prefs = prefLines.join("\n");
-
-  const parts = [tpl.trim(), ""];
-  if (prefs) parts.push("Preferências:", prefs, "");
-  if (state.pendingObs) parts.push("Observação do usuário:", state.pendingObs, "");
-
-  let i = 1;
-  parts.push("Blocos-base:");
-  for (const id of includedSet) {
-    const it = state.selected.get(id);
-    if (!it) continue;
-    parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, "");
-    if (i++ >= MAX_SEL) break;
-  }
-  return parts.join("\n");
-}
-
-/* ---------- mini-lists (modais) ---------- */
-function buildMiniList(container, includedSet) {
-  container.innerHTML = "";
-  const items = [...state.selected.values()];
-  items.forEach((it) => {
-    const li = document.createElement("li");
-    li.className = "mini-item";
-
-    const chk = document.createElement("button");
-    chk.className = "chk";
-    chk.setAttribute("aria-label", "Incluir/excluir do prompt");
-    chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    const sync = () => { chk.dataset.checked = includedSet.has(it.id) ? "true" : "false"; };
-    sync();
-    chk.addEventListener("click", () => {
-      if (includedSet.has(it.id)) includedSet.delete(it.id);
-      else includedSet.add(it.id);
-      sync();
-    });
-
-    const title = document.createElement("div");
-    title.className = "mini-title";
-    const preview = (it.title.slice(0, PREV_MAX) + (it.title.length > PREV_MAX ? "…" : ""));
-    title.textContent = `${preview} — ${it.source}`;
-
-    li.append(chk, title);
-    container.appendChild(li);
-  });
-}
-
-/* ---------- copiar com toast ---------- */
-function copyToClipboard(txt) {
-  navigator.clipboard?.writeText(txt).then(
-    () => toast("✅ Prompt copiado. Cole na sua I.A. preferida."),
-    () => toast("Copie manualmente na sua I.A.")
-  );
-}
-
-/* ---------- logo: reset ---------- */
+/* ---------- reset pela marca ---------- */
 els.brand?.addEventListener("click", () => {
   els.q && (els.q.value = "");
   els.stack && (els.stack.innerHTML = "");
@@ -633,3 +420,13 @@ els.brand?.addEventListener("click", () => {
 
 /* ---------- init ---------- */
 updateBottom();
+
+/* ========= OBS:
+1) Se houver um modal que lista o arquivo completo, use a MESMA regra do leitor:
+   - título no cabeçalho
+   - corpo renderizado com (item.body) — nunca com (item.text)
+   Se você tem uma função própria desse modal, troque qualquer uso de `a.text` por:
+     `const display = (a.body && a.body.trim()) ? a.body : "";`
+     e renderize o `display`.
+2) O highlight funciona em cards, leitor e onde você usar `highlightAll`.
+========= */
