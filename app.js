@@ -19,6 +19,7 @@ const els = {
   selCount: $("#selCount"),
 
   studyBtn: $("#studyBtn"),
+  questionsBtn: $("#questionsBtn"),
   viewBtn: $("#viewBtn"),
   selectedModal: $("#selectedModal"),
   selectedList: $("#selectedList"),
@@ -26,6 +27,11 @@ const els = {
   studyModal: $("#studyModal"),
   promptPreview: $("#promptPreview"),
   copyPromptBtn: $("#copyPromptBtn"),
+
+  questionsModal: $("#questionsModal"),
+  questionsPreview: $("#questionsPreview"),
+  copyQuestionsBtn: $("#copyQuestionsBtn"),
+  questionsObs: $("#questionsObs"),
 
   codeSelect: $("#codeSelect"),
   toasts: $("#toasts"),
@@ -39,7 +45,8 @@ const state = {
   cacheTxt: new Map(),      // url -> txt
   cacheParsed: new Map(),   // url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null,          // template carregado de data/prompt/prompt_estudar.txt
+  promptTpl: null,          // template estudo
+  promptQTpl: null,         // template questões
 };
 
 /* util */
@@ -53,6 +60,7 @@ function updateBottom(){
   const n = state.selected.size;
   els.viewBtn.textContent = `${n} Selecionados – Ver`;
   els.studyBtn.disabled = n===0;
+  els.questionsBtn.disabled = n===0;
   els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 function norm(s){
@@ -119,14 +127,13 @@ function parseBlock(block, idx){
   const bodyRaw = after.join("\n");
   const bodyClean = dedupeBody(title, bodyRaw);
 
-  // texto único: título na primeira linha + corpo limpo
   const oneText = [title, bodyClean].filter(Boolean).join("\n");
 
   return {
     kind:"article",
     title: title || `Bloco ${idx+1}`,
     text: [epigrafe?`Epígrafe: ${epigrafe}`:"", oneText].filter(Boolean).join("\n"),
-    bodyOnly: bodyClean,                 // corpo sem repetição (útil pra prompt)
+    bodyOnly: bodyClean,
     htmlId:`art-${idx}`,
     _split:{titleText:title, epigrafe, body:bodyClean, oneText}
   };
@@ -141,7 +148,7 @@ async function parseFile(url){
   return items;
 }
 
-/* carregar template do prompt */
+/* Templates de prompts */
 async function loadPromptTemplate(){
   if (state.promptTpl) return state.promptTpl;
   try{
@@ -151,6 +158,79 @@ async function loadPromptTemplate(){
     state.promptTpl = "Você é uma I.A. jurídica. A partir dos artigos abaixo, organize o estudo, explique em linguagem simples e aponte jurisprudência relevante.\n";
   }
   return state.promptTpl;
+}
+async function loadQuestionsTemplate(){
+  if (state.promptQTpl) return state.promptQTpl;
+  const tries = [
+    "data/prompt/prompt_questões.txt",
+    "data/prompt/prompt_questoes.txt"
+  ];
+  for (const p of tries){
+    try{
+      const tpl = await fetchText(p);
+      state.promptQTpl = tpl.trim();
+      return state.promptQTpl;
+    }catch{}
+  }
+  state.promptQTpl = "Você é uma I.A. professora de Direito. Gere questões desafiadoras e inéditas a partir das instruções e artigos abaixo.\n";
+  return state.promptQTpl;
+}
+
+/* ALIASES de códigos */
+const CODE_ALIASES = {
+  "cp": ["Código Penal"], "código penal": ["Código Penal"], "codigo penal": ["Código Penal"],
+  "cpp": ["Processo Penal"], "código de processo penal": ["Processo Penal"], "codigo de processo penal": ["Processo Penal"],
+  "cpc": ["Processo Civil"], "cpc/2015": ["Processo Civil"], "ncpc": ["Processo Civil"],
+  "código de processo civil": ["Processo Civil"], "codigo de processo civil": ["Processo Civil"],
+  "cc": ["Código Civil"], "código civil": ["Código Civil"], "codigo civil": ["Código Civil"],
+  "ctn": ["CTN"], "clt": ["CLT"], "cdc": ["CDC"], "ctb": ["CTB"], "cpm": ["CPM"],
+  "cf": ["CF88"], "cf/88": ["CF88"], "cf88": ["CF88"], "crfb": ["CF88"],
+  "constituição": ["CF88"], "constituicao": ["CF88"],
+  "eca": ["ECA"],
+  "lep": ["Lei de Execução Penal"], "lei de execucao penal": ["Lei de Execução Penal"], "lei de execução penal": ["Lei de Execução Penal"],
+  "lai": ["Lei de Acesso à Informação"], "lei de acesso a informacao": ["Lei de Acesso à Informação"], "lei de acesso à informação": ["Lei de Acesso à Informação"],
+  "lms": ["Mandado de Segurança"], "mandado de seguranca": ["Mandado de Segurança"], "mandado de segurança": ["Mandado de Segurança"],
+};
+function labelsToUrls(labels){
+  const opts = Array.from(els.codeSelect.querySelectorAll("option"))
+    .map(o=>({label:o.textContent.trim(), url:o.value.trim()}));
+  const urls = [];
+  labels?.forEach(lbl=>{
+    const hit = opts.find(o=> norm(o.label) === norm(lbl));
+    if (hit) urls.push(hit.url);
+  });
+  return urls;
+}
+
+/* Parser da consulta */
+function parseQuery(raw){
+  const q = raw.trim();
+  const qNorm = q.toLowerCase();
+
+  const mArt = qNorm.match(/\b(?:art(?:\.|igo)?)\s*(\d{1,4})(?:\s*[--–—]?\s*[a-z])?/i);
+  const mSoloNum = qNorm.match(/^\s*(\d{1,4})\s*$/);
+  const articleNum = mArt ? mArt[1] : (mSoloNum ? mSoloNum[1] : null);
+  const numberOnly = !!mSoloNum;
+
+  const codeHits = new Set();
+  const words = qNorm.split(/[^a-z0-9/]+/).filter(Boolean);
+  for (let i=0; i<words.length; i++){
+    const w = words[i];
+    const two = (w + " " + (words[i+1]||"")).trim();
+    if (CODE_ALIASES[two]) CODE_ALIASES[two].forEach(x=>codeHits.add(x));
+    if (CODE_ALIASES[w])   CODE_ALIASES[w].forEach(x=>codeHits.add(x));
+  }
+
+  // tokens: ≥3 letras; números mantidos
+  const rawTokens = q.split(/\s+/).filter(Boolean);
+  const tokens = rawTokens
+    .filter(t=>{
+      if (/^\d+$/.test(t)) return true;
+      return t.length >= 3;
+    })
+    .map(norm);
+
+  return { tokens, articleNum, numberOnly, codeHits: Array.from(codeHits) };
 }
 
 /* busca */
@@ -173,26 +253,48 @@ async function doSearch(){
   els.spinner.classList.add("show");
 
   try{
-    const tokens = term.split(/\s+/).filter(Boolean).map(norm);
+    const { tokens, articleNum, numberOnly, codeHits } = parseQuery(term);
+
     const results = [];
-    const options = Array.from(els.codeSelect.querySelectorAll("option"))
+    const allOptions = Array.from(els.codeSelect.querySelectorAll("option"))
       .map(o=>({url:o.value?.trim(), label:o.textContent?.trim()})).filter(o=>o.url);
+
+    // filtra por código quando houver
+    let options = allOptions;
+    if (codeHits.length){
+      const urls = labelsToUrls(codeHits);
+      if (urls.length) options = allOptions.filter(o=> urls.includes(o.url));
+    }
 
     for(const {url,label} of options){
       try{
         const items = await parseFile(url);
         items.forEach(it=>{
           if(it.kind!=="article") return;
-          const bag = norm([it._split.oneText||"", it._split.epigrafe||""].join(" "));
-          if(tokens.every(t=>bag.includes(t))){
+
+          // filtro por Artigo N (quando houver)
+          let okArticle = true;
+          if (articleNum){
+            const title = (it._split.titleText||"").toLowerCase();
+            okArticle = new RegExp(`^\\s*art(?:\\.|igo)?\\s*${articleNum}(?:\\b|\\s*[--–—]?[a-z])`,"i").test(title);
+          }
+          if (!okArticle) return;
+
+          // filtro por tokens (AND estrito)
+          let okTokens = true;
+          if (tokens.length){
+            const bag = norm((it._split.oneText||"") + " " + (it._split.epigrafe||""));
+            okTokens = tokens.every(t => bag.includes(t));
+          }
+
+          if ((numberOnly && articleNum && okArticle) || (!numberOnly && okArticle && okTokens)){
             results.push({
               id: `${url}::${it.htmlId}`,
               source: label,
               fileUrl: url,
               htmlId: it.htmlId,
-              // único texto para exibir no card
               text: it._split.oneText,
-              body: it.bodyOnly, // para prompt
+              body: it.bodyOnly,
               title: it._split.titleText
             });
           }
@@ -239,7 +341,7 @@ function highlight(text, tokens){
   return safe;
 }
 
-/* truncar por caracteres (250) mantendo highlight */
+/* truncar por caracteres (250) */
 function truncatedHTML(fullText, tokens){
   const raw = fullText || "";
   const truncated = raw.length > CARD_CHAR_LIMIT ? raw.slice(0, CARD_CHAR_LIMIT).trim() + "…" : raw;
@@ -257,12 +359,10 @@ function renderCard(item, tokens){
   pill.href = "#"; pill.className="pill"; pill.textContent = item.source;
   pill.addEventListener("click", (e)=>{ e.preventDefault(); openReader(item); });
 
-  // único bloco de texto (sem h3)
+  // único bloco de texto (sem título separado)
   const body = document.createElement("div");
   body.className = "body is-collapsed";
   body.innerHTML = truncatedHTML(item.text, tokens);
-
-  // abrir leitor clicando no texto
   body.style.cursor = "pointer";
   body.addEventListener("click", ()=> openReader(item));
 
@@ -327,7 +427,6 @@ async function openReader(item){
     hideModal(els.readerModal);
   }
 }
-
 function renderArticleRow(a, fileUrl, sourceLabel){
   const row=document.createElement("div"); row.className="article"; row.id=a.htmlId;
 
@@ -339,8 +438,8 @@ function renderArticleRow(a, fileUrl, sourceLabel){
     id:`${fileUrl}::${a.htmlId}`,
     title:a._split.titleText || a.title,
     source:sourceLabel,
-    text:[a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"), // texto único
-    body:a._split.body||"",   // corpo limpo
+    text:[a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"), // texto único completo (p/ copiar caso precise)
+    body:a._split.body||"",   // *** só o corpo ***
     fileUrl, htmlId:a.htmlId
   };
   const sync=()=>{ chk.dataset.checked = state.selected.has(itemRef.id) ? "true":"false"; };
@@ -357,7 +456,8 @@ function renderArticleRow(a, fileUrl, sourceLabel){
 
   const body=document.createElement("div");
   const h4=document.createElement("h4"); h4.textContent=`${itemRef.title} — ${sourceLabel}`;
-  const txt=document.createElement("div"); txt.className="a-body"; txt.textContent=itemRef.text;
+  const txt=document.createElement("div"); txt.className="a-body";
+  txt.textContent = itemRef.body || itemRef.text; // <<<<< só corpo no card do modal
   body.append(h4,txt);
 
   row.append(chk,body);
@@ -371,21 +471,24 @@ function hideModal(el){ el.hidden=true; document.body.style.overflow=""; }
 document.addEventListener("click",(e)=>{
   if(e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
   if(e.target.matches("[data-close-study]")) hideModal(els.studyModal);
+  if(e.target.matches("[data-close-questions]")) hideModal(els.questionsModal);
   if(e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
 
   if(e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
   if(e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
+  if(e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
   if(e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
 });
 document.addEventListener("keydown",(e)=>{
   if(e.key==="Escape"){
     if(!els.readerModal.hidden) hideModal(els.readerModal);
     if(!els.studyModal.hidden) hideModal(els.studyModal);
+    if(!els.questionsModal.hidden) hideModal(els.questionsModal);
     if(!els.selectedModal.hidden) hideModal(els.selectedModal);
   }
 });
 
-/* VER SELECIONADOS (modal central) */
+/* VER SELECIONADOS */
 els.viewBtn.addEventListener("click", ()=>{
   els.selectedList.innerHTML = "";
   for (const [id, it] of state.selected.entries()){
@@ -408,7 +511,7 @@ els.viewBtn.addEventListener("click", ()=>{
 /* ESTUDAR */
 els.studyBtn.addEventListener("click", async ()=>{
   if(!state.selected.size) return;
-  const prompt = await buildPrompt();
+  const prompt = await buildStudyPrompt();
   openStudyModal(prompt);
   navigator.clipboard?.writeText(prompt).then(
     ()=> toast("✅ Prompt copiado. Cole na sua IA preferida."),
@@ -420,13 +523,13 @@ els.copyPromptBtn?.addEventListener("click", ()=>{
   navigator.clipboard?.writeText(txt).then(()=> toast("✅ Copiado!"));
 });
 
-async function buildPrompt(){
+async function buildStudyPrompt(){
   const tpl = await loadPromptTemplate();
   const parts = [tpl.trim(), ""];
   let i=1;
   for(const it of state.selected.values()){
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.body || it.text, "");  // usa o corpo limpo
+    parts.push(it.body || it.text, "");
     if(i++>=MAX_SEL) break;
   }
   return parts.join("\n");
@@ -434,6 +537,50 @@ async function buildPrompt(){
 function openStudyModal(prompt){
   els.promptPreview.textContent = prompt;
   showModal(els.studyModal);
+}
+
+/* CRIAR QUESTÕES */
+els.questionsBtn.addEventListener("click", async ()=>{
+  if(!state.selected.size) return;
+  const prompt = await buildQuestionsPrompt();
+  els.questionsPreview.textContent = prompt;
+  showModal(els.questionsModal);
+  navigator.clipboard?.writeText(prompt).then(
+    ()=> toast("✅ Prompt copiado. Cole na sua IA preferida."),
+    ()=> toast("Copie manualmente no modal.")
+  );
+});
+els.copyQuestionsBtn?.addEventListener("click", ()=>{
+  const txt = els.questionsPreview.textContent || "";
+  navigator.clipboard?.writeText(txt).then(()=> toast("✅ Copiado!"));
+});
+
+async function buildQuestionsPrompt(){
+  const tpl = await loadQuestionsTemplate();
+
+  // Preferências
+  const opts = Array.from(document.querySelectorAll(".qopt")).filter(i=>i.checked).map(i=>i.value);
+  const prefLines = [];
+  if (opts.includes("casos2")) prefLines.push("- Inclua 2 Casos Concretos.");
+  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
+  if (opts.includes("vf2")) prefLines.push("- Inclua 2 V ou F.");
+  if (opts.includes("pegadinhas")) prefLines.push("- Misture os entendimentos para criar pegadinhas.");
+  const prefs = prefLines.join("\n");
+
+  const obs = (els.questionsObs.value || "").trim();
+
+  const parts = [tpl.trim(), ""];
+  if (prefs) parts.push("Preferências:", prefs, "");
+  if (obs) parts.push("Observação do usuário:", obs, "");
+
+  let i=1;
+  parts.push("Artigos-base:");
+  for(const it of state.selected.values()){
+    parts.push(`### ${i}. ${it.title} — [${it.source}]`);
+    parts.push(it.body || it.text, "");
+    if(i++>=MAX_SEL) break;
+  }
+  return parts.join("\n");
 }
 
 /* init */
