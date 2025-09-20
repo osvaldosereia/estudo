@@ -198,14 +198,14 @@ async function loadPromptTemplate() {
 /* >>> SOMENTE este caminho para “Criar Questões” <<< */
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompts/prompt_questoes.txt";
+  const PATH = "data/prompt/prompt_questoes.txt";
   try {
     const r = await fetch(PATH, { cache: "no-cache" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     state.promptQTpl = (await r.text()).trim();
   } catch {
     state.promptQTpl = ""; // sem fallback, por pedido
-    toast("Não encontrei data/prompts/prompt_questoes.txt");
+    toast("Não encontrei data/prompt/prompt_questoes.txt");
   }
   return state.promptQTpl;
 }
