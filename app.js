@@ -1,9 +1,10 @@
 /* ==========================
-   direito.love — app.js (2025-09 • estável)
-   Regras:
-   1) Cada card = bloco entre linhas "-----"
-   2) Texto preservado como no .txt (parênteses incluídos)
-   3) "Respiros" (linhas em branco) apenas na visualização do leitor
+   direito.love — app.js (parser universal de ARTIGOS)
+   Regras principais:
+   1) SOMENTE artigos: começa em linha "Art." e vai até antes do próximo "Art." (ou EOF)
+   2) Texto preservado (inclusive parênteses/notas)
+   3) "Respiros" (linhas em branco antes de §/inciso/alínea/títulos) APENAS NA EXIBIÇÃO DO LEITOR
+   4) Converte github.com/.../blob/... -> raw.githubusercontent.com/... e aplica encodeURI (adeus 404)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -64,9 +65,9 @@ const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
 const state = {
-  selected: new Map(),     // id -> item
+  selected: new Map(),     // id -> artigo
   cacheTxt: new Map(),     // url -> string
-  cacheParsed: new Map(),  // url -> items[]
+  cacheParsed: new Map(),  // url -> artigos[]
   urlToLabel: new Map(),
   promptTpl: null,         // estudo
   promptQTpl: null,        // questões
@@ -75,7 +76,7 @@ const state = {
   questionsIncluded: new Set(),
 };
 
-/* ---------- util ---------- */
+/* ---------- UI utils ---------- */
 function toast(msg) {
   const el = document.createElement("div");
   el.className = "toast";
@@ -103,8 +104,7 @@ function escHTML(s) {
   }[m]));
 }
 
-/* ---------- catálogo (select) ---------- */
-/* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
+/* ---------- select: normalização de URLs ---------- */
 function toRawGitHub(url){
   if(!url) return url;
   const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
@@ -117,18 +117,18 @@ function toRawGitHub(url){
     const label = (opt.textContent || "").trim();
     if (!url) return;
     url = encodeURI(toRawGitHub(url));
-    opt.value = url; // corrige no DOM (evita 404 e caracteres especiais)
+    opt.value = url; // corrige no DOM
     state.urlToLabel.set(label, url);
   });
 })();
 
-/* ---------- fetch/parse ---------- */
+/* ---------- fetch & sanitize ---------- */
 function sanitize(s) {
   return String(s)
     .replace(/\uFEFF/g, "")      // BOM
     .replace(/\u00A0/g, " ")     // NBSP
     .replace(/\r\n?/g, "\n")     // EOL
-    .replace(/[ \t]+\n/g, "\n"); // ws final
+    .replace(/[ \t]+\n/g, "\n"); // trailing ws
 }
 async function fetchText(url) {
   url = encodeURI(url);
@@ -140,45 +140,63 @@ async function fetchText(url) {
   return t;
 }
 
-/* Split: cada linha com 5+ hifens (-----) separa blocos */
-function splitBlocks(txt) {
-  return sanitize(txt)
-    .split(/^\s*-{5,}\s*$/m)
-    .map((s) => s.trim())
-    .filter(Boolean);
+/* ---------- PARSER UNIVERSAL: só ARTIGOS ---------- */
+/* Linha de início de Artigo (tolerante):
+   Aceita: Art. 1º | Art. 1o | Art. 1 | Art. 121-A | Art. 1º-A | Art. 1-A. */
+const RX_ART_HEAD = /^[ \t]*Art\.\s*(?<num>\d+[A-Z]*)\s*(?<ord>[ºo])?(?:\s*-\s*(?<suf>[A-Z]))?\s*\./;
+
+/* rótulo exato "Art. 121-A." como impresso (pra preview bonito) */
+function extractRotulo(line) {
+  const m = line.match(/^[ \t]*(Art\.\s*\d+[A-Z]*(?:\s*[ºo])?(?:\s*-\s*[A-Z])?\s*\.)/);
+  return m ? m[1].trim() : line.trim();
 }
 
-/* Parser minimalista: título = 1ª linha; corpo = resto (preservado) */
-function parseBlock(block, idx, fileUrl, sourceLabel) {
-  const lines = block.split("\n");
-  const firstIdx = lines.findIndex((l) => l.trim().length > 0);
-  const first = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
-  const rest  = lines.slice(firstIdx + 1).join("\n").trim();
-  const full  = [first, rest].filter(Boolean).join("\n");
+/* Core: transforma .txt cru -> [{ id, numero, rotulo, texto }] */
+function parseArticlesFromTxt(rawTxt, fileUrl, sourceLabel) {
+  const txt = sanitize(rawTxt);
+  const lines = txt.split("\n");
+  const starts = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (RX_ART_HEAD.test(lines[i])) starts.push(i);
+  }
+  if (!starts.length) return []; // sem Art. = nada
 
-  return {
-    id: `${fileUrl}::art-${idx}`,
-    htmlId: `art-${idx}`,
-    source: sourceLabel,
-    title: first,
-    body: rest,
-    text: full, // título + corpo
-    fileUrl,
-  };
+  const artigos = [];
+  for (let idx = 0; idx < starts.length; idx++) {
+    const a = starts[idx];
+    const b = (idx + 1 < starts.length) ? starts[idx + 1] : lines.length;
+
+    const bloco = lines.slice(a, b);
+    const headLine = bloco[0] || "";
+    const m = headLine.match(RX_ART_HEAD);
+
+    let numero = "";
+    if (m && m.groups) {
+      const num = m.groups.num || "";
+      const ord = m.groups.ord || "";
+      const suf = m.groups.suf || "";
+      numero = num + (ord || "") + (suf ? "-" + suf : ""); // ex.: 7º-A, 121-A, 1º
+    }
+
+    const rotulo = extractRotulo(headLine);
+    const texto = bloco.join("\n").trim(); // caput + §§ + incisos + alíneas preservados
+    const id = "art-" + numero.replace(/[^\w\-]/g, "").toLowerCase();
+
+    artigos.push({
+      id: `${fileUrl}::${id}`,
+      htmlId: id,
+      source: sourceLabel,
+      numero,
+      rotulo,  // "Art. 7º."
+      title: rotulo, // título do card
+      text: texto,   // texto integral do artigo
+      fileUrl,
+    });
+  }
+  return artigos;
 }
 
-async function parseFile(url, sourceLabel) {
-  if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
-  const txt = await fetchText(url);
-  const blocks = splitBlocks(txt);
-  const items = blocks.map((b, i) => parseBlock(b, i, url, sourceLabel));
-  state.cacheParsed.set(url, items);
-  return items;
-}
-
-/* ---------- "Respiros" (só no leitor) ---------- */
-/* Insere linha em branco ANTES de marcadores no INÍCIO da linha,
-   sem alterar o texto original na fonte (apenas para exibição). */
+/* "Respiros" SÓ para visualização (não altera o texto fonte) */
 function addRespirationsForDisplay(s) {
   if (!s) return "";
   const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
@@ -186,22 +204,29 @@ function addRespirationsForDisplay(s) {
   const RX_ALINEA  = /^[a-z](?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
   const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
 
-  const lines = String(s).replace(/\r\n?/g, "\n").split("\n");
+  const lines = String(s).split("\n");
   const out = [];
-  for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i].trim();
+  for (const rawLine of lines) {
+    const ln = rawLine.replace(/\r$/, ""); // keep original start, strip CR
+    const bare = ln.trim();
     const isMarker =
-      RX_PARAGR.test(ln) ||
-      RX_INCISO.test(ln) ||
-      RX_ALINEA.test(ln) ||
-      RX_TITULO.test(ln);
+      RX_PARAGR.test(bare) || RX_INCISO.test(bare) || RX_ALINEA.test(bare) || RX_TITULO.test(bare);
 
     if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
-    if (ln === "" && out.length && out[out.length - 1] === "") continue;
+    if (bare === "" && out.length && out[out.length - 1] === "") continue;
 
     out.push(ln);
   }
   return out.join("\n");
+}
+
+/* ---------- parseFile: baixa e transforma em artigos ---------- */
+async function parseFile(url, label) {
+  if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
+  const raw = await fetchText(url);
+  const artigos = parseArticlesFromTxt(raw, url, label);
+  state.cacheParsed.set(url, artigos);
+  return artigos;
 }
 
 /* ---------- templates de prompt ---------- */
@@ -217,7 +242,7 @@ async function loadPromptTemplate() {
       if (r.ok) { state.promptTpl = (await r.text()).trim(); return state.promptTpl; }
     } catch {}
   }
-  state.promptTpl = "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos blocos abaixo.\n";
+  state.promptTpl = "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos artigos abaixo.\n";
   return state.promptTpl;
 }
 async function loadQuestionsTemplate() {
@@ -266,8 +291,8 @@ async function doSearch() {
 
     for (const { url, label } of allOptions) {
       try {
-        const items = await parseFile(url, label);
-        items.forEach((it) => {
+        const artigos = await parseFile(url, label);
+        artigos.forEach((it) => {
           const bag = norm(it.text);
           const ok = tokens.every((t) => bag.includes(t));
           if (ok) results.push(it);
@@ -288,26 +313,7 @@ async function doSearch() {
   }
 }
 
-function renderBlock(term, items, tokens) {
-  const block = document.createElement("section");
-  block.className = "block";
-  const title = document.createElement("div");
-  title.className = "block-title";
-  title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
-  block.appendChild(title);
-
-  if (!items.length) {
-    const empty = document.createElement("div");
-    empty.className = "block-empty";
-    empty.textContent = `Nada por aqui com ‘${term}’. Tente outra palavra.`;
-    block.appendChild(empty);
-  } else {
-    items.forEach((it) => block.appendChild(renderCard(it, tokens)));
-  }
-  els.stack.append(block);
-}
-
-/* ---------- cards ---------- */
+/* ---------- render: lista de artigos ---------- */
 function highlight(text, tokens) {
   let safe = escHTML(text || "");
   tokens.forEach((t) => {
@@ -319,7 +325,6 @@ function highlight(text, tokens) {
 }
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
-  // corta em limite sem quebrar no meio da palavra
   let out = base.slice(0, CARD_CHAR_LIMIT);
   const cut = out.lastIndexOf(" ");
   if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
@@ -342,9 +347,15 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   pill.textContent = item.source;
   pill.addEventListener("click", (e) => { e.preventDefault(); openReader(item); });
 
+  const title = document.createElement("h4");
+  title.className = "title";
+  title.textContent = item.title; // ex.: "Art. 7º."
+
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  body.innerHTML = truncatedHTML(item.text, tokens);
+  // preview: rótulo + começo do caput (pega 1ª linha do texto)
+  const firstLine = (item.text.split("\n").find(l => l.trim()) || "").replace(/^\s*Art\.\s*\d+[A-Z]*(?:\s*[ºo])?(?:\s*-\s*[A-Z])?\s*\.\s*/, "");
+  body.innerHTML = truncatedHTML(firstLine, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
@@ -356,20 +367,20 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-      body.innerHTML = truncatedHTML(item.text, tokens);
+      body.innerHTML = truncatedHTML(firstLine, tokens);
       toggle.textContent = "ver texto";
     } else {
-      body.textContent = item.text; // texto integral
+      body.textContent = item.text; // integral (sem respiro na lista)
       toggle.textContent = "ocultar";
     }
   });
 
-  left.append(pill, body, actions);
+  left.append(pill, title, body, actions);
   actions.append(toggle);
 
   const chk = document.createElement("button");
   chk.className = "chk";
-  chk.setAttribute("aria-label", "Selecionar bloco");
+  chk.setAttribute("aria-label", "Selecionar artigo");
   chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
@@ -379,7 +390,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
       if (ctx.context === "selected") card.remove();
     } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
+      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 artigos."); return; }
       state.selected.set(item.id, { ...item });
       toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
@@ -389,6 +400,25 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   card.append(left, chk);
   return card;
+}
+
+function renderBlock(term, items, tokens) {
+  const block = document.createElement("section");
+  block.className = "block";
+  const title = document.createElement("div");
+  title.className = "block-title";
+  title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
+  block.appendChild(title);
+
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "block-empty";
+    empty.textContent = `Nada por aqui com ‘${term}’. Tente outra palavra.`;
+    block.appendChild(empty);
+  } else {
+    items.forEach((it) => block.appendChild(renderCard(it, tokens)));
+  }
+  els.stack.append(block);
 }
 
 /* ---------- Leitor (modal) ---------- */
@@ -407,16 +437,16 @@ async function openReader(item) {
   }
 
   try {
-    const items = await parseFile(item.fileUrl, item.source);
+    const artigos = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
-    items.forEach((a) => {
+    artigos.forEach((a) => {
       const row = document.createElement("div");
       row.className = "article";
       row.id = a.htmlId;
 
       const chk = document.createElement("button");
       chk.className = "chk a-chk";
-      chk.setAttribute("aria-label", "Selecionar bloco");
+      chk.setAttribute("aria-label", "Selecionar artigo");
       chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const sync = () => { chk.dataset.checked = state.selected.has(a.id) ? "true" : "false"; };
       sync();
@@ -425,7 +455,7 @@ async function openReader(item) {
           state.selected.delete(a.id);
           toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
         } else {
-          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
+          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 artigos."); return; }
           state.selected.set(a.id, a);
           toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
         }
@@ -439,7 +469,7 @@ async function openReader(item) {
       h4.textContent = `${a.title} — ${a.source}`;
       const txt = document.createElement("div");
       txt.className = "a-body";
-      txt.textContent = addRespirationsForDisplay(a.text); // só respiros visuais
+      txt.textContent = addRespirationsForDisplay(a.text); // respiro visual
       body.append(h4, txt);
 
       row.append(chk, body);
@@ -490,7 +520,7 @@ els.viewBtn?.addEventListener("click", () => {
   if (!state.selected.size) {
     const empty = document.createElement("div");
     empty.className = "block-empty";
-    empty.textContent = "Nenhum bloco selecionado.";
+    empty.textContent = "Nenhum artigo selecionado.";
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
@@ -573,7 +603,7 @@ async function buildQuestionsPrompt(includedSet) {
   if (state.pendingObs) parts.push("Observação do usuário:", state.pendingObs, "");
 
   let i = 1;
-  parts.push("Blocos-base:");
+  parts.push("Artigos-base:");
   for (const id of includedSet) {
     const it = state.selected.get(id);
     if (!it) continue;
