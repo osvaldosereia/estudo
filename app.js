@@ -1,10 +1,13 @@
 /* ==========================
-   direito.love — app.js (parser universal de ARTIGOS)
-   Regras principais:
-   1) SOMENTE artigos: começa em linha "Art." e vai até antes do próximo "Art." (ou EOF)
-   2) Texto preservado (inclusive parênteses/notas)
-   3) "Respiros" (linhas em branco antes de §/inciso/alínea/títulos) APENAS NA EXIBIÇÃO DO LEITOR
-   4) Converte github.com/.../blob/... -> raw.githubusercontent.com/... e aplica encodeURI (adeus 404)
+   direito.love — app.js (2025-09, modo ----- + cards)
+   Regras:
+   1) Delimitador: "-----" separa blocos
+   2) Card = bloco que contém linha iniciando com "Art.", "Súmula" ou "Preâmbulo"
+      - Se houver cabeçalho (LIVRO/TÍTULO/CAPÍTULO/SEÇÃO) antes, corta e começa no "Art."
+   3) Cabeçalhos puros NÃO viram card
+   4) Busca: palavras 3+ letras e dígitos de 1 algarismo (isolados); AND estrito; grifa tudo
+   5) Modal: só mostra os cards (sem cabeçalhos e sem "-----")
+   6) Números com milhares: "Art. 1.000." tratado como um único artigo; id "art-1000"
    ========================== */
 
 /* Service Worker (opcional) */
@@ -65,15 +68,16 @@ const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
 const state = {
-  selected: new Map(),     // id -> artigo
+  selected: new Map(),     // id -> card
   cacheTxt: new Map(),     // url -> string
-  cacheParsed: new Map(),  // url -> artigos[]
+  cacheParsed: new Map(),  // url -> cards[]
   urlToLabel: new Map(),
   promptTpl: null,         // estudo
   promptQTpl: null,        // questões
   pendingObs: "",          // obs do usuário (questões)
   studyIncluded: new Set(),
   questionsIncluded: new Set(),
+  searchTokens: [],
 };
 
 /* ---------- UI utils ---------- */
@@ -103,6 +107,7 @@ function escHTML(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
 }
+function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 /* ---------- select: normalização de URLs ---------- */
 function toRawGitHub(url){
@@ -140,77 +145,125 @@ async function fetchText(url) {
   return t;
 }
 
-/* ---------- PARSER UNIVERSAL: só ARTIGOS ---------- */
-/* Linha de início de Artigo (tolerante):
-   Aceita: Art. 1º | Art. 1o | Art. 1 | Art. 121-A | Art. 1º-A | Art. 1-A. */
-const RX_ART_HEAD = /^[ \t]*Art\.\s*(?<num>\d+[A-Z]*)\s*(?<ord>[ºo])?(?:\s*-\s*(?<suf>[A-Z]))?\s*\./;
-
-/* rótulo exato "Art. 121-A." como impresso (pra preview bonito) */
-function extractRotulo(line) {
-  const m = line.match(/^[ \t]*(Art\.\s*\d+[A-Z]*(?:\s*[ºo])?(?:\s*-\s*[A-Z])?\s*\.)/);
-  return m ? m[1].trim() : line.trim();
+/* ---------- delimitadores e padrões ---------- */
+// Split por "-----"
+function splitBlocksByDashes(txt) {
+  return sanitize(txt)
+    .split(/^\s*-{5,}\s*$/m)
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
-/* Core: transforma .txt cru -> [{ id, numero, rotulo, texto }] */
-function parseArticlesFromTxt(rawTxt, fileUrl, sourceLabel) {
-  const txt = sanitize(rawTxt);
-  const lines = txt.split("\n");
-  const starts = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (RX_ART_HEAD.test(lines[i])) starts.push(i);
-  }
-  if (!starts.length) return []; // sem Art. = nada
+// Início de card dentro do bloco
+const RX_CARD_START = /^\s*(?:Art\.\b|S[úu]mula\b|Pre[aâ]mbulo\b)/i;
 
-  const artigos = [];
-  for (let idx = 0; idx < starts.length; idx++) {
-    const a = starts[idx];
-    const b = (idx + 1 < starts.length) ? starts[idx + 1] : lines.length;
+// Cabeçalhos estruturais que queremos ignorar como cards
+const RX_LIVRO    = /^\s*LIVRO\b/i;
+const RX_TITULO   = /^\s*T[ÍI]TULO\b/i;
+const RX_CAPITULO = /^\s*CAP[ÍI]TULO\b/i;
+const RX_SECAO    = /^\s*SEÇÃO\b/i;
+const RX_SUBSECAO = /^\s*SUBSEÇÃO\b/i;
 
-    const bloco = lines.slice(a, b);
-    const headLine = bloco[0] || "";
-    const m = headLine.match(RX_ART_HEAD);
+// Artigo — suporta "1.000", "121", "1º", "1º-A", "121-A", etc.
+const RX_ART_EXTRACT =
+/^\s*Art\.\s*(?<num>(?:\d{1,3}(?:\.\d{3})*|\d+))\s*(?<ord>[ºo])?(?:\s*-\s*(?<suf>[A-Z]))?\s*\./i;
 
-    let numero = "";
-    if (m && m.groups) {
-      const num = m.groups.num || "";
-      const ord = m.groups.ord || "";
-      const suf = m.groups.suf || "";
-      numero = num + (ord || "") + (suf ? "-" + suf : ""); // ex.: 7º-A, 121-A, 1º
+// Para remover o prefixo "Art. X." (inclusive com milhares) do preview
+const RX_ART_PREFIX =
+/^\s*Art\.\s*(?:\d{1,3}(?:\.\d{3})*|\d+)\s*(?:[ºo])?(?:\s*-\s*[A-Z])?\s*\.\s*/i;
+
+/* ---------- Parser por ----- (apenas cards) ---------- */
+function parseBlocksCardsOnly(rawTxt, fileUrl, sourceLabel) {
+  const blocks = splitBlocksByDashes(rawTxt);
+  const out = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const blk = blocks[i];
+    const lines = blk.split("\n");
+
+    // Bloco só de cabeçalho? (primeiras linhas) → ignora
+    const firstNonEmpty = lines.find(l => l.trim().length);
+    if (firstNonEmpty && (
+      RX_LIVRO.test(firstNonEmpty) ||
+      RX_TITULO.test(firstNonEmpty) ||
+      RX_CAPITULO.test(firstNonEmpty) ||
+      RX_SECAO.test(firstNonEmpty) ||
+      RX_SUBSECAO.test(firstNonEmpty)
+    )) {
+      // Só descartamos se NÃO houver Art./Súmula/Preâmbulo adiante
+      if (!lines.some(l => RX_CARD_START.test(l))) continue;
     }
 
-    const rotulo = extractRotulo(headLine);
-    const texto = bloco.join("\n").trim(); // caput + §§ + incisos + alíneas preservados
-    const id = "art-" + numero.replace(/[^\w\-]/g, "").toLowerCase();
+    // acha a 1ª linha que começa com "Art.", "Súmula" ou "Preâmbulo"
+    const startIdx = lines.findIndex(l => RX_CARD_START.test(l));
+    if (startIdx === -1) continue; // não é card
 
-    artigos.push({
-      id: `${fileUrl}::${id}`,
-      htmlId: id,
+    // corta tudo antes do início do card
+    const eff = lines.slice(startIdx);
+    const headLine = eff[0] || "";
+    const body = eff.slice(1).join("\n").trim();      // corpo sem o título
+    const text = [headLine, body].filter(Boolean).join("\n"); // título + corpo
+
+    // Título do card = a própria primeira linha (sem mexer)
+    const title = headLine.trim();
+
+    // Tenta extrair número se for "Art."
+    let numero = "";
+    const m = headLine.match(RX_ART_EXTRACT);
+    if (m && m.groups) {
+      const base = (m.groups.num || "").replace(/\./g, ""); // 1.000 -> "1000"
+      const ord  = m.groups.ord || "";
+      const suf  = m.groups.suf || "";
+      numero = base + (ord || "") + (suf ? "-" + suf : "");
+    }
+
+    // ancora previsível
+    const htmlId = numero
+      ? ("art-" + numero.replace(/[^\w\-]/g, "").toLowerCase())
+      : ("blk-" + (i + 1));
+
+    out.push({
+      id: `${fileUrl}::${htmlId}`,
+      htmlId,
       source: sourceLabel,
-      numero,
-      rotulo,  // "Art. 7º."
-      title: rotulo, // título do card
-      text: texto,   // texto integral do artigo
+      numeroOriginal: m?.groups?.num || "", // ex.: "1.000" (se for artigo)
+      numero,                                // ex.: "1000" (para id)
+      title,      // mostrado no card
+      text,       // título + corpo
+      body,       // só corpo (para modal sem duplicar título)
       fileUrl,
     });
   }
-  return artigos;
+
+  return out;
 }
 
-/* "Respiros" SÓ para visualização (não altera o texto fonte) */
+/* ---------- parseFile: sempre por ----- ---------- */
+async function parseFile(url, label) {
+  if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
+  const raw = await fetchText(url);
+
+  const items = parseBlocksCardsOnly(raw, url, label);
+
+  state.cacheParsed.set(url, items);
+  return items;
+}
+
+/* ---------- "Respiros" (visual) ---------- */
 function addRespirationsForDisplay(s) {
   if (!s) return "";
   const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
   const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/i;
   const RX_ALINEA  = /^[a-z](?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
-  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
+  const RX_TIT     = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
 
   const lines = String(s).split("\n");
   const out = [];
   for (const rawLine of lines) {
-    const ln = rawLine.replace(/\r$/, ""); // keep original start, strip CR
+    const ln = rawLine.replace(/\r$/, "");
     const bare = ln.trim();
     const isMarker =
-      RX_PARAGR.test(bare) || RX_INCISO.test(bare) || RX_ALINEA.test(bare) || RX_TITULO.test(bare);
+      RX_PARAGR.test(bare) || RX_INCISO.test(bare) || RX_ALINEA.test(bare) || RX_TIT.test(bare);
 
     if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
     if (bare === "" && out.length && out[out.length - 1] === "") continue;
@@ -220,16 +273,44 @@ function addRespirationsForDisplay(s) {
   return out.join("\n");
 }
 
-/* ---------- parseFile: baixa e transforma em artigos ---------- */
-async function parseFile(url, label) {
-  if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
-  const raw = await fetchText(url);
-  const artigos = parseArticlesFromTxt(raw, url, label);
-  state.cacheParsed.set(url, artigos);
-  return artigos;
+/* ---------- Busca: tokens, checagem e highlight ---------- */
+function buildSearchTokens(term) {
+  // Palavras com 3+ letras OU número de 1 dígito
+  return (term || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter(t => (/^\d$/.test(t) || t.length >= 3));
+}
+function containsAllTokens(text, tokens) {
+  const raw = String(text || "");
+  const bagNorm = norm(raw);
+
+  return tokens.every(t => {
+    if (/^\d$/.test(t)) {
+      // dígito isolado
+      const re = new RegExp(`(^|[^0-9])${t}([^0-9]|$)`);
+      return re.test(raw);
+    }
+    return bagNorm.includes(norm(t));
+  });
+}
+function highlight(text, tokens) {
+  const valid = (tokens || []).filter(t => /^\d$/.test(t) || t.length >= 3);
+  let safe = escHTML(text || "");
+
+  for (const t of valid) {
+    if (/^\d$/.test(t)) {
+      const re = new RegExp(`(^|[^0-9])(${t})(?=[^0-9]|$)`, "g");
+      safe = safe.replace(re, (_, a, mid) => `${a}<mark>${mid}</mark>`);
+    } else {
+      const re = new RegExp(`(${escapeRegExp(t)})`, "gi");
+      safe = safe.replace(re, "<mark>$1</mark>");
+    }
+  }
+  return safe;
 }
 
-/* ---------- templates de prompt ---------- */
+/* ---------- templates (estudo/questões) ---------- */
 async function loadPromptTemplate() {
   if (state.promptTpl) return state.promptTpl;
   const CANDIDATES = [
@@ -282,7 +363,8 @@ async function doSearch() {
   els.spinner?.classList.add("show");
 
   try {
-    const tokens = term.split(/\s+/).filter(Boolean).map(norm);
+    const tokens = buildSearchTokens(term);
+    state.searchTokens = tokens.slice();
 
     const results = [];
     const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
@@ -291,11 +373,9 @@ async function doSearch() {
 
     for (const { url, label } of allOptions) {
       try {
-        const artigos = await parseFile(url, label);
-        artigos.forEach((it) => {
-          const bag = norm(it.text);
-          const ok = tokens.every((t) => bag.includes(t));
-          if (ok) results.push(it);
+        const cards = await parseFile(url, label);
+        cards.forEach((it) => {
+          if (containsAllTokens(it.text, tokens)) results.push(it);
         });
       } catch (e) {
         toast(`⚠️ Não carreguei: ${label}`);
@@ -313,16 +393,7 @@ async function doSearch() {
   }
 }
 
-/* ---------- render: lista de artigos ---------- */
-function highlight(text, tokens) {
-  let safe = escHTML(text || "");
-  tokens.forEach((t) => {
-    if (!t) return;
-    const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-    safe = safe.replace(re, "<mark>$1</mark>");
-  });
-  return safe;
-}
+/* ---------- render: lista de cards ---------- */
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
   let out = base.slice(0, CARD_CHAR_LIMIT);
@@ -349,12 +420,12 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const title = document.createElement("h4");
   title.className = "title";
-  title.textContent = item.title; // ex.: "Art. 7º."
+  title.textContent = item.title; // ex.: "Art. 1.000." | "Súmula 123..."
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // preview: rótulo + começo do caput (pega 1ª linha do texto)
-  const firstLine = (item.text.split("\n").find(l => l.trim()) || "").replace(/^\s*Art\.\s*\d+[A-Z]*(?:\s*[ºo])?(?:\s*-\s*[A-Z])?\s*\.\s*/, "");
+  // preview: primeira linha do corpo (mais limpo)
+  const firstLine = (item.body || item.text).split("\n").find(l => l.trim()) || "";
   body.innerHTML = truncatedHTML(firstLine, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
@@ -370,7 +441,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(firstLine, tokens);
       toggle.textContent = "ver texto";
     } else {
-      body.textContent = item.text; // integral (sem respiro na lista)
+      body.innerHTML = highlight(escHTML(item.text), tokens); // integral (sem "-----")
       toggle.textContent = "ocultar";
     }
   });
@@ -437,9 +508,9 @@ async function openReader(item) {
   }
 
   try {
-    const artigos = await parseFile(item.fileUrl, item.source);
+    const cards = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
-    artigos.forEach((a) => {
+    cards.forEach((a) => {
       const row = document.createElement("div");
       row.className = "article";
       row.id = a.htmlId;
@@ -469,7 +540,9 @@ async function openReader(item) {
       h4.textContent = `${a.title} — ${a.source}`;
       const txt = document.createElement("div");
       txt.className = "a-body";
-      txt.textContent = addRespirationsForDisplay(a.text); // respiro visual
+      // só o corpo (sem duplicar o título e sem cabeçalhos)
+      const shown = addRespirationsForDisplay(a.body || a.text);
+      txt.innerHTML = highlight(escHTML(shown), state.searchTokens || []);
       body.append(h4, txt);
 
       row.append(chk, body);
@@ -524,7 +597,7 @@ els.viewBtn?.addEventListener("click", () => {
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
-      const card = renderCard(it, [], { context: "selected" });
+      const card = renderCard(it, state.searchTokens || [], { context: "selected" });
       els.selectedStack.appendChild(card);
     }
   }
