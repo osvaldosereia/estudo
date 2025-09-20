@@ -8,6 +8,7 @@ body{
   max-width:100%; overflow-x:hidden;
 }
 button,input,select{font:inherit}
+a{color:inherit}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ===== Tokens ===== */
@@ -37,7 +38,7 @@ button,input,select{font:inherit}
 
 /* Tipografia dos CARDS (AUMENTO +1px) */
 :root{
-  --card-fs:        16px;   /* was 15px */
+  --card-fs:        16px;
   --card-line:      1.5;
   --card-title-fs:  1.05rem;
   --card-epi-fs:    0.97rem;
@@ -45,12 +46,29 @@ button,input,select{font:inherit}
 }
 @media (max-width: 768px){
   :root{
-    --card-fs:        17px;   /* was 16px */
+    --card-fs:        17px;
     --card-line:      1.6;
     --card-title-fs:  1.10rem;
     --card-epi-fs:    1.00rem;
     --card-meta-fs:   1.00rem;
   }
+}
+
+/* ===== Botões base ===== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:36px; padding:0 12px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--btn-border); background:#fff; box-shadow:var(--btn-shadow);
+}
+.btn:focus{ outline:2px solid var(--focus); outline-offset:2px; }
+.btn:hover{ background:#fafbff; }
+.btn.primary{
+  background: var(--blue); color:#fff; border-color:#1f4fd0;
+  box-shadow:0 6px 16px rgba(37,99,235,.22);
+}
+.btn.primary:hover{ filter:brightness(.98); }
+.btn.soft{
+  background:#f6f7fb; border-color:#e7eaf3; color:#0f172a;
 }
 
 /* ===== Utilitários ===== */
@@ -78,9 +96,7 @@ button,input,select{font:inherit}
 
 /* Informações */
 .info-btn.btn{
-  width:var(--btn-size); height:var(--btn-size); border-radius:var(--btn-radius);
-  border:1px solid var(--btn-border); background:#fff; cursor:pointer;
-  display:inline-grid; place-items:center; box-shadow:var(--btn-shadow);
+  width:var(--btn-size); height:var(--btn-size);
 }
 
 /* ===== Barra secundária (com busca central) ===== */
@@ -109,7 +125,7 @@ button,input,select{font:inherit}
 .search input{
   width:100%; height:40px; border:1px solid #cfd4e2; border-radius:999px; padding:0 40px 0 14px; background:#fff;
   box-shadow:0 1px 2px rgba(0,0,0,.03); transition:border .2s, box-shadow .2s;
-  font-weight:400; /* garantir sem negrito */
+  font-weight:400;
 }
 .search input:focus{ border-color:#9bb6ff; box-shadow:0 0 0 3px rgba(155,182,255,.25); outline:none; }
 .search .spinner{
@@ -190,11 +206,6 @@ article::after{
 .art-epigrafe{ font-size: var(--card-epi-fs); font-weight:400; }
 .art-body{ font-size:1rem; font-weight:400; }
 
-/* Ações internas dos cards (ocultas; usamos FAB global) */
-.art-actions{ display:none !important; }
-.icon-btn{ width:32px; height:32px; display:grid; place-items:center; cursor:pointer; border:0; background:transparent; padding:0; color:var(--icon-muted); }
-.icon-btn img { width:18px; height:18px; display:block; opacity:.78; }
-
 /* ===== Mini-finder ===== */
 .finder-pop{
   position:fixed; left:50%; transform:translateX(-50%); bottom:14px;
@@ -221,7 +232,7 @@ article::after{
 .busy::after{ content:""; position:absolute; inset:0; display:block; background:rgba(255,255,255,.65); border-radius:inherit; }
 .busy::before{ content:""; position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px; border:2px solid #cfd4e2; border-top-color:#142B6F; border-radius:50%; animation:spin 1s linear infinite; }
 
-/* ===== FAB (ações do artigo em foco) ===== */
+/* ===== FAB (ações) ===== */
 #actionFab{
   position:fixed;
   right: calc((100vw - min(var(--wrap-max), 92vw))/2 + 8px);
@@ -251,33 +262,46 @@ article::after{
 
 /* ===== Modais (reutilizáveis) ===== */
 .modal-backdrop{
-  position:fixed; inset:0; display:none; z-index:400; background:rgba(0,0,0,.08);
+  position:fixed; inset:0; display:none; z-index:400; background:rgba(0,0,0,.12);
 }
 .modal-backdrop[aria-hidden="false"]{ display:block; }
+
 .modal{
-  width:min(780px, 92vw);
+  width:min(640px, 92vw);        /* menor no desktop */
   margin: 16px auto;
   background:#fff; border:1px solid #e7eaf3; border-radius:12px; box-shadow: var(--shadow-strong);
   padding:12px;
-  /* Novo: evita “sumir pela base” no mobile */
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100dvh - 36px);
   overflow:auto;
 }
-.study-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:0; background:#fff; z-index:1; padding-bottom:4px; }
+.modal--md{ width:min(560px, 92vw); }
+.modal--sm{ width:min(520px, 92vw); }
+
+.study-head{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  position:sticky; top:0; background:#fff; z-index:1; padding-bottom:4px;
+}
 .study-title{ margin:0; font-size:1.05rem; font-weight:600; }
-.study-close.btn{
-  width:32px; height:32px; border-radius:8px; border:1px solid var(--btn-border); background:#fff; cursor:pointer; display:grid; place-items:center;
-}
+.study-close.btn{ width:32px; height:32px; }
+
 .prompt-box{
-  white-space:pre-wrap; background:#f9fafb; border:1px solid #eef1f6; border-radius:10px; padding:10px; margin:10px 0;
-  max-height: 48vh; /* segura o conteúdo */
-  overflow: auto;
+  white-space:pre-wrap;
+  background:#f9fafb; border:1px solid #eef1f6; border-radius:10px;
+  padding:10px; margin:10px 0;
+  max-height: 48vh; overflow: auto;
+  font: 400 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
-.ia-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-.ia-btn.btn{
-  height:38px; border:1px solid var(--btn-border); border-radius:10px; background:#fff; box-shadow:var(--btn-shadow); cursor:pointer;
+
+.actions-row{ display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+
+.ia-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+  margin-top:6px; margin-bottom:6px;
 }
-.copy-prompt{ display:flex; justify-content:flex-end; }
+.ia-btn.btn{ height:36px; }
+@media (max-width: 680px){
+  .ia-grid{ grid-template-columns:repeat(2,1fr); }
+}
 
 /* ===== Arquivos: MODAL ===== */
 .files-body{ display:grid; grid-template-columns: 1fr; gap:8px; max-height:60vh; overflow:auto; }
