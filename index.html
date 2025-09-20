@@ -5,34 +5,29 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>direito.love — Leitor jurídico</title>
 
-  <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ffffff">
 
-  <!-- Ícones -->
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ============ TOP BAR (branca, fixa) ============ -->
+  <!-- TOP BAR (logo ESQ, busca DIR) -->
   <header class="topbar" role="banner">
-    <div class="topbar-inner">
-      <!-- mini-logo ESQUERDA -->
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn" title="Início">
-      <!-- busca DIREITA (sem sugestões) -->
-      <form class="search search-top" id="searchForm" role="search" aria-label="Buscar">
+    <div class="wrap">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
+      <form class="search" id="searchForm" role="search" aria-label="Buscar">
         <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
         <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
       </form>
     </div>
   </header>
 
-  <!-- (mantemos o seletor oculto de arquivos como catálogo de dados) -->
-  <select id="codeSelect" title="Arquivos" style="display:none">
+  <!-- seletor oculto: mapeia os .txt existentes -->
+  <select id="codeSelect" hidden>
     <option value="">—</option>
     <optgroup label="Códigos">
       <option value="data/codigos/CF88.txt">CF88</option>
@@ -42,39 +37,40 @@
       <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
       <option value="data/codigos/CDC.txt">CDC</option>
       <option value="data/codigos/CLT.txt">CLT</option>
-      <option value="data/codigos/codigo_tributario_nacional.txt">Código Tributário Nacional</option>
-      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Código de Trânsito Brasileiro</option>
+      <option value="data/codigos/codigo_tributario_nacional.txt">CTN</option>
+      <option value="data/codigos/codigo_de_transito_brasileiro.txt">CTB</option>
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos/codigo_penal_militar.txt">Código Penal Militar</option>
+      <option value="data/codigos/codigo_penal_militar.txt">CPM</option>
     </optgroup>
     <optgroup label="Leis">
       <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
       <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
       <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
-      <option value="data/leis/lei_lgpd.txt">Lei LGPD</option>
-      <option value="data/leis/marco_civil_da_internet.txt">Marco Civil da Internet</option>
-      <option value="data/leis/crimes_hediondos.txt">Lei dos Crimes Hediondos</option>
+      <option value="data/leis/lei_do_mandado_de_seguranca.txt">Mandado de Segurança</option>
+      <option value="data/leis/lei_de_acesso_a_informação.txt">Lei de Acesso à Informação</option>
     </optgroup>
     <optgroup label="Estatutos">
-      <option value="data/estatutos/ECA.txt">ECA - Est. da Criança e Adolescente</option>
-      <option value="data/estatutos/estatuto_oab.txt">Est. da OAB</option>
+      <option value="data/estatutos/ECA.txt">ECA</option>
+      <option value="data/estatutos/estatuto_oab.txt">Estatuto da OAB</option>
     </optgroup>
   </select>
 
-  <!-- ============ PILHA DE RESULTADOS (acumula ACIMA) ============ -->
+  <!-- PILHA DE RESULTADOS (entradas novas vão para CIMA) -->
   <main class="content">
-    <div class="container">
+    <div class="wrap">
       <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
     </div>
   </main>
 
-  <!-- ============ BOTTOM BAR ============ -->
+  <!-- BARRA INFERIOR dentro do mesmo wrap (fica alinhada ao conteúdo) -->
   <footer class="bottombar" role="contentinfo">
-    <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>ESTUDAR</button>
-    <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – VER</button>
+    <div class="wrap bar-inner">
+      <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>ESTUDAR</button>
+      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – VER</button>
+    </div>
   </footer>
 
-  <!-- ============ BOTTOM-SHEET: VER SELECIONADOS ============ -->
+  <!-- BOTTOM-SHEET: VER -->
   <div id="selectedSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
     <div class="sheet-card">
       <div class="sheet-head">
@@ -86,7 +82,7 @@
     <div class="sheet-backdrop" data-close-sheet></div>
   </div>
 
-  <!-- ============ MODAL: LEITOR DO CÓDIGO (full mobile / médio desktop) ============ -->
+  <!-- MODAL LEITOR -->
   <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
     <div class="modal-card" role="document">
       <div class="modal-head">
@@ -99,31 +95,33 @@
     <div class="modal-backdrop" data-close-modal></div>
   </div>
 
-  <!-- ============ MODAL: ESTUDAR COM I.A. (reaproveitado) ============ -->
-  <div class="modal-backdrop" id="studyModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
-      <div class="study-head">
-        <h3 id="modalTitle" class="study-title">Estude com I.A.</h3>
-        <button class="study-close btn" id="closeStudy" aria-label="Fechar">✕</button>
+  <!-- MODAL ESTUDAR — agora no mesmo padrão dos outros -->
+  <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
+    <div class="modal-card" role="document">
+      <div class="modal-head">
+        <strong id="studyTitle">Estudar com I.A.</strong>
+        <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
       </div>
-      <p class="study-sub" id="studySub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
-      <pre class="prompt-box" id="promptPreview"></pre>
-      <div class="ia-grid">
-        <button class="ia-btn btn" data-url="https://chat.openai.com/">ChatGPT</button>
-        <button class="ia-btn btn" data-url="https://gemini.google.com/">Gemini</button>
-        <button class="ia-btn btn" data-url="https://copilot.microsoft.com/">Copilot</button>
-        <button class="ia-btn btn" data-url="https://www.perplexity.ai/">Perplexity</button>
-      </div>
-      <div class="copy-prompt">
-        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
+      <div class="modal-body">
+        <p class="study-sub">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
+        <pre id="promptPreview" class="prompt-box"></pre>
+        <div class="ia-grid">
+          <a class="ia-btn btn" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
+          <a class="ia-btn btn" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
+          <a class="ia-btn btn" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
+          <a class="ia-btn btn" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
+        </div>
+        <div class="copy-prompt">
+          <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
+        </div>
       </div>
     </div>
+    <div class="modal-backdrop" data-close-study></div>
   </div>
 
   <!-- TOASTS -->
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>
