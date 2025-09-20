@@ -1,13 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09, modo ----- + cards)
-   Regras:
-   1) Delimitador: "-----" separa blocos
-   2) Card = bloco que contém linha iniciando com "Art.", "Súmula" ou "Preâmbulo"
-      - Se houver cabeçalho (LIVRO/TÍTULO/CAPÍTULO/SEÇÃO) antes, corta e começa no "Art."
-   3) Cabeçalhos puros NÃO viram card
-   4) Busca: palavras 3+ letras e dígitos de 1 algarismo (isolados); AND estrito; grifa tudo
-   5) Modal: só mostra os cards (sem cabeçalhos e sem "-----")
-   6) Números com milhares: "Art. 1.000." tratado como um único artigo; id "art-1000"
+   direito.love — app.js (modo -----, robusto)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -21,44 +13,31 @@ if ("serviceWorker" in navigator) {
 const $ = (s) => document.querySelector(s);
 
 const els = {
-  /* topo/busca */
   form: $("#searchForm"),
   q: $("#searchInput"),
   spinner: $("#searchSpinner"),
   stack: $("#resultsStack"),
   brand: $("#brandBtn"),
   codeSelect: $("#codeSelect"),
-
-  /* barra inferior */
   studyBtn: $("#studyBtn"),
   questionsBtn: $("#questionsBtn"),
   viewBtn: $("#viewBtn"),
-
-  /* leitor */
   readerModal: $("#readerModal"),
   readerBody: $("#readerBody"),
   readerTitle: $("#readerTitle"),
   selCount: $("#selCount"),
-
-  /* selecionados */
   selectedModal: $("#selectedModal"),
   selectedStack: $("#selectedStack"),
-
-  /* estudar */
   studyModal: $("#studyModal"),
   studyList: $("#studyList"),
   studyUpdate: $("#studyUpdate"),
   copyPromptBtn: $("#copyPromptBtn"),
-
-  /* criar questões */
   questionsModal: $("#questionsModal"),
   questionsList: $("#questionsList"),
   questionsUpdate: $("#questionsUpdate"),
   copyQuestionsBtn: $("#copyQuestionsBtn"),
   includeObsBtn: $("#includeObsBtn"),
   questionsObs: $("#questionsObs"),
-
-  /* toasts */
   toasts: $("#toasts"),
 };
 
@@ -68,13 +47,13 @@ const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
 const state = {
-  selected: new Map(),     // id -> card
-  cacheTxt: new Map(),     // url -> string
-  cacheParsed: new Map(),  // url -> cards[]
+  selected: new Map(),
+  cacheTxt: new Map(),
+  cacheParsed: new Map(),
   urlToLabel: new Map(),
-  promptTpl: null,         // estudo
-  promptQTpl: null,        // questões
-  pendingObs: "",          // obs do usuário (questões)
+  promptTpl: null,
+  promptQTpl: null,
+  pendingObs: "",
   studyIncluded: new Set(),
   questionsIncluded: new Set(),
   searchTokens: [],
@@ -90,15 +69,14 @@ function toast(msg) {
 }
 function updateBottom() {
   const n = state.selected.size;
-  els.viewBtn && (els.viewBtn.textContent = `${n} Selecionados – Ver`);
-  els.studyBtn && (els.studyBtn.disabled = n === 0);
-  els.questionsBtn && (els.questionsBtn.disabled = n === 0);
-  els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
+  if (els.viewBtn) els.viewBtn.textContent = `${n} Selecionados – Ver`;
+  if (els.studyBtn) els.studyBtn.disabled = n === 0;
+  if (els.questionsBtn) els.questionsBtn.disabled = n === 0;
+  if (els.selCount) els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 function norm(s) {
   return (s || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/ç/g, "c")
     .toLowerCase();
 }
@@ -109,7 +87,7 @@ function escHTML(s) {
 }
 function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-/* ---------- select: normalização de URLs ---------- */
+/* ---------- normalização de URLs do GitHub ---------- */
 function toRawGitHub(url){
   if(!url) return url;
   const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
@@ -122,7 +100,7 @@ function toRawGitHub(url){
     const label = (opt.textContent || "").trim();
     if (!url) return;
     url = encodeURI(toRawGitHub(url));
-    opt.value = url; // corrige no DOM
+    opt.value = url;
     state.urlToLabel.set(label, url);
   });
 })();
@@ -133,7 +111,7 @@ function sanitize(s) {
     .replace(/\uFEFF/g, "")      // BOM
     .replace(/\u00A0/g, " ")     // NBSP
     .replace(/\r\n?/g, "\n")     // EOL
-    .replace(/[ \t]+\n/g, "\n"); // trailing ws
+    .replace(/[ \t]+\n/g, "\n"); // espaços no fim
 }
 async function fetchText(url) {
   url = encodeURI(url);
@@ -146,31 +124,27 @@ async function fetchText(url) {
 }
 
 /* ---------- delimitadores e padrões ---------- */
-// Split por "-----"
+// Split por linha com 3+ hífens (mais tolerante) — nunca exibimos "-----"
 function splitBlocksByDashes(txt) {
   return sanitize(txt)
-    .split(/^\s*-{5,}\s*$/m)
-    .map(s => s.trim())
+    .split(/^\s*-{3,}\s*$/m)
+    .map(s => s.replace(/^\s+|\s+$/g, "")) // trim
     .filter(Boolean);
 }
 
-// Início de card dentro do bloco
-const RX_CARD_START = /^\s*(?:Art\.\b|S[úu]mula\b|Pre[aâ]mbulo\b)/i;
+// Início de card dentro do bloco: aceita variações e acentos opcionais
+const RX_CARD_START = /^\s*(?:Art\.|Artigo|S[úu]mula|Pre[âa]mbulo)\b/i;
 
-// Cabeçalhos estruturais que queremos ignorar como cards
+// Cabeçalhos que não podem virar card
 const RX_LIVRO    = /^\s*LIVRO\b/i;
 const RX_TITULO   = /^\s*T[ÍI]TULO\b/i;
 const RX_CAPITULO = /^\s*CAP[ÍI]TULO\b/i;
 const RX_SECAO    = /^\s*SEÇÃO\b/i;
 const RX_SUBSECAO = /^\s*SUBSEÇÃO\b/i;
 
-// Artigo — suporta "1.000", "121", "1º", "1º-A", "121-A", etc.
+// Artigo — cobre milhares ("1.000"), ordinal (º/o), e sufixo "-A"
 const RX_ART_EXTRACT =
 /^\s*Art\.\s*(?<num>(?:\d{1,3}(?:\.\d{3})*|\d+))\s*(?<ord>[ºo])?(?:\s*-\s*(?<suf>[A-Z]))?\s*\./i;
-
-// Para remover o prefixo "Art. X." (inclusive com milhares) do preview
-const RX_ART_PREFIX =
-/^\s*Art\.\s*(?:\d{1,3}(?:\.\d{3})*|\d+)\s*(?:[ºo])?(?:\s*-\s*[A-Z])?\s*\.\s*/i;
 
 /* ---------- Parser por ----- (apenas cards) ---------- */
 function parseBlocksCardsOnly(rawTxt, fileUrl, sourceLabel) {
@@ -179,45 +153,49 @@ function parseBlocksCardsOnly(rawTxt, fileUrl, sourceLabel) {
 
   for (let i = 0; i < blocks.length; i++) {
     const blk = blocks[i];
+    if (!blk) continue;
+
     const lines = blk.split("\n");
 
-    // Bloco só de cabeçalho? (primeiras linhas) → ignora
+    // Se o bloco começa com cabeçalho e NÃO tem Art/Súmula/Preâmbulo depois, ignora
     const firstNonEmpty = lines.find(l => l.trim().length);
+    const hasCardStartAhead = lines.some(l => RX_CARD_START.test(l));
     if (firstNonEmpty && (
       RX_LIVRO.test(firstNonEmpty) ||
       RX_TITULO.test(firstNonEmpty) ||
       RX_CAPITULO.test(firstNonEmpty) ||
       RX_SECAO.test(firstNonEmpty) ||
       RX_SUBSECAO.test(firstNonEmpty)
-    )) {
-      // Só descartamos se NÃO houver Art./Súmula/Preâmbulo adiante
-      if (!lines.some(l => RX_CARD_START.test(l))) continue;
+    ) && !hasCardStartAhead) {
+      continue;
     }
 
-    // acha a 1ª linha que começa com "Art.", "Súmula" ou "Preâmbulo"
+    // acha a 1ª linha válida para card
     const startIdx = lines.findIndex(l => RX_CARD_START.test(l));
-    if (startIdx === -1) continue; // não é card
+    if (startIdx === -1) continue;
 
-    // corta tudo antes do início do card
+    // Corta tudo ANTES do Art/Súmula/Preâmbulo
     const eff = lines.slice(startIdx);
-    const headLine = eff[0] || "";
-    const body = eff.slice(1).join("\n").trim();      // corpo sem o título
-    const text = [headLine, body].filter(Boolean).join("\n"); // título + corpo
 
-    // Título do card = a própria primeira linha (sem mexer)
+    // Remove quaisquer linhas "-----" residuais (se existirem no meio por erro humano)
+    const clean = eff.filter(l => !/^\s*-{3,}\s*$/.test(l));
+
+    const headLine = clean[0] || "";
+    const body = clean.slice(1).join("\n").trim();
+    const text = [headLine, body].filter(Boolean).join("\n");
+
     const title = headLine.trim();
 
-    // Tenta extrair número se for "Art."
+    // Extrai número do Art para id (1.000 => 1000)
     let numero = "";
     const m = headLine.match(RX_ART_EXTRACT);
     if (m && m.groups) {
-      const base = (m.groups.num || "").replace(/\./g, ""); // 1.000 -> "1000"
+      const base = (m.groups.num || "").replace(/\./g, ""); // 1.000 -> 1000
       const ord  = m.groups.ord || "";
       const suf  = m.groups.suf || "";
       numero = base + (ord || "") + (suf ? "-" + suf : "");
     }
 
-    // ancora previsível
     const htmlId = numero
       ? ("art-" + numero.replace(/[^\w\-]/g, "").toLowerCase())
       : ("blk-" + (i + 1));
@@ -226,11 +204,11 @@ function parseBlocksCardsOnly(rawTxt, fileUrl, sourceLabel) {
       id: `${fileUrl}::${htmlId}`,
       htmlId,
       source: sourceLabel,
-      numeroOriginal: m?.groups?.num || "", // ex.: "1.000" (se for artigo)
-      numero,                                // ex.: "1000" (para id)
-      title,      // mostrado no card
-      text,       // título + corpo
-      body,       // só corpo (para modal sem duplicar título)
+      numeroOriginal: m?.groups?.num || "",
+      numero,
+      title,
+      text,   // título + corpo
+      body,   // só corpo (pra não duplicar no modal)
       fileUrl,
     });
   }
@@ -242,9 +220,7 @@ function parseBlocksCardsOnly(rawTxt, fileUrl, sourceLabel) {
 async function parseFile(url, label) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const raw = await fetchText(url);
-
   const items = parseBlocksCardsOnly(raw, url, label);
-
   state.cacheParsed.set(url, items);
   return items;
 }
@@ -273,9 +249,8 @@ function addRespirationsForDisplay(s) {
   return out.join("\n");
 }
 
-/* ---------- Busca: tokens, checagem e highlight ---------- */
+/* ---------- Busca ---------- */
 function buildSearchTokens(term) {
-  // Palavras com 3+ letras OU número de 1 dígito
   return (term || "")
     .split(/\s+/)
     .filter(Boolean)
@@ -287,7 +262,6 @@ function containsAllTokens(text, tokens) {
 
   return tokens.every(t => {
     if (/^\d$/.test(t)) {
-      // dígito isolado
       const re = new RegExp(`(^|[^0-9])${t}([^0-9]|$)`);
       return re.test(raw);
     }
@@ -378,8 +352,8 @@ async function doSearch() {
           if (containsAllTokens(it.text, tokens)) results.push(it);
         });
       } catch (e) {
+        console.error("Falha ao carregar", label, e);
         toast(`⚠️ Não carreguei: ${label}`);
-        console.warn("Falha ao buscar:", e);
       }
     }
 
@@ -420,11 +394,10 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const title = document.createElement("h4");
   title.className = "title";
-  title.textContent = item.title; // ex.: "Art. 1.000." | "Súmula 123..."
+  title.textContent = item.title;
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // preview: primeira linha do corpo (mais limpo)
   const firstLine = (item.body || item.text).split("\n").find(l => l.trim()) || "";
   body.innerHTML = truncatedHTML(firstLine, tokens);
   body.style.cursor = "pointer";
@@ -441,7 +414,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(firstLine, tokens);
       toggle.textContent = "ver texto";
     } else {
-      body.innerHTML = highlight(escHTML(item.text), tokens); // integral (sem "-----")
+      body.innerHTML = highlight(escHTML(item.text), tokens);
       toggle.textContent = "ocultar";
     }
   });
@@ -494,12 +467,11 @@ function renderBlock(term, items, tokens) {
 
 /* ---------- Leitor (modal) ---------- */
 async function openReader(item) {
-  els.readerTitle && (els.readerTitle.textContent = item.source);
-  els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-  els.readerBody && (els.readerBody.innerHTML = "");
+  if (els.readerTitle) els.readerTitle.textContent = item.source;
+  if (els.selCount) els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
+  if (els.readerBody) els.readerBody.innerHTML = "";
   showModal(els.readerModal);
 
-  // skeleton
   for (let i = 0; i < 3; i++) {
     const s = document.createElement("div");
     s.className = "skel block";
@@ -530,7 +502,7 @@ async function openReader(item) {
           state.selected.set(a.id, a);
           toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
         }
-        els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
+        if (els.selCount) els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
         sync();
         updateBottom();
       });
@@ -540,7 +512,6 @@ async function openReader(item) {
       h4.textContent = `${a.title} — ${a.source}`;
       const txt = document.createElement("div");
       txt.className = "a-body";
-      // só o corpo (sem duplicar o título e sem cabeçalhos)
       const shown = addRespirationsForDisplay(a.body || a.text);
       txt.innerHTML = highlight(escHTML(shown), state.searchTokens || []);
       body.append(h4, txt);
@@ -557,8 +528,8 @@ async function openReader(item) {
     }
     els.readerBody.focus();
   } catch (e) {
+    console.error(e);
     toast("Erro ao abrir o arquivo. Veja o console.");
-    console.warn(e);
     hideModal(els.readerModal);
   }
 }
@@ -630,7 +601,7 @@ async function buildStudyPrompt(includedSet) {
     const it = state.selected.get(id);
     if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, ""); // texto integral
+    parts.push(it.text, "");
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
@@ -727,8 +698,8 @@ function copyToClipboard(txt) {
 
 /* ---------- logo: reset ---------- */
 els.brand?.addEventListener("click", () => {
-  els.q && (els.q.value = "");
-  els.stack && (els.stack.innerHTML = "");
+  if (els.q) els.q.value = "";
+  if (els.stack) els.stack.innerHTML = "";
   els.q?.focus();
   toast("Busca reiniciada.");
 });
