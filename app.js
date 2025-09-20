@@ -148,28 +148,36 @@ function normCmp(s) {
 }
 
 /**
- * addRespirations:
- * Insere uma linha em branco ANTES de:
- *  - § e “Parágrafo ...”
- *  - incisos em romanos (I, II, III, …) seguidos de “)”, “.”, “-”, “–”, “—” (opcionais)
- *  - alíneas: a), b), c) … (aceita “a.” ou “a -”)
- *  - títulos/cabeçalhos: TÍTULO, CAPÍTULO, SEÇÃO, SUBSEÇÃO, LIVRO
- * Evita duplicar linhas em branco.
- */
-function addRespirations(body) {
+ * function addRespirations(body) {
   if (!body) return "";
 
-  const RX_INCISO   = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))?(?:\s+|$)/; // I) / I. / I-
-  const RX_PARAGR   = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|[0-9]+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/;
-  const RX_ALINEA   = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;            // a), a. ou a -
-  const RX_TITULO   = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
+  // Normalização básica
+  let s = String(body)
+    .replace(/\u00A0/g, " ")   // nbsp
+    .replace(/\r\n?/g, "\n");  // EOL
 
-  const lines = String(body).split("\n");
+  // 1) INSERIR QUEBRA DE LINHA ANTES DE MARCADORES INLINE
+  //    (§, Parágrafo, incisos romanos, alíneas)
+  //    Ex.: "... condição da mulher. § 1º Considera-se..." => quebra antes do §
+  s = s
+    // § n.º  / Parágrafo único / Parágrafo 2º
+    .replace(/(?:\s|;)\s*(§\s*\d+\s*[ºo]?)/g, "\n$1")
+    .replace(/(?:\s|;)\s*(Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)/gi, "\n$1")
+    // Incisos romanos: I)  II.  III -  IV –  V —
+    .replace(/(?:\s|;)\s*([IVXLCDM]{1,8}\s*(?:\)|\.|[-–—]))/g, "\n$1")
+    // Alíneas: a)  b.  c -  (minúsculas)
+    .replace(/(?:\s|;)\s*([a-z]\s*(?:\)|\.|[-–—]))/g, "\n$1");
+
+  // 2) QUEBRAR EM LINHAS E INSERIR "RESPIRO" (linha em branco) ANTES DOS MARCADORES NO INÍCIO DA LINHA
+  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
+  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/i;
+  const RX_ALINEA  = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
+  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
+
+  const lines = s.split("\n");
   const out = [];
-
   for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const ln = raw.trim();
+    const ln = lines[i].trim();
 
     const isMarker =
       RX_PARAGR.test(ln) ||
@@ -177,17 +185,17 @@ function addRespirations(body) {
       RX_ALINEA.test(ln) ||
       RX_TITULO.test(ln);
 
-    if (isMarker && out.length && out[out.length - 1] !== "") {
-      out.push(""); // “respiro” antes do marcador
-    }
-
-    // evita acumular múltiplas linhas em branco
+    // evita duplicar linhas em branco
+    if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
     if (ln === "" && out.length && out[out.length - 1] === "") continue;
 
     out.push(ln);
   }
-  return out.join("\n");
+
+  // 3) Compactar múltiplas linhas em branco
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
+
 
 function dedupeBody(title, body) {
   if (!body) return "";
