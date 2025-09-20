@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (revisado)
+   direito.love — app.js (arrumado)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -148,7 +148,13 @@ function normCmp(s) {
 }
 
 /**
- * function addRespirations(body) {
+ * addRespirations:
+ * 1) Insere QUEBRA DE LINHA antes de marcadores inline (§, Parágrafo, incisos romanos, alíneas),
+ *    mesmo quando aparecem no meio do parágrafo.
+ * 2) Depois, insere uma LINHA EM BRANCO antes de cada marcador no início da linha.
+ * 3) Compacta múltiplas linhas vazias.
+ */
+function addRespirations(body) {
   if (!body) return "";
 
   // Normalização básica
@@ -156,19 +162,18 @@ function normCmp(s) {
     .replace(/\u00A0/g, " ")   // nbsp
     .replace(/\r\n?/g, "\n");  // EOL
 
-  // 1) INSERIR QUEBRA DE LINHA ANTES DE MARCADORES INLINE
-  //    (§, Parágrafo, incisos romanos, alíneas)
-  //    Ex.: "... condição da mulher. § 1º Considera-se..." => quebra antes do §
+  // 1) QUEBRA inline antes de § / Parágrafo / Incisos / Alíneas
   s = s
-    // § n.º  / Parágrafo único / Parágrafo 2º
+    // § n.º (ex.: "; § 1º", " § 2º")
     .replace(/(?:\s|;)\s*(§\s*\d+\s*[ºo]?)/g, "\n$1")
+    // Parágrafo único / Parágrafo 2º
     .replace(/(?:\s|;)\s*(Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)/gi, "\n$1")
     // Incisos romanos: I)  II.  III -  IV –  V —
     .replace(/(?:\s|;)\s*([IVXLCDM]{1,8}\s*(?:\)|\.|[-–—]))/g, "\n$1")
-    // Alíneas: a)  b.  c -  (minúsculas)
+    // Alíneas: a)  b.  c - (minúsculas)
     .replace(/(?:\s|;)\s*([a-z]\s*(?:\)|\.|[-–—]))/g, "\n$1");
 
-  // 2) QUEBRAR EM LINHAS E INSERIR "RESPIRO" (linha em branco) ANTES DOS MARCADORES NO INÍCIO DA LINHA
+  // 2) Respiro (linha em branco) antes de marcadores no início da linha
   const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
   const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/i;
   const RX_ALINEA  = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
@@ -176,6 +181,7 @@ function normCmp(s) {
 
   const lines = s.split("\n");
   const out = [];
+
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i].trim();
 
@@ -185,17 +191,17 @@ function normCmp(s) {
       RX_ALINEA.test(ln) ||
       RX_TITULO.test(ln);
 
-    // evita duplicar linhas em branco
     if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
+
+    // evita acumular blanks
     if (ln === "" && out.length && out[out.length - 1] === "") continue;
 
     out.push(ln);
   }
 
-  // 3) Compactar múltiplas linhas em branco
+  // 3) Compacta 3+ linhas vazias consecutivas para 1
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
-
 
 function dedupeBody(title, body) {
   if (!body) return "";
@@ -207,12 +213,12 @@ function dedupeBody(title, body) {
 
   let cleaned = lines.join("\n").trim();
 
-  // título literal no topo do corpo? remove
+  // título literal repetido no topo do corpo? remove
   const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const rx = new RegExp("^\\s*" + esc + "\\s*\\n?", "i");
   cleaned = cleaned.replace(rx, "").trim();
 
-  // aplica “respiros”
+  // aplica respiros
   cleaned = addRespirations(cleaned);
   return cleaned;
 }
@@ -471,7 +477,7 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
-  const noParens = stripParens(fullText || "");
+  const noParens = stripParens(fullText || ""); // preview sem parênteses
   const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
   return highlight(escHTML(truncated), tokens);
 }
@@ -505,7 +511,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
-      const full = stripParens(addRespirations(item.text));
+      const full = stripParens(addRespirations(item.text)); // expandido com respiro
       body.textContent = full;
       toggle.textContent = "ocultar";
     }
@@ -613,7 +619,7 @@ function renderArticleRow(a, fileUrl, sourceLabel) {
   h4.textContent = `${itemRef.title} — ${sourceLabel}`;
   const txt = document.createElement("div");
   txt.className = "a-body";
-  txt.textContent = addRespirations(itemRef.body || itemRef.text); // no leitor mantemos tudo (sem stripParens)
+  txt.textContent = addRespirations(itemRef.body || itemRef.text); // leitor mantém tudo, com respiro
   body.append(h4, txt);
 
   row.append(chk, body);
