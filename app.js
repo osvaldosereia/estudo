@@ -33,6 +33,7 @@ const els = {
 
 /* estado */
 const MAX_SEL = 6;
+const CARD_CHAR_LIMIT = 250;
 const state = {
   selected: new Map(),      // id -> item
   cacheTxt: new Map(),      // url -> txt
@@ -80,6 +81,31 @@ function splitBlocks(txt){
   const cleaned = sanitize(txt.replace(/^\uFEFF/, "").replace(/\r\n/g,"\n").replace(/[ \t]+/g," "));
   return cleaned.split(/^\s*-{5,}\s*$/m).map(s=>s.trim()).filter(Boolean);
 }
+
+/* —— deduplicação título vs corpo —— */
+function normCmp(s){
+  return (s||"")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[–—-]/g," ")
+    .replace(/[^\w\s]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+function dedupeBody(title, body){
+  if(!body) return "";
+  const lines = body.split(/\n+/);
+  if(!lines.length) return body;
+  const t = normCmp(title);
+  const f = normCmp(lines[0]);
+  if (f === t || f.startsWith(t) || t.startsWith(f)) lines.shift();
+  let cleaned = lines.join("\n").trim();
+  const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rx = new RegExp("^\\s*" + esc + "\\s*\\n?", "i");
+  cleaned = cleaned.replace(rx, "").trim();
+  return cleaned;
+}
+
 function parseBlock(block, idx){
   const lines = block.split(/\n/);
   const artIdx = lines.findIndex(l=>/^(Pre[aâ]mbulo|Art(?:igo)?\.?|S[úu]mula)/i.test(l.trim()));
@@ -87,19 +113,25 @@ function parseBlock(block, idx){
 
   const pre = lines.slice(0, artIdx).map(s=>s.trim()).filter(Boolean);
   const after = lines.slice(artIdx).map(s=>s.trim()).filter(Boolean);
+
   const epigrafe = pre.length ? pre.join("\n") : "";
   const title = after.shift() || "";
-  const body = after.join("\n");
+  const bodyRaw = after.join("\n");
+  const bodyClean = dedupeBody(title, bodyRaw);
+
+  // texto único: título na primeira linha + corpo limpo
+  const oneText = [title, bodyClean].filter(Boolean).join("\n");
 
   return {
     kind:"article",
     title: title || `Bloco ${idx+1}`,
-    text: [epigrafe?`Epígrafe: ${epigrafe}`:"", title, body].filter(Boolean).join("\n"), // completo
-    bodyOnly: body,  // só corpo (pra evitar repetição em prévias e prompt)
+    text: [epigrafe?`Epígrafe: ${epigrafe}`:"", oneText].filter(Boolean).join("\n"),
+    bodyOnly: bodyClean,                 // corpo sem repetição (útil pra prompt)
     htmlId:`art-${idx}`,
-    _split:{titleText:title, epigrafe, body}
+    _split:{titleText:title, epigrafe, body:bodyClean, oneText}
   };
 }
+
 async function parseFile(url){
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
@@ -128,7 +160,7 @@ els.q.addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); d
 async function doSearch(){
   const term = (els.q.value||"").trim(); if(!term) return;
 
-  // nova pesquisa substitui a anterior (não mexe na seleção)
+  // nova pesquisa substitui a anterior (selecionados ficam)
   els.stack.innerHTML = "";
 
   els.stack.setAttribute("aria-busy","true");
@@ -151,16 +183,17 @@ async function doSearch(){
         const items = await parseFile(url);
         items.forEach(it=>{
           if(it.kind!=="article") return;
-          const bag = norm([it._split.titleText||"", it._split.epigrafe||"", it._split.body||""].join(" "));
+          const bag = norm([it._split.oneText||"", it._split.epigrafe||""].join(" "));
           if(tokens.every(t=>bag.includes(t))){
             results.push({
               id: `${url}::${it.htmlId}`,
-              title: it._split.titleText || it.title,
               source: label,
-              text: it.text,              // completo
-              body: it.bodyOnly,          // só corpo
               fileUrl: url,
-              htmlId: it.htmlId
+              htmlId: it.htmlId,
+              // único texto para exibir no card
+              text: it._split.oneText,
+              body: it.bodyOnly, // para prompt
+              title: it._split.titleText
             });
           }
         });
@@ -195,14 +228,22 @@ function renderBlock(term, items, tokens){
   els.stack.append(block);
 }
 
+/* destaque em azul claro */
 function highlight(text, tokens){
-  let safe = escHTML(text);
+  let safe = escHTML(text || "");
   tokens.forEach(t=>{
     if(!t) return;
     const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,"gi");
     safe = safe.replace(re, '<mark>$1</mark>');
   });
   return safe;
+}
+
+/* truncar por caracteres (250) mantendo highlight */
+function truncatedHTML(fullText, tokens){
+  const raw = fullText || "";
+  const truncated = raw.length > CARD_CHAR_LIMIT ? raw.slice(0, CARD_CHAR_LIMIT).trim() + "…" : raw;
+  return highlight(truncated, tokens);
 }
 
 function renderCard(item, tokens){
@@ -216,24 +257,24 @@ function renderCard(item, tokens){
   pill.href = "#"; pill.className="pill"; pill.textContent = item.source;
   pill.addEventListener("click", (e)=>{ e.preventDefault(); openReader(item); });
 
-  const h3 = document.createElement("h3"); h3.textContent = item.title;
-
+  // único bloco de texto (sem h3)
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  body.innerHTML = highlight(item.body || item.text, tokens); // 2 linhas + highlight
+  body.innerHTML = truncatedHTML(item.text, tokens);
+
+  // abrir leitor clicando no texto
+  body.style.cursor = "pointer";
+  body.addEventListener("click", ()=> openReader(item));
 
   const actions = document.createElement("div"); actions.className="actions";
   const toggle = document.createElement("button"); toggle.className="toggle"; toggle.textContent="ver texto";
   toggle.addEventListener("click", ()=>{
     const collapsed = body.classList.toggle("is-collapsed");
     toggle.textContent = collapsed ? "ver texto" : "ocultar";
-    body.innerHTML = collapsed ? highlight(item.body || item.text, tokens)
-                               : highlight(item.text, tokens);
+    body.innerHTML = collapsed ? truncatedHTML(item.text, tokens) : highlight(item.text, tokens);
   });
 
-  [h3].forEach(el=>{ el.style.cursor="pointer"; el.addEventListener("click", ()=>openReader(item)); });
-
-  left.append(pill, h3, body, actions);
+  left.append(pill, body, actions);
   actions.append(toggle);
 
   const chk = document.createElement("button");
@@ -286,6 +327,7 @@ async function openReader(item){
     hideModal(els.readerModal);
   }
 }
+
 function renderArticleRow(a, fileUrl, sourceLabel){
   const row=document.createElement("div"); row.className="article"; row.id=a.htmlId;
 
@@ -297,8 +339,8 @@ function renderArticleRow(a, fileUrl, sourceLabel){
     id:`${fileUrl}::${a.htmlId}`,
     title:a._split.titleText || a.title,
     source:sourceLabel,
-    text:[a._split.epigrafe?`Epígrafe: ${a._split.epigrafe}`:"", a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"),
-    body:a._split.body||"",
+    text:[a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"), // texto único
+    body:a._split.body||"",   // corpo limpo
     fileUrl, htmlId:a.htmlId
   };
   const sync=()=>{ chk.dataset.checked = state.selected.has(itemRef.id) ? "true":"false"; };
@@ -383,9 +425,8 @@ async function buildPrompt(){
   const parts = [tpl.trim(), ""];
   let i=1;
   for(const it of state.selected.values()){
-    // heading com o título + corpo (sem repetir título)
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.body || it.text, "");  // somente corpo evita a repetição que você reportou
+    parts.push(it.body || it.text, "");  // usa o corpo limpo
     if(i++>=MAX_SEL) break;
   }
   return parts.join("\n");
