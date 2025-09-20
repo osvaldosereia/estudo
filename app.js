@@ -9,32 +9,40 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-/* ---------- helpers DOM ---------- */
+/* ---------- helpers ---------- */
 const $ = (s) => document.querySelector(s);
 
 const els = {
+  /* topo/busca */
   form: $("#searchForm"),
   q: $("#searchInput"),
   spinner: $("#searchSpinner"),
   stack: $("#resultsStack"),
+  brand: $("#brandBtn"),
+  codeSelect: $("#codeSelect"),
 
+  /* barra inferior */
+  studyBtn: $("#studyBtn"),
+  questionsBtn: $("#questionsBtn"),
+  viewBtn: $("#viewBtn"),
+
+  /* leitor */
   readerModal: $("#readerModal"),
   readerBody: $("#readerBody"),
   readerTitle: $("#readerTitle"),
   selCount: $("#selCount"),
 
-  studyBtn: $("#studyBtn"),
-  questionsBtn: $("#questionsBtn"),
-  viewBtn: $("#viewBtn"),
-
+  /* selecionados */
   selectedModal: $("#selectedModal"),
   selectedStack: $("#selectedStack"),
 
+  /* estudar */
   studyModal: $("#studyModal"),
   studyList: $("#studyList"),
   studyUpdate: $("#studyUpdate"),
   copyPromptBtn: $("#copyPromptBtn"),
 
+  /* criar questões */
   questionsModal: $("#questionsModal"),
   questionsList: $("#questionsList"),
   questionsUpdate: $("#questionsUpdate"),
@@ -42,26 +50,25 @@ const els = {
   includeObsBtn: $("#includeObsBtn"),
   questionsObs: $("#questionsObs"),
 
-  brand: $("#brandBtn"),
-  codeSelect: $("#codeSelect"),
+  /* toasts */
   toasts: $("#toasts"),
 };
 
-/* ---------- estado global ---------- */
+/* ---------- estado ---------- */
 const MAX_SEL = 6;
 const CARD_CHAR_LIMIT = 250;
-const PREV_MAX = 60; // preview nos modais
+const PREV_MAX = 60;
 
 const state = {
-  selected: new Map(),   // id -> item
-  cacheTxt: new Map(),   // url -> string
-  cacheParsed: new Map(),// url -> items[]
+  selected: new Map(),     // id -> item
+  cacheTxt: new Map(),     // url -> string
+  cacheParsed: new Map(),  // url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null,       // estudo
-  promptQTpl: null,      // questões
-  pendingObs: "",        // observação incluída
-  studyIncluded: new Set(),     // ids incluídos no modal Estudar
-  questionsIncluded: new Set(), // ids incluídos no modal Questões
+  promptTpl: null,         // estudo
+  promptQTpl: null,        // questões
+  pendingObs: "",          // obs do usuário (questões)
+  studyIncluded: new Set(),
+  questionsIncluded: new Set(),
 };
 
 /* ---------- util ---------- */
@@ -91,8 +98,11 @@ function escHTML(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
 }
+function stripParens(s) { // remove ( ... ) para os CARDS
+  return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
+}
 
-/* ---------- catálogo (label -> url) ---------- */
+/* ---------- catálogo (oculto no HTML) ---------- */
 (() => {
   els.codeSelect.querySelectorAll("option").forEach((opt) => {
     const url = opt.value?.trim();
@@ -103,9 +113,7 @@ function escHTML(s) {
 
 /* ---------- fetch/parse de arquivos ---------- */
 function sanitize(s) {
-  return s.replace(/\u00A0/g, " ")
-    .replace(/\r\n/g, "\n")
-    .replace(/[ \t]+\n/g, "\n");
+  return s.replace(/\u00A0/g, " ").replace(/\r\n/g, "\n").replace(/[ \t]+\n/g, "\n");
 }
 async function fetchText(url) {
   if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
@@ -117,13 +125,10 @@ async function fetchText(url) {
 }
 function splitBlocks(txt) {
   const cleaned = sanitize(txt).replace(/^\uFEFF/, "");
-  return cleaned
-    .split(/^\s*-{5,}\s*$/m)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return cleaned.split(/^\s*-{5,}\s*$/m).map((s) => s.trim()).filter(Boolean);
 }
 
-/* anti-duplicação + “respiros” + limpeza */
+/* dedupe título x corpo + “respiros” */
 function normCmp(s) {
   return (s || "")
     .toLowerCase()
@@ -133,15 +138,14 @@ function normCmp(s) {
     .replace(/\s+/g, " ")
     .trim();
 }
-
-// RESPIROS ROBUSTOS (parágrafos, incisos, alíneas, títulos)
 function addRespirations(body) {
   if (!body) return "";
 
-  const RX_INCISO = /^(?:[IVXLCDM]{1,8})(?:\s*(?:[-–—]|\.|\)))(?:\s+|$)/;                 // I -, II –, III —, IV., V)
-  const RX_PARAGR = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[uú]nico|\d+)\s*[ºo]?)(?:\s*[:.-])?(?:\s+|$)/i; // § 1º / § 2 o / Parágrafo único
-  const RX_ALINEA = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;                           // a), b., c -, d —
-  const RX_TITULO = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO)\b/i;
+  // §, incisos (romanos), alíneas (a), títulos
+  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:[-–—]|\.|\)))(?:\s+|$)/;
+  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[uú]nico|\d+)\s*[ºo]?)(?:\s*[:.-])?(?:\s+|$)/i;
+  const RX_ALINEA  = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
+  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO)\b/i;
 
   const lines = String(body).replace(/\r\n/g, "\n").split("\n");
   const out = [];
@@ -149,16 +153,10 @@ function addRespirations(body) {
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i].trim();
     const isMarker = RX_PARAGR.test(ln) || RX_INCISO.test(ln) || RX_ALINEA.test(ln) || RX_TITULO.test(ln);
-    if (isMarker && out.length && out[out.length - 1] !== "") out.push(""); // respiro
+    if (isMarker && out.length && out[out.length - 1] !== "") out.push(""); // linha em branco
     out.push(ln);
   }
-
-  // compacta múltiplos vazios
-  return out.join("\n").replace(/\n{3,}/g, "\n\n");
-}
-
-function stripParens(s) {
-  return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
+  return out.join("\n");
 }
 function dedupeBody(title, body) {
   if (!body) return "";
@@ -174,7 +172,6 @@ function dedupeBody(title, body) {
   cleaned = addRespirations(cleaned);
   return cleaned;
 }
-
 function parseBlock(block, idx) {
   const lines = block.split(/\n/);
   const artIdx = lines.findIndex((l) =>
@@ -182,49 +179,56 @@ function parseBlock(block, idx) {
   );
   if (artIdx === -1) return { kind: "heading", raw: block, htmlId: `h-${idx}` };
 
-  const pre = lines.slice(0, artIdx).map((s) => s.trim()).filter(Boolean);
+  const pre   = lines.slice(0, artIdx).map((s) => s.trim()).filter(Boolean);
   const after = lines.slice(artIdx).map((s) => s.trim()).filter(Boolean);
 
   const epigrafe = pre.length ? pre.join("\n") : "";
-  const title = after.shift() || "";
-  const bodyRaw = after.join("\n");
-  const bodyClean = dedupeBody(title, bodyRaw);
-  const oneText = [title, bodyClean].filter(Boolean).join("\n");
+  const title    = after.shift() || "";
+  const bodyRaw  = after.join("\n");
+  const bodyClean= dedupeBody(title, bodyRaw);
+  const oneText  = [title, bodyClean].filter(Boolean).join("\n");
 
   return {
     kind: "article",
     title: title || `Bloco ${idx + 1}`,
-    text: [epigrafe ? `Epígrafe: ${epigrafe}` : "", oneText].filter(Boolean).join("\n"),
+    text:  [epigrafe ? `Epígrafe: ${epigrafe}` : "", oneText].filter(Boolean).join("\n"),
     bodyOnly: bodyClean,
     htmlId: `art-${idx}`,
     _split: { titleText: title, epigrafe, body: bodyClean, oneText },
   };
 }
-
 async function parseFile(url) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
   const items = splitBlocks(txt).map(parseBlock);
   let i = 0;
-  items.forEach((it) => {
-    if (it.kind === "article") it.htmlId = `art-${i++}`;
-  });
+  items.forEach((it) => { if (it.kind === "article") it.htmlId = `art-${i++}`; });
   state.cacheParsed.set(url, items);
   return items;
 }
 
-/* ---------- templates de prompts ---------- */
+/* ---------- templates de prompt ---------- */
+// Estudar: tenta data/prompts/prompt_estudar.txt; senão, fallback
 async function loadPromptTemplate() {
   if (state.promptTpl) return state.promptTpl;
-  try {
-    const t = await fetchText("data/prompt/prompt_estudar.txt");
-    state.promptTpl = t.trim();
-  } catch {
-    state.promptTpl = "Você é uma I.A. jurídica. A partir dos artigos abaixo, organize o estudo e explique de forma clara.\n";
+  const CANDIDATES = [
+    "data/prompts/prompt_estudar.txt",
+    "data/prompt/prompt_estudar.txt", // compatibilidade antiga
+  ];
+  for (const p of CANDIDATES) {
+    try {
+      const r = await fetch(p, { cache: "no-cache" });
+      if (r.ok) {
+        state.promptTpl = (await r.text()).trim();
+        return state.promptTpl;
+      }
+    } catch {}
   }
+  state.promptTpl =
+    "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos artigos abaixo, com explicações, exemplos e conexões entre os dispositivos.\n";
   return state.promptTpl;
 }
-/* SOMENTE este caminho para “Criar Questões” */
+// Criar Questões: **apenas** este caminho
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
   const PATH = "data/prompts/prompt_questoes.txt";
@@ -241,18 +245,25 @@ async function loadQuestionsTemplate() {
 
 /* ---------- aliases de códigos ---------- */
 const CODE_ALIASES = {
+  // Penais
   cp: ["Código Penal"], "codigo penal": ["Código Penal"], "código penal": ["Código Penal"],
+  cpm: ["CPM"],
   cpp: ["Processo Penal"], "codigo de processo penal": ["Processo Penal"], "código de processo penal": ["Processo Penal"],
+  // Civis
   cpc: ["Processo Civil"], "cpc/2015": ["Processo Civil"], ncpc: ["Processo Civil"],
   "codigo de processo civil": ["Processo Civil"], "código de processo civil": ["Processo Civil"],
   cc: ["Código Civil"], "codigo civil": ["Código Civil"], "código civil": ["Código Civil"],
-  ctn: ["CTN"], clt: ["CLT"], cdc: ["CDC"], ctb: ["CTB"], cpm: ["CPM"],
+  // Tributário / Trabalho / Consumidor / Trânsito
+  ctn: ["CTN"], clt: ["CLT"], cdc: ["CDC"], ctb: ["CTB"],
+  // Constituição
   cf: ["CF88"], "cf/88": ["CF88"], cf88: ["CF88"], crfb: ["CF88"], constituicao: ["CF88"], "constituição": ["CF88"],
+  // Estatutos/Leis comuns
   eca: ["ECA"],
   lep: ["Lei de Execução Penal"], "lei de execucao penal": ["Lei de Execução Penal"], "lei de execução penal": ["Lei de Execução Penal"],
   lai: ["Lei de Acesso à Informação"], "lei de acesso a informacao": ["Lei de Acesso à Informação"], "lei de acesso à informação": ["Lei de Acesso à Informação"],
   lms: ["Mandado de Segurança"], "mandado de seguranca": ["Mandado de Segurança"], "mandado de segurança": ["Mandado de Segurança"],
 };
+/* helpers alias -> url */
 function labelsToUrls(labels) {
   const opts = Array.from(els.codeSelect.querySelectorAll("option")).map((o) => ({
     label: o.textContent.trim(),
@@ -266,18 +277,18 @@ function labelsToUrls(labels) {
   return urls;
 }
 
-/* ---------- parser de consulta ---------- */
+/* ---------- parser da consulta ---------- */
 function parseQuery(raw) {
   const q = raw.trim();
   const qNorm = q.toLowerCase();
 
-  // artigo explícito (art. 123 / artigo 123) ou número puro
+  // "art. 44 cp" / "artigo 44 do cp" / número puro
   const mArt = qNorm.match(/\b(?:art(?:\.|igo)?)\s*(\d{1,4})(?:\s*[–—-]?\s*[a-z])?/i);
   const mSoloNum = qNorm.match(/^\s*(\d{1,4})\s*$/);
   const articleNum = mArt ? mArt[1] : (mSoloNum ? mSoloNum[1] : null);
   const numberOnly = !!mSoloNum;
 
-  // detectar códigos por alias (palavra simples ou bigrama)
+  // aliases de código (palavra simples ou bigrama)
   const codeHits = new Set();
   const words = qNorm.split(/[^a-z0-9/]+/).filter(Boolean);
   for (let i = 0; i < words.length; i++) {
@@ -287,7 +298,7 @@ function parseQuery(raw) {
     if (CODE_ALIASES[w]) CODE_ALIASES[w].forEach((x) => codeHits.add(x));
   }
 
-  // tokens: >= 3 letras (ou números)
+  // tokens da busca: >= 3 letras (números sempre aceitos)
   const rawTokens = q.split(/\s+/).filter(Boolean);
   const tokens = rawTokens
     .filter((t) => (/^\d+$/.test(t) ? true : t.length >= 3))
@@ -328,7 +339,7 @@ async function doSearch() {
       .map((o) => ({ url: o.value?.trim(), label: o.textContent?.trim() }))
       .filter((o) => o.url);
 
-    // filtrar por código quando tiver alias
+    // quando houver código explícito, restringe a busca a ele
     let options = allOptions;
     if (codeHits.length) {
       const urls = labelsToUrls(codeHits);
@@ -352,7 +363,7 @@ async function doSearch() {
           }
           if (!okArticle) return;
 
-          // AND estrito
+          // AND estrito de tokens (quando houver)
           let okTokens = true;
           if (tokens.length) {
             const bag = norm((it._split.oneText || "") + " " + (it._split.epigrafe || ""));
@@ -365,13 +376,13 @@ async function doSearch() {
               source: label,
               fileUrl: url,
               htmlId: it.htmlId,
-              text: it._split.oneText,
-              body: it.bodyOnly,
-              title: it._split.titleText,
+              text: it._split.oneText,     // título + corpo
+              body: it.bodyOnly,           // corpo puro
+              title: it._split.titleText,  // título
             });
           }
         });
-      } catch { /* ignora arquivo quebrado */ }
+      } catch {/* ignora arquivo quebrado */}
     }
 
     skel.remove();
@@ -414,11 +425,12 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
+  // 1) remove ( ... )
   const noParens = stripParens(fullText || "");
+  // 2) limita
   const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
   return highlight(escHTML(truncated), tokens);
 }
-
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
@@ -449,6 +461,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
+      // mostrar texto completo (sem parênteses), com “respiro”
       const full = stripParens(addRespirations(item.text));
       body.textContent = full;
       toggle.textContent = "ocultar";
@@ -464,7 +477,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
-
   chk.addEventListener("click", () => {
     if (state.selected.has(item.id)) {
       state.selected.delete(item.id);
@@ -483,7 +495,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   return card;
 }
 
-/* ---------- MODAL: LEITOR ---------- */
+/* ---------- Leitor (modal) ---------- */
 async function openReader(item) {
   els.readerTitle.textContent = item.source;
   els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
@@ -518,7 +530,6 @@ async function openReader(item) {
     hideModal(els.readerModal);
   }
 }
-
 function renderArticleRow(a, fileUrl, sourceLabel) {
   const row = document.createElement("div");
   row.className = "article";
@@ -559,7 +570,7 @@ function renderArticleRow(a, fileUrl, sourceLabel) {
   h4.textContent = `${itemRef.title} — ${sourceLabel}`;
   const txt = document.createElement("div");
   txt.className = "a-body";
-  txt.textContent = stripParens(addRespirations(itemRef.body || itemRef.text));
+  txt.textContent = addRespirations(itemRef.body || itemRef.text); // no leitor mantemos tudo (sem stripParens)
   body.append(h4, txt);
 
   row.append(chk, body);
@@ -590,7 +601,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-/* ---------- VER SELECIONADOS (cards idênticos) ---------- */
+/* ---------- VER SELECIONADOS ---------- */
 els.viewBtn.addEventListener("click", () => {
   els.selectedStack.innerHTML = "";
   if (!state.selected.size) {
@@ -607,10 +618,10 @@ els.viewBtn.addEventListener("click", () => {
   showModal(els.selectedModal);
 });
 
-/* ---------- Estudar: lista e prompt ---------- */
+/* ---------- Estudar ---------- */
 els.studyBtn.addEventListener("click", async () => {
   if (!state.selected.size) return;
-  state.studyIncluded = new Set([...state.selected.keys()]); // incluir todos por padrão
+  state.studyIncluded = new Set([...state.selected.keys()]);
   buildMiniList(els.studyList, state.studyIncluded);
   showModal(els.studyModal);
   const prompt = await buildStudyPrompt(state.studyIncluded);
@@ -639,7 +650,7 @@ async function buildStudyPrompt(includedSet) {
   return parts.join("\n");
 }
 
-/* ---------- Criar Questões: lista, prefs e prompt ---------- */
+/* ---------- Criar Questões ---------- */
 els.questionsBtn.addEventListener("click", async () => {
   if (!state.selected.size) return;
   state.questionsIncluded = new Set([...state.selected.keys()]);
@@ -668,10 +679,10 @@ async function buildQuestionsPrompt(includedSet) {
     .filter((i) => i.checked)
     .map((i) => i.value);
   const prefLines = [];
-  if (opts.includes("casos2")) prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2")) prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas")) prefLines.push("- Misture os entendimentos para criar pegadinhas.");
+  if (opts.includes("casos2"))        prefLines.push("- Inclua 2 Casos Concretos.");
+  if (opts.includes("dissertativas2"))prefLines.push("- Inclua 2 Dissertativas.");
+  if (opts.includes("vf2"))           prefLines.push("- Inclua 2 V ou F.");
+  if (opts.includes("pegadinhas"))    prefLines.push("- Misture os entendimentos para criar pegadinhas.");
   const prefs = prefLines.join("\n");
 
   const parts = [tpl.trim(), ""];
@@ -690,7 +701,7 @@ async function buildQuestionsPrompt(includedSet) {
   return parts.join("\n");
 }
 
-/* ---------- mini-lists (nos modais) ---------- */
+/* ---------- mini-lists (modais) ---------- */
 function buildMiniList(container, includedSet) {
   container.innerHTML = "";
   const items = [...state.selected.values()];
@@ -720,7 +731,7 @@ function buildMiniList(container, includedSet) {
   });
 }
 
-/* ---------- copiar com toast unificado ---------- */
+/* ---------- copiar com toast ---------- */
 function copyToClipboard(txt) {
   navigator.clipboard?.writeText(txt).then(
     () => toast("✅ Prompt copiado. Cole na sua I.A. preferida."),
@@ -728,7 +739,7 @@ function copyToClipboard(txt) {
   );
 }
 
-/* ---------- LOGO: resetar busca ---------- */
+/* ---------- logo: reset ---------- */
 els.brand?.addEventListener("click", () => {
   els.q.value = "";
   els.stack.innerHTML = "";
