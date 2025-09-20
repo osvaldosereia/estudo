@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js
+   direito.love — app.js (revisado)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -98,13 +98,13 @@ function escHTML(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
 }
-function stripParens(s) { // remove ( ... ) para os CARDS
+function stripParens(s) { // remove ( ... ) só para CARDS/preview
   return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
 /* ---------- catálogo (oculto no HTML) ---------- */
 (() => {
-  els.codeSelect.querySelectorAll("option").forEach((opt) => {
+  els.codeSelect?.querySelectorAll("option").forEach((opt) => {
     const url = opt.value?.trim();
     const label = opt.textContent?.trim();
     if (url) state.urlToLabel.set(label, url);
@@ -113,7 +113,11 @@ function stripParens(s) { // remove ( ... ) para os CARDS
 
 /* ---------- fetch/parse de arquivos ---------- */
 function sanitize(s) {
-  return s.replace(/\u00A0/g, " ").replace(/\r\n/g, "\n").replace(/[ \t]+\n/g, "\n");
+  return String(s)
+    .replace(/\uFEFF/g, "")               // BOM
+    .replace(/\u00A0/g, " ")              // nbsp
+    .replace(/\r\n?/g, "\n")              // EOL
+    .replace(/[ \t]+\n/g, "\n");          // ws final
 }
 async function fetchText(url) {
   if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
@@ -124,11 +128,15 @@ async function fetchText(url) {
   return t;
 }
 function splitBlocks(txt) {
-  const cleaned = sanitize(txt).replace(/^\uFEFF/, "");
-  return cleaned.split(/^\s*-{5,}\s*$/m).map((s) => s.trim()).filter(Boolean);
+  // quebra por linhas contendo 5+ hifens (-----), com espaços tolerados
+  const parts = sanitize(txt)
+    .split(/^\s*-{5,}\s*$/m)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts;
 }
 
-/* dedupe título x corpo + “respiros” */
+/* ---------- normalizadores & “respiros” ---------- */
 function normCmp(s) {
   return (s || "")
     .toLowerCase()
@@ -138,49 +146,81 @@ function normCmp(s) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/**
+ * addRespirations:
+ * Insere uma linha em branco ANTES de:
+ *  - § e “Parágrafo ...”
+ *  - incisos em romanos (I, II, III, …) seguidos de “)”, “.”, “-”, “–”, “—” (opcionais)
+ *  - alíneas: a), b), c) … (aceita “a.” ou “a -”)
+ *  - títulos/cabeçalhos: TÍTULO, CAPÍTULO, SEÇÃO, SUBSEÇÃO, LIVRO
+ * Evita duplicar linhas em branco.
+ */
 function addRespirations(body) {
   if (!body) return "";
 
-  // §, incisos (romanos), alíneas (a), títulos
-  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:[-–—]|\.|\)))(?:\s+|$)/;
-  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[uú]nico|\d+)\s*[ºo]?)(?:\s*[:.-])?(?:\s+|$)/i;
-  const RX_ALINEA  = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
-  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO)\b/i;
+  const RX_INCISO   = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))?(?:\s+|$)/; // I) / I. / I-
+  const RX_PARAGR   = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|[0-9]+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/;
+  const RX_ALINEA   = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;            // a), a. ou a -
+  const RX_TITULO   = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
 
-  const lines = String(body).replace(/\r\n/g, "\n").split("\n");
+  const lines = String(body).split("\n");
   const out = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i].trim();
-    const isMarker = RX_PARAGR.test(ln) || RX_INCISO.test(ln) || RX_ALINEA.test(ln) || RX_TITULO.test(ln);
-    if (isMarker && out.length && out[out.length - 1] !== "") out.push(""); // linha em branco
+    const raw = lines[i];
+    const ln = raw.trim();
+
+    const isMarker =
+      RX_PARAGR.test(ln) ||
+      RX_INCISO.test(ln) ||
+      RX_ALINEA.test(ln) ||
+      RX_TITULO.test(ln);
+
+    if (isMarker && out.length && out[out.length - 1] !== "") {
+      out.push(""); // “respiro” antes do marcador
+    }
+
+    // evita acumular múltiplas linhas em branco
+    if (ln === "" && out.length && out[out.length - 1] === "") continue;
+
     out.push(ln);
   }
   return out.join("\n");
 }
+
 function dedupeBody(title, body) {
   if (!body) return "";
   const lines = body.split(/\n+/);
   if (!lines.length) return body;
   const t = normCmp(title);
-  const f = normCmp(lines[0]);
+  const f = normCmp(lines[0] || "");
   if (f === t || f.startsWith(t) || t.startsWith(f)) lines.shift();
+
   let cleaned = lines.join("\n").trim();
+
+  // título literal no topo do corpo? remove
   const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const rx = new RegExp("^\\s*" + esc + "\\s*\\n?", "i");
   cleaned = cleaned.replace(rx, "").trim();
+
+  // aplica “respiros”
   cleaned = addRespirations(cleaned);
   return cleaned;
 }
+
 function parseBlock(block, idx) {
   const lines = block.split(/\n/);
-  const artIdx = lines.findIndex((l) =>
-    /^(Pre[aâ]mbulo|Art(?:igo)?\.?|S[úu]mula)/i.test(l.trim())
+  const firstIdx = lines.findIndex((l) =>
+    /^(Pre[aâ]mbulo|Art(?:\.|igo)?\s*\d+|S[úu]mula)/i.test(l.trim())
   );
-  if (artIdx === -1) return { kind: "heading", raw: block, htmlId: `h-${idx}` };
 
-  const pre   = lines.slice(0, artIdx).map((s) => s.trim()).filter(Boolean);
-  const after = lines.slice(artIdx).map((s) => s.trim()).filter(Boolean);
+  if (firstIdx === -1) {
+    return { kind: "heading", raw: block, htmlId: `h-${idx}` };
+  }
+
+  const pre   = lines.slice(0, firstIdx).map((s) => s.trim()).filter(Boolean);
+  const after = lines.slice(firstIdx).map((s) => s.trim()).filter(Boolean);
 
   const epigrafe = pre.length ? pre.join("\n") : "";
   const title    = after.shift() || "";
@@ -197,6 +237,7 @@ function parseBlock(block, idx) {
     _split: { titleText: title, epigrafe, body: bodyClean, oneText },
   };
 }
+
 async function parseFile(url) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
@@ -208,12 +249,11 @@ async function parseFile(url) {
 }
 
 /* ---------- templates de prompt ---------- */
-// Estudar: tenta data/prompts/prompt_estudar.txt; senão, fallback
 async function loadPromptTemplate() {
   if (state.promptTpl) return state.promptTpl;
   const CANDIDATES = [
     "data/prompts/prompt_estudar.txt",
-    "data/prompt/prompt_estudar.txt", // compatibilidade antiga
+    "data/prompt/prompt_estudar.txt", // compat antiga
   ];
   for (const p of CANDIDATES) {
     try {
@@ -228,7 +268,6 @@ async function loadPromptTemplate() {
     "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos artigos abaixo, com explicações, exemplos e conexões entre os dispositivos.\n";
   return state.promptTpl;
 }
-// Criar Questões: **apenas** este caminho
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
   const PATH = "data/prompts/prompt_questoes.txt";
@@ -263,9 +302,8 @@ const CODE_ALIASES = {
   lai: ["Lei de Acesso à Informação"], "lei de acesso a informacao": ["Lei de Acesso à Informação"], "lei de acesso à informação": ["Lei de Acesso à Informação"],
   lms: ["Mandado de Segurança"], "mandado de seguranca": ["Mandado de Segurança"], "mandado de segurança": ["Mandado de Segurança"],
 };
-/* helpers alias -> url */
 function labelsToUrls(labels) {
-  const opts = Array.from(els.codeSelect.querySelectorAll("option")).map((o) => ({
+  const opts = Array.from(els.codeSelect?.querySelectorAll("option") || []).map((o) => ({
     label: o.textContent.trim(),
     url: o.value.trim(),
   }));
@@ -308,8 +346,8 @@ function parseQuery(raw) {
 }
 
 /* ---------- busca ---------- */
-els.form.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
-els.q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
+els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
+els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
 
 async function doSearch() {
   const term = (els.q.value || "").trim();
@@ -335,7 +373,7 @@ async function doSearch() {
     const { tokens, articleNum, numberOnly, codeHits } = parseQuery(term);
 
     const results = [];
-    const allOptions = Array.from(els.codeSelect.querySelectorAll("option"))
+    const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
       .map((o) => ({ url: o.value?.trim(), label: o.textContent?.trim() }))
       .filter((o) => o.url);
 
@@ -425,9 +463,7 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
-  // 1) remove ( ... )
   const noParens = stripParens(fullText || "");
-  // 2) limita
   const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
   return highlight(escHTML(truncated), tokens);
 }
@@ -461,7 +497,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
-      // mostrar texto completo (sem parênteses), com “respiro”
       const full = stripParens(addRespirations(item.text));
       body.textContent = full;
       toggle.textContent = "ocultar";
@@ -578,8 +613,8 @@ function renderArticleRow(a, fileUrl, sourceLabel) {
 }
 
 /* ---------- MODAIS: helpers ---------- */
-function showModal(el) { el.hidden = false; document.body.style.overflow = "hidden"; }
-function hideModal(el) { el.hidden = true; document.body.style.overflow = ""; }
+function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
+function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflow = ""; } }
 
 document.addEventListener("click", (e) => {
   if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
@@ -587,22 +622,23 @@ document.addEventListener("click", (e) => {
   if (e.target.matches("[data-close-questions]")) hideModal(els.questionsModal);
   if (e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
 
-  if (e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
-  if (e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
-  if (e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
-  if (e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
+  // clique no backdrop (estrutura esperada: .modal > .modal-backdrop)
+  if (els.readerModal && e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
+  if (els.studyModal && e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
+  if (els.questionsModal && e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
+  if (els.selectedModal && e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    if (!els.readerModal.hidden) hideModal(els.readerModal);
-    if (!els.studyModal.hidden) hideModal(els.studyModal);
-    if (!els.questionsModal.hidden) hideModal(els.questionsModal);
-    if (!els.selectedModal.hidden) hideModal(els.selectedModal);
+    if (els.readerModal && !els.readerModal.hidden) hideModal(els.readerModal);
+    if (els.studyModal && !els.studyModal.hidden) hideModal(els.studyModal);
+    if (els.questionsModal && !els.questionsModal.hidden) hideModal(els.questionsModal);
+    if (els.selectedModal && !els.selectedModal.hidden) hideModal(els.selectedModal);
   }
 });
 
 /* ---------- VER SELECIONADOS ---------- */
-els.viewBtn.addEventListener("click", () => {
+els.viewBtn?.addEventListener("click", () => {
   els.selectedStack.innerHTML = "";
   if (!state.selected.size) {
     const empty = document.createElement("div");
@@ -619,7 +655,7 @@ els.viewBtn.addEventListener("click", () => {
 });
 
 /* ---------- Estudar ---------- */
-els.studyBtn.addEventListener("click", async () => {
+els.studyBtn?.addEventListener("click", async () => {
   if (!state.selected.size) return;
   state.studyIncluded = new Set([...state.selected.keys()]);
   buildMiniList(els.studyList, state.studyIncluded);
@@ -627,7 +663,7 @@ els.studyBtn.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
 });
-els.studyUpdate.addEventListener("click", async () => {
+els.studyUpdate?.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
   toast("Lista atualizada e prompt copiado.");
@@ -651,7 +687,7 @@ async function buildStudyPrompt(includedSet) {
 }
 
 /* ---------- Criar Questões ---------- */
-els.questionsBtn.addEventListener("click", async () => {
+els.questionsBtn?.addEventListener("click", async () => {
   if (!state.selected.size) return;
   state.questionsIncluded = new Set([...state.selected.keys()]);
   buildMiniList(els.questionsList, state.questionsIncluded);
@@ -659,7 +695,7 @@ els.questionsBtn.addEventListener("click", async () => {
   const prompt = await buildQuestionsPrompt(state.questionsIncluded);
   copyToClipboard(prompt);
 });
-els.questionsUpdate.addEventListener("click", async () => {
+els.questionsUpdate?.addEventListener("click", async () => {
   const prompt = await buildQuestionsPrompt(state.questionsIncluded);
   copyToClipboard(prompt);
   toast("Lista atualizada e prompt copiado.");
@@ -679,10 +715,10 @@ async function buildQuestionsPrompt(includedSet) {
     .filter((i) => i.checked)
     .map((i) => i.value);
   const prefLines = [];
-  if (opts.includes("casos2"))        prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2"))prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))           prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas"))    prefLines.push("- Misture os entendimentos para criar pegadinhas.");
+  if (opts.includes("casos2"))         prefLines.push("- Inclua 2 Casos Concretos.");
+  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
+  if (opts.includes("vf2"))            prefLines.push("- Inclua 2 V ou F.");
+  if (opts.includes("pegadinhas"))     prefLines.push("- Misture os entendimentos para criar pegadinhas.");
   const prefs = prefLines.join("\n");
 
   const parts = [tpl.trim(), ""];
