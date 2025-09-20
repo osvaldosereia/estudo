@@ -83,6 +83,9 @@
         <button class="icon-btn" data-close-modal aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body" id="readerBody" tabindex="0"></div>
+      <div class="modal-foot">
+        <button class="icon-btn foot-close" data-close-modal aria-label="Fechar">✕</button>
+      </div>
     </div>
   </div>
 
@@ -107,6 +110,9 @@
           <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
         </div>
       </div>
+      <div class="modal-foot">
+        <button class="icon-btn foot-close" data-close-study aria-label="Fechar">✕</button>
+      </div>
     </div>
   </div>
 
@@ -128,7 +134,10 @@
         </fieldset>
 
         <label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
-        <textarea id="questionsObs" class="obs-input" rows="3" placeholder="(Opcional) Ex.: foco em tutela de urgência em concursos; inclua exemplos práticos."></textarea>
+        <div class="obs-row">
+          <textarea id="questionsObs" class="obs-input" rows="3" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos."></textarea>
+          <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
+        </div>
 
         <p class="muted">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
         <pre id="questionsPreview" class="prompt-box"></pre>
@@ -142,6 +151,9 @@
           <button class="btn soft" id="copyQuestionsBtn">Copiar prompt</button>
         </div>
       </div>
+      <div class="modal-foot">
+        <button class="icon-btn foot-close" data-close-questions aria-label="Fechar">✕</button>
+      </div>
     </div>
   </div>
 
@@ -154,7 +166,10 @@
         <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <ul id="selectedList" class="sel-list"></ul>
+        <section id="selectedStack"></section>
+      </div>
+      <div class="modal-foot">
+        <button class="icon-btn foot-close" data-close-sel aria-label="Fechar">✕</button>
       </div>
     </div>
   </div>
