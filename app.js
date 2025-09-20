@@ -1,5 +1,9 @@
 /* ==========================
-   direito.love — app.js
+   direito.love — app.js (2025-09 • estável)
+   Regras:
+   1) Cada card = bloco entre linhas "-----"
+   2) Texto preservado como no .txt (parênteses incluídos)
+   3) "Respiros" (linhas em branco) apenas na visualização do leitor
    ========================== */
 
 /* Service Worker (opcional) */
@@ -77,14 +81,14 @@ function toast(msg) {
   el.className = "toast";
   el.textContent = msg;
   els.toasts.appendChild(el);
-  setTimeout(() => el.remove(), 2000);
+  setTimeout(() => el.remove(), 2400);
 }
 function updateBottom() {
   const n = state.selected.size;
-  els.viewBtn.textContent = `${n} Selecionados – Ver`;
-  els.studyBtn.disabled = n === 0;
-  els.questionsBtn.disabled = n === 0;
-  els.selCount.textContent = `${n}/${MAX_SEL}`;
+  els.viewBtn && (els.viewBtn.textContent = `${n} Selecionados – Ver`);
+  els.studyBtn && (els.studyBtn.disabled = n === 0);
+  els.questionsBtn && (els.questionsBtn.disabled = n === 0);
+  els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
 }
 function norm(s) {
   return (s || "")
@@ -98,137 +102,124 @@ function escHTML(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
 }
-function stripParens(s) { // remove ( ... ) para os CARDS
-  return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
-}
 
-/* ---------- catálogo (oculto no HTML) ---------- */
+/* ---------- catálogo (select) ---------- */
+/* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
+function toRawGitHub(url){
+  if(!url) return url;
+  const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
+  if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
+  return url;
+}
 (() => {
-  els.codeSelect.querySelectorAll("option").forEach((opt) => {
-    const url = opt.value?.trim();
-    const label = opt.textContent?.trim();
-    if (url) state.urlToLabel.set(label, url);
+  els.codeSelect?.querySelectorAll("option").forEach((opt) => {
+    let url = (opt.value || "").trim();
+    const label = (opt.textContent || "").trim();
+    if (!url) return;
+    url = encodeURI(toRawGitHub(url));
+    opt.value = url; // corrige no DOM (evita 404 e caracteres especiais)
+    state.urlToLabel.set(label, url);
   });
 })();
 
-/* ---------- fetch/parse de arquivos ---------- */
+/* ---------- fetch/parse ---------- */
 function sanitize(s) {
-  return s.replace(/\u00A0/g, " ").replace(/\r\n/g, "\n").replace(/[ \t]+\n/g, "\n");
+  return String(s)
+    .replace(/\uFEFF/g, "")      // BOM
+    .replace(/\u00A0/g, " ")     // NBSP
+    .replace(/\r\n?/g, "\n")     // EOL
+    .replace(/[ \t]+\n/g, "\n"); // ws final
 }
 async function fetchText(url) {
+  url = encodeURI(url);
   if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
   const r = await fetch(url, { cache: "no-cache" });
-  if (!r.ok) throw new Error(url);
+  if (!r.ok) throw new Error(`fetch-fail ${r.status} ${url}`);
   const t = sanitize(await r.text());
   state.cacheTxt.set(url, t);
   return t;
 }
+
+/* Split: cada linha com 5+ hifens (-----) separa blocos */
 function splitBlocks(txt) {
-  const cleaned = sanitize(txt).replace(/^\uFEFF/, "");
-  return cleaned.split(/^\s*-{5,}\s*$/m).map((s) => s.trim()).filter(Boolean);
+  return sanitize(txt)
+    .split(/^\s*-{5,}\s*$/m)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
-/* dedupe título x corpo + “respiros” */
-function normCmp(s) {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—-]/g, " ")
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-function addRespirations(body) {
-  if (!body) return "";
-
-  // §, incisos (romanos), alíneas (a), títulos
-  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:[-–—]|\.|\)))(?:\s+|$)/;
-  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[uú]nico|\d+)\s*[ºo]?)(?:\s*[:.-])?(?:\s+|$)/i;
-  const RX_ALINEA  = /^(?:[a-z])(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
-  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO)\b/i;
-
-  const lines = String(body).replace(/\r\n/g, "\n").split("\n");
-  const out = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i].trim();
-    const isMarker = RX_PARAGR.test(ln) || RX_INCISO.test(ln) || RX_ALINEA.test(ln) || RX_TITULO.test(ln);
-    if (isMarker && out.length && out[out.length - 1] !== "") out.push(""); // linha em branco
-    out.push(ln);
-  }
-  return out.join("\n");
-}
-function dedupeBody(title, body) {
-  if (!body) return "";
-  const lines = body.split(/\n+/);
-  if (!lines.length) return body;
-  const t = normCmp(title);
-  const f = normCmp(lines[0]);
-  if (f === t || f.startsWith(t) || t.startsWith(f)) lines.shift();
-  let cleaned = lines.join("\n").trim();
-  const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const rx = new RegExp("^\\s*" + esc + "\\s*\\n?", "i");
-  cleaned = cleaned.replace(rx, "").trim();
-  cleaned = addRespirations(cleaned);
-  return cleaned;
-}
-function parseBlock(block, idx) {
-  const lines = block.split(/\n/);
-  const artIdx = lines.findIndex((l) =>
-    /^(Pre[aâ]mbulo|Art(?:igo)?\.?|S[úu]mula)/i.test(l.trim())
-  );
-  if (artIdx === -1) return { kind: "heading", raw: block, htmlId: `h-${idx}` };
-
-  const pre   = lines.slice(0, artIdx).map((s) => s.trim()).filter(Boolean);
-  const after = lines.slice(artIdx).map((s) => s.trim()).filter(Boolean);
-
-  const epigrafe = pre.length ? pre.join("\n") : "";
-  const title    = after.shift() || "";
-  const bodyRaw  = after.join("\n");
-  const bodyClean= dedupeBody(title, bodyRaw);
-  const oneText  = [title, bodyClean].filter(Boolean).join("\n");
+/* Parser minimalista: título = 1ª linha; corpo = resto (preservado) */
+function parseBlock(block, idx, fileUrl, sourceLabel) {
+  const lines = block.split("\n");
+  const firstIdx = lines.findIndex((l) => l.trim().length > 0);
+  const first = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
+  const rest  = lines.slice(firstIdx + 1).join("\n").trim();
+  const full  = [first, rest].filter(Boolean).join("\n");
 
   return {
-    kind: "article",
-    title: title || `Bloco ${idx + 1}`,
-    text:  [epigrafe ? `Epígrafe: ${epigrafe}` : "", oneText].filter(Boolean).join("\n"),
-    bodyOnly: bodyClean,
+    id: `${fileUrl}::art-${idx}`,
     htmlId: `art-${idx}`,
-    _split: { titleText: title, epigrafe, body: bodyClean, oneText },
+    source: sourceLabel,
+    title: first,
+    body: rest,
+    text: full, // título + corpo
+    fileUrl,
   };
 }
-async function parseFile(url) {
+
+async function parseFile(url, sourceLabel) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
-  const items = splitBlocks(txt).map(parseBlock);
-  let i = 0;
-  items.forEach((it) => { if (it.kind === "article") it.htmlId = `art-${i++}`; });
+  const blocks = splitBlocks(txt);
+  const items = blocks.map((b, i) => parseBlock(b, i, url, sourceLabel));
   state.cacheParsed.set(url, items);
   return items;
 }
 
+/* ---------- "Respiros" (só no leitor) ---------- */
+/* Insere linha em branco ANTES de marcadores no INÍCIO da linha,
+   sem alterar o texto original na fonte (apenas para exibição). */
+function addRespirationsForDisplay(s) {
+  if (!s) return "";
+  const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
+  const RX_PARAGR  = /^(?:§+\s*\d+\s*[ºo]?|Par[aá]grafo\s+(?:[Uu]nico|\d+)\s*[ºo]?)(?:\s*[:.\-–—])?(?:\s+|$)/i;
+  const RX_ALINEA  = /^[a-z](?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
+  const RX_TITULO  = /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SEÇÃO|SUBSEÇÃO|LIVRO)\b/i;
+
+  const lines = String(s).replace(/\r\n?/g, "\n").split("\n");
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i].trim();
+    const isMarker =
+      RX_PARAGR.test(ln) ||
+      RX_INCISO.test(ln) ||
+      RX_ALINEA.test(ln) ||
+      RX_TITULO.test(ln);
+
+    if (isMarker && out.length && out[out.length - 1] !== "") out.push("");
+    if (ln === "" && out.length && out[out.length - 1] === "") continue;
+
+    out.push(ln);
+  }
+  return out.join("\n");
+}
+
 /* ---------- templates de prompt ---------- */
-// Estudar: tenta data/prompts/prompt_estudar.txt; senão, fallback
 async function loadPromptTemplate() {
   if (state.promptTpl) return state.promptTpl;
   const CANDIDATES = [
     "data/prompts/prompt_estudar.txt",
-    "data/prompt/prompt_estudar.txt", // compatibilidade antiga
+    "data/prompt/prompt_estudar.txt",
   ];
   for (const p of CANDIDATES) {
     try {
       const r = await fetch(p, { cache: "no-cache" });
-      if (r.ok) {
-        state.promptTpl = (await r.text()).trim();
-        return state.promptTpl;
-      }
+      if (r.ok) { state.promptTpl = (await r.text()).trim(); return state.promptTpl; }
     } catch {}
   }
-  state.promptTpl =
-    "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos artigos abaixo, com explicações, exemplos e conexões entre os dispositivos.\n";
+  state.promptTpl = "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos blocos abaixo.\n";
   return state.promptTpl;
 }
-// Criar Questões: **apenas** este caminho
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
   const PATH = "data/prompts/prompt_questoes.txt";
@@ -243,81 +234,15 @@ async function loadQuestionsTemplate() {
   return state.promptQTpl;
 }
 
-/* ---------- aliases de códigos ---------- */
-const CODE_ALIASES = {
-  // Penais
-  cp: ["Código Penal"], "codigo penal": ["Código Penal"], "código penal": ["Código Penal"],
-  cpm: ["CPM"],
-  cpp: ["Processo Penal"], "codigo de processo penal": ["Processo Penal"], "código de processo penal": ["Processo Penal"],
-  // Civis
-  cpc: ["Processo Civil"], "cpc/2015": ["Processo Civil"], ncpc: ["Processo Civil"],
-  "codigo de processo civil": ["Processo Civil"], "código de processo civil": ["Processo Civil"],
-  cc: ["Código Civil"], "codigo civil": ["Código Civil"], "código civil": ["Código Civil"],
-  // Tributário / Trabalho / Consumidor / Trânsito
-  ctn: ["CTN"], clt: ["CLT"], cdc: ["CDC"], ctb: ["CTB"],
-  // Constituição
-  cf: ["CF88"], "cf/88": ["CF88"], cf88: ["CF88"], crfb: ["CF88"], constituicao: ["CF88"], "constituição": ["CF88"],
-  // Estatutos/Leis comuns
-  eca: ["ECA"],
-  lep: ["Lei de Execução Penal"], "lei de execucao penal": ["Lei de Execução Penal"], "lei de execução penal": ["Lei de Execução Penal"],
-  lai: ["Lei de Acesso à Informação"], "lei de acesso a informacao": ["Lei de Acesso à Informação"], "lei de acesso à informação": ["Lei de Acesso à Informação"],
-  lms: ["Mandado de Segurança"], "mandado de seguranca": ["Mandado de Segurança"], "mandado de segurança": ["Mandado de Segurança"],
-};
-/* helpers alias -> url */
-function labelsToUrls(labels) {
-  const opts = Array.from(els.codeSelect.querySelectorAll("option")).map((o) => ({
-    label: o.textContent.trim(),
-    url: o.value.trim(),
-  }));
-  const urls = [];
-  labels?.forEach((lbl) => {
-    const hit = opts.find((o) => norm(o.label) === norm(lbl));
-    if (hit) urls.push(hit.url);
-  });
-  return urls;
-}
-
-/* ---------- parser da consulta ---------- */
-function parseQuery(raw) {
-  const q = raw.trim();
-  const qNorm = q.toLowerCase();
-
-  // "art. 44 cp" / "artigo 44 do cp" / número puro
-  const mArt = qNorm.match(/\b(?:art(?:\.|igo)?)\s*(\d{1,4})(?:\s*[–—-]?\s*[a-z])?/i);
-  const mSoloNum = qNorm.match(/^\s*(\d{1,4})\s*$/);
-  const articleNum = mArt ? mArt[1] : (mSoloNum ? mSoloNum[1] : null);
-  const numberOnly = !!mSoloNum;
-
-  // aliases de código (palavra simples ou bigrama)
-  const codeHits = new Set();
-  const words = qNorm.split(/[^a-z0-9/]+/).filter(Boolean);
-  for (let i = 0; i < words.length; i++) {
-    const w = words[i];
-    const two = (w + " " + (words[i + 1] || "")).trim();
-    if (CODE_ALIASES[two]) CODE_ALIASES[two].forEach((x) => codeHits.add(x));
-    if (CODE_ALIASES[w]) CODE_ALIASES[w].forEach((x) => codeHits.add(x));
-  }
-
-  // tokens da busca: >= 3 letras (números sempre aceitos)
-  const rawTokens = q.split(/\s+/).filter(Boolean);
-  const tokens = rawTokens
-    .filter((t) => (/^\d+$/.test(t) ? true : t.length >= 3))
-    .map(norm);
-
-  return { tokens, articleNum, numberOnly, codeHits: Array.from(codeHits) };
-}
-
 /* ---------- busca ---------- */
-els.form.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
-els.q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
+els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
+els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
 
 async function doSearch() {
   const term = (els.q.value || "").trim();
   if (!term) return;
 
-  // nova pesquisa substitui a anterior (selecionados permanecem)
   els.stack.innerHTML = "";
-
   els.stack.setAttribute("aria-busy", "true");
   const skel = document.createElement("section");
   skel.className = "block";
@@ -329,60 +254,28 @@ async function doSearch() {
     const s = document.createElement("div"); s.className = "skel block"; skel.appendChild(s);
   }
   els.stack.append(skel);
-  els.spinner.classList.add("show");
+  els.spinner?.classList.add("show");
 
   try {
-    const { tokens, articleNum, numberOnly, codeHits } = parseQuery(term);
+    const tokens = term.split(/\s+/).filter(Boolean).map(norm);
 
     const results = [];
-    const allOptions = Array.from(els.codeSelect.querySelectorAll("option"))
-      .map((o) => ({ url: o.value?.trim(), label: o.textContent?.trim() }))
+    const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
+      .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
       .filter((o) => o.url);
 
-    // quando houver código explícito, restringe a busca a ele
-    let options = allOptions;
-    if (codeHits.length) {
-      const urls = labelsToUrls(codeHits);
-      if (urls.length) options = allOptions.filter((o) => urls.includes(o.url));
-    }
-
-    for (const { url, label } of options) {
+    for (const { url, label } of allOptions) {
       try {
-        const items = await parseFile(url);
+        const items = await parseFile(url, label);
         items.forEach((it) => {
-          if (it.kind !== "article") return;
-
-          // artigo específico?
-          let okArticle = true;
-          if (articleNum) {
-            const title = (it._split.titleText || "").toLowerCase();
-            okArticle = new RegExp(
-              `^\\s*art(?:\\.|igo)?\\s*${articleNum}(?:\\b|\\s*[–—-]?[a-z])`,
-              "i"
-            ).test(title);
-          }
-          if (!okArticle) return;
-
-          // AND estrito de tokens (quando houver)
-          let okTokens = true;
-          if (tokens.length) {
-            const bag = norm((it._split.oneText || "") + " " + (it._split.epigrafe || ""));
-            okTokens = tokens.every((t) => bag.includes(t));
-          }
-
-          if ((numberOnly && articleNum && okArticle) || (!numberOnly && okArticle && okTokens)) {
-            results.push({
-              id: `${url}::${it.htmlId}`,
-              source: label,
-              fileUrl: url,
-              htmlId: it.htmlId,
-              text: it._split.oneText,     // título + corpo
-              body: it.bodyOnly,           // corpo puro
-              title: it._split.titleText,  // título
-            });
-          }
+          const bag = norm(it.text);
+          const ok = tokens.every((t) => bag.includes(t));
+          if (ok) results.push(it);
         });
-      } catch {/* ignora arquivo quebrado */}
+      } catch (e) {
+        toast(`⚠️ Não carreguei: ${label}`);
+        console.warn("Falha ao buscar:", e);
+      }
     }
 
     skel.remove();
@@ -390,8 +283,8 @@ async function doSearch() {
     toast(`${results.length} resultado(s) encontrados.`);
   } finally {
     els.stack.setAttribute("aria-busy", "false");
-    els.spinner.classList.remove("show");
-    els.q.select();
+    els.spinner?.classList.remove("show");
+    els.q?.select();
   }
 }
 
@@ -414,7 +307,7 @@ function renderBlock(term, items, tokens) {
   els.stack.append(block);
 }
 
-/* ---------- renderização de cards ---------- */
+/* ---------- cards ---------- */
 function highlight(text, tokens) {
   let safe = escHTML(text || "");
   tokens.forEach((t) => {
@@ -425,11 +318,16 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
-  // 1) remove ( ... )
-  const noParens = stripParens(fullText || "");
-  // 2) limita
-  const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
-  return highlight(escHTML(truncated), tokens);
+  const base = fullText || "";
+  // corta em limite sem quebrar no meio da palavra
+  let out = base.slice(0, CARD_CHAR_LIMIT);
+  const cut = out.lastIndexOf(" ");
+  if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
+    out = out.slice(0, cut) + "…";
+  } else if (base.length > CARD_CHAR_LIMIT) {
+    out = out.trim() + "…";
+  }
+  return highlight(escHTML(out), tokens);
 }
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
@@ -461,9 +359,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       body.innerHTML = truncatedHTML(item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
-      // mostrar texto completo (sem parênteses), com “respiro”
-      const full = stripParens(addRespirations(item.text));
-      body.textContent = full;
+      body.textContent = item.text; // texto integral
       toggle.textContent = "ocultar";
     }
   });
@@ -473,7 +369,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const chk = document.createElement("button");
   chk.className = "chk";
-  chk.setAttribute("aria-label", "Selecionar artigo");
+  chk.setAttribute("aria-label", "Selecionar bloco");
   chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
@@ -483,7 +379,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
       if (ctx.context === "selected") card.remove();
     } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 artigos."); return; }
+      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
       state.selected.set(item.id, { ...item });
       toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
@@ -497,9 +393,9 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
 /* ---------- Leitor (modal) ---------- */
 async function openReader(item) {
-  els.readerTitle.textContent = item.source;
-  els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
-  els.readerBody.innerHTML = "";
+  els.readerTitle && (els.readerTitle.textContent = item.source);
+  els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
+  els.readerBody && (els.readerBody.innerHTML = "");
   showModal(els.readerModal);
 
   // skeleton
@@ -511,11 +407,43 @@ async function openReader(item) {
   }
 
   try {
-    const items = await parseFile(item.fileUrl);
+    const items = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
     items.forEach((a) => {
-      if (a.kind !== "article") return;
-      els.readerBody.appendChild(renderArticleRow(a, item.fileUrl, item.source));
+      const row = document.createElement("div");
+      row.className = "article";
+      row.id = a.htmlId;
+
+      const chk = document.createElement("button");
+      chk.className = "chk a-chk";
+      chk.setAttribute("aria-label", "Selecionar bloco");
+      chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const sync = () => { chk.dataset.checked = state.selected.has(a.id) ? "true" : "false"; };
+      sync();
+      chk.addEventListener("click", () => {
+        if (state.selected.has(a.id)) {
+          state.selected.delete(a.id);
+          toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
+        } else {
+          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
+          state.selected.set(a.id, a);
+          toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
+        }
+        els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
+        sync();
+        updateBottom();
+      });
+
+      const body = document.createElement("div");
+      const h4 = document.createElement("h4");
+      h4.textContent = `${a.title} — ${a.source}`;
+      const txt = document.createElement("div");
+      txt.className = "a-body";
+      txt.textContent = addRespirationsForDisplay(a.text); // só respiros visuais
+      body.append(h4, txt);
+
+      row.append(chk, body);
+      els.readerBody.appendChild(row);
     });
 
     const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
@@ -525,61 +453,16 @@ async function openReader(item) {
       setTimeout(() => anchor.classList.remove("highlight"), 1800);
     }
     els.readerBody.focus();
-  } catch {
-    toast("Erro ao abrir o código. Tente novamente.");
+  } catch (e) {
+    toast("Erro ao abrir o arquivo. Veja o console.");
+    console.warn(e);
     hideModal(els.readerModal);
   }
 }
-function renderArticleRow(a, fileUrl, sourceLabel) {
-  const row = document.createElement("div");
-  row.className = "article";
-  row.id = a.htmlId;
 
-  const itemRef = {
-    id: `${fileUrl}::${a.htmlId}`,
-    title: a._split.titleText || a.title,
-    source: sourceLabel,
-    text: [a._split.titleText || a.title, a._split.body || ""].filter(Boolean).join("\n"),
-    body: a._split.body || "",
-    fileUrl,
-    htmlId: a.htmlId,
-  };
-
-  const chk = document.createElement("button");
-  chk.className = "chk a-chk";
-  chk.setAttribute("aria-label", "Selecionar artigo");
-  chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const sync = () => { chk.dataset.checked = state.selected.has(itemRef.id) ? "true" : "false"; };
-  sync();
-  chk.addEventListener("click", () => {
-    if (state.selected.has(itemRef.id)) {
-      state.selected.delete(itemRef.id);
-      toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
-    } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 artigos."); return; }
-      state.selected.set(itemRef.id, itemRef);
-      toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
-    }
-    els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
-    sync();
-    updateBottom();
-  });
-
-  const body = document.createElement("div");
-  const h4 = document.createElement("h4");
-  h4.textContent = `${itemRef.title} — ${sourceLabel}`;
-  const txt = document.createElement("div");
-  txt.className = "a-body";
-  txt.textContent = addRespirations(itemRef.body || itemRef.text); // no leitor mantemos tudo (sem stripParens)
-  body.append(h4, txt);
-
-  row.append(chk, body);
-  return row;
-}
-
-/* ---------- MODAIS: helpers ---------- */
-function showModal(el) { el.hidden = false; document.body.style.overflow = "hidden"; }
-function hideModal(el) { el.hidden = true; document.body.style.overflow = ""; }
+/* ---------- MODAIS ---------- */
+function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
+function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflow = ""; } }
 
 document.addEventListener("click", (e) => {
   if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
@@ -587,27 +470,27 @@ document.addEventListener("click", (e) => {
   if (e.target.matches("[data-close-questions]")) hideModal(els.questionsModal);
   if (e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
 
-  if (e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
-  if (e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
-  if (e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
-  if (e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
+  if (els.readerModal && e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
+  if (els.studyModal && e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
+  if (els.questionsModal && e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
+  if (els.selectedModal && e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    if (!els.readerModal.hidden) hideModal(els.readerModal);
-    if (!els.studyModal.hidden) hideModal(els.studyModal);
-    if (!els.questionsModal.hidden) hideModal(els.questionsModal);
-    if (!els.selectedModal.hidden) hideModal(els.selectedModal);
+    if (els.readerModal && !els.readerModal.hidden) hideModal(els.readerModal);
+    if (els.studyModal && !els.studyModal.hidden) hideModal(els.studyModal);
+    if (els.questionsModal && !els.questionsModal.hidden) hideModal(els.questionsModal);
+    if (els.selectedModal && !els.selectedModal.hidden) hideModal(els.selectedModal);
   }
 });
 
 /* ---------- VER SELECIONADOS ---------- */
-els.viewBtn.addEventListener("click", () => {
+els.viewBtn?.addEventListener("click", () => {
   els.selectedStack.innerHTML = "";
   if (!state.selected.size) {
     const empty = document.createElement("div");
     empty.className = "block-empty";
-    empty.textContent = "Nenhum artigo selecionado.";
+    empty.textContent = "Nenhum bloco selecionado.";
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
@@ -619,7 +502,7 @@ els.viewBtn.addEventListener("click", () => {
 });
 
 /* ---------- Estudar ---------- */
-els.studyBtn.addEventListener("click", async () => {
+els.studyBtn?.addEventListener("click", async () => {
   if (!state.selected.size) return;
   state.studyIncluded = new Set([...state.selected.keys()]);
   buildMiniList(els.studyList, state.studyIncluded);
@@ -627,7 +510,7 @@ els.studyBtn.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
 });
-els.studyUpdate.addEventListener("click", async () => {
+els.studyUpdate?.addEventListener("click", async () => {
   const prompt = await buildStudyPrompt(state.studyIncluded);
   copyToClipboard(prompt);
   toast("Lista atualizada e prompt copiado.");
@@ -644,14 +527,14 @@ async function buildStudyPrompt(includedSet) {
     const it = state.selected.get(id);
     if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.body || it.text, "");
+    parts.push(it.text, ""); // texto integral
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
 }
 
 /* ---------- Criar Questões ---------- */
-els.questionsBtn.addEventListener("click", async () => {
+els.questionsBtn?.addEventListener("click", async () => {
   if (!state.selected.size) return;
   state.questionsIncluded = new Set([...state.selected.keys()]);
   buildMiniList(els.questionsList, state.questionsIncluded);
@@ -659,7 +542,7 @@ els.questionsBtn.addEventListener("click", async () => {
   const prompt = await buildQuestionsPrompt(state.questionsIncluded);
   copyToClipboard(prompt);
 });
-els.questionsUpdate.addEventListener("click", async () => {
+els.questionsUpdate?.addEventListener("click", async () => {
   const prompt = await buildQuestionsPrompt(state.questionsIncluded);
   copyToClipboard(prompt);
   toast("Lista atualizada e prompt copiado.");
@@ -679,10 +562,10 @@ async function buildQuestionsPrompt(includedSet) {
     .filter((i) => i.checked)
     .map((i) => i.value);
   const prefLines = [];
-  if (opts.includes("casos2"))        prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2"))prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))           prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas"))    prefLines.push("- Misture os entendimentos para criar pegadinhas.");
+  if (opts.includes("casos2"))         prefLines.push("- Inclua 2 Casos Concretos.");
+  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
+  if (opts.includes("vf2"))            prefLines.push("- Inclua 2 V ou F.");
+  if (opts.includes("pegadinhas"))     prefLines.push("- Misture os entendimentos para criar pegadinhas.");
   const prefs = prefLines.join("\n");
 
   const parts = [tpl.trim(), ""];
@@ -690,12 +573,12 @@ async function buildQuestionsPrompt(includedSet) {
   if (state.pendingObs) parts.push("Observação do usuário:", state.pendingObs, "");
 
   let i = 1;
-  parts.push("Artigos-base:");
+  parts.push("Blocos-base:");
   for (const id of includedSet) {
     const it = state.selected.get(id);
     if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.body || it.text, "");
+    parts.push(it.text, "");
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
@@ -723,7 +606,7 @@ function buildMiniList(container, includedSet) {
 
     const title = document.createElement("div");
     title.className = "mini-title";
-    const preview = (stripParens(it.title).slice(0, PREV_MAX) + (it.title.length > PREV_MAX ? "…" : ""));
+    const preview = (it.title.slice(0, PREV_MAX) + (it.title.length > PREV_MAX ? "…" : ""));
     title.textContent = `${preview} — ${it.source}`;
 
     li.append(chk, title);
@@ -741,9 +624,9 @@ function copyToClipboard(txt) {
 
 /* ---------- logo: reset ---------- */
 els.brand?.addEventListener("click", () => {
-  els.q.value = "";
-  els.stack.innerHTML = "";
-  els.q.focus();
+  els.q && (els.q.value = "");
+  els.stack && (els.stack.innerHTML = "");
+  els.q?.focus();
   toast("Busca reiniciada.");
 });
 
