@@ -53,7 +53,9 @@ function updateBottom(){
   els.studyBtn.disabled = n===0;
   els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
-function norm(s){return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ç/g,"c").toLowerCase();}
+function norm(s){
+  return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ç/g,"c").toLowerCase();
+}
 
 /* catálogo */
 (function(){
@@ -63,7 +65,7 @@ function norm(s){return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").
   });
 })();
 
-/* loader + parser (aproveitado) */
+/* loader + parser */
 function sanitize(s){return s.replace(/\u00A0/g," ").replace(/\t/g," ").replace(/\s+\n/g,"\n");}
 async function fetchText(url){
   if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
@@ -88,7 +90,10 @@ function parseBlock(block, idx){
   return {
     kind:"article",
     title: title || `Bloco ${idx+1}`,
+    // text completo (guardar para estudo e modal)
     text: [epigrafe?`Epígrafe: ${epigrafe}`:"", title, body].filter(Boolean).join("\n"),
+    // somente o corpo (para prévia do card — evita duplicar título)
+    bodyOnly: body,
     htmlId:`art-${idx}`,
     _split:{titleText:title, epigrafe, body}
   };
@@ -102,7 +107,7 @@ async function parseFile(url){
   return items;
 }
 
-/* busca (Enter) — adiciona bloco NOVO ACIMA */
+/* busca (Enter) — bloco NOVO ACIMA */
 els.form.addEventListener("submit", e=>{e.preventDefault(); doSearch();});
 els.q.addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); doSearch();} });
 
@@ -135,7 +140,8 @@ async function doSearch(){
               id: `${url}::${it.htmlId}`,
               title: it._split.titleText || it.title,
               source: label,
-              text: it.text,
+              text: it.text,           // completo (para expandido e estudo)
+              preview: it.bodyOnly,    // só corpo (para card colapsado)
               fileUrl: url,
               htmlId: it.htmlId
             });
@@ -153,6 +159,7 @@ async function doSearch(){
   }
 }
 
+/* render */
 function renderBlock(term, items){
   const block = document.createElement("section");
   block.className = "block";
@@ -178,19 +185,40 @@ function renderCard(item){
   card.dataset.id = item.id;
 
   const left = document.createElement("div");
-  const h3 = document.createElement("h3"); h3.textContent = `${item.title} — ${item.source}`;
-  const p  = document.createElement("div"); p.className="body"; p.textContent = item.text;
-  const src= document.createElement("a");  src.href="#"; src.className="source"; src.textContent=item.source;
 
-  [h3,p,src].forEach(el=>{ el.style.cursor="pointer"; el.addEventListener("click", ()=>openReader(item)); });
+  // Pílula da fonte no topo (clicável -> abre modal do arquivo)
+  const pill = document.createElement("a");
+  pill.href = "#"; pill.className="pill"; pill.textContent = item.source;
+  pill.addEventListener("click", (e)=>{ e.preventDefault(); openReader(item); });
 
-  left.append(h3,p,src);
+  const h3 = document.createElement("h3"); h3.textContent = item.title;
+
+  const body = document.createElement("div");
+  body.className = "body is-collapsed";
+  body.textContent = item.preview || item.text;
+
+  // Botão ver/ocultar (colapso no card)
+  const actions = document.createElement("div"); actions.className="actions";
+  const toggle = document.createElement("button"); toggle.className="toggle"; toggle.textContent="ver texto";
+  toggle.addEventListener("click", ()=>{
+    const collapsed = body.classList.toggle("is-collapsed");
+    toggle.textContent = collapsed ? "ver texto" : "ocultar";
+    // quando expandir, usar o texto COMPLETO do item
+    if (!collapsed) body.textContent = item.text;
+    else body.textContent = item.preview || item.text;
+  });
+
+  // Abrir modal também clicando no título ou no corpo
+  [h3].forEach(el=>{ el.style.cursor="pointer"; el.addEventListener("click", ()=>openReader(item)); });
+
+  left.append(pill, h3, body, actions);
+  actions.append(toggle);
 
   const chk = document.createElement("button");
   chk.className="chk";
   chk.setAttribute("aria-label","Selecionar artigo");
-  chk.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const sync=()=>{chk.dataset.checked = state.selected.has(item.id) ? "true":"false";};
+  chk.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const sync=()=>{ chk.dataset.checked = state.selected.has(item.id) ? "true":"false"; };
   sync();
   chk.addEventListener("click", ()=>{
     if(state.selected.has(item.id)){ state.selected.delete(item.id); toast(`Removido (${state.selected.size}/${MAX_SEL}).`);}
@@ -234,17 +262,19 @@ function renderArticleRow(a, fileUrl, sourceLabel){
 
   const chk=document.createElement("button");
   chk.className="chk a-chk"; chk.setAttribute("aria-label","Selecionar artigo");
-  chk.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  chk.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
   const itemRef={
     id:`${fileUrl}::${a.htmlId}`,
     title:a._split.titleText || a.title,
     source:sourceLabel,
     text:[a._split.epigrafe?`Epígrafe: ${a._split.epigrafe}`:"", a._split.titleText||a.title, a._split.body||""].filter(Boolean).join("\n"),
+    preview:a._split.body||"",
     fileUrl, htmlId:a.htmlId
   };
   const sync=()=>{ chk.dataset.checked = state.selected.has(itemRef.id) ? "true":"false"; };
   sync();
+
   chk.addEventListener("click", ()=>{
     if(state.selected.has(itemRef.id)){ state.selected.delete(itemRef.id); toast(`Removido (${state.selected.size}/${MAX_SEL}).`); }
     else{
@@ -284,6 +314,7 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 
+/* bottom-sheet VER */
 els.viewBtn.addEventListener("click", ()=> toggleSheet(true));
 function toggleSheet(on){
   if(on){
@@ -310,7 +341,7 @@ els.studyBtn.addEventListener("click", ()=>{
     ()=> toast("Copie manualmente no modal.")
   );
 });
-$("#copyPromptBtn")?.addEventListener("click", ()=>{
+els.copyPromptBtn?.addEventListener("click", ()=>{
   const txt = els.promptPreview.textContent || "";
   navigator.clipboard?.writeText(txt).then(()=> toast("✅ Copiado!"));
 });
