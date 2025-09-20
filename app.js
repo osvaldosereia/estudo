@@ -31,11 +31,13 @@ const els = {
   selectedStack: $("#selectedStack"),
 
   studyModal: $("#studyModal"),
-  promptPreview: $("#promptPreview"),
+  studyList: $("#studyList"),
+  studyUpdate: $("#studyUpdate"),
   copyPromptBtn: $("#copyPromptBtn"),
 
   questionsModal: $("#questionsModal"),
-  questionsPreview: $("#questionsPreview"),
+  questionsList: $("#questionsList"),
+  questionsUpdate: $("#questionsUpdate"),
   copyQuestionsBtn: $("#copyQuestionsBtn"),
   includeObsBtn: $("#includeObsBtn"),
   questionsObs: $("#questionsObs"),
@@ -48,15 +50,18 @@ const els = {
 /* ---------- estado global ---------- */
 const MAX_SEL = 6;
 const CARD_CHAR_LIMIT = 250;
+const PREV_MAX = 60; // preview de itens nos modais
 
 const state = {
   selected: new Map(), // id -> item
   cacheTxt: new Map(), // url -> string
   cacheParsed: new Map(), // url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null, // estudo
-  promptQTpl: null, // questões
-  pendingObs: "", // observação “Incluir”
+  promptTpl: null,     // estudo
+  promptQTpl: null,    // questões
+  pendingObs: "",      // observação “Incluir”
+  studyIncluded: new Set(),     // ids incluídos no modal Estudar
+  questionsIncluded: new Set(), // ids incluídos no modal Criar Questões
 };
 
 /* ---------- util ---------- */
@@ -83,7 +88,6 @@ function norm(s) {
     .replace(/ç/g, "c")
     .toLowerCase();
 }
-
 function escHTML(s) {
   return (s || "").replace(/[&<>"']/g, (m) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -121,7 +125,7 @@ function splitBlocks(txt) {
     .filter(Boolean);
 }
 
-/* anti-duplicação “título aparece no corpo” */
+/* anti-duplicação + ajustes de visual */
 function normCmp(s) {
   return (s || "")
     .toLowerCase()
@@ -130,6 +134,23 @@ function normCmp(s) {
     .replace(/[^\w\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+function addRespirations(body) {
+  if (!body) return "";
+  const lines = body.split(/\n+/);
+  const out = [];
+  for (const ln of lines) {
+    const trimmed = ln.trim();
+    const isInciso = /^[IVXLCDM]+\s*[-–—]/.test(trimmed);
+    const isParagrafo = /^§\s*\d+|^Par[aá]grafo\s*(?:[uú]nico|\d+)/i.test(trimmed);
+    const isAlinea = /^[a-z]\)\s+/.test(trimmed);
+    if ((isInciso || isParagrafo || isAlinea) && out.length) out.push(""); // linha em branco
+    out.push(trimmed);
+  }
+  return out.join("\n");
+}
+function stripParens(s) {
+  return (s || "").replace(/\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
 }
 function dedupeBody(title, body) {
   if (!body) return "";
@@ -142,6 +163,7 @@ function dedupeBody(title, body) {
   const esc = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const rx = new RegExp("^\\s*" + esc + "\\s*\\n?", "i");
   cleaned = cleaned.replace(rx, "").trim();
+  cleaned = addRespirations(cleaned);
   return cleaned;
 }
 
@@ -194,18 +216,17 @@ async function loadPromptTemplate() {
   }
   return state.promptTpl;
 }
-
-/* >>> SOMENTE este caminho para “Criar Questões” <<< */
+/* somente este caminho para “Criar Questões” */
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompt/prompt_questoes.txt";
+  const PATH = "data/prompts/prompt_questoes.txt";
   try {
     const r = await fetch(PATH, { cache: "no-cache" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    if (!r.ok) throw new Error();
     state.promptQTpl = (await r.text()).trim();
   } catch {
-    state.promptQTpl = ""; // sem fallback, por pedido
-    toast("Não encontrei data/prompt/prompt_questoes.txt");
+    state.promptQTpl = "";
+    toast("Não encontrei data/prompts/prompt_questoes.txt");
   }
   return state.promptQTpl;
 }
@@ -224,7 +245,6 @@ const CODE_ALIASES = {
   lai: ["Lei de Acesso à Informação"], "lei de acesso a informacao": ["Lei de Acesso à Informação"], "lei de acesso à informação": ["Lei de Acesso à Informação"],
   lms: ["Mandado de Segurança"], "mandado de seguranca": ["Mandado de Segurança"], "mandado de segurança": ["Mandado de Segurança"],
 };
-
 function labelsToUrls(labels) {
   const opts = Array.from(els.codeSelect.querySelectorAll("option")).map((o) => ({
     label: o.textContent.trim(),
@@ -324,7 +344,7 @@ async function doSearch() {
           }
           if (!okArticle) return;
 
-          // AND estrito entre tokens
+          // AND estrito
           let okTokens = true;
           if (tokens.length) {
             const bag = norm((it._split.oneText || "") + " " + (it._split.epigrafe || ""));
@@ -348,6 +368,7 @@ async function doSearch() {
 
     skel.remove();
     renderBlock(term, results, tokens);
+    toast(`${results.length} resultado(s) encontrados.`);
   } finally {
     els.stack.setAttribute("aria-busy", "false");
     els.spinner.classList.remove("show");
@@ -385,9 +406,11 @@ function highlight(text, tokens) {
   return safe;
 }
 function truncatedHTML(fullText, tokens) {
-  const raw = fullText || "";
-  const truncated = raw.length > CARD_CHAR_LIMIT ? raw.slice(0, CARD_CHAR_LIMIT).trim() + "…" : raw;
-  return highlight(truncated, tokens);
+  // 1) remove parênteses
+  const noParens = stripParens(fullText || "");
+  // 2) limita
+  const truncated = noParens.length > CARD_CHAR_LIMIT ? noParens.slice(0, CARD_CHAR_LIMIT).trim() + "…" : noParens;
+  return highlight(escHTML(truncated), tokens);
 }
 
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
@@ -416,8 +439,15 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   toggle.textContent = "ver texto";
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
-    toggle.textContent = collapsed ? "ver texto" : "ocultar";
-    body.innerHTML = collapsed ? truncatedHTML(item.text, tokens) : highlight(item.text, tokens);
+    if (collapsed) {
+      body.innerHTML = truncatedHTML(item.text, tokens);
+      toggle.textContent = "ver texto";
+    } else {
+      // mostrar texto completo sem parênteses e com “respiros”
+      const full = stripParens(addRespirations(item.text));
+      body.textContent = full;
+      toggle.textContent = "ocultar";
+    }
   });
 
   left.append(pill, body, actions);
@@ -434,7 +464,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     if (state.selected.has(item.id)) {
       state.selected.delete(item.id);
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
-      // se estiver no modal Selecionados, removemos o card da UI
       if (ctx.context === "selected") card.remove();
     } else {
       if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 artigos."); return; }
@@ -472,7 +501,6 @@ async function openReader(item) {
       els.readerBody.appendChild(renderArticleRow(a, item.fileUrl, item.source));
     });
 
-    // rolar para o artigo ancorado
     const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
     if (anchor) {
       anchor.scrollIntoView({ block: "center", behavior: "instant" });
@@ -481,7 +509,7 @@ async function openReader(item) {
     }
     els.readerBody.focus();
   } catch {
-    toast("Não consegui abrir este código. Tente novamente.");
+    toast("Erro ao abrir o código. Tente novamente.");
     hideModal(els.readerModal);
   }
 }
@@ -526,7 +554,7 @@ function renderArticleRow(a, fileUrl, sourceLabel) {
   h4.textContent = `${itemRef.title} — ${sourceLabel}`;
   const txt = document.createElement("div");
   txt.className = "a-body";
-  txt.textContent = itemRef.body || itemRef.text; // (no modal: só corpo)
+  txt.textContent = stripParens(addRespirations(itemRef.body || itemRef.text));
   body.append(h4, txt);
 
   row.append(chk, body);
@@ -566,7 +594,6 @@ els.viewBtn.addEventListener("click", () => {
     empty.textContent = "Nenhum artigo selecionado.";
     els.selectedStack.appendChild(empty);
   } else {
-    // renderizar cada selecionado como card idêntico aos resultados
     for (const it of state.selected.values()) {
       const card = renderCard(it, [], { context: "selected" });
       els.selectedStack.appendChild(card);
@@ -575,59 +602,67 @@ els.viewBtn.addEventListener("click", () => {
   showModal(els.selectedModal);
 });
 
-/* ---------- ESTUDAR ---------- */
+/* ---------- Estudar: lista e prompt ---------- */
 els.studyBtn.addEventListener("click", async () => {
   if (!state.selected.size) return;
-  const prompt = await buildStudyPrompt();
-  openStudyModal(prompt);
-  navigator.clipboard?.writeText(prompt).then(
-    () => toast("✅ Prompt copiado. Cole na sua IA preferida."),
-    () => toast("Copie manualmente no modal.")
-  );
-});
-els.copyPromptBtn?.addEventListener("click", () => {
-  const txt = els.promptPreview.textContent || "";
-  navigator.clipboard?.writeText(txt).then(() => toast("✅ Copiado!"));
+  // por padrão: incluir todos
+  state.studyIncluded = new Set([...state.selected.keys()]);
+  buildMiniList(els.studyList, state.studyIncluded);
+  showModal(els.studyModal);
+  // copia já ao abrir (com todos os selecionados)
+  const prompt = await buildStudyPrompt(state.studyIncluded);
+  copyToClipboard(prompt);
 });
 
-async function buildStudyPrompt() {
+els.studyUpdate.addEventListener("click", async () => {
+  const prompt = await buildStudyPrompt(state.studyIncluded);
+  copyToClipboard(prompt);
+  toast("Lista atualizada e prompt copiado.");
+});
+
+els.copyPromptBtn?.addEventListener("click", async () => {
+  const prompt = await buildStudyPrompt(state.studyIncluded);
+  copyToClipboard(prompt);
+});
+
+async function buildStudyPrompt(includedSet) {
   const tpl = await loadPromptTemplate();
   const parts = [tpl.trim(), ""];
   let i = 1;
-  for (const it of state.selected.values()) {
+  for (const id of includedSet) {
+    const it = state.selected.get(id);
+    if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
     parts.push(it.body || it.text, "");
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
 }
-function openStudyModal(prompt) {
-  els.promptPreview.textContent = prompt;
-  showModal(els.studyModal);
-}
 
-/* ---------- CRIAR QUESTÕES ---------- */
+/* ---------- Criar Questões: lista, prefs e prompt ---------- */
 els.questionsBtn.addEventListener("click", async () => {
   if (!state.selected.size) return;
-  const prompt = await buildQuestionsPrompt();
-  els.questionsPreview.textContent = prompt;
+  state.questionsIncluded = new Set([...state.selected.keys()]);
+  buildMiniList(els.questionsList, state.questionsIncluded);
   showModal(els.questionsModal);
-  navigator.clipboard?.writeText(prompt).then(
-    () => toast("✅ Prompt copiado. Cole na sua IA preferida."),
-    () => toast("Copie manualmente no modal.")
-  );
+  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
+  copyToClipboard(prompt);
 });
-els.copyQuestionsBtn?.addEventListener("click", () => {
-  const txt = els.questionsPreview.textContent || "";
-  navigator.clipboard?.writeText(txt).then(() => toast("✅ Copiado!"));
+els.questionsUpdate.addEventListener("click", async () => {
+  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
+  copyToClipboard(prompt);
+  toast("Lista atualizada e prompt copiado.");
 });
-els.includeObsBtn?.addEventListener("click", async () => {
+els.copyQuestionsBtn?.addEventListener("click", async () => {
+  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
+  copyToClipboard(prompt);
+});
+els.includeObsBtn?.addEventListener("click", () => {
   state.pendingObs = (els.questionsObs.value || "").trim();
-  els.questionsPreview.textContent = await buildQuestionsPrompt(); // refresh preview
-  toast("Observação incluída no prompt.");
+  toast("Observação incluída.");
 });
 
-async function buildQuestionsPrompt() {
+async function buildQuestionsPrompt(includedSet) {
   const tpl = await loadQuestionsTemplate();
 
   // Preferências (checkboxes)
@@ -647,12 +682,52 @@ async function buildQuestionsPrompt() {
 
   let i = 1;
   parts.push("Artigos-base:");
-  for (const it of state.selected.values()) {
+  for (const id of includedSet) {
+    const it = state.selected.get(id);
+    if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
     parts.push(it.body || it.text, "");
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
+}
+
+/* ---------- mini-lists (nos modais) ---------- */
+function buildMiniList(container, includedSet) {
+  container.innerHTML = "";
+  const items = [...state.selected.values()];
+  items.forEach((it) => {
+    const li = document.createElement("li");
+    li.className = "mini-item";
+
+    const chk = document.createElement("button");
+    chk.className = "chk";
+    chk.setAttribute("aria-label", "Incluir/excluir do prompt");
+    chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const sync = () => { chk.dataset.checked = includedSet.has(it.id) ? "true" : "false"; };
+    sync();
+    chk.addEventListener("click", () => {
+      if (includedSet.has(it.id)) includedSet.delete(it.id);
+      else includedSet.add(it.id);
+      sync();
+    });
+
+    const title = document.createElement("div");
+    title.className = "mini-title";
+    const preview = (stripParens(it.title).slice(0, PREV_MAX) + (it.title.length > PREV_MAX ? "…" : ""));
+    title.textContent = `${preview} — ${it.source}`;
+
+    li.append(chk, title);
+    container.appendChild(li);
+  });
+}
+
+/* ---------- copiar com toast unificado ---------- */
+function copyToClipboard(txt) {
+  navigator.clipboard?.writeText(txt).then(
+    () => toast("✅ Prompt copiado. Cole na sua I.A. preferida."),
+    () => toast("Copie manualmente na sua I.A.")
+  );
 }
 
 /* ---------- LOGO: resetar busca ---------- */
