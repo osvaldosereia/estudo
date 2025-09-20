@@ -26,7 +26,7 @@
     </div>
   </header>
 
-  <!-- seletor oculto: mapeia os .txt existentes -->
+  <!-- Catálogo oculto: mapeia os .txt do /data -->
   <select id="codeSelect" hidden>
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -55,14 +55,14 @@
     </optgroup>
   </select>
 
-  <!-- PILHA DE RESULTADOS (entradas novas vão para CIMA) -->
+  <!-- PILHA DE RESULTADOS (novas buscas sobem para o topo) -->
   <main class="content">
     <div class="wrap">
       <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
     </div>
   </main>
 
-  <!-- BARRA INFERIOR dentro do mesmo wrap (fica alinhada ao conteúdo) -->
+  <!-- BARRA INFERIOR (dentro do wrap) -->
   <footer class="bottombar" role="contentinfo">
     <div class="wrap bar-inner">
       <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>ESTUDAR</button>
@@ -70,7 +70,7 @@
     </div>
   </footer>
 
-  <!-- BOTTOM-SHEET: VER -->
+  <!-- BOTTOM-SHEET: VER SELECIONADOS -->
   <div id="selectedSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
     <div class="sheet-card">
       <div class="sheet-head">
@@ -82,7 +82,7 @@
     <div class="sheet-backdrop" data-close-sheet></div>
   </div>
 
-  <!-- MODAL LEITOR -->
+  <!-- MODAL LEITOR (central) -->
   <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
     <div class="modal-card" role="document">
       <div class="modal-head">
@@ -95,7 +95,7 @@
     <div class="modal-backdrop" data-close-modal></div>
   </div>
 
-  <!-- MODAL ESTUDAR — agora no mesmo padrão dos outros -->
+  <!-- MODAL ESTUDAR (central, mesmo padrão) -->
   <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
     <div class="modal-card" role="document">
       <div class="modal-head">
