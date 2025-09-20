@@ -20,8 +20,8 @@ const els = {
 
   studyBtn: $("#studyBtn"),
   viewBtn: $("#viewBtn"),
-  sheet: $("#selectedSheet"),
-  selList: $("#selectedList"),
+  selectedModal: $("#selectedModal"),
+  selectedList: $("#selectedList"),
 
   studyModal: $("#studyModal"),
   promptPreview: $("#promptPreview"),
@@ -90,10 +90,8 @@ function parseBlock(block, idx){
   return {
     kind:"article",
     title: title || `Bloco ${idx+1}`,
-    // text completo (guardar para estudo e modal)
     text: [epigrafe?`Epígrafe: ${epigrafe}`:"", title, body].filter(Boolean).join("\n"),
-    // somente o corpo (para prévia do card — evita duplicar título)
-    bodyOnly: body,
+    bodyOnly: body,                       // <- só o corpo (útil pros cards)
     htmlId:`art-${idx}`,
     _split:{titleText:title, epigrafe, body}
   };
@@ -107,7 +105,7 @@ async function parseFile(url){
   return items;
 }
 
-/* busca (Enter) — bloco NOVO ACIMA */
+/* busca */
 els.form.addEventListener("submit", e=>{e.preventDefault(); doSearch();});
 els.q.addEventListener("keydown", e=>{ if(e.key==="Enter"){e.preventDefault(); doSearch();} });
 
@@ -140,8 +138,8 @@ async function doSearch(){
               id: `${url}::${it.htmlId}`,
               title: it._split.titleText || it.title,
               source: label,
-              text: it.text,           // completo (para expandido e estudo)
-              preview: it.bodyOnly,    // só corpo (para card colapsado)
+              text: it.text,
+              preview: it.bodyOnly,
               fileUrl: url,
               htmlId: it.htmlId
             });
@@ -159,7 +157,6 @@ async function doSearch(){
   }
 }
 
-/* render */
 function renderBlock(term, items){
   const block = document.createElement("section");
   block.className = "block";
@@ -186,7 +183,6 @@ function renderCard(item){
 
   const left = document.createElement("div");
 
-  // Pílula da fonte no topo (clicável -> abre modal do arquivo)
   const pill = document.createElement("a");
   pill.href = "#"; pill.className="pill"; pill.textContent = item.source;
   pill.addEventListener("click", (e)=>{ e.preventDefault(); openReader(item); });
@@ -197,18 +193,14 @@ function renderCard(item){
   body.className = "body is-collapsed";
   body.textContent = item.preview || item.text;
 
-  // Botão ver/ocultar (colapso no card)
   const actions = document.createElement("div"); actions.className="actions";
   const toggle = document.createElement("button"); toggle.className="toggle"; toggle.textContent="ver texto";
   toggle.addEventListener("click", ()=>{
     const collapsed = body.classList.toggle("is-collapsed");
     toggle.textContent = collapsed ? "ver texto" : "ocultar";
-    // quando expandir, usar o texto COMPLETO do item
-    if (!collapsed) body.textContent = item.text;
-    else body.textContent = item.preview || item.text;
+    body.textContent = collapsed ? (item.preview || item.text) : item.text;
   });
 
-  // Abrir modal também clicando no título ou no corpo
   [h3].forEach(el=>{ el.style.cursor="pointer"; el.addEventListener("click", ()=>openReader(item)); });
 
   left.append(pill, h3, body, actions);
@@ -233,13 +225,14 @@ function renderCard(item){
   return card;
 }
 
-/* modal leitor */
+/* MODAL LEITOR */
 async function openReader(item){
   els.readerTitle.textContent = item.source;
   els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
   els.readerBody.innerHTML = "";
   showModal(els.readerModal);
 
+  // skeleton
   for(let i=0;i<3;i++){ const s=document.createElement("div"); s.className="skel block"; s.style.margin="10px 0"; els.readerBody.appendChild(s); }
 
   try{
@@ -249,8 +242,14 @@ async function openReader(item){
       if(a.kind!=="article") return;
       els.readerBody.appendChild(renderArticleRow(a, item.fileUrl, item.source));
     });
+
+    // âncora -> centro + highlight
     const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
-    if(anchor) anchor.scrollIntoView({block:"start",behavior:"smooth"});
+    if(anchor){
+      anchor.scrollIntoView({block:"center", behavior:"instant"});
+      anchor.classList.add("highlight");
+      setTimeout(()=> anchor.classList.remove("highlight"), 1800);
+    }
     els.readerBody.focus();
   }catch{
     toast("Não consegui abrir este código. Tente novamente.");
@@ -293,45 +292,48 @@ function renderArticleRow(a, fileUrl, sourceLabel){
   return row;
 }
 
-/* modais e sheet */
+/* MODAIS: abrir/fechar */
 function showModal(el){ el.hidden=false; document.body.style.overflow="hidden"; }
 function hideModal(el){ el.hidden=true; document.body.style.overflow=""; }
 
 document.addEventListener("click",(e)=>{
   if(e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
   if(e.target.matches("[data-close-study]")) hideModal(els.studyModal);
-  if(e.target.matches("[data-close-sheet]")) toggleSheet(false);
+  if(e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
 
   if(e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
   if(e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
-  if(e.target === els.sheet.querySelector(".sheet-backdrop")) toggleSheet(false);
+  if(e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
 });
 document.addEventListener("keydown",(e)=>{
   if(e.key==="Escape"){
     if(!els.readerModal.hidden) hideModal(els.readerModal);
     if(!els.studyModal.hidden) hideModal(els.studyModal);
-    if(!els.sheet.hidden) toggleSheet(false);
+    if(!els.selectedModal.hidden) hideModal(els.selectedModal);
   }
 });
 
-/* bottom-sheet VER */
-els.viewBtn.addEventListener("click", ()=> toggleSheet(true));
-function toggleSheet(on){
-  if(on){
-    els.selList.innerHTML="";
-    for(const [id,it] of state.selected.entries()){
-      const li=document.createElement("li");
-      li.innerHTML=`<span>${it.title} — <em>${it.source}</em></span>`;
-      const del=document.createElement("button"); del.className="icon-btn"; del.textContent="✕";
-      del.addEventListener("click", ()=>{ state.selected.delete(id); li.remove(); updateBottom(); toast(`Removido (${state.selected.size}/${MAX_SEL}).`); });
-      li.appendChild(del);
-      els.selList.appendChild(li);
-    }
+/* VER SELECIONADOS (modal central) */
+els.viewBtn.addEventListener("click", ()=>{
+  els.selectedList.innerHTML = "";
+  for (const [id, it] of state.selected.entries()){
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${it.title} — <em>${it.source}</em></span>`;
+    const del = document.createElement("button");
+    del.className = "icon-btn"; del.textContent = "✕";
+    del.addEventListener("click", ()=>{
+      state.selected.delete(id);
+      li.remove();
+      updateBottom();
+      toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
+    });
+    li.appendChild(del);
+    els.selectedList.appendChild(li);
   }
-  els.sheet.hidden=!on;
-}
+  showModal(els.selectedModal);
+});
 
-/* estudar */
+/* ESTUDAR */
 els.studyBtn.addEventListener("click", ()=>{
   if(!state.selected.size) return;
   const prompt = buildPrompt();
