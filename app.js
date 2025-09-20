@@ -42,7 +42,7 @@ const els = {
   promptPreview: document.getElementById("promptPreview"),
   copyPromptBtn: document.getElementById("copyPromptBtn"),
 
-  // Modais novos
+  // Modais
   filesModal: document.getElementById("filesModal"),
   closeFiles: document.getElementById("closeFiles"),
   filesSearch: document.getElementById("filesSearch"),
@@ -387,7 +387,7 @@ function buildArticleElement(a){
 }
 function clearArticles(){ els.articles.innerHTML=""; state.currentArticleIdx=-1; }
 
-/* =================== Outline (in-view) — com listener de scroll =================== */
+/* =================== Outline (in-view) — robusto =================== */
 let _scrollRAF = null;
 function updateCurrentOutline() {
   const nodes = Array.from(document.querySelectorAll("article[data-idx]"));
@@ -489,7 +489,7 @@ function renderListItems(list){
 
   if (!list.items.length){
     els.articles.innerHTML='<div style="padding:24px; color:#6c7282; text-align:center;">📂 Lista vazia.</div>';
-    updateActionMenuForMode(); // atualiza menu
+    updateActionMenuForMode();
     return;
   }
   const frag = document.createDocumentFragment(); let idx=0;
@@ -509,7 +509,7 @@ function renderListItems(list){
   els.articles.appendChild(frag);
   window.scrollTo({top:0, behavior:"instant"});
   updateCurrentOutline();
-  updateActionMenuForMode(); // muda botões
+  updateActionMenuForMode();
 }
 
 /* =================== Loader =================== */
@@ -550,7 +550,7 @@ async function loadFile(url, triggerBtn){
       store.saveLast({ mode:"file", fileUrl:url, scrollY:0, articleId:null });
       rebuildSuggestionsIndex();
       closeFilesModal();
-      updateActionMenuForMode(); // muda botões
+      updateActionMenuForMode();
     } catch(err){
       console.error(err);
       els.articles.innerHTML=`<div style="padding:24px; color:#a33; border:1px dashed #e7bcbc; border-radius:12px">
@@ -564,7 +564,7 @@ async function loadFile(url, triggerBtn){
 
 /* =================== Busca + Sugestões =================== */
 let suggestActiveIndex = -1;
-let suggestionsData = []; // {id, title, htmlId}
+let suggestionsData = [];
 function rebuildSuggestionsIndex(){
   suggestionsData = state.articles.map(a=>{
     const t   = a._split?.titleText || a.title || "";
@@ -777,18 +777,16 @@ function renderSaveLists(){
 }
 
 /* =================== Ações / FAB =================== */
-let studyAllBtn = null; // criado sob demanda
+let studyAllBtn = null;
 function updateActionPreview(){
   const node = document.querySelector("article.in-view");
   const title = node?.querySelector(".art-title")?.textContent?.trim() || "—";
   els.actionContext.textContent = title;
 }
 function updateActionMenuForMode(){
-  // Mostra/oculta “Salvar em lista” e injeta “Estudar todos” quando estiver em listas
   const isLists = state.mode === "lists";
   if (els.saveToListBtn) els.saveToListBtn.style.display = isLists ? "none" : "block";
 
-  // se for lista, cria (se ainda não existir) o botão "Estudar todos"
   if (isLists){
     if (!studyAllBtn){
       studyAllBtn = document.createElement("button");
@@ -803,7 +801,6 @@ function updateActionMenuForMode(){
     if (studyAllBtn) studyAllBtn.style.display = "none";
   }
 
-  // ajusta label do botão "study" para “Estudar” (sempre)
   const btnStudy = els.actionMenu.querySelector('.menu-btn[data-action="study"]');
   if (btnStudy) btnStudy.textContent = "📖 Estudar";
 }
@@ -827,7 +824,6 @@ ${supra}${body}
 }
 function buildStudyPromptForList(list){
   const parts = list.items.map((entry, idx)=>{
-    // tenta extrair título/epi/corpo simples
     const [maybeEpiAndTitle, ...rest] = (entry.text||"").split("\n");
     const title = (maybeEpiAndTitle||"Artigo").includes("Epígrafe:")
       ? (rest[0] || "Artigo")
