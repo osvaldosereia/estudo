@@ -98,8 +98,12 @@
         <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <p class="muted">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
-        <pre id="promptPreview" class="prompt-box"></pre>
+        <p class="muted">Com esse prompt você vai estudar sobre:</p>
+        <ul id="studyList" class="mini-list"></ul>
+        <div class="mini-actions">
+          <button id="studyUpdate" class="btn soft">Atualizar lista</button>
+        </div>
+        <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
         <div class="ia-grid">
           <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
           <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
@@ -107,7 +111,7 @@
           <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
         <div class="copy-prompt">
-          <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
+          <button class="btn soft" id="copyPromptBtn">Usar outra I.A.</button>
         </div>
       </div>
       <div class="modal-foot">
@@ -139,8 +143,13 @@
           <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
         </div>
 
-        <p class="muted">Prompt gerado automaticamente. Você pode copiar e colar na IA preferida.</p>
-        <pre id="questionsPreview" class="prompt-box"></pre>
+        <p class="muted">Com esse prompt você vai gerar questões sobre:</p>
+        <ul id="questionsList" class="mini-list"></ul>
+        <div class="mini-actions">
+          <button id="questionsUpdate" class="btn soft">Atualizar lista</button>
+        </div>
+
+        <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
         <div class="ia-grid">
           <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
           <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
@@ -148,7 +157,7 @@
           <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
         <div class="copy-prompt">
-          <button class="btn soft" id="copyQuestionsBtn">Copiar prompt</button>
+          <button class="btn soft" id="copyQuestionsBtn">Usar outra I.A.</button>
         </div>
       </div>
       <div class="modal-foot">
