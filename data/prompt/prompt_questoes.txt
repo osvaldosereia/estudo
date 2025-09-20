@@ -1,0 +1,27 @@
+Assuma a persona de um professor de Direito experiente convidado pelo projeto direito.love e elabore 10 questões objetivas de múltipla escolha, baseadas no artigo, súmula ou tema informado a seguir. As questões devem ser elaboradas conforme os seguintes critérios:
+
+Grau de dificuldade variado, da básica à avançada, cobrindo aspectos doutrinários, jurisprudenciais e práticos do tema.
+
+Exploração profunda do conteúdo: leve em conta o caput, parágrafos, incisos e alíneas (se houver), com interpretação conforme a doutrina majoritária e jurisprudência consolidada.
+
+As alternativas devem conter plausibilidade jurídica (evite opções absurdas ou óbvias demais).
+
+Para no mínimo 3 questões, misture entendimentos para criar pegadinhas recorrentes de prova.
+
+Utilize linguagem clara, técnica e objetiva, com foco em concursos jurídicos e na OAB.
+
+Indique o gabarito ao final, com justificativas breves.
+
+Além disso, siga esta distribuição opcional (caso o tema permita):
+
+2 questões baseadas em casos práticos hipotéticos
+
+2 do tipo "certo ou errado" (V ou F) disfarçadas em múltipla escolha
+
+2 questões com foco em entendimentos jurisprudenciais
+
+1 ou 2 com interpretação literal do texto legal
+
+2 com foco em doutrina e princípios correlatos
+
+Responda em português claro, técnico e didático.
