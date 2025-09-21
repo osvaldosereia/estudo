@@ -12,53 +12,58 @@ if ("serviceWorker" in navigator) {
 /* ---------- helpers DOM ---------- */
 const $ = (s) => document.querySelector(s);
 const els = {
-  // busca / resultados
+  // topo / busca
+  brandBtn: $("#brandBtn"),
   form: $("#searchForm"),
   q: $("#searchInput"),
   spinner: $("#searchSpinner"),
   stack: $("#resultsStack"),
   codeSelect: $("#codeSelect"),
   toasts: $("#toasts"),
-  brand: $("#brand"),
 
-  // leitor (modal)
+  // leitor
   readerModal: $("#readerModal"),
   readerTitle: $("#readerTitle"),
   readerBody: $("#readerBody"),
   selCount: $("#selCount"),
 
-  // “ver selecionados”
+  // selecionados
   viewBtn: $("#viewBtn"),
   selectedModal: $("#selectedModal"),
   selectedStack: $("#selectedStack"),
 
-  // estudar / questões (se existirem na página)
+  // estudar / questões (se presentes)
   studyBtn: $("#studyBtn"),
   studyModal: $("#studyModal"),
   studyList: $("#studyList"),
   questionsBtn: $("#questionsBtn"),
   questionsModal: $("#questionsModal"),
+  questionsList: $("#questionsList"),
 };
 
 const MAX_SEL = 6;
-const CARD_CHAR_LIMIT = 200; // preview em cards
-const PREV_MAX_LINES = 6;
+const CARD_CHAR_LIMIT = 200;
 
 /* ---------- estado ---------- */
 const state = {
   selected: new Map(),     // id -> item
   cacheTxt: new Map(),     // url -> string
   cacheParsed: new Map(),  // url -> items[]
-  urlToLabel: new Map(),
 };
 
-/* ---------- util ---------- */
+/* ---------- UI util ---------- */
 function toast(msg) {
+  if (!els.toasts) return;
   const el = document.createElement("div");
   el.className = "toast";
   el.textContent = msg;
-  els.toasts?.appendChild(el);
+  els.toasts.appendChild(el);
   setTimeout(() => el.remove(), 2400);
+}
+
+function setBusy(flag) {
+  els.spinner?.classList.toggle("show", !!flag);
+  $("[aria-live='polite']")?.setAttribute("aria-busy", flag ? "true" : "false");
 }
 
 function updateBottom() {
@@ -69,11 +74,12 @@ function updateBottom() {
   els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
 }
 
-/** Normaliza acentos e pontuação básica */
+/* ---------- Normalização / Parser ---------- */
+/** Remove acentos e normaliza espaços/aspas */
 function baseNorm(s) {
   return (s || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[“”"']/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -84,7 +90,7 @@ function normalizeThousands(s) {
   return s.replace(/(?<=^|\D)(\d{1,3}(?:\.\d{3})+)(?=\D|$)/g, (m) => m.replace(/\./g, ""));
 }
 
-/** Normalização para indexação / busca */
+/** Normalização para indexação/busca (minúsculas, sem pontuação) */
 function norm(s) {
   return normalizeThousands(
     baseNorm(String(s))
@@ -93,9 +99,9 @@ function norm(s) {
   );
 }
 
-/** Tokenização conforme regras:
- * - palavras com 3+ letras
- * - números com 1 a 4 dígitos
+/** Tokenização:
+ * - Palavras com 3+ letras
+ * - Números com 1–4 dígitos (cada número individualmente)
  */
 function tokenize(query) {
   const q = norm(query);
@@ -108,66 +114,45 @@ function tokenize(query) {
       tokens.push(w);
     }
   }
-  return Array.from(new Set(tokens)); // únicos p/ buscar
+  // Únicos para busca; grifamos todas as ocorrências depois
+  return Array.from(new Set(tokens));
 }
 
-/** Realça TODAS as ocorrências dos tokens dentro de um texto (case/acentos-insensitive) */
-function highlightAll(htmlText, tokens) {
-  if (!tokens?.length) return htmlText;
+/** Grifa TODAS as ocorrências de TODOS os tokens (repetidas inclusive) */
+function highlightAll(plainText, tokens) {
+  if (!tokens?.length) return plainText;
 
-  // cria um regex global que respeita números e palavras
   const parts = tokens
-    .map((t) =>
-      t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape
-    )
+    .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .filter(Boolean);
 
-  if (!parts.length) return htmlText;
+  if (!parts.length) return plainText;
 
-  // flag u para unicode, i para case-insensitive, g para global
+  // global + unicode + case-insensitive
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
 
-  // Para comparação sem acento, vamos substituir via função que compara normalizado
-  // Estratégia: percorre o texto plain e reconstrói com tags.
-  const text = htmlText;
   let out = "";
   let last = 0;
-
-  // Precisamos trabalhar sobre versão sem HTML. Como o corpo que passamos aqui é plain (inserimos via textContent e depois transformamos), fica ok.
-  // Se vier com <br>, vamos comparar sobre o texto “visível”.
-  const plain = text;
-
   let m;
-  while ((m = rx.exec(plain)) !== null) {
+  while ((m = rx.exec(plainText)) !== null) {
     const start = m.index;
     const end = rx.lastIndex;
-    out += plain.slice(last, start);
-    out += `<mark class="hl">${plain.slice(start, end)}</mark>`;
+    out += plainText.slice(last, start);
+    out += `<mark class="hl">${plainText.slice(start, end)}</mark>`;
     last = end;
   }
-  out += plain.slice(last);
+  out += plainText.slice(last);
   return out;
 }
 
-/** Sanitiza texto bruto */
+/** Sanitiza quebras e espaços */
 function sanitize(txt) {
   return (txt || "")
     .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+\n/g, "\n");
+  ;
 }
 
-/** Busca texto de arquivo com cache */
-async function fetchText(url) {
-  const u = encodeURI(url);
-  if (state.cacheTxt.has(u)) return state.cacheTxt.get(u);
-  const r = await fetch(u, { cache: "no-cache" });
-  if (!r.ok) throw new Error(`fetch-fail ${r.status} ${u}`);
-  const t = sanitize(await r.text());
-  state.cacheTxt.set(u, t);
-  return t;
-}
-
-/** Split: linhas com 5+ hifens (-----) separam blocos */
+/** Divide por linhas com 5+ hifens (-----) */
 function splitBlocks(txt) {
   return sanitize(txt)
     .split(/^\s*-{5,}\s*$/m)
@@ -175,32 +160,37 @@ function splitBlocks(txt) {
     .filter(Boolean);
 }
 
-/** Parser:
- * título = 1ª linha não vazia
- * body   = restante (preservado)
- * text   = título + "\n" + body (para index)
+/** Monta item:
+ *  title = primeira linha não vazia
+ *  body  = restante SEM título
+ *  text  = title + "\n" + body (para index/busca)
  */
-function parseBlock(block, idx, fileUrl, sourceLabel) {
+function parseBlock(block, idx, fileUrl, label) {
   const lines = block.split("\n");
   const firstIdx = lines.findIndex((l) => l.trim().length > 0);
   const title = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
   const body = lines.slice(firstIdx + 1).join("\n").trim();
   const text = body ? `${title}\n${body}` : title;
-
-  // id estável: url#idx
-  const id = `${fileUrl}#${idx}`;
-
   return {
-    id,
+    id: `${fileUrl}#${idx}`,
     title,
-    body,     // SEM título
-    text,     // título + corpo (para busca)
-    source: sourceLabel || fileUrl,
+    body,   // SEM título
+    text,   // título + corpo (indexação)
+    source: label || fileUrl,
     fileUrl,
   };
 }
 
-/** Parse de um arquivo completo */
+async function fetchText(url) {
+  const u = encodeURI(url);
+  if (state.cacheTxt.has(u)) return state.cacheTxt.get(u);
+  const r = await fetch(u, { cache: "no-cache" });
+  if (!r.ok) throw new Error(`Falha ao carregar ${u}: ${r.status}`);
+  const t = sanitize(await r.text());
+  state.cacheTxt.set(u, t);
+  return t;
+}
+
 async function parseFile(url, label) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
@@ -210,15 +200,15 @@ async function parseFile(url, label) {
   return items;
 }
 
-/* ---------- busca ---------- */
+/* ---------- Busca ---------- */
 async function search(term) {
   els.stack.innerHTML = "";
+  const tokens = tokenize(term);
+
   if (!term || !term.trim()) {
     toast("Digite um termo.");
     return;
   }
-
-  const tokens = tokenize(term);
   if (!tokens.length) {
     toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
     return;
@@ -228,9 +218,9 @@ async function search(term) {
   const sk = document.createElement("div");
   sk.className = "skel";
   els.stack.appendChild(sk);
-  els.spinner?.classList.add("show");
+  setBusy(true);
 
-  // opções (todos os arquivos do select)
+  // todos os arquivos do select
   const options = Array.from(els.codeSelect?.querySelectorAll("option") || [])
     .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
     .filter((o) => o.url);
@@ -241,17 +231,16 @@ async function search(term) {
       const items = await parseFile(url, label);
       for (const it of items) {
         const bag = norm(it.text);
-        // todos os tokens precisam aparecer
         const ok = tokens.every((t) => bag.includes(t));
         if (ok) results.push(it);
       }
-    } catch (err) {
-      console.warn("Falha ao carregar:", url, err);
+    } catch (e) {
+      console.warn("Erro ao ler", url, e);
       toast(`Falha ao carregar: ${label}`);
     }
   }
 
-  els.spinner?.classList.remove("show");
+  setBusy(false);
   sk.remove();
 
   if (!results.length) {
@@ -262,7 +251,6 @@ async function search(term) {
     return;
   }
 
-  // render
   const frag = document.createDocumentFragment();
   for (const it of results) {
     frag.appendChild(renderCard(it, tokens, { context: "results" }));
@@ -270,7 +258,7 @@ async function search(term) {
   els.stack.appendChild(frag);
 }
 
-/* ---------- cards ---------- */
+/* ---------- Cards ---------- */
 function truncateText(s, n = CARD_CHAR_LIMIT) {
   if (!s) return "";
   const clean = s.replace(/\s+/g, " ").trim();
@@ -287,15 +275,13 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   h.className = "card-title";
   h.textContent = item.title;
 
-  // preview: usa SÓ body, com limite de 200 chars
+  // preview: usa SÓ body (sem título) + limite 200 chars
   const preview = document.createElement("p");
   preview.className = "card-prev";
-
-  // preview plain → vira HTML com marcações
   const prevText = truncateText(item.body || "", CARD_CHAR_LIMIT);
   preview.innerHTML = tokens.length ? highlightAll(prevText, tokens) : prevText;
 
-  // rodapé com ações
+  // rodapé
   const footer = document.createElement("div");
   footer.className = "card-foo";
 
@@ -334,7 +320,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   return card;
 }
 
-/* ---------- leitor (modal de leitura única) ---------- */
+/* ---------- Leitor (modal) ---------- */
 function showModal(modalEl) {
   if (!modalEl) return;
   modalEl.hidden = false;
@@ -346,45 +332,47 @@ function hideModal(modalEl) {
   modalEl.hidden = true;
 }
 
-/** Leitor: elimina título duplicado.
- * h4 = item.title
- * body = APENAS item.body (sem repetir o título)
- * highlight aplicado no body.
- */
-async function openReader(item, tokens = []) {
+/** Leitor: nunca usa `text` no corpo para evitar duplicação do título */
+function openReader(item, tokens = []) {
   if (!els.readerModal) return;
+
+  // título
   els.readerTitle.textContent = item.title;
-  els.readerBody.innerHTML = "";
 
-  const body = (item.body && item.body.trim()) ? item.body : ""; // nunca usa text aqui
-  const textHtml = tokens.length ? highlightAll(body, tokens) : body;
+  // corpo: APENAS body
+  const body = (item.body && item.body.trim()) ? item.body : "";
+  const htmlMarked = tokens.length ? highlightAll(body, tokens) : body;
 
-  // transforma \n em <br> (visual)
-  const html = textHtml.split("\n").map((l) => l || "").join("<br>");
-  const container = document.createElement("div");
-  container.className = "reader-text";
-  container.innerHTML = html;
+  // \n -> <br>
+  const html = htmlMarked.split("\n").map((l) => l || "").join("<br>");
 
-  els.readerBody.appendChild(container);
+  els.readerBody.innerHTML = `<div class="reader-text">${html}</div>`;
   showModal(els.readerModal);
 }
 
-/* Fecha modais por clique no backdrop ou ESC */
+/* Fechamento de modais por atributos data- */
 document.addEventListener("click", (e) => {
-  const backdrop = e.target.closest(".modal-backdrop");
-  if (!backdrop) return;
-  const modal = backdrop.parentElement;
-  hideModal(modal);
+  const t = e.target;
+  if (t.matches("[data-close-modal]")) hideModal(els.readerModal);
+  if (t.matches("#readerModal .modal-backdrop")) hideModal(els.readerModal);
+
+  if (t.matches("[data-close-sel]")) hideModal(els.selectedModal);
+  if (t.matches("#selectedModal .modal-backdrop")) hideModal(els.selectedModal);
+
+  if (t.matches("[data-close-study]")) hideModal(els.studyModal);
+  if (t.matches("#studyModal .modal-backdrop")) hideModal(els.studyModal);
+
+  if (t.matches("[data-close-questions]")) hideModal(els.questionsModal);
+  if (t.matches("#questionsModal .modal-backdrop")) hideModal(els.questionsModal);
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    [els.readerModal, els.selectedModal, els.studyModal, els.questionsModal]
-      .filter(Boolean)
-      .forEach((m) => { if (!m.hidden) hideModal(m); });
-  }
+  if (e.key !== "Escape") return;
+  [els.readerModal, els.selectedModal, els.studyModal, els.questionsModal]
+    .filter(Boolean)
+    .forEach((m) => { if (!m.hidden) hideModal(m); });
 });
 
-/* ---------- VER SELECIONADOS (sem título duplicado) ---------- */
+/* ---------- Ver selecionados ---------- */
 els.viewBtn?.addEventListener("click", () => {
   if (!els.selectedModal) return;
   els.selectedStack.innerHTML = "";
@@ -396,37 +384,55 @@ els.viewBtn?.addEventListener("click", () => {
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
+      // nos cards do modal, a lógica é a MESMA (título no h4, preview só do body)
       els.selectedStack.appendChild(renderCard(it, [], { context: "selected" }));
     }
   }
-
   showModal(els.selectedModal);
 });
 
-/* ---------- busca: submit ---------- */
+/* ---------- Estudar / Questões (listas básicas) ---------- */
+function syncLists() {
+  if (!els.studyList && !els.questionsList) return;
+  const items = Array.from(state.selected.values());
+
+  if (els.studyList) {
+    els.studyList.innerHTML = "";
+    items.forEach((it) => {
+      const li = document.createElement("li");
+      li.textContent = it.title;
+      els.studyList.appendChild(li);
+    });
+  }
+  if (els.questionsList) {
+    els.questionsList.innerHTML = "";
+    items.forEach((it) => {
+      const li = document.createElement("li");
+      li.textContent = it.title;
+      els.questionsList.appendChild(li);
+    });
+  }
+}
+els.studyBtn?.addEventListener("click", () => {
+  syncLists();
+  showModal(els.studyModal);
+});
+els.questionsBtn?.addEventListener("click", () => {
+  syncLists();
+  showModal(els.questionsModal);
+});
+
+/* ---------- Eventos principais ---------- */
 els.form?.addEventListener("submit", (e) => {
   e.preventDefault();
-  const q = els.q?.value || "";
-  search(q);
+  search(els.q?.value || "");
 });
-
-/* ---------- reset pela marca ---------- */
-els.brand?.addEventListener("click", () => {
+els.brandBtn?.addEventListener("click", () => {
   els.q && (els.q.value = "");
   els.stack && (els.stack.innerHTML = "");
+  toast("Pronto. Digite o que quer buscar.");
   els.q?.focus();
-  toast("Busca reiniciada.");
 });
 
-/* ---------- init ---------- */
+/* ---------- Init ---------- */
 updateBottom();
-
-/* ========= OBS:
-1) Se houver um modal que lista o arquivo completo, use a MESMA regra do leitor:
-   - título no cabeçalho
-   - corpo renderizado com (item.body) — nunca com (item.text)
-   Se você tem uma função própria desse modal, troque qualquer uso de `a.text` por:
-     `const display = (a.body && a.body.trim()) ? a.body : "";`
-     e renderize o `display`.
-2) O highlight funciona em cards, leitor e onde você usar `highlightAll`.
-========= */
