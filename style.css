@@ -146,43 +146,32 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 
 @keyframes hilite{0%{background:#fff9c2}100%{background:#fff}}
 
+/* ====== iOS safe-area (rodapé/conteúdo não encostam no Safari) ====== */
+.bottombar{ padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.content{  padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+
 /* ====== Mobile: topbar em 2 faixas + logo maior ====== */
 @media (max-width: 767px){
-  :root{
-    /* altura aproximada das duas faixas (logo + input) */
-    --topbar-mobile-h: 112px;
-  }
+  :root{ --topbar-mobile-h: 112px; }  /* fallback; JS atualiza */
+
   .topbar{height:auto}
-  .topbar .wrap{flex-direction:column;align-items:center;justify-content:center;padding:8px 0}
-  .brand{height:42px} /* logo maior */
+  .topbar .wrap{
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:8px 0;
+  }
+  .brand{height:44px}     /* logo maior */
   .search{margin:0;width:100%}
   .search input{height:46px}
+
+  /* conteúdo começa depois da topbar de 2 andares */
   .content{padding-top:calc(var(--topbar-mobile-h) + 10px)}
+
+  /* chips colam logo abaixo da topbar e respeitam a largura da página */
   .chips-bar{
     top: var(--topbar-mobile-h);
     padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px);
     padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
   }
-}
-/* === iOS safe-area para a barra inferior e o conteúdo === */
-.bottombar{
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-}
-
-.content{
-  /* já tinha padding-bottom; somo a safe-area pra não “encostar” no Safari */
-  padding-bottom: calc(110px + env(safe-area-inset-bottom));
-}
-
-/* === Mobile: valores padrão; o JS vai sobrescrever com a altura real === */
-@media (max-width: 767px){
-  :root{
-    --topbar-mobile-h: 112px; /* fallback; será atualizado via JS */
-  }
-  /* chips grudam logo abaixo da topbar de 2 andares */
-  .chips-bar{
-    top: var(--topbar-mobile-h);
-  }
-  /* logo um tiquinho maior (como pediu) */
-  .brand{ height: 44px; }
 }
