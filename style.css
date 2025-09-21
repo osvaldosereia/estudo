@@ -113,3 +113,10 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .toast{background:#111;color:#fff;border-radius:14px;padding:10px 14px;margin:6px;box-shadow:var(--shadow);pointer-events:auto}
 
 @keyframes hilite{0%{background:#fff9c2}100%{background:#fff}}
+
+mark.hl {
+  background: #cfe8ff; /* azul clarinho */
+  padding: 0 .15em;
+  border-radius: .2em;
+}
+
