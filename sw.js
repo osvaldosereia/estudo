@@ -1,5 +1,5 @@
 // sw.js — cache básico
-const CACHE = "direito-love-v1";
+const CACHE = "direito-love-v2";
 const ASSETS = [
   "./",
   "./index.html",
