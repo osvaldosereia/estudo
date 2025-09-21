@@ -110,13 +110,14 @@ function makePlanaltoURL(title, source) {
 
   // base do código no Planalto (adicione outros conforme necessário)
   const bases = {
-    "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848.htm",
-    "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406.htm",
-    "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
-    "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
-    "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
-    "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
-    "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
+    "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del2848compilado.htm",
+    "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/L10406compilada.htm",
+    "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105compilada.htm",
+    "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/ConstituicaoCompilado.htm",
+    "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del5452compilado.htm",
+    "CDC": "https://www.planalto.gov.br/ccivil_03/leis/L8078compilado.htm",
+    "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/L9503Compilado.htm",
+     "ECA": "https://www.planalto.gov.br/ccivil_03/leis/L8069compilado.htm",
     // pode expandir esse objeto com os outros códigos
   };
 
