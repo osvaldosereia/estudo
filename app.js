@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09 • estável)
+   direito.love — app.js (2025-09 • estável + patches)
    Regras:
    1) Cada card = bloco entre linhas "-----"
    2) Texto preservado como no .txt (parênteses incluídos)
@@ -101,6 +101,62 @@ function escHTML(s) {
   return (s || "").replace(/[&<>"']/g, (m) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
+}
+
+/* ---------- BUSCA: tokens e regras (NOVO) ---------- */
+// Palavras 3+ letras e números 1–4 dígitos (número exato)
+function tokenize(query) {
+  const q = norm(query);
+  const raw = q.split(/\s+/).filter(Boolean);
+  const tokens = [];
+  for (const w of raw) {
+    if (/^\d{1,4}$/.test(w)) tokens.push(w);         // número exato
+    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);  // palavra 3+ letras
+  }
+  return Array.from(new Set(tokens));
+}
+
+function splitTokens(tokens) {
+  const wordTokens = [];
+  const numTokens  = [];
+  for (const t of tokens) (/^\d{1,4}$/.test(t) ? numTokens : wordTokens).push(t);
+  return { wordTokens, numTokens };
+}
+
+// número "exato" dentro de um texto normalizado (1 não casa 10/100; 11 não casa 1)
+function hasExactNumber(bag, n) {
+  const rx = new RegExp(`(?:^|\\D)${n}(?:\\D|$)`, "g");
+  return rx.test(bag);
+}
+
+// números que aparecem perto de "art", "art.", "artigo" ou "súmula" no MESMO card
+function extractLegalRefs(text) {
+  const rx = /\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(\d{1,4}[a-zA-Z\-]?)\b/giu;
+  const out = new Set();
+  let m;
+  while ((m = rx.exec(text)) !== null) {
+    const puro = (m[2] || "").toLowerCase().match(/^\d{1,4}/)?.[0];
+    if (puro) out.add(puro);
+  }
+  return out;
+}
+
+function hasAllWordTokens(bag, wordTokens) {
+  return wordTokens.every(w => bag.includes(w));
+}
+
+// Regras dos números:
+// - Sem “art|artigo|súmula” na query → exigir números exatos em qualquer parte do card
+// - Com “art|artigo|súmula” na query → cada número precisa estar próximo desses termos no MESMO card
+function matchesNumbers(item, numTokens, queryHasLegalKeyword) {
+  if (!numTokens.length) return true;
+
+  const bag = norm(item.text);
+  if (!queryHasLegalKeyword) {
+    return numTokens.every(n => hasExactNumber(bag, n));
+  }
+  const legals = extractLegalRefs(item.text); // usa texto cru p/ janela
+  return numTokens.every(n => legals.has(n));
 }
 
 /* ---------- catálogo (select) ---------- */
@@ -257,7 +313,18 @@ async function doSearch() {
   els.spinner?.classList.add("show");
 
   try {
-    const tokens = term.split(/\s+/).filter(Boolean).map(norm);
+    // NOVO: tokens válidos (palavras 3+ e números 1–4 dígitos)
+    const tokens = tokenize(term);
+    if (!tokens.length) {
+      skel.remove();
+      renderBlock(term, [], []);
+      toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
+      return;
+    }
+
+    const normQuery = norm(term);
+    const queryHasLegalKeyword = /\b(art|art\.|artigo|s[uú]mula)\b/i.test(normQuery);
+    const { wordTokens, numTokens } = splitTokens(tokens);
 
     const results = [];
     const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
@@ -267,11 +334,17 @@ async function doSearch() {
     for (const { url, label } of allOptions) {
       try {
         const items = await parseFile(url, label);
-        items.forEach((it) => {
+        for (const it of items) {
           const bag = norm(it.text);
-          const ok = tokens.every((t) => bag.includes(t));
-          if (ok) results.push(it);
-        });
+
+          // Palavras: exige TODAS (cobre o requisito de >2 palavras)
+          const okWords = hasAllWordTokens(bag, wordTokens);
+
+          // Números: exatos; e, se “art|artigo|súmula” presente, próximos no mesmo card
+          const okNums = matchesNumbers(it, numTokens, queryHasLegalKeyword);
+
+          if (okWords && okNums) results.push(it);
+        }
       } catch (e) {
         toast(`⚠️ Não carreguei: ${label}`);
         console.warn("Falha ao buscar:", e);
@@ -344,7 +417,8 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  body.innerHTML = truncatedHTML(item.text, tokens);
+  // PREVIEW: usa o body quando existir para não “ecoar” o título
+  body.innerHTML = truncatedHTML(item.body || item.text, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
@@ -356,10 +430,10 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-      body.innerHTML = truncatedHTML(item.text, tokens);
+      body.innerHTML = truncatedHTML(item.body || item.text, tokens);
       toggle.textContent = "ver texto";
     } else {
-      body.textContent = item.text; // texto integral
+      body.textContent = item.text; // texto integral (título + corpo)
       toggle.textContent = "ocultar";
     }
   });
@@ -437,11 +511,14 @@ async function openReader(item) {
       const body = document.createElement("div");
       const h4 = document.createElement("h4");
       h4.textContent = `${a.title} — ${a.source}`;
+      h4.style.fontWeight = "normal"; // sem negrito no leitor
+
       const txt = document.createElement("div");
       txt.className = "a-body";
-      txt.textContent = addRespirationsForDisplay(a.text); // só respiros visuais
-      body.append(h4, txt);
+      // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
+      txt.textContent = addRespirationsForDisplay(a.body || a.text);
 
+      body.append(h4, txt);
       row.append(chk, body);
       els.readerBody.appendChild(row);
     });
