@@ -142,8 +142,9 @@ function extractLegalRefs(text) {
 }
 
 function hasAllWordTokens(bag, wordTokens) {
-  return wordTokens.every(w => bag.includes(w));
+  return wordTokens.every((w) => bagHasTokenWord(bag, w));
 }
+
 
 // Regras dos números:
 // - Sem “art|artigo|súmula” na query → exigir números exatos em qualquer parte do card
@@ -158,6 +159,60 @@ function matchesNumbers(item, numTokens, queryHasLegalKeyword) {
   const legals = extractLegalRefs(item.text); // usa texto cru p/ janela
   return numTokens.every(n => legals.has(n));
 }
+// Divide o "bag" em palavras normalizadas (3+ letras ou números)
+function getBagWords(bag) {
+  return bag.match(/\b[a-z0-9]{3,}\b/g) || [];
+}
+
+function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+// Variações simples de plural PT-BR
+function pluralVariants(t) {
+  const v = new Set([t]);
+  if (!t.endsWith("s")) { v.add(t + "s"); v.add(t + "es"); }
+  else { v.add(t.slice(0, -1)); }            // “tutelas” ↔ “tutela”
+  if (t.endsWith("m")) v.add(t.slice(0, -1) + "ns");  // “homem” ↔ “homens”
+  if (t.endsWith("ao")) {
+    const base = t.slice(0, -2);
+    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes"); // “cidadão” set qdo normalizado
+  }
+  return [...v];
+}
+
+// Distância de edição <= 1 (inserção/remoção/substituição). O( min(n,m) )
+function withinOneEdit(a, b) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  let i = 0, j = 0, edits = 0;
+  while (i < la && j < lb) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++edits > 1) return false;
+    if (la > lb) { i++; }          // remoção em a
+    else if (lb > la) { j++; }     // inserção em a
+    else { i++; j++; }             // substituição
+  }
+  // resto de um caractere conta como uma edição
+  if (i < la || j < lb) edits++;
+  return edits <= 1;
+}
+
+// Checa se UM token de palavra existe no bag por PALAVRA INTEIRA (com tolerância)
+function bagHasTokenWord(bag, token) {
+  const words = getBagWords(bag);
+  const vars = pluralVariants(token);
+  // 1) match direto por borda de palavra (rápido)
+  const rx = new RegExp(`\\b(${vars.map(escapeRx).join("|")})\\b`, "i");
+  if (rx.test(bag)) return true;
+
+  // 2) tolera 1 erro de digitação (sem substrings)
+  for (const w of words) {
+    for (const v of vars) {
+      if (withinOneEdit(v, w)) return true;
+    }
+  }
+  return false;
+}
+
 
 /* ---------- catálogo (select) ---------- */
 /* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
@@ -382,21 +437,25 @@ function renderBlock(term, items, tokens) {
 
 /* ---------- cards ---------- */
 function highlight(text, tokens) {
-  const src = escHTML(text || "");
-  if (!tokens?.length) return src;
+  if (!tokens?.length) return escHTML(text || "");
 
-  // Permite casar palavras com/sem acento (ex.: "urgencia" ↔ "urgência")
+  // Trabalha em NFD para casar base + diacrítico; volta a NFC no fim
+  const srcEsc = escHTML(text || "");
+  const srcNFD = srcEsc.normalize("NFD");
+
   const toDiacriticRx = (t) =>
-    t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")      // escapa meta
-     .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*"); // permite diacríticos após a letra
+    t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+     .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*");
 
   const parts = tokens.filter(Boolean).map(toDiacriticRx);
-  if (!parts.length) return src;
+  if (!parts.length) return srcEsc;
 
-  // \b = borda de palavra (evita grifar pedaços tipo "art" dentro de "partido")
+  // borda de palavra: evita “art” em “partido”
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
-  return src.replace(rx, "<mark>$1</mark>");
+  const markedNFD = srcNFD.replace(rx, "<mark>$1</mark>");
+  return markedNFD.normalize("NFC");
 }
+
 
 
 function truncatedHTML(fullText, tokens) {
