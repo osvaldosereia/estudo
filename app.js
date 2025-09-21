@@ -477,7 +477,7 @@ body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (
 }
 
 /* ---------- Leitor (modal) ---------- */
-async function openReader(item) {
+async function openReader(item, tokens = []) {
   els.readerTitle && (els.readerTitle.textContent = item.source);
   els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
   els.readerBody && (els.readerBody.innerHTML = "");
@@ -527,7 +527,9 @@ async function openReader(item) {
       const txt = document.createElement("div");
       txt.className = "a-body";
       // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
-      txt.textContent = addRespirationsForDisplay(a.body || a.text);
+const withBreaks = addRespirationsForDisplay(a.body || a.text);
+const withMarks  = highlight(withBreaks, tokens);
+txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
 
       body.append(h4, txt);
       row.append(chk, body);
