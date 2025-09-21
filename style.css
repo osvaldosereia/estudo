@@ -164,3 +164,25 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
     padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
   }
 }
+/* === iOS safe-area para a barra inferior e o conteúdo === */
+.bottombar{
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.content{
+  /* já tinha padding-bottom; somo a safe-area pra não “encostar” no Safari */
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+}
+
+/* === Mobile: valores padrão; o JS vai sobrescrever com a altura real === */
+@media (max-width: 767px){
+  :root{
+    --topbar-mobile-h: 112px; /* fallback; será atualizado via JS */
+  }
+  /* chips grudam logo abaixo da topbar de 2 andares */
+  .chips-bar{
+    top: var(--topbar-mobile-h);
+  }
+  /* logo um tiquinho maior (como pediu) */
+  .brand{ height: 44px; }
+}
