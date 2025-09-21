@@ -103,13 +103,11 @@ function escHTML(s) {
   }[m]));
 }
 
-// Gera link direto para o Planalto com base no código e artigo
+/* ===== Planalto (links) ===== */
 function makePlanaltoURL(title, source) {
-  // tenta extrair número do artigo (ex: 121, 121-A, 5º)
   const match = title.match(/\d{1,4}[A-Za-zº-]?/);
   const artNum = match ? match[0].replace("º", "") : "";
 
-  // base do código no Planalto (versões compiladas)
   const bases = {
     "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del2848compilado.htm",
     "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/L10406compilada.htm",
@@ -120,98 +118,135 @@ function makePlanaltoURL(title, source) {
     "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/L9503Compilado.htm",
     "ECA": "https://www.planalto.gov.br/ccivil_03/leis/L8069compilado.htm",
   };
-
   const baseUrl = bases[source] || "https://www.planalto.gov.br/ccivil_03/";
   return artNum ? `${baseUrl}#art${artNum}` : baseUrl;
 }
 
 /* ============================================================
-   BUSCA • ABREVIATURAS, NÚMEROS E REGRAS (NOVO)
+   BUSCA — abreviações & regras
    ============================================================ */
 
-/* Mapa de abreviações/nomes → rótulo exato do <select> (opt.textContent).
-   Amplie à vontade. Use chaves NORMALIZADAS (norm). */
-const CODE_ABBREVS = new Map(Object.entries({
-  // Constituição
-  "cf": "CF88", "cf88": "CF88", "crfb": "CF88", "cr/88": "CF88", "constituicao federal": "CF88",
-
-  // Códigos principais (batem com seu <select>)
-  "cc": "Código Civil", "cod civil": "Código Civil", "codigo civil": "Código Civil",
-  "cp": "Código Penal", "cod penal": "Código Penal", "codigo penal": "Código Penal",
-  "cpc": "Processo Civil", "cod proc civil": "Processo Civil", "codigo de processo civil": "Processo Civil",
-  "cpp": "Processo Penal", "cod proc penal": "Processo Penal", "codigo de processo penal": "Processo Penal",
-  "ctn": "Cód. Tributário Nacional", "codigo tributario nacional": "Cód. Tributário Nacional",
-  "ctb": "Cód. Trânsito Brasileiro", "codigo de transito brasileiro": "Cód. Trânsito Brasileiro",
-  "cdc": "CDC", "codigo de defesa do consumidor": "CDC",
-  "clt": "CLT",
-  "codigo florestal": "Código Florestal",
-
-  // Estatutos / Leis presentes no seu <select>
-  "eca": "ECA", "estatuto da crianca e do adolescente": "ECA",
-  "estatuto oab": "Estatuto da OAB", "oab": "Estatuto da OAB",
-  "lei maria da penha": "Lei Maria da Penha",
-  "lei de drogas": "Lei de Drogas",
-  "lei de execucao penal": "Lei de Execução Penal", "lep": "Lei de Execução Penal",
-  "lei da improbidade administrativa": "Lei da Improbidade Administrativa", "lia": "Lei da Improbidade Administrativa",
-  "mandado de seguranca": "Mandado de Segurança",
-
-  // Militares (presentes no seu <select>)
-  "cpm": "Cód. Penal Militar", "codigo penal militar": "Cód. Penal Militar",
-  "cppm": "Cód. Proc. Penal Militar", "codigo de processo penal militar": "Cód. Proc. Penal Militar",
-
-  // Código Eleitoral (tem no <select>)
-  "ce": "Código Eleitoral", "codigo eleitoral": "Código Eleitoral"
-}));
-
-// Remove pontos entre dígitos: “1.000” → “1000”
-function squashDotsBetweenDigits(s) {
+/* Remove pontos de milhar entre dígitos (1.000 → 1000) */
+function stripThousandDots(s) {
   return String(s).replace(/(?<=\d)\.(?=\d)/g, "");
 }
 
-// Detecta se a query começa com “art/ art./ artigo” ou “súmula/sumula”
-function getPrefixMode(qNorm) {
-  const q = qNorm.trim();
-  if (/^(art(\.|igo)?\b)/i.test(q)) return "art";
-  if (/^(sumula|s\u00famula)\b/i.test(q)) return "sumula";
+/* ---------- CÓDIGOS: abreviações/sinônimos → rótulo do <select> ---------- */
+/* Lado direito = rótulo EXATO do <option> do seu <select id="codeSelect"> */
+const CODE_ABBREVS = new Map(Object.entries({
+  // CF88
+  "cf": "CF88",
+  "cf88": "CF88",
+  "cf/88": "CF88",
+  "crfb": "CF88",
+  "cr/88": "CF88",
+  "constituicao federal": "CF88",
+  "constituicao de 1988": "CF88",
+
+  // Código Civil
+  "cc": "Código Civil",
+  "codigo civil": "Código Civil",
+  "cod civil": "Código Civil",
+
+  // Processo Civil
+  "cpc": "Processo Civil",
+  "codigo de processo civil": "Processo Civil",
+  "cod proc civil": "Processo Civil",
+  "proc civil": "Processo Civil",
+
+  // Código Penal
+  "cp": "Código Penal",
+  "codigo penal": "Código Penal",
+  "cod penal": "Código Penal",
+
+  // Processo Penal
+  "cpp": "Processo Penal",
+  "codigo de processo penal": "Processo Penal",
+  "cod proc penal": "Processo Penal",
+  "proc penal": "Processo Penal",
+
+  // CDC
+  "cdc": "CDC",
+  "codigo de defesa do consumidor": "CDC",
+  "defesa do consumidor": "CDC",
+
+  // Código Eleitoral
+  "ce": "Código Eleitoral",
+  "codigo eleitoral": "Código Eleitoral",
+  "cod eleitoral": "Código Eleitoral",
+
+  // CLT
+  "clt": "CLT",
+  "consolidacao das leis do trabalho": "CLT",
+
+  // CTN
+  "ctn": "Cód. Tributário Nacional",
+  "codigo tributario nacional": "Cód. Tributário Nacional",
+  "cod trib nacional": "Cód. Tributário Nacional",
+
+  // CTB
+  "ctb": "Cód. Trânsito Brasileiro",
+  "codigo de transito brasileiro": "Cód. Trânsito Brasileiro",
+  "cod transito brasileiro": "Cód. Trânsito Brasileiro",
+
+  // Código Florestal
+  "codigo florestal": "Código Florestal",
+  "cod florestal": "Código Florestal",
+
+  // Militares
+  "cpm": "Cód. Penal Militar",
+  "codigo penal militar": "Cód. Penal Militar",
+  "cod penal militar": "Cód. Penal Militar",
+
+  "cppm": "Cód. Proc. Penal Militar",
+  "codigo de processo penal militar": "Cód. Proc. Penal Militar",
+  "cod proc penal militar": "Cód. Proc. Penal Militar",
+
+  // ECA / OAB
+  "eca": "ECA",
+  "estatuto da crianca e do adolescente": "ECA",
+
+  "estatuto da oab": "Estatuto da OAB",
+  "oab": "Estatuto da OAB",
+
+  // Leis (rótulo = option)
+  "lei maria da penha": "Lei Maria da Penha",
+  "lmp": "Lei Maria da Penha",
+
+  "lei da improbidade administrativa": "Lei da Improbidade Administrativa",
+  "lia": "Lei da Improbidade Administrativa",
+  "lei de improbidade": "Lei da Improbidade Administrativa",
+
+  "lei de execucao penal": "Lei de Execução Penal",
+  "lep": "Lei de Execução Penal",
+
+  "lei de drogas": "Lei de Drogas",
+
+  "mandado de seguranca": "Mandado de Segurança",
+  "lei do mandado de seguranca": "Mandado de Segurança",
+}));
+
+/* Detecta se a query contém uma dica de código (abreviação/sinônimo) */
+function detectCodeFromQuery(rawQuery) {
+  const q = ` ${norm(rawQuery)} `; // acolchoado para evitar falsos positivos
+  for (const [abbr, label] of CODE_ABBREVS.entries()) {
+    const needle = ` ${abbr} `;
+    if (q.includes(needle) || q.trim() === abbr) {
+      const keyWords = new Set(abbr.split(/\s+/).filter(Boolean));
+      return { label, keyWords };
+    }
+  }
   return null;
 }
 
-// A partir da query normalizada, deduz filtros de fonte (labels do <select>)
-function detectSourceFilters(qNorm) {
-  const filters = new Set();
-
-  // 1) frases compostas (por extenso) que estejam no mapa
-  for (const [k, label] of CODE_ABBREVS.entries()) {
-    if (k.includes(" ")) {
-      if (qNorm.includes(k)) filters.add(label);
-    }
-  }
-  // 2) tokens individuais (abreviações 2+ letras)
-  for (const raw of qNorm.split(/\s+/).filter(Boolean)) {
-    const t = raw.replace(/[^\p{L}0-9/]/gu, ""); // limpa pontuação
-    if (t.length >= 2) {
-      const tk = norm(t);
-      if (CODE_ABBREVS.has(tk)) filters.add(CODE_ABBREVS.get(tk));
-    }
-  }
-  return filters;
-}
-
-/* ---------- BUSCA: tokens e regras ---------- */
-// Palavras 3+ letras e números 1–4 dígitos (match exato).
-// EXCEÇÃO: abreviações mapeadas (2+ letras) entram como palavra.
+/* Palavras 3+ letras e números 1–4 dígitos */
 function tokenize(query) {
   const q = norm(query);
   const raw = q.split(/\s+/).filter(Boolean);
   const tokens = [];
   for (const w of raw) {
-    if (/^\d{1,4}$/.test(w)) {
-      tokens.push(w); // número exato de 1–4 dígitos (20 ≠ 200)
-    } else if (/^\p{L}{3,}$/u.test(w)) {
-      tokens.push(w); // palavra 3+ letras
-    } else if (/^\p{L}{2,}$/u.test(w) && CODE_ABBREVS.has(w)) {
-      tokens.push(w); // abreviação jurídica conhecida (2+)
-    }
+    if (/^\d{1,4}$/.test(w)) tokens.push(w);          // número exato (1–4 dígitos)
+    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);  // palavra 3+ letras
   }
   return Array.from(new Set(tokens));
 }
@@ -223,20 +258,55 @@ function splitTokens(tokens) {
   return { wordTokens, numTokens };
 }
 
-// número "exato" dentro do bag (com pontos entre dígitos já removidos)
+/* número "exato" dentro de um texto normalizado (1 não casa 10/100; 11 ≠ 1)
+   Trata pontos de milhar: "1.000" ≡ "1000" */
 function hasExactNumber(bag, n) {
-  const bagNum = squashDotsBetweenDigits(bag);
+  const bagNum = stripThousandDots(bag);
   const rx = new RegExp(`(?:^|\\D)${n}(?:\\D|$)`, "g");
   return rx.test(bagNum);
 }
 
-// números que aparecem até 12 chars após art/art./artigo/súmula no MESMO card
-function extractLegalRefs(text) {
-  const cleaned = squashDotsBetweenDigits(text);
+/* keyword proximity (≤12 chars) e regra "linha começa com" (≤15 chars) */
+const KW_RX = /\b(art\.?|artigo|s[uú]mula)\b/iu;
+const KW_ART_RX = /^\s*(art\.?|artigo)\b/i;
+const KW_SUM_RX = /^\s*s[uú]mula\b/i;
+
+/* retorna true se o número N:
+   (a) está a ≤12 chars da keyword (art/art./artigo/súmula), e
+   (b) SE a query começar por "art|art.|artigo|súmula":
+       o número aparece nos 15 primeiros caracteres da linha que começa com esse marcador. */
+function numberRespectsWindows(text, n, queryMode /* "art"|"sumula"|null */) {
+  const raw = String(text);
+
+  // (a) janela curta ≤12 chars
+  // captura "KW ... N" com até 12 não-alfa-num entre o fim da KW e o primeiro dígito
+  const nearRx = new RegExp(String.raw`\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(${n})(?:\b|[^0-9])`, "i");
+  const nearOK = nearRx.test(stripThousandDots(raw));
+  if (!nearOK) return false;
+
+  // (b) se query começa com o marcador → precisa estar nos 15 primeiros chars da linha
+  if (!queryMode) return true;
+
+  const lines = raw.split(/\r?\n/);
+  const wantStart = queryMode === "art" ? KW_ART_RX : KW_SUM_RX;
+
+  for (const line of lines) {
+    if (!wantStart.test(line)) continue;
+    const clean = stripThousandDots(norm(line)); // normaliza e remove "1.000"
+    // pega a parte da linha após o marcador inicial
+    const after = clean.replace(queryMode === "art" ? KW_ART_RX : KW_SUM_RX, "").trimStart();
+    // índice do número (como string) após o marcador
+    const idx = after.indexOf(n);
+    if (idx !== -1 && idx <= 15) return true;
+  }
+  return false;
+}
+
+function extractLegalRefsToSet(text) {
   const rx = /\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(\d{1,4}[a-zA-Z\-]?)/giu;
   const out = new Set();
   let m;
-  while ((m = rx.exec(cleaned)) !== null) {
+  while ((m = rx.exec(text)) !== null) {
     const puro = (m[2] || "").toLowerCase().match(/^\d{1,4}/)?.[0];
     if (puro) out.add(puro);
   }
@@ -247,6 +317,7 @@ function getBagWords(bag) {
   return bag.match(/\b[a-z0-9]{3,}\b/g) || [];
 }
 function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
 function pluralVariants(t) {
   const v = new Set([t]);
   if (!t.endsWith("s")) { v.add(t + "s"); v.add(t + "es"); }
@@ -280,41 +351,8 @@ function bagHasTokenWord(bag, token) {
   }
   return false;
 }
-function hasAllWordTokens(bag, wordTokens) {
-  return wordTokens.every((w) => bagHasTokenWord(bag, w));
-}
-
-// Regra de números com suporte a prefixo (Art/Súmula) e janela de 15 no título
-function matchesNumbers(item, numTokens, queryHasLegalKeyword, prefixMode) {
-  if (!numTokens.length) return true;
-
-  // Modo prefixado: a linha deve começar com "Art..." ou "Súmula"
-  if (prefixMode) {
-    const tNorm = norm(item.title || "");
-    const startsOk =
-      (prefixMode === "art"    && /^art(\.|igo)?\b/.test(tNorm)) ||
-      (prefixMode === "sumula" && /^sumula\b/.test(tNorm));
-    if (!startsOk) return false;
-
-    // Considera apenas os primeiros 15 caracteres do título
-    const title = String(item.title || "");
-    const windowText = title.slice(0, 15);
-    const legals = extractLegalRefs(windowText);
-    return numTokens.every((n) => legals.has(n));
-  }
-
-  // Sem prefixo: se houver palavra-chave jurídica, exigir proximidade; senão, número exato em qualquer parte
-  if (queryHasLegalKeyword) {
-    const legals = extractLegalRefs(item.text);
-    return numTokens.every((n) => legals.has(n));
-  } else {
-    const bag = norm(item.text);
-    return numTokens.every((n) => hasExactNumber(bag, n));
-  }
-}
 
 /* ---------- catálogo (select) ---------- */
-/* Converte automático URLs do GitHub (blob) em RAW + encodeURI */
 function toRawGitHub(url){
   if(!url) return url;
   const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
@@ -327,7 +365,7 @@ function toRawGitHub(url){
     const label = (opt.textContent || "").trim();
     if (!url) return;
     url = encodeURI(toRawGitHub(url));
-    opt.value = url; // corrige no DOM (evita 404 e caracteres especiais)
+    opt.value = url;
     state.urlToLabel.set(label, url);
   });
 })();
@@ -335,10 +373,10 @@ function toRawGitHub(url){
 /* ---------- fetch/parse ---------- */
 function sanitize(s) {
   return String(s)
-    .replace(/\uFEFF/g, "")      // BOM
-    .replace(/\u00A0/g, " ")     // NBSP
-    .replace(/\r\n?/g, "\n")     // EOL
-    .replace(/[ \t]+\n/g, "\n"); // ws final
+    .replace(/\uFEFF/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+\n/g, "\n");
 }
 async function fetchText(url) {
   url = encodeURI(url);
@@ -349,16 +387,12 @@ async function fetchText(url) {
   state.cacheTxt.set(url, t);
   return t;
 }
-
-/* Split: cada linha com 5+ hifens (-----) separa blocos */
 function splitBlocks(txt) {
   return sanitize(txt)
     .split(/^\s*-{5,}\s*$/m)
     .map((s) => s.trim())
     .filter(Boolean);
 }
-
-/* Parser minimalista: título = 1ª linha; corpo = resto (preservado) */
 function parseBlock(block, idx, fileUrl, sourceLabel) {
   const lines = block.split("\n");
   const firstIdx = lines.findIndex((l) => l.trim().length > 0);
@@ -376,7 +410,6 @@ function parseBlock(block, idx, fileUrl, sourceLabel) {
     fileUrl,
   };
 }
-
 async function parseFile(url, sourceLabel) {
   if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
   const txt = await fetchText(url);
@@ -430,18 +463,15 @@ async function loadPromptTemplate() {
 }
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
-  const PATHS = [
-    "data/prompts/prompt_questoes.txt",
-    "data/prompt/prompt_questoes.txt",
-  ];
-  for (const p of PATHS) {
-    try {
-      const r = await fetch(p, { cache: "no-cache" });
-      if (r.ok) { state.promptQTpl = (await r.text()).trim(); return state.promptQTpl; }
-    } catch {}
+  const PATH = "data/prompts/prompt_questoes.txt";
+  try {
+    const r = await fetch(PATH, { cache: "no-cache" });
+    if (!r.ok) throw new Error();
+    state.promptQTpl = (await r.text()).trim();
+  } catch {
+    state.promptQTpl = "";
+    toast("Não encontrei data/prompts/prompt_questoes.txt");
   }
-  state.promptQTpl = "";
-  toast("Não encontrei data/prompts/prompt_questoes.txt");
   return state.promptQTpl;
 }
 
@@ -449,9 +479,36 @@ async function loadQuestionsTemplate() {
 els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
 els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
 
+function detectQueryMode(normQuery) {
+  const trimmed = normQuery.trim();
+  if (/^(art\.?\b|artigo\b)/i.test(trimmed)) return "art";
+  if (/^s[uú]mula\b/i.test(trimmed)) return "sumula";
+  return null;
+}
+
+/* Palavras: TODAS; Números: exatos; Proximidade: ≤12; Se começa com Art/Súmula: ≤15 no início da linha */
+function hasAllWordTokens(bag, wordTokens) {
+  return wordTokens.every((w) => bagHasTokenWord(bag, w));
+}
+function matchesNumbers(item, numTokens, queryHasLegalKeyword, queryMode) {
+  if (!numTokens.length) return true;
+
+  const bag = norm(stripThousandDots(item.text));
+
+  if (!queryHasLegalKeyword) {
+    return numTokens.every((n) => hasExactNumber(bag, n));
+  }
+
+  // com keyword jurídica na query: precisa (a) proximidade ≤12 e (b) (se houver) regra ≤15 no início da linha
+  return numTokens.every((n) => numberRespectsWindows(item.text, n, queryMode));
+}
+
 async function doSearch() {
-  const term = (els.q.value || "").trim();
-  if (!term) return;
+  const termRaw = (els.q.value || "").trim();
+  if (!termRaw) return;
+
+  // trata 1.000 → 1000 na query
+  const term = stripThousandDots(termRaw);
 
   els.stack.innerHTML = "";
   els.stack.setAttribute("aria-busy", "true");
@@ -459,7 +516,7 @@ async function doSearch() {
   skel.className = "block";
   const t = document.createElement("div");
   t.className = "block-title";
-  t.textContent = `Busca: ‘${term}’ (…)`;
+  t.textContent = `Busca: ‘${termRaw}’ (…)`;
   skel.appendChild(t);
   for (let i = 0; i < 2; i++) {
     const s = document.createElement("div"); s.className = "skel block"; skel.appendChild(s);
@@ -468,44 +525,50 @@ async function doSearch() {
   els.spinner?.classList.add("show");
 
   try {
-    // tokens válidos (palavras 3+, números 1–4 e abreviações 2+ conhecidas)
-    const tokens = tokenize(term);
+    const normQuery = norm(term);
+    const queryMode = detectQueryMode(normQuery); // "art" | "sumula" | null
+
+    // dica de código (cc, cp, cpc, "codigo civil", etc.)
+    const codeInfo = detectCodeFromQuery(normQuery);
+
+    // tokens válidos (palavras 3+ e números 1–4)
+    let tokens = tokenize(normQuery);
     if (!tokens.length) {
       skel.remove();
-      renderBlock(term, [], []);
-      toast("Use palavras com 3+ letras, abreviações jurídicas (cc, cp, cpc...) ou números (1–4 dígitos).");
+      renderBlock(termRaw, [], []);
+      toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
       return;
     }
 
-    const normQuery = norm(term);
-    const prefixMode = getPrefixMode(normQuery); // "art" | "sumula" | null
-    const queryHasLegalKeyword = /\b(art|art\.|artigo|s[uú]mula)\b/i.test(normQuery);
+    // se houve codeInfo, remove do conjunto de palavras os termos que só serviram p/ identificar o código
+    if (codeInfo) {
+      tokens = tokens.filter((tk) => !codeInfo.keyWords.has(tk));
+    }
+
+    const queryHasLegalKeyword = KW_RX.test(normQuery);
     const { wordTokens, numTokens } = splitTokens(tokens);
 
-    // Filtro por fonte (ex.: “cc”, “codigo civil”)
-    const sourceFilters = detectSourceFilters(normQuery); // Set<labels>
-
-    const results = [];
-    const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
+    // monta a lista de arquivos; se codeInfo → filtra pelo rótulo do <option>
+    let allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
       .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
       .filter((o) => o.url);
 
-    // Se houver filtros, restringe; senão, busca em todos
-    const optionsToSearch = sourceFilters.size
-      ? allOptions.filter((o) => sourceFilters.has(o.label))
-      : allOptions;
+    if (codeInfo) {
+      allOptions = allOptions.filter((o) => o.label === codeInfo.label);
+      if (!allOptions.length) {
+        toast(`Não achei o arquivo para “${codeInfo.label}”. Confira o rótulo do catálogo.`);
+      }
+    }
 
-    for (const { url, label } of optionsToSearch) {
+    const results = [];
+    for (const { url, label } of allOptions) {
       try {
         const items = await parseFile(url, label);
         for (const it of items) {
-          const bag = norm(it.text);
+          const bag = norm(stripThousandDots(it.text));
 
-          // Palavras: exige TODAS (inclui abreviações reconhecidas que viraram tokens)
           const okWords = hasAllWordTokens(bag, wordTokens);
-
-          // Números: regra de proximidade/precisão + prefix mode
-          const okNums = matchesNumbers(it, numTokens, queryHasLegalKeyword, prefixMode);
+          const okNums  = matchesNumbers(it, numTokens, queryHasLegalKeyword, queryMode);
 
           if (okWords && okNums) results.push(it);
         }
@@ -516,7 +579,7 @@ async function doSearch() {
     }
 
     skel.remove();
-    renderBlock(term, results, tokens);
+    renderBlock(termRaw, results, tokens);
     toast(`${results.length} resultado(s) encontrados.`);
   } finally {
     els.stack.setAttribute("aria-busy", "false");
@@ -547,19 +610,13 @@ function renderBlock(term, items, tokens) {
 /* ---------- cards ---------- */
 function highlight(text, tokens) {
   if (!tokens?.length) return escHTML(text || "");
-
-  // NFD para casar base + diacrítico; volta a NFC no fim
   const srcEsc = escHTML(text || "");
   const srcNFD = srcEsc.normalize("NFD");
-
   const toDiacriticRx = (t) =>
     t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
      .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*");
-
   const parts = tokens.filter(Boolean).map(toDiacriticRx);
   if (!parts.length) return srcEsc;
-
-  // borda de palavra
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
   const markedNFD = srcNFD.replace(rx, "<mark>$1</mark>");
   return markedNFD.normalize("NFC");
@@ -584,22 +641,21 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const left = document.createElement("div");
 
-  // chip da fonte fora do leitor
+  // chip do código (não no modal leitor)
   if (item.source && ctx.context !== "reader") {
     const pill = document.createElement("a");
     pill.href = "#";
     pill.className = "pill";
     pill.textContent = item.source;
-    pill.addEventListener("click", (e) => {
-      e.preventDefault();
-      openReader(item);
+    pill.addEventListener("click", (e) => { 
+      e.preventDefault(); 
+      openReader(item); 
     });
     left.append(pill);
   }
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // preview: título + caput (compacto)
   body.innerHTML = truncatedHTML(item.text, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
@@ -607,7 +663,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const actions = document.createElement("div");
   actions.className = "actions";
 
-  // Botão ver texto
+  // ver texto
   const toggle = document.createElement("button");
   toggle.className = "toggle";
   toggle.textContent = "ver texto";
@@ -622,7 +678,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
   });
 
-  // Botão Planalto
+  // Planalto
   const planaltoBtn = document.createElement("button");
   planaltoBtn.className = "toggle";
   planaltoBtn.textContent = "Planalto";
@@ -633,7 +689,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   actions.append(toggle, planaltoBtn);
   left.append(body, actions);
 
-  // Checkbox à direita
+  // check à direita
   const chk = document.createElement("button");
   chk.className = "chk";
   chk.setAttribute("aria-label", "Selecionar bloco");
@@ -764,7 +820,7 @@ async function buildStudyPrompt(includedSet) {
     const it = state.selected.get(id);
     if (!it) continue;
     parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, ""); // texto integral
+    parts.push(it.text, "");
     if (i++ >= MAX_SEL) break;
   }
   return parts.join("\n");
