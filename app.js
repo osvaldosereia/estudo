@@ -537,10 +537,11 @@ planaltoBtn.className = "toggle";
 planaltoBtn.textContent = "Planalto";
 planaltoBtn.href = makePlanaltoURL(item.title, item.source);
 planaltoBtn.target = "_blank";
-planaltoBtn.rel = "noopener";
+planaltoBtn.rel = "noopener noreferrer";
 
-// Adiciona os dois botões
+// Adiciona os dois botões lado a lado
 actions.append(toggle, planaltoBtn);
+
 
 
   left.append(pill, body, actions);
