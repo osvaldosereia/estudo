@@ -175,3 +175,24 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
     padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
   }
 }
+/* ==== FIX MOBILE: chips fixos logo abaixo da topbar, com respiro exato ==== */
+@media (max-width: 767px){
+  :root{ --chips-h: 56px; } /* fallback; o JS mede e corrige */
+
+  .chips-bar{
+    position: fixed !important;
+    left: 0; right: 0;
+    top: var(--topbar-mobile-h) !important;
+    bottom: auto !important;
+    z-index: 260;
+    background: var(--top);
+    border-bottom: 1px solid var(--line);
+    padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px) !important;
+    padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px) !important;
+  }
+
+  /* conteúdo começa depois da topbar (2 faixas) + altura real dos chips */
+  .content{
+    padding-top: calc(var(--topbar-mobile-h) + var(--chips-h) + 10px) !important;
+  }
+}
