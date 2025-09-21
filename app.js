@@ -102,6 +102,28 @@ function escHTML(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[m]));
 }
+// Gera link direto para o Planalto com base no código e artigo
+function makePlanaltoURL(title, source) {
+  // tenta extrair número do artigo (ex: 121, 121-A, 5º)
+  const match = title.match(/\d{1,4}[A-Za-zº-]?/);
+  const artNum = match ? match[0].replace("º", "") : "";
+
+  // base do código no Planalto (adicione outros conforme necessário)
+  const bases = {
+    "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848.htm",
+    "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406.htm",
+    "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
+    "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
+    "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
+    "CDC": "https://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
+    "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
+    // pode expandir esse objeto com os outros códigos
+  };
+
+  const baseUrl = bases[source] || "https://www.planalto.gov.br/ccivil_03/";
+  return artNum ? `${baseUrl}#art${artNum}` : baseUrl;
+}
+
 
 /* ---------- BUSCA: tokens e regras (NOVO) ---------- */
 // Palavras 3+ letras e números 1–4 dígitos (número exato)
@@ -492,22 +514,34 @@ body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (
   body.addEventListener("click", () => openReader(item));
 
   const actions = document.createElement("div");
-  actions.className = "actions";
-  const toggle = document.createElement("button");
-  toggle.className = "toggle";
-  toggle.textContent = "ver texto";
-  toggle.addEventListener("click", () => {
-    const collapsed = body.classList.toggle("is-collapsed");
-    if (collapsed) {
-  body.innerHTML = truncatedHTML(item.text, tokens);
-  toggle.textContent = "ver texto";
-} else {
-  // mantém destaque também no modo expandido
-  body.innerHTML = highlight(item.text, tokens);
-  toggle.textContent = "ocultar";
-}
+actions.className = "actions";
 
-  });
+// Botão ver texto
+const toggle = document.createElement("button");
+toggle.className = "toggle";
+toggle.textContent = "ver texto";
+toggle.addEventListener("click", () => {
+  const collapsed = body.classList.toggle("is-collapsed");
+  if (collapsed) {
+    body.innerHTML = truncatedHTML(item.text, tokens);
+    toggle.textContent = "ver texto";
+  } else {
+    body.innerHTML = highlight(item.text, tokens);
+    toggle.textContent = "ocultar";
+  }
+});
+
+// Botão Planalto
+const planaltoBtn = document.createElement("a");
+planaltoBtn.className = "toggle";
+planaltoBtn.textContent = "Planalto";
+planaltoBtn.href = makePlanaltoURL(item.title, item.source);
+planaltoBtn.target = "_blank";
+planaltoBtn.rel = "noopener";
+
+// Adiciona os dois botões
+actions.append(toggle, planaltoBtn);
+
 
   left.append(pill, body, actions);
   actions.append(toggle);
