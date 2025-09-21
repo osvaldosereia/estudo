@@ -495,6 +495,21 @@ async function doSearch(){
     els.q?.select();
   }
 }
+/* ===== Altura real da topbar no mobile (duas faixas) ===== */
+function setMobileTopbarHeight() {
+  if (!window.matchMedia('(max-width: 767px)').matches) return;
+  const tb = document.querySelector('.topbar');
+  if (!tb) return;
+  const h = tb.offsetHeight || 112; // fallback
+  document.documentElement.style.setProperty('--topbar-mobile-h', h + 'px');
+}
+
+/* recalcula quando muda o layout */
+window.addEventListener('load', setMobileTopbarHeight);
+window.addEventListener('resize', setMobileTopbarHeight);
+new MutationObserver(setMobileTopbarHeight).observe(document.body, {subtree:true, childList:true});
 
 /* init */
 updateBottom();
+setMobileTopbarHeight();
+
