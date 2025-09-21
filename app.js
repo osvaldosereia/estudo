@@ -495,21 +495,53 @@ async function doSearch(){
     els.q?.select();
   }
 }
-/* ===== Altura real da topbar no mobile (duas faixas) ===== */
-function setMobileTopbarHeight() {
+/* ===== Altura real da topbar no mobile (duas faixas) — robusto para iOS ===== */
+function setMobileTopbarHeightOnce() {
   if (!window.matchMedia('(max-width: 767px)').matches) return;
   const tb = document.querySelector('.topbar');
   if (!tb) return;
-  const h = tb.offsetHeight || 112; // fallback
+  // getBoundingClientRect é mais estável no iOS do que offsetHeight
+  const h = Math.round(tb.getBoundingClientRect().height) || 112;
   document.documentElement.style.setProperty('--topbar-mobile-h', h + 'px');
 }
 
-/* recalcula quando muda o layout */
+function afterBrandLoaded(cb){
+  const img = document.querySelector('.brand');
+  if (!img) { cb(); return; }
+  if (img.complete && img.naturalHeight > 0) { cb(); return; }
+  // chama quando a imagem da logo terminar de carregar
+  img.addEventListener('load', cb, { once:true });
+  // fallback em 500ms (caso o cache já tenha carregado mas não disparou 'load')
+  setTimeout(cb, 500);
+}
+
+function setMobileTopbarHeight() {
+  // mede no load, depois que a logo estiver pronta, e remede em alguns ticks
+  const measure = () => {
+    setMobileTopbarHeightOnce();
+    // remede em alguns ciclos porque o Safari ajusta layout tardiamente
+    setTimeout(setMobileTopbarHeightOnce, 120);
+    setTimeout(setMobileTopbarHeightOnce, 320);
+    requestAnimationFrame(setMobileTopbarHeightOnce);
+  };
+  afterBrandLoaded(measure);
+}
+
+// re-calcula em mudanças relevantes
 window.addEventListener('load', setMobileTopbarHeight);
 window.addEventListener('resize', setMobileTopbarHeight);
-new MutationObserver(setMobileTopbarHeight).observe(document.body, {subtree:true, childList:true});
+window.addEventListener('orientationchange', setMobileTopbarHeight);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) setMobileTopbarHeight();
+});
+
+// DOM changes (abre/fecha teclado, chips, etc.)
+new MutationObserver(() => setMobileTopbarHeightOnce())
+  .observe(document.body, { subtree:true, childList:true, attributes:true });
+
 
 /* init */
 updateBottom();
 setMobileTopbarHeight();
+
 
