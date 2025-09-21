@@ -103,15 +103,115 @@ function escHTML(s) {
   }[m]));
 }
 
-/* ---------- BUSCA: tokens e regras (NOVO) ---------- */
-// Palavras 3+ letras e números 1–4 dígitos (número exato)
+// Gera link direto para o Planalto com base no código e artigo
+function makePlanaltoURL(title, source) {
+  // tenta extrair número do artigo (ex: 121, 121-A, 5º)
+  const match = title.match(/\d{1,4}[A-Za-zº-]?/);
+  const artNum = match ? match[0].replace("º", "") : "";
+
+  // base do código no Planalto (versões compiladas)
+  const bases = {
+    "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del2848compilado.htm",
+    "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/L10406compilada.htm",
+    "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105compilada.htm",
+    "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/ConstituicaoCompilado.htm",
+    "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del5452compilado.htm",
+    "CDC": "https://www.planalto.gov.br/ccivil_03/leis/L8078compilado.htm",
+    "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/L9503Compilado.htm",
+    "ECA": "https://www.planalto.gov.br/ccivil_03/leis/L8069compilado.htm",
+  };
+
+  const baseUrl = bases[source] || "https://www.planalto.gov.br/ccivil_03/";
+  return artNum ? `${baseUrl}#art${artNum}` : baseUrl;
+}
+
+/* ============================================================
+   BUSCA • ABREVIATURAS, NÚMEROS E REGRAS (NOVO)
+   ============================================================ */
+
+/* Mapa de abreviações/nomes → rótulo exato do <select> (opt.textContent).
+   Amplie à vontade. Use chaves NORMALIZADAS (norm). */
+const CODE_ABBREVS = new Map(Object.entries({
+  // Constituição
+  "cf": "CF88", "cf88": "CF88", "crfb": "CF88", "cr/88": "CF88", "constituicao federal": "CF88",
+
+  // Códigos principais (batem com seu <select>)
+  "cc": "Código Civil", "cod civil": "Código Civil", "codigo civil": "Código Civil",
+  "cp": "Código Penal", "cod penal": "Código Penal", "codigo penal": "Código Penal",
+  "cpc": "Processo Civil", "cod proc civil": "Processo Civil", "codigo de processo civil": "Processo Civil",
+  "cpp": "Processo Penal", "cod proc penal": "Processo Penal", "codigo de processo penal": "Processo Penal",
+  "ctn": "Cód. Tributário Nacional", "codigo tributario nacional": "Cód. Tributário Nacional",
+  "ctb": "Cód. Trânsito Brasileiro", "codigo de transito brasileiro": "Cód. Trânsito Brasileiro",
+  "cdc": "CDC", "codigo de defesa do consumidor": "CDC",
+  "clt": "CLT",
+  "codigo florestal": "Código Florestal",
+
+  // Estatutos / Leis presentes no seu <select>
+  "eca": "ECA", "estatuto da crianca e do adolescente": "ECA",
+  "estatuto oab": "Estatuto da OAB", "oab": "Estatuto da OAB",
+  "lei maria da penha": "Lei Maria da Penha",
+  "lei de drogas": "Lei de Drogas",
+  "lei de execucao penal": "Lei de Execução Penal", "lep": "Lei de Execução Penal",
+  "lei da improbidade administrativa": "Lei da Improbidade Administrativa", "lia": "Lei da Improbidade Administrativa",
+  "mandado de seguranca": "Mandado de Segurança",
+
+  // Militares (presentes no seu <select>)
+  "cpm": "Cód. Penal Militar", "codigo penal militar": "Cód. Penal Militar",
+  "cppm": "Cód. Proc. Penal Militar", "codigo de processo penal militar": "Cód. Proc. Penal Militar",
+
+  // Código Eleitoral (tem no <select>)
+  "ce": "Código Eleitoral", "codigo eleitoral": "Código Eleitoral"
+}));
+
+// Remove pontos entre dígitos: “1.000” → “1000”
+function squashDotsBetweenDigits(s) {
+  return String(s).replace(/(?<=\d)\.(?=\d)/g, "");
+}
+
+// Detecta se a query começa com “art/ art./ artigo” ou “súmula/sumula”
+function getPrefixMode(qNorm) {
+  const q = qNorm.trim();
+  if (/^(art(\.|igo)?\b)/i.test(q)) return "art";
+  if (/^(sumula|s\u00famula)\b/i.test(q)) return "sumula";
+  return null;
+}
+
+// A partir da query normalizada, deduz filtros de fonte (labels do <select>)
+function detectSourceFilters(qNorm) {
+  const filters = new Set();
+
+  // 1) frases compostas (por extenso) que estejam no mapa
+  for (const [k, label] of CODE_ABBREVS.entries()) {
+    if (k.includes(" ")) {
+      if (qNorm.includes(k)) filters.add(label);
+    }
+  }
+  // 2) tokens individuais (abreviações 2+ letras)
+  for (const raw of qNorm.split(/\s+/).filter(Boolean)) {
+    const t = raw.replace(/[^\p{L}0-9/]/gu, ""); // limpa pontuação
+    if (t.length >= 2) {
+      const tk = norm(t);
+      if (CODE_ABBREVS.has(tk)) filters.add(CODE_ABBREVS.get(tk));
+    }
+  }
+  return filters;
+}
+
+/* ---------- BUSCA: tokens e regras ---------- */
+// Palavras 3+ letras e números 1–4 dígitos (match exato).
+// EXCEÇÃO: abreviações mapeadas (2+ letras) entram como palavra.
 function tokenize(query) {
   const q = norm(query);
   const raw = q.split(/\s+/).filter(Boolean);
   const tokens = [];
   for (const w of raw) {
-    if (/^\d{1,4}$/.test(w)) tokens.push(w);         // número exato
-    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);  // palavra 3+ letras
+    if (/^\d{1,4}$/.test(w)) {
+      tokens.push(w); // número exato de 1–4 dígitos (20 ≠ 200)
+    } else if (/^\p{L}{3,}$/u.test(w)) {
+      tokens.push(w); // palavra 3+ letras
+    } else if (/^\p{L}{2,}$/u.test(w) && CODE_ABBREVS.has(w)) {
+      tokens.push(w); // abreviação jurídica conhecida (2+)
+    }
   }
   return Array.from(new Set(tokens));
 }
@@ -123,88 +223,56 @@ function splitTokens(tokens) {
   return { wordTokens, numTokens };
 }
 
-// número "exato" dentro de um texto normalizado (1 não casa 10/100; 11 não casa 1)
+// número "exato" dentro do bag (com pontos entre dígitos já removidos)
 function hasExactNumber(bag, n) {
+  const bagNum = squashDotsBetweenDigits(bag);
   const rx = new RegExp(`(?:^|\\D)${n}(?:\\D|$)`, "g");
-  return rx.test(bag);
+  return rx.test(bagNum);
 }
 
-// números que aparecem perto de "art", "art.", "artigo" ou "súmula" no MESMO card
+// números que aparecem até 12 chars após art/art./artigo/súmula no MESMO card
 function extractLegalRefs(text) {
-  const rx = /\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(\d{1,4}[a-zA-Z\-]?)\b/giu;
+  const cleaned = squashDotsBetweenDigits(text);
+  const rx = /\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(\d{1,4}[a-zA-Z\-]?)/giu;
   const out = new Set();
   let m;
-  while ((m = rx.exec(text)) !== null) {
+  while ((m = rx.exec(cleaned)) !== null) {
     const puro = (m[2] || "").toLowerCase().match(/^\d{1,4}/)?.[0];
     if (puro) out.add(puro);
   }
   return out;
 }
 
-function hasAllWordTokens(bag, wordTokens) {
-  return wordTokens.every((w) => bagHasTokenWord(bag, w));
-}
-
-
-
-// Regras dos números:
-// - Sem “art|artigo|súmula” na query → exigir números exatos em qualquer parte do card
-// - Com “art|artigo|súmula” na query → cada número precisa estar próximo desses termos no MESMO card
-function matchesNumbers(item, numTokens, queryHasLegalKeyword) {
-  if (!numTokens.length) return true;
-
-  const bag = norm(item.text);
-  if (!queryHasLegalKeyword) {
-    return numTokens.every(n => hasExactNumber(bag, n));
-  }
-  const legals = extractLegalRefs(item.text); // usa texto cru p/ janela
-  return numTokens.every(n => legals.has(n));
-}
-// Divide o "bag" em palavras normalizadas (3+ letras ou números)
 function getBagWords(bag) {
   return bag.match(/\b[a-z0-9]{3,}\b/g) || [];
 }
-
 function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-
-// Variações simples de plural PT-BR
 function pluralVariants(t) {
   const v = new Set([t]);
   if (!t.endsWith("s")) { v.add(t + "s"); v.add(t + "es"); }
-  else { v.add(t.slice(0, -1)); }            // “tutelas” ↔ “tutela”
-  if (t.endsWith("m")) v.add(t.slice(0, -1) + "ns");  // “homem” ↔ “homens”
+  else { v.add(t.slice(0, -1)); }
+  if (t.endsWith("m")) v.add(t.slice(0, -1) + "ns");
   if (t.endsWith("ao")) {
     const base = t.slice(0, -2);
-    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes"); // “cidadão” set qdo normalizado
+    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes");
   }
   return [...v];
 }
-
-// Distância de edição <= 1 (inserção/remoção/substituição). O( min(n,m) )
-// Fuzzy bem restrito: permite APENAS 1 substituição (mesmo tamanho),
-// mantendo 1ª e última letra iguais. Evita "preclusao" ≈ "reclusao".
 function withinOneSubstitutionStrict(a, b) {
-  if (a.length !== b.length) return false;          // sem inserção/remoção
-  if (a.length < 4) return a === b;                 // palavras curtas: sem fuzzy
+  if (a.length !== b.length) return false;
+  if (a.length < 4) return a === b;
   if (a[0] !== b[0] || a[a.length - 1] !== b[b.length - 1]) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i] && ++diff > 1) return false;
   }
-  return diff === 1;                                 // exatamente 1 diferença
+  return diff === 1;
 }
-
-
-// Checa se UM token de palavra existe no bag por PALAVRA INTEIRA (com tolerância)
 function bagHasTokenWord(bag, token) {
   const words = getBagWords(bag);
   const vars = pluralVariants(token);
-
-  // 1) match EXATO por palavra (singular/plural simples)
   const rx = new RegExp(`\\b(${vars.map(escapeRx).join("|")})\\b`, "i");
   if (rx.test(bag)) return true;
-
-  // 2) fuzzy ULTRA-restrito: 1 substituição (mesmo tamanho, mesma 1ª e última)
   for (const w of words) {
     for (const v of vars) {
       if (withinOneSubstitutionStrict(v, w)) return true;
@@ -212,11 +280,41 @@ function bagHasTokenWord(bag, token) {
   }
   return false;
 }
+function hasAllWordTokens(bag, wordTokens) {
+  return wordTokens.every((w) => bagHasTokenWord(bag, w));
+}
 
+// Regra de números com suporte a prefixo (Art/Súmula) e janela de 15 no título
+function matchesNumbers(item, numTokens, queryHasLegalKeyword, prefixMode) {
+  if (!numTokens.length) return true;
 
+  // Modo prefixado: a linha deve começar com "Art..." ou "Súmula"
+  if (prefixMode) {
+    const tNorm = norm(item.title || "");
+    const startsOk =
+      (prefixMode === "art"    && /^art(\.|igo)?\b/.test(tNorm)) ||
+      (prefixMode === "sumula" && /^sumula\b/.test(tNorm));
+    if (!startsOk) return false;
+
+    // Considera apenas os primeiros 15 caracteres do título
+    const title = String(item.title || "");
+    const windowText = title.slice(0, 15);
+    const legals = extractLegalRefs(windowText);
+    return numTokens.every((n) => legals.has(n));
+  }
+
+  // Sem prefixo: se houver palavra-chave jurídica, exigir proximidade; senão, número exato em qualquer parte
+  if (queryHasLegalKeyword) {
+    const legals = extractLegalRefs(item.text);
+    return numTokens.every((n) => legals.has(n));
+  } else {
+    const bag = norm(item.text);
+    return numTokens.every((n) => hasExactNumber(bag, n));
+  }
+}
 
 /* ---------- catálogo (select) ---------- */
-/* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
+/* Converte automático URLs do GitHub (blob) em RAW + encodeURI */
 function toRawGitHub(url){
   if(!url) return url;
   const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
@@ -289,8 +387,6 @@ async function parseFile(url, sourceLabel) {
 }
 
 /* ---------- "Respiros" (só no leitor) ---------- */
-/* Insere linha em branco ANTES de marcadores no INÍCIO da linha,
-   sem alterar o texto original na fonte (apenas para exibição). */
 function addRespirationsForDisplay(s) {
   if (!s) return "";
   const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
@@ -334,15 +430,18 @@ async function loadPromptTemplate() {
 }
 async function loadQuestionsTemplate() {
   if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompts/prompt_questoes.txt";
-  try {
-    const r = await fetch(PATH, { cache: "no-cache" });
-    if (!r.ok) throw new Error();
-    state.promptQTpl = (await r.text()).trim();
-  } catch {
-    state.promptQTpl = "";
-    toast("Não encontrei data/prompts/prompt_questoes.txt");
+  const PATHS = [
+    "data/prompts/prompt_questoes.txt",
+    "data/prompt/prompt_questoes.txt",
+  ];
+  for (const p of PATHS) {
+    try {
+      const r = await fetch(p, { cache: "no-cache" });
+      if (r.ok) { state.promptQTpl = (await r.text()).trim(); return state.promptQTpl; }
+    } catch {}
   }
+  state.promptQTpl = "";
+  toast("Não encontrei data/prompts/prompt_questoes.txt");
   return state.promptQTpl;
 }
 
@@ -369,35 +468,44 @@ async function doSearch() {
   els.spinner?.classList.add("show");
 
   try {
-    // NOVO: tokens válidos (palavras 3+ e números 1–4 dígitos)
+    // tokens válidos (palavras 3+, números 1–4 e abreviações 2+ conhecidas)
     const tokens = tokenize(term);
     if (!tokens.length) {
       skel.remove();
       renderBlock(term, [], []);
-      toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
+      toast("Use palavras com 3+ letras, abreviações jurídicas (cc, cp, cpc...) ou números (1–4 dígitos).");
       return;
     }
 
     const normQuery = norm(term);
+    const prefixMode = getPrefixMode(normQuery); // "art" | "sumula" | null
     const queryHasLegalKeyword = /\b(art|art\.|artigo|s[uú]mula)\b/i.test(normQuery);
     const { wordTokens, numTokens } = splitTokens(tokens);
+
+    // Filtro por fonte (ex.: “cc”, “codigo civil”)
+    const sourceFilters = detectSourceFilters(normQuery); // Set<labels>
 
     const results = [];
     const allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
       .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
       .filter((o) => o.url);
 
-    for (const { url, label } of allOptions) {
+    // Se houver filtros, restringe; senão, busca em todos
+    const optionsToSearch = sourceFilters.size
+      ? allOptions.filter((o) => sourceFilters.has(o.label))
+      : allOptions;
+
+    for (const { url, label } of optionsToSearch) {
       try {
         const items = await parseFile(url, label);
         for (const it of items) {
           const bag = norm(it.text);
 
-          // Palavras: exige TODAS (cobre o requisito de >2 palavras)
+          // Palavras: exige TODAS (inclui abreviações reconhecidas que viraram tokens)
           const okWords = hasAllWordTokens(bag, wordTokens);
 
-          // Números: exatos; e, se “art|artigo|súmula” presente, próximos no mesmo card
-          const okNums = matchesNumbers(it, numTokens, queryHasLegalKeyword);
+          // Números: regra de proximidade/precisão + prefix mode
+          const okNums = matchesNumbers(it, numTokens, queryHasLegalKeyword, prefixMode);
 
           if (okWords && okNums) results.push(it);
         }
@@ -440,7 +548,7 @@ function renderBlock(term, items, tokens) {
 function highlight(text, tokens) {
   if (!tokens?.length) return escHTML(text || "");
 
-  // Trabalha em NFD para casar base + diacrítico; volta a NFC no fim
+  // NFD para casar base + diacrítico; volta a NFC no fim
   const srcEsc = escHTML(text || "");
   const srcNFD = srcEsc.normalize("NFD");
 
@@ -451,17 +559,14 @@ function highlight(text, tokens) {
   const parts = tokens.filter(Boolean).map(toDiacriticRx);
   if (!parts.length) return srcEsc;
 
-  // borda de palavra: evita “art” em “partido”
+  // borda de palavra
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
   const markedNFD = srcNFD.replace(rx, "<mark>$1</mark>");
   return markedNFD.normalize("NFC");
 }
 
-
-
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
-  // corta em limite sem quebrar no meio da palavra
   let out = base.slice(0, CARD_CHAR_LIMIT);
   const cut = out.lastIndexOf(" ");
   if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
@@ -471,6 +576,7 @@ function truncatedHTML(fullText, tokens) {
   }
   return highlight(escHTML(out), tokens);
 }
+
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
@@ -478,40 +584,56 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const left = document.createElement("div");
 
-  const pill = document.createElement("a");
-  pill.href = "#";
-  pill.className = "pill";
-  pill.textContent = item.source;
-  pill.addEventListener("click", (e) => { e.preventDefault(); openReader(item); });
+  // chip da fonte fora do leitor
+  if (item.source && ctx.context !== "reader") {
+    const pill = document.createElement("a");
+    pill.href = "#";
+    pill.className = "pill";
+    pill.textContent = item.source;
+    pill.addEventListener("click", (e) => {
+      e.preventDefault();
+      openReader(item);
+    });
+    left.append(pill);
+  }
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // PREVIEW: usa o body quando existir para não “ecoar” o título
-body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (título + caput)
+  // preview: título + caput (compacto)
+  body.innerHTML = truncatedHTML(item.text, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
   const actions = document.createElement("div");
   actions.className = "actions";
+
+  // Botão ver texto
   const toggle = document.createElement("button");
   toggle.className = "toggle";
   toggle.textContent = "ver texto";
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-  body.innerHTML = truncatedHTML(item.text, tokens);
-  toggle.textContent = "ver texto";
-} else {
-  // mantém destaque também no modo expandido
-  body.innerHTML = highlight(item.text, tokens);
-  toggle.textContent = "ocultar";
-}
-
+      body.innerHTML = truncatedHTML(item.text, tokens);
+      toggle.textContent = "ver texto";
+    } else {
+      body.innerHTML = highlight(item.text, tokens);
+      toggle.textContent = "ocultar";
+    }
   });
 
-  left.append(pill, body, actions);
-  actions.append(toggle);
+  // Botão Planalto
+  const planaltoBtn = document.createElement("button");
+  planaltoBtn.className = "toggle";
+  planaltoBtn.textContent = "Planalto";
+  planaltoBtn.addEventListener("click", () => {
+    window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
+  });
 
+  actions.append(toggle, planaltoBtn);
+  left.append(body, actions);
+
+  // Checkbox à direita
   const chk = document.createElement("button");
   chk.className = "chk";
   chk.setAttribute("aria-label", "Selecionar bloco");
@@ -554,46 +676,11 @@ async function openReader(item, tokens = []) {
   try {
     const items = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
+
     items.forEach((a) => {
-      const row = document.createElement("div");
-      row.className = "article";
-      row.id = a.htmlId;
-
-      const chk = document.createElement("button");
-      chk.className = "chk a-chk";
-      chk.setAttribute("aria-label", "Selecionar bloco");
-      chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const sync = () => { chk.dataset.checked = state.selected.has(a.id) ? "true" : "false"; };
-      sync();
-      chk.addEventListener("click", () => {
-        if (state.selected.has(a.id)) {
-          state.selected.delete(a.id);
-          toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
-        } else {
-          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
-          state.selected.set(a.id, a);
-          toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
-        }
-        els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-        sync();
-        updateBottom();
-      });
-
-      const body = document.createElement("div");
-      const h4 = document.createElement("h4");
-      h4.textContent = `${a.title} — ${a.source}`;
-      h4.style.fontWeight = "normal"; // sem negrito no leitor
-
-      const txt = document.createElement("div");
-      txt.className = "a-body";
-      // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
-const withBreaks = addRespirationsForDisplay(a.body || a.text);
-const withMarks  = highlight(withBreaks, tokens);
-txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
-
-      body.append(h4, txt);
-      row.append(chk, body);
-      els.readerBody.appendChild(row);
+      const card = renderCard(a, tokens, { context: "reader" });
+      card.id = a.htmlId;
+      els.readerBody.appendChild(card);
     });
 
     const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
@@ -711,11 +798,20 @@ async function buildQuestionsPrompt(includedSet) {
   const opts = Array.from(document.querySelectorAll(".qopt"))
     .filter((i) => i.checked)
     .map((i) => i.value);
+
   const prefLines = [];
-  if (opts.includes("casos2"))         prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))            prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas"))     prefLines.push("- Misture os entendimentos para criar pegadinhas.");
+  if (opts.includes("casos2"))                  prefLines.push("- Inclua 2 Casos Concretos.");
+  if (opts.includes("dissertativas2"))          prefLines.push("- Inclua 2 Dissertativas.");
+  if (opts.includes("vf2"))                     prefLines.push("- Inclua 2 V ou F.");
+  if (opts.includes("mcq_1correta"))            prefLines.push("- Questões múltipla escolha A–E com apenas 1 correta (sem 'todas' ou 'nenhuma').");
+  if (opts.includes("dificuldade_balanceada"))  prefLines.push("- Balancear dificuldade: 3 fáceis, 4 médias e 3 difíceis.");
+  if (opts.includes("bloom_mix"))               prefLines.push("- Distribuir pelo modelo Bloom: 30% lembrar, 40% aplicar, 30% analisar.");
+  if (opts.includes("enunciado_autossuficiente")) prefLines.push("- Enunciados devem ser autossuficientes e neutros.");
+  if (opts.includes("distratores_plausiveis"))  prefLines.push("- Distratores devem ser plausíveis (erros típicos OAB/FGV).");
+  if (opts.includes("alternativas_padronizadas")) prefLines.push("- Alternativas com extensão padronizada (variação ≤ 15%).");
+  if (opts.includes("tempo_alvo"))              prefLines.push("- Considerar tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min.");
+  if (opts.includes("pegadinhas"))              prefLines.push("- Misturar entendimentos para criar pegadinhas recorrentes.");
+
   const prefs = prefLines.join("\n");
 
   const parts = [tpl.trim(), ""];
