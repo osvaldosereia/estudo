@@ -26,14 +26,14 @@
     </div>
   </header>
 
-  <!-- Chips de filtro por arquivo (apenas após busca) -->
+  <!-- CHIPS (NOVO: aparecem após a busca) -->
   <nav id="chipsBar" class="chips-bar" aria-label="Filtros de arquivo" hidden>
     <button class="chips-arrow chips-prev" aria-label="Anterior" tabindex="-1">‹</button>
     <div class="chips-scroll" role="tablist"></div>
     <button class="chips-arrow chips-next" aria-label="Próximo" tabindex="-1">›</button>
   </nav>
 
-  <!-- Catálogo (oculto) -->
+  <!-- Catálogo (oculto — igual ao seu) -->
   <select id="codeSelect" hidden>
     <option value="">—</option>
     <optgroup label="Códigos">
@@ -48,20 +48,33 @@
       <option value="data/codigos/codigo_tributario_nacional.txt">Cód. Tributário Nacional</option>
       <option value="data/codigos/codigo_de_transito_brasileiro.txt">Cód. Trânsito Brasileiro</option>
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos//codigo_processo_penal_militar.txt">Código de Processo Penal Militar</option>
+      <option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
+      <option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
+    </optgroup>
+    <optgroup label="Leis">
+      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+      <option value="data/leis/lei_da_improbidade_administrativa.txt">Lei da Improbidade Administrativa</option>
+      <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
+      <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
+      <option value="data/leis/lei_do_mandado_de_seguranca.txt">Mandado de Segurança</option>
+    </optgroup>
+    <optgroup label="Estatutos">
+      <option value="data/estatutos/ECA.txt">ECA</option>
+      <option value="data/estatutos/estatuto_oab.txt">Estatuto da OAB</option>
     </optgroup>
   </select>
 
+  <!-- RESULTADOS -->
   <main class="content">
     <div class="wrap">
       <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
     </div>
   </main>
 
-  <!-- RODAPÉ (AÇÕES) — preservado -->
-  <footer class="bottom" role="contentinfo">
-    <div class="wrap">
-      <div class="left">
+  <!-- BARRA INFERIOR (igual à sua) -->
+  <footer class="bottombar" role="contentinfo">
+    <div class="wrap bar-inner">
+      <div class="bar-group">
         <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
         <button id="questionsBtn" class="btn btn-primary" aria-label="Criar questões" disabled>Criar Questões</button>
       </div>
@@ -85,7 +98,7 @@
     </div>
   </div>
 
-  <!-- MODAL: ESTUDAR COM I.A. (restaurado) -->
+  <!-- MODAL: ESTUDAR -->
   <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
     <div class="modal-backdrop" data-close-study></div>
     <div class="modal-card" role="document">
@@ -94,28 +107,29 @@
         <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <p class="muted">Selecione até 6 blocos e gere um prompt de estudo personalizado.</p>
+        <p class="muted">Com esse prompt você vai estudar sobre:</p>
         <ul id="studyList" class="mini-list"></ul>
         <div class="mini-actions">
-          <button id="studyUpdate" class="btn soft">Atualizar seleção</button>
+          <button id="studyUpdate" class="btn soft">Atualizar lista</button>
         </div>
-
-        <p class="muted small-note">Abra sua I.A. preferida e cole o prompt:</p>
+        <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
         <div class="ia-grid">
           <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
           <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
           <a class="chip" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
           <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
+        <div class="copy-prompt">
+          <button class="btn soft" id="copyPromptBtn">Usar outra I.A.</button>
+        </div>
       </div>
       <div class="modal-foot">
-        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
         <button class="icon-btn foot-close" data-close-study aria-label="Fechar">✕</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: CRIAR QUESTÕES (escopo visual próprio) -->
+  <!-- MODAL: CRIAR QUESTÕES (com frase explicativa + contraste) -->
   <div id="questionsModal" class="modal modal--questions" role="dialog" aria-modal="true" aria-labelledby="questionsTitle" hidden>
     <div class="modal-backdrop" data-close-questions></div>
     <div class="modal-card" role="document">
@@ -133,13 +147,11 @@
           <label><input type="checkbox" class="qopt" value="pegadinhas" checked> Misture os entendimentos para criar pegadinhas</label>
         </fieldset>
 
-        <label class="obs">
-          <span>Inclua alguma informação para deixar suas questões únicas e inéditas.</span>
-          <div class="obs-row">
-            <input id="questionsObs" type="text" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos." />
-            <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
-          </div>
-        </label>
+        <label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
+        <div class="obs-row">
+          <textarea id="questionsObs" class="obs-input" rows="3" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos."></textarea>
+          <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
+        </div>
 
         <p class="muted">Com esse prompt você vai gerar questões sobre:</p>
         <ul id="questionsList" class="mini-list"></ul>
@@ -169,14 +181,13 @@
     <div class="modal-backdrop" data-close-sel></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
-        <span id="selTitle" class="title">Selecionados</span>
+        <span id="selTitle" class="title">Selecionados (máx. 6)</span>
         <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <section id="selectedStack" class="stack"></section>
+        <section id="selectedStack"></section>
       </div>
       <div class="modal-foot">
-        <button class="btn soft" id="copyToIASelected">Copiar para I.A.</button>
         <button class="icon-btn foot-close" data-close-sel aria-label="Fechar">✕</button>
       </div>
     </div>
