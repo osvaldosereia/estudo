@@ -532,12 +532,13 @@ toggle.addEventListener("click", () => {
 });
 
 // Botão Planalto
-const planaltoBtn = document.createElement("a");
+const planaltoBtn = document.createElement("button");
 planaltoBtn.className = "toggle";
 planaltoBtn.textContent = "Planalto";
-planaltoBtn.href = makePlanaltoURL(item.title, item.source);
-planaltoBtn.target = "_blank";
-planaltoBtn.rel = "noopener noreferrer";
+planaltoBtn.addEventListener("click", () => {
+  window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
+});
+
 
 // Adiciona os dois botões lado a lado
 actions.append(toggle, planaltoBtn);
