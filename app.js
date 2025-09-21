@@ -629,7 +629,7 @@ const withMarks  = highlight(withBreaks, tokens);
 txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
 
       body.append(h4, txt);
-      row.append(chk, body);
+      row.append(body, chk);
       els.readerBody.appendChild(row);
     });
 
