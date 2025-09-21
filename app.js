@@ -146,6 +146,7 @@ function hasAllWordTokens(bag, wordTokens) {
 }
 
 
+
 // Regras dos números:
 // - Sem “art|artigo|súmula” na query → exigir números exatos em qualquer parte do card
 // - Com “art|artigo|súmula” na query → cada número precisa estar próximo desses termos no MESMO card
@@ -180,38 +181,38 @@ function pluralVariants(t) {
 }
 
 // Distância de edição <= 1 (inserção/remoção/substituição). O( min(n,m) )
-function withinOneEdit(a, b) {
-  const la = a.length, lb = b.length;
-  if (Math.abs(la - lb) > 1) return false;
-  let i = 0, j = 0, edits = 0;
-  while (i < la && j < lb) {
-    if (a[i] === b[j]) { i++; j++; continue; }
-    if (++edits > 1) return false;
-    if (la > lb) { i++; }          // remoção em a
-    else if (lb > la) { j++; }     // inserção em a
-    else { i++; j++; }             // substituição
+// Fuzzy bem restrito: permite APENAS 1 substituição (mesmo tamanho),
+// mantendo 1ª e última letra iguais. Evita "preclusao" ≈ "reclusao".
+function withinOneSubstitutionStrict(a, b) {
+  if (a.length !== b.length) return false;          // sem inserção/remoção
+  if (a.length < 4) return a === b;                 // palavras curtas: sem fuzzy
+  if (a[0] !== b[0] || a[a.length - 1] !== b[b.length - 1]) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i] && ++diff > 1) return false;
   }
-  // resto de um caractere conta como uma edição
-  if (i < la || j < lb) edits++;
-  return edits <= 1;
+  return diff === 1;                                 // exatamente 1 diferença
 }
+
 
 // Checa se UM token de palavra existe no bag por PALAVRA INTEIRA (com tolerância)
 function bagHasTokenWord(bag, token) {
   const words = getBagWords(bag);
   const vars = pluralVariants(token);
-  // 1) match direto por borda de palavra (rápido)
+
+  // 1) match EXATO por palavra (singular/plural simples)
   const rx = new RegExp(`\\b(${vars.map(escapeRx).join("|")})\\b`, "i");
   if (rx.test(bag)) return true;
 
-  // 2) tolera 1 erro de digitação (sem substrings)
+  // 2) fuzzy ULTRA-restrito: 1 substituição (mesmo tamanho, mesma 1ª e última)
   for (const w of words) {
     for (const v of vars) {
-      if (withinOneEdit(v, w)) return true;
+      if (withinOneSubstitutionStrict(v, w)) return true;
     }
   }
   return false;
 }
+
 
 
 /* ---------- catálogo (select) ---------- */
