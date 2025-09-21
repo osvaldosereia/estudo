@@ -587,7 +587,8 @@ async function openReader(item, tokens = []) {
       const txt = document.createElement("div");
       txt.className = "a-body";
       // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
-const withBreaks = addRespirationsForDisplay(a.body || a.text);
+const baseText   = a.body && a.body.trim() ? a.body : "";
+const withBreaks = addRespirationsForDisplay(baseText);
 const withMarks  = highlight(withBreaks, tokens);
 txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
 
