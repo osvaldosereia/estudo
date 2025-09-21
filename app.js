@@ -1,5 +1,4 @@
-/* direito.love — app.js (rev UX/UI) */
-/* Base do seu app + correções pontuais para busca/chips/consultar */
+/* direito.love — app.js (rev UX/UI — busca ok, chips, consultar) */
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -130,7 +129,7 @@ function matchesNumbers(item, numTokens, queryHasLegalKeyword){
   return numTokens.every(n => near.has(n));
 }
 
-/* Fetch & parse (idêntico ao seu, com saneamento) */
+/* Fetch & parse */
 function sanitize(s){ return String(s).replace(/\uFEFF/g,"").replace(/\u00A0/g," ").replace(/\r\n?/g,"\n").replace(/[ \t]+\n/g,"\n"); }
 async function fetchText(url){
   url = encodeURI(url);
@@ -159,7 +158,7 @@ async function parseFile(url, sourceLabel){
   return items;
 }
 
-/* “Respiros” para o Leitor (visual only) */
+/* Respiros (visual) */
 function addRespirationsForDisplay(s){
   if (!s) return "";
   const RX_INCISO=/^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
@@ -197,7 +196,7 @@ function truncatedHTML(fullText, tokens){
   return highlight(escHTML(out), tokens);
 }
 
-/* Planalto “consultar” (NOVO) */
+/* Planalto “consultar” */
 const PLANALTO_MAP = new Map([
   ["CF88","https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"],
   ["Constituição Federal","https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"],
@@ -230,7 +229,7 @@ function extractArticleLabel(title){
 function planaltoUrlFor(item){
   const base = PLANALTO_MAP.get(item.source) || null;
   const art = extractArticleLabel(item.title || item.text || "");
-  if (base && art) return base; // Âncoras variam; abre a lei e o usuário localiza rápido
+  if (base && art) return base; // abre a lei base; âncoras variam no Planalto
   const q = encodeURIComponent(`${extractArticleLabel(item.title||item.text||"")||""} ${item.source} site:planalto.gov.br`);
   return `https://www.google.com/search?q=${q}`;
 }
@@ -265,7 +264,6 @@ function renderCard(item, tokens=[], ctx={context:"results"}){
     else { body.innerHTML = highlight(item.text, tokens); toggle.textContent="ocultar"; }
   });
 
-  // NOVO: botão "consultar" (mesmo layout)
   const consult = document.createElement("a");
   consult.href="#"; consult.className="toggle"; consult.textContent="consultar";
   consult.addEventListener("click",(e)=>{ e.preventDefault(); window.open(planaltoUrlFor(item), "_blank","noopener"); });
@@ -315,7 +313,7 @@ function renderBlock(term, items, tokens){
   els.stack.appendChild(block);
 }
 
-/* Chips (NOVO) */
+/* Chips */
 function buildChips(results){
   const set = new Set(results.map(r => r.source));
   const list = ["Todos", ...set];
@@ -359,14 +357,13 @@ function updateBottom(){
   if (els.selCount) els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 
-/* Abrir Leitor */
+/* Abrir Leitor (mostra arquivo inteiro com respiros) */
 async function openReader(item, tokens=[]){
   if (els.readerTitle) els.readerTitle.textContent = item.source;
   if (els.selCount) els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
   if (els.readerBody) els.readerBody.innerHTML = "";
   showModal(els.readerModal);
 
-  // skeleton
   for (let i=0;i<3;i++){ const s=document.createElement("div"); s.className="skel block"; s.style.margin="10px 0"; els.readerBody.appendChild(s); }
 
   try{
@@ -435,7 +432,7 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
-/* Ações base */
+/* Ver / Estudar / Questões */
 els.viewBtn?.addEventListener("click", ()=>{
   const container = els.selectedStack; if (!container) return;
   container.innerHTML = "";
@@ -449,7 +446,6 @@ els.viewBtn?.addEventListener("click", ()=>{
   }
   showModal(els.selectedModal);
 });
-
 els.studyBtn?.addEventListener("click", ()=>{ if (state.selected.size) showModal(els.studyModal); });
 els.questionsBtn?.addEventListener("click", ()=>{ if (state.selected.size) showModal(els.questionsModal); });
 
@@ -458,7 +454,6 @@ async function doSearch(){
   const term = (els.q?.value || "").trim();
   if (!term) return;
 
-  // skeleton
   els.stack.innerHTML="";
   els.stack.setAttribute("aria-busy","true");
   const skel=document.createElement("section"); skel.className="block";
@@ -492,7 +487,7 @@ async function doSearch(){
 
     skel.remove();
     renderBlock(term, results, tokens);
-    buildChips(results); // <-- NOVO: popula e mostra chips
+    buildChips(results);
     toast(`${results.length} resultado(s) encontrados.`);
   } finally {
     els.stack.setAttribute("aria-busy","false");
