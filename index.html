@@ -1,190 +1,108 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>direito.love — Leitor jurídico</title>
+:root{
+  --bg:#f7f7fb;          /* fundo */
+  --surface:#ffffff;     /* cartões/modais */
+  --surface-2:#fafafa;   /* caixas internas */
+  --ink:#0f172a;         /* texto principal */
+  --ink-weak:#1f2937;    /* texto secundário */
+  --line:#e5e7eb;        /* borda suave */
+  --line-strong:#d1d5db; /* borda forte */
+  --chip-active:#111827; /* chip ativo */
+}
 
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#ffffff">
+/* RESET + BASE */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+img{max-width:100%;display:block}
+button,input,select{font:inherit}
+a{color:inherit}
 
-  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+/* LAYOUT */
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+.topbar{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);z-index:9}
+.topbar .wrap{display:flex;align-items:center;gap:16px;padding:10px 16px}
+.brand{height:28px;cursor:pointer}
+.search{margin-left:auto;position:relative;display:flex;align-items:center;gap:8px;max-width:420px;width:100%}
+.search input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.spinner{width:18px;height:18px;border:2px solid var(--line);border-top-color:#999;border-radius:50%;animation:spin 1s linear infinite;display:none}
+.spinner.show{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <!-- TOP BAR -->
-  <header class="topbar" role="banner">
-    <div class="wrap">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
-      <form class="search" id="searchForm" role="search" aria-label="Buscar">
-        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
-        <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
-      </form>
-    </div>
-  </header>
+.content{padding:16px 0 90px}
+.stack{display:flex;flex-direction:column;gap:12px}
 
-  <!-- Filtros por arquivo (após busca) -->
-  <nav id="chipsBar" class="chips-bar" aria-label="Filtros de arquivo" hidden>
-    <button class="chips-arrow chips-prev" aria-label="Anterior" tabindex="-1">‹</button>
-    <div class="chips-scroll" role="tablist"></div>
-    <button class="chips-arrow chips-next" aria-label="Próximo" tabindex="-1">›</button>
-  </nav>
+.block{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.block-title{font-weight:600;margin-bottom:8px}
+.block-empty{color:#6b7280}
 
-  <!-- Catálogo (oculto) -->
-  <select id="codeSelect" hidden>
-    <option value="">—</option>
-    <optgroup label="Códigos">
-      <option value="data/codigos/CF88.txt">CF88</option>
-      <option value="data/codigos/codigo_civil.txt">Código Civil</option>
-      <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
-      <option value="data/codigos/codigo_penal.txt">Código Penal</option>
-      <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
-      <option value="data/codigos/CDC.txt">CDC</option>
-      <option value="data/codigos/codigo_eleitoral.txt">Código Eleitoral</option>
-      <option value="data/codigos/CLT.txt">CLT</option>
-      <option value="data/codigos/codigo_tributario_nacional.txt">Cód. Tributário Nacional</option>
-      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Cód. Trânsito Brasileiro</option>
-      <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos//codigo_processo_penal_militar.txt">Código de Processo Penal Militar</option>
-    </optgroup>
-  </select>
+/* CARD */
+.card{position:relative;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;gap:12px;align-items:flex-start;background:var(--surface)}
+.card .pill{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:.2rem .6rem;font-size:.8rem;text-decoration:none;cursor:pointer}
+.card .body{margin-top:8px;color:var(--ink-weak)}
+.card .body.is-collapsed{max-height:5.8em;overflow:hidden}
+.card .actions{display:flex;gap:8px;margin-top:10px}
+.card .actions .toggle{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer}
+.card .actions .toggle.alt{opacity:.95}
+.card .actions a.toggle{display:inline-block;text-decoration:none}
+.card .chk{position:absolute;right:12px;top:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:6px;cursor:pointer}
+.card .chk[data-checked="true"]{background:#111;color:#fff;border-color:#111}
 
-  <main class="content">
-    <div class="wrap">
-      <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
-    </div>
-  </main>
+/* BOTTOM (preservado) */
+.bottom{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:9}
+.bottom .wrap{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
 
-  <!-- RODAPÉ (AÇÕES) -->
-  <footer class="bottom" role="contentinfo">
-    <div class="wrap">
-      <div class="left">
-        <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
-        <button id="questionsBtn" class="btn btn-primary" aria-label="Criar questões" disabled>Criar Questões</button>
-      </div>
-      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – Ver</button>
-    </div>
-  </footer>
+/* BOTÕES */
+.btn{border:1px solid #111;background:#111;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+.btn.soft{border-color:var(--line);background:var(--surface-2);color:var(--ink)}
+.btn.btn-primary[disabled],.btn.soft[disabled]{opacity:.5;cursor:not-allowed}
+.btn-ghost{border:1px dashed var(--line);background:var(--surface)}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer}
 
-  <!-- MODAL: LEITOR -->
-  <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
-    <div class="modal-backdrop" data-close-modal></div>
-    <div class="modal-card" role="document">
-      <div class="modal-head">
-        <span id="readerTitle" class="title">Leitor</span>
-        <div class="modal-meta"><span id="selCount">0/6</span></div>
-        <button class="icon-btn" data-close-modal aria-label="Fechar">✕</button>
-      </div>
-      <div class="modal-body" id="readerBody" tabindex="0"></div>
-      <div class="modal-foot">
-        <button class="icon-btn foot-close" data-close-modal aria-label="Fechar">✕</button>
-      </div>
-    </div>
-  </div>
+/* MODAIS — base preservada */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.modal[hidden]{display:none}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.32)}
+.modal-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:780px;width:92%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.10)}
+.modal-head,.modal-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line)}
+.modal-foot{border-bottom:none;border-top:1px solid var(--line)}
+.modal-head .title{font-weight:700;color:var(--ink)}
+.modal-body{padding:14px 14px 18px;color:var(--ink-weak);overflow:auto}
+.modal-meta{font-size:.9rem;color:#6b7280}
 
-  <!-- MODAL: ESTUDAR COM I.A. (restaurado) -->
-  <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
-    <div class="modal-backdrop" data-close-study></div>
-    <div class="modal-card" role="document">
-      <div class="modal-head">
-        <span id="studyTitle" class="title">Estudar com I.A.</span>
-        <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="muted">Selecione até 6 blocos e gere um prompt de estudo personalizado.</p>
-        <ul id="studyList" class="mini-list"></ul>
-        <div class="mini-actions">
-          <button id="studyUpdate" class="btn soft">Atualizar seleção</button>
-        </div>
+/* MODAL DE QUESTÕES — contraste escopado */
+.modal--questions .modal-card{border:1px solid var(--line-strong);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.modal--questions .modal-head .title{color:#111}
+.modal--questions .modal-body{color:#1f2937}
+.modal--questions fieldset.prefs{background:var(--surface-2);border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:10px 0}
+.modal--questions fieldset.prefs legend{font-weight:600;color:#111}
+.modal--questions .modal-help{margin:-4px 0 10px;color:#4b5563;font-size:.95rem}
 
-        <p class="muted small-note">Abra sua I.A. preferida e cole o prompt:</p>
-        <div class="ia-grid">
-          <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
-          <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
-          <a class="chip" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
-          <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn soft" id="copyPromptBtn">Copiar prompt</button>
-        <button class="icon-btn foot-close" data-close-study aria-label="Fechar">✕</button>
-      </div>
-    </div>
-  </div>
+fieldset.prefs label{display:block;margin:.4rem 0}
+.obs{display:block;margin-top:12px}
+.obs-row{display:flex;gap:8px;margin-top:6px}
+.obs-row input{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.muted{color:#6b7280;margin:10px 0 6px}
+.small-note{font-size:.875rem}
+.ia-grid{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-block;padding:.35rem .6rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);text-decoration:none}
 
-  <!-- MODAL: CRIAR QUESTÕES (escopo visual próprio) -->
-  <div id="questionsModal" class="modal modal--questions" role="dialog" aria-modal="true" aria-labelledby="questionsTitle" hidden>
-    <div class="modal-backdrop" data-close-questions></div>
-    <div class="modal-card" role="document">
-      <div class="modal-head">
-        <span id="questionsTitle" class="title">Criar Questões</span>
-        <button class="icon-btn" data-close-questions aria-label="Fechar">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-help">Escolha como quer suas questões. Você pode adicionar um foco no campo abaixo.</p>
-        <fieldset class="prefs">
-          <legend>Preferências</legend>
-          <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
-          <label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
-          <label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
-          <label><input type="checkbox" class="qopt" value="pegadinhas" checked> Misture os entendimentos para criar pegadinhas</label>
-        </fieldset>
+/* TOASTS */
+.toasts{position:fixed;right:12px;bottom:90px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.toast{background:#111;color:#fff;border-radius:10px;padding:8px 10px}
 
-        <label class="obs">
-          <span>Inclua alguma informação para deixar suas questões únicas e inéditas.</span>
-          <div class="obs-row">
-            <input id="questionsObs" type="text" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos." />
-            <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
-          </div>
-        </label>
+/* Chips (isolados) */
+.chips-bar{display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:8}
+.chips-bar .chips-scroll{display:flex;gap:.5rem;overflow-x:auto;scroll-behavior:smooth;padding:.25rem 0;flex:1}
+.chips-bar .chip{white-space:nowrap;border:1px solid var(--line);padding:.35rem .6rem;border-radius:999px;font-size:.875rem;cursor:pointer;user-select:none;background:var(--surface)}
+.chips-bar .chip[aria-pressed="true"]{background:var(--chip-active);color:#fff;border-color:var(--chip-active)}
+.chips-bar .chips-arrow{display:none}
+@media (min-width: 1024px){
+  .chips-bar .chips-arrow{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+}
 
-        <p class="muted">Com esse prompt você vai gerar questões sobre:</p>
-        <ul id="questionsList" class="mini-list"></ul>
-        <div class="mini-actions">
-          <button id="questionsUpdate" class="btn soft">Atualizar lista</button>
-        </div>
-
-        <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
-        <div class="ia-grid">
-          <a class="chip" href="https://chat.openai.com/" target="_blank" rel="noopener">ChatGPT</a>
-          <a class="chip" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a>
-          <a class="chip" href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Copilot</a>
-          <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
-        </div>
-        <div class="copy-prompt">
-          <button class="btn soft" id="copyQuestionsBtn">Usar outra I.A.</button>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="icon-btn foot-close" data-close-questions aria-label="Fechar">✕</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: VER SELECIONADOS -->
-  <div id="selectedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selTitle" hidden>
-    <div class="modal-backdrop" data-close-sel></div>
-    <div class="modal-card" role="document">
-      <div class="modal-head">
-        <span id="selTitle" class="title">Selecionados</span>
-        <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
-      </div>
-      <div class="modal-body">
-        <section id="selectedStack" class="stack"></section>
-      </div>
-      <div class="modal-foot">
-        <button class="btn soft" id="copyPromptBtn">Copiar para I.A.</button>
-        <button class="icon-btn foot-close" data-close-sel aria-label="Fechar">✕</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOASTS -->
-  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
-
-  <script src="app.js"></script>
-</body>
-</html>
+/* MOBILE (opcional; pode remover se quiser manter o antigo) */
+@media (max-width: 767px){
+  .topbar .wrap{display:flex;flex-direction:column;gap:.5rem;align-items:center;justify-content:center}
+  .topbar .brand{margin:0 auto}
+  .topbar .search{width:100%;max-width:unset}
+  .topbar{padding-bottom:.5rem}
+}
