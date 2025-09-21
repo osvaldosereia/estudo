@@ -1,15 +1,11 @@
-/* direito.love — app.js (rev UX/UI — busca ok, chips, consultar) */
+/* direito.love — app.js (simples, chips filtram de verdade, mobile sem medições) */
 
-/* Service Worker: registra, força atualização e recarrega quando assumir */
+/* SW: registra e ativa na hora */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register('sw.js');
-
-      // se já existe um SW novo "waiting", ativa na hora
       if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
-
-      // quando encontrar update, manda instalar + pular espera
       reg.addEventListener('updatefound', () => {
         const sw = reg.installing;
         if (!sw) return;
@@ -19,20 +15,13 @@ if ('serviceWorker' in navigator) {
           }
         });
       });
-
-      // quando o novo SW assumir o controle, recarrega 1x
       let reloaded = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (reloaded) return;
-        reloaded = true;
-        window.location.reload();
+        if (reloaded) return; reloaded = true; location.reload();
       });
-    } catch (e) {
-      // silencioso
-    }
+    } catch {}
   });
 }
-
 
 /* Helpers */
 const $ = (s) => document.querySelector(s);
@@ -102,7 +91,7 @@ function toast(msg, ms=2000){
   setTimeout(()=> el.remove(), ms);
 }
 
-/* Busca — tokenização e regras */
+/* Busca — tokenização e regras (idêntico) */
 function tokenize(query){
   const q = norm(query);
   const raw = q.split(/\s+/).filter(Boolean);
@@ -261,7 +250,7 @@ function extractArticleLabel(title){
 function planaltoUrlFor(item){
   const base = PLANALTO_MAP.get(item.source) || null;
   const art = extractArticleLabel(item.title || item.text || "");
-  if (base && art) return base; // abre a lei base; âncoras variam no Planalto
+  if (base && art) return base;
   const q = encodeURIComponent(`${extractArticleLabel(item.title||item.text||"")||""} ${item.source} site:planalto.gov.br`);
   return `https://www.google.com/search?q=${q}`;
 }
@@ -271,6 +260,7 @@ function renderCard(item, tokens=[], ctx={context:"results"}){
   const card = document.createElement("article");
   card.className = "card";
   card.dataset.id = item.id;
+  card.dataset.source = item.source;            // <-- chave p/ filtro simples
 
   const left = document.createElement("div");
 
@@ -332,7 +322,7 @@ function renderBlock(term, items, tokens){
   const title = document.createElement("div");
   title.className="block-title";
   title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
-  state.blockTitleEl = title; // guardar para atualizar com o filtro
+  state.blockTitleEl = title;
   block.appendChild(title);
 
   if (!items.length){
@@ -358,19 +348,13 @@ function updateBlockTitleWithFilter(filterName){
   state.blockTitleEl.textContent = base + suffix + ")";
 }
 function buildChips(results){
-  // sem resultados? esconde a barra e sai
   if (!results || results.length === 0) {
-    if (els.chipsBar) els.chipsBar.hidden = true;
-    return;
+    els.chipsBar.hidden = true; return;
   }
-
   const set = new Set(results.map(r => r.source));
   const list = ["Todos", ...set];
-
-  // limpa os chips
   els.chipsScroll.innerHTML = "";
 
-  // monta os chips
   list.forEach((name, i)=>{
     const b = document.createElement("button");
     b.className="chip";
@@ -386,11 +370,9 @@ function buildChips(results){
     els.chipsScroll.appendChild(b);
   });
 
-  // mostra a barra
   els.chipsBar.hidden = false;
-  setChipsMetrics();
 
-  // evita listeners acumulados
+  // setas desktop
   const scroll = els.chipsScroll;
   if (els.chipsPrev) els.chipsPrev.onclick = () => scroll.scrollBy({left:-200, behavior:"smooth"});
   if (els.chipsNext) els.chipsNext.onclick = () => scroll.scrollBy({left: 200, behavior:"smooth"});
@@ -399,8 +381,7 @@ function filterByChip(name){
   const cards = els.stack.querySelectorAll(".card");
   if (name==="Todos"){ cards.forEach(c=> c.hidden=false); return; }
   cards.forEach(c=>{
-    const pill = c.querySelector(".pill");
-    const src = pill ? pill.textContent.trim() : "";
+    const src = c.dataset.source || "";
     c.hidden = (src !== name);
   });
 }
@@ -416,7 +397,7 @@ function updateBottom(){
   if (els.selCount) els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 
-/* Abrir Leitor (mostra arquivo inteiro com respiros) */
+/* Leitor */
 async function openReader(item, tokens=[]){
   if (els.readerTitle) els.readerTitle.textContent = item.source;
   if (els.selCount) els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
@@ -475,7 +456,6 @@ els.brand?.addEventListener("click", ()=>{
   if(els.chipsBar) els.chipsBar.hidden = true;
   toast("Busca reiniciada.");
 });
-
 document.addEventListener("click", (e)=>{
   if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
   if (e.target.matches("[data-close-study]")) hideModal(els.studyModal);
@@ -496,7 +476,7 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
-/* Execução da busca */
+/* Busca */
 async function doSearch(){
   const term = (els.q?.value || "").trim();
   if (!term) return;
@@ -548,54 +528,5 @@ async function doSearch(){
   }
 }
 
-/* ===== Altura real da topbar no mobile (duas faixas) — robusto para iOS ===== */
-function setMobileTopbarHeightOnce() {
-  if (!window.matchMedia('(max-width: 767px)').matches) return;
-  const tb = document.querySelector('.topbar');
-  if (!tb) return;
-  const h = Math.round(tb.getBoundingClientRect().height) || 112;
-  document.documentElement.style.setProperty('--topbar-mobile-h', h + 'px');
-}
-function afterBrandLoaded(cb){
-  const img = document.querySelector('.brand');
-  if (!img) { cb(); return; }
-  if (img.complete && img.naturalHeight > 0) { cb(); return; }
-  img.addEventListener('load', cb, { once:true });
-  setTimeout(cb, 500);
-}
-function setMobileTopbarHeight() {
-  const measure = () => {
-    setMobileTopbarHeightOnce();
-    setTimeout(setMobileTopbarHeightOnce, 120);
-    setTimeout(setMobileTopbarHeightOnce, 320);
-    requestAnimationFrame(setMobileTopbarHeightOnce);
-    setChipsMetrics();
-
-  };
-  afterBrandLoaded(measure);
-}
-window.addEventListener('load', setMobileTopbarHeight);
-window.addEventListener('resize', setMobileTopbarHeight);
-window.addEventListener('orientationchange', setMobileTopbarHeight);
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) setMobileTopbarHeight();
-});
-new MutationObserver(() => setMobileTopbarHeightOnce())
-  .observe(document.body, { subtree:true, childList:true, attributes:true });
-/* ===== Altura dinâmica dos chips no mobile ===== */
-function setChipsMetrics(){
-  if (!window.matchMedia('(max-width: 767px)').matches) return;
-  const bar = els.chipsBar;
-  if (!bar || bar.hidden) return;
-  // mede a altura efetiva (varia com zoom, fontes, etc.)
-  const h = Math.round(bar.getBoundingClientRect().height) || 56;
-  document.documentElement.style.setProperty('--chips-h', h + 'px');
-}
-window.addEventListener('resize', setChipsMetrics);
-window.addEventListener('orientationchange', setChipsMetrics);
-
 /* init */
 updateBottom();
-setMobileTopbarHeight();
-setChipsMetrics();
-
