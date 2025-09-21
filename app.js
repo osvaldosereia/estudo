@@ -385,21 +385,19 @@ function highlight(text, tokens) {
   const src = escHTML(text || "");
   if (!tokens?.length) return src;
 
-  // Transforma cada letra em "letra + \p{M}*" para casar variações com acento.
+  // Permite casar palavras com/sem acento (ex.: "urgencia" ↔ "urgência")
   const toDiacriticRx = (t) =>
     t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")      // escapa meta
-     .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*"); // permite diacríticos
+     .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*"); // permite diacríticos após a letra
 
-  const parts = tokens
-    .filter(Boolean)
-    .map(toDiacriticRx);
-
+  const parts = tokens.filter(Boolean).map(toDiacriticRx);
   if (!parts.length) return src;
 
-  // \b... word boundaries; 'giu' = global, case-insensitive, unicode
+  // \b = borda de palavra (evita grifar pedaços tipo "art" dentro de "partido")
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
   return src.replace(rx, "<mark>$1</mark>");
 }
+
 
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
