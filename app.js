@@ -611,6 +611,7 @@ async function openReader(item, tokens = []) {
   try {
     const items = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
+
     items.forEach((a) => {
       const row = document.createElement("div");
       row.className = "article";
@@ -638,12 +639,18 @@ async function openReader(item, tokens = []) {
 
       const body = document.createElement("div");
       const h4 = document.createElement("h4");
-      h4.textContent = `${a.title} — ${a.source}`;
-      h4.style.fontWeight = "normal"; // sem negrito no leitor
+      // 👉 título sem repetir a fonte (o cabeçalho do modal já mostra a fonte)
+      h4.textContent = a.title;
+      h4.style.fontWeight = "normal";
+
+      // 👉 corpo SEM a primeira linha (título), mesmo se a.body vier vazio
+      const onlyBody = (a.body && a.body.trim())
+        ? a.body
+        : (a.text || "").replace(/^[^\n]*\n?/, "");
 
       const txt = document.createElement("div");
       txt.className = "a-body";
-      const withBreaks = addRespirationsForDisplay(a.body || a.text);
+      const withBreaks = addRespirationsForDisplay(onlyBody);
       const withMarks  = highlight(withBreaks, tokens);
       txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
 
