@@ -8,7 +8,7 @@ Art. 1 -  A ementa da Lei n 8429, de 2 de junho de 1992, passa a vigorar com a s
 -----
 Art. 2 - A Lei n 8429, de 2 de junho de 1992, passa a vigorar com as seguintes alterações:
 
-“-----
+-----
 Art. 1A - O sistema de responsabilização por atos de improbidade administrativa tutelará a probidade na organização do Estado e no exercício de suas funções, como forma de assegurar a integridade do patrimônio público e social, nos termos desta Lei.
 
 
@@ -38,13 +38,13 @@ Parágrafo único. (Revogado).
 
 § 8 Não configura improbidade a ação ou omissão decorrente de divergência interpretativa da lei, baseada em jurisprudência, ainda que não pacificada, mesmo que não venha a ser posteriormente prevalecente nas decisões dos órgãos de controle ou dos tribunais do Poder Judiciário.” (NR)
 
-“-----
+-----
 Art. 2A - Para os efeitos desta Lei, consideram-se agente público o agente político, o servidor público e todo aquele que exerce, ainda que transitoriamente ou sem remuneração, por eleição, nomeação, designação, contratação ou qualquer outra forma de investidura ou vínculo, mandato, cargo, emprego ou função nas entidades referidas no art. 1 desta Lei.
 
 
 Parágrafo único. No que se refere a recursos de origem pública, sujeita-se às sanções previstas nesta Lei o particular, pessoa física ou jurídica, que celebra com a administração pública convênio, contrato de repasse, contrato de gestão, termo de parceria, termo de cooperação ou ajuste administrativo equivalente.” (NR)
 
-“-----
+-----
 Art. 3 - As disposições desta Lei são aplicáveis, no que couber, àquele que, mesmo não sendo agente público, induza ou concorra dolosamente para a prática do ato de improbidade.
 
 
@@ -53,22 +53,22 @@ Art. 3 - As disposições desta Lei são aplicáveis, no que couber, àquele que
 
 § 2 As sanções desta Lei não se aplicarão à pessoa jurídica, caso o ato de improbidade administrativa seja também sancionado como ato lesivo à administração pública de que trata a Lei n 12846, de 1 de agosto de 2013.” (NR)
 
-“-----
+-----
 Art. 7 - Se houver indícios de ato de improbidade, a autoridade que conhecer dos fatos representará ao Ministério Público competente, para as providências necessárias.
 
 
 Parágrafo único. (Revogado).” (NR)
 
-“-----
+-----
 Art. 8 - O sucessor ou o herdeiro daquele que causar dano ao erário ou que se enriquecer ilicitamente estão sujeitos apenas à obrigação de repará-lo até o limite do valor da herança ou do patrimônio transferido.” (NR)
 
-“-----
+-----
 Art. 8A --A A responsabilidade sucessória de que trata o art. 8 desta Lei aplica-se também na hipótese de alteração contratual, de transformação, de incorporação, de fusão ou de cisão societária.
 
 
 Parágrafo único. Nas hipóteses de fusão e de incorporação, a responsabilidade da sucessora será restrita à obrigação de reparação integral do dano causado, até o limite do patrimônio transferido, não lhe sendo aplicáveis as demais sanções previstas nesta Lei decorrentes de atos e de fatos ocorridos antes da data da fusão ou da incorporação, exceto no caso de simulação ou de evidente intuito de fraude, devidamente comprovados.”
 
-“-----
+-----
 Art. 9 - Constitui ato de improbidade administrativa importando em enriquecimento ilícito auferir, mediante a prática de ato doloso, qualquer tipo de vantagem patrimonial indevida em razão do exercício de cargo, de mandato, de função, de emprego ou de atividade nas entidades referidas no art. 1 desta Lei, e notadamente:
 
 ..................................................................................................
@@ -86,7 +86,7 @@ VII - adquirir, para si ou para outrem, no exercício de mandato, de cargo, de e
 
 ..........................................................................................” (NR)
 
-“-----
+-----
 Art. 10. Constitui ato de improbidade administrativa que causa lesão ao erário qualquer ação ou omissão dolosa, que enseje, efetiva e comprovadamente, perda patrimonial, desvio, apropriação, malbaratamento ou dilapidação dos bens ou haveres das entidades referidas no art. 1 desta Lei, e notadamente:
 
 
@@ -121,7 +121,7 @@ XXII - conceder, aplicar ou manter benefício financeiro ou tributário contrár
 
 § 2 A mera perda patrimonial decorrente da atividade econômica não acarretará improbidade administrativa, salvo se comprovado ato doloso praticado com essa finalidade.” (NR)
 
-“-----
+-----
 Art. 11. Constitui ato de improbidade administrativa que atenta contra os princípios da administração pública a ação ou omissão dolosa que viole os deveres de honestidade, de imparcialidade e de legalidade, caracterizada por uma das seguintes condutas:
 
 
@@ -171,7 +171,7 @@ XII - praticar, no âmbito da administração pública e com recursos do erário
 
 § 5 Não se configurará improbidade a mera nomeação ou indicação política por parte dos detentores de mandatos eletivos, sendo necessária a aferição de dolo com finalidade ilícita por parte do agente.” (NR)
 
-“-----
+-----
 Art. 12. Independentemente do ressarcimento integral do dano patrimonial, se efetivo, e das sanções penais comuns e de responsabilidade, civis e administrativas previstas na legislação específica, está o responsável pelo ato de improbidade sujeito às seguintes cominações, que podem ser aplicadas isolada ou cumulativamente, de acordo com a gravidade do fato:
 
 
@@ -219,7 +219,7 @@ Parágrafo único. (Revogado).
 
 § 10. Para efeitos de contagem do prazo da sanção de suspensão dos direitos políticos, computar-se-á retroativamente o intervalo de tempo entre a decisão colegiada e o trânsito em julgado da sentença condenatória.” (NR)
 
-“-----
+-----
 Art. 13. A posse e o exercício de agente público ficam condicionados à apresentação de declaração de imposto de renda e proventos de qualquer natureza, que tenha sido apresentada à Secretaria Especial da Receita Federal do Brasil, a fim de ser arquivada no serviço de pessoal competente.
 
 
@@ -234,7 +234,7 @@ Art. 13. A posse e o exercício de agente público ficam condicionados à aprese
 
 § 4 (Revogado).” (NR)
 
-“-----
+-----
 Art. 14. ........................................................................................
 
 ......................................................................................................
@@ -242,7 +242,7 @@ Art. 14. .......................................................................
 
 § 3 Atendidos os requisitos da representação, a autoridade determinará a imediata apuração dos fatos, observada a legislação que regula o processo administrativo disciplinar aplicável ao agente.” (NR)
 
-“-----
+-----
 Art. 16. Na ação por improbidade administrativa poderá ser formulado, em caráter antecedente ou incidente, pedido de indisponibilidade de bens dos réus, a fim de garantir a integral recomposição do erário ou do acréscimo patrimonial resultante de enriquecimento ilícito.
 
 
@@ -290,7 +290,7 @@ Art. 16. Na ação por improbidade administrativa poderá ser formulado, em car�
 
 § 14. É vedada a decretação de indisponibilidade do bem de família do réu, salvo se comprovado que o imóvel seja fruto de vantagem patrimonial indevida, conforme descrito no art. 9 desta Lei.” (NR)
 
-“-----
+-----
 Art. 17. A ação para a aplicação das sanções de que trata esta Lei será proposta pelo Ministério Público e seguirá o procedimento comum previsto na Lei n 13105, de 16 de março de 2015 (Código de Processo Civil), salvo o disposto nesta Lei.
 
 
@@ -415,7 +415,7 @@ IV - o reexame obrigatório da sentença de improcedência ou de extinção sem 
 
 § 21. Das decisões interlocutórias caberá agravo de instrumento, inclusive da decisão que rejeitar questões preliminares suscitadas pelo réu em sua contestação.” (NR)
 
-“-----
+-----
 Art. 17-B. O Ministério Público poderá, conforme as circunstâncias do caso concreto, celebrar acordo de não persecução civil, desde que dele advenham, ao menos, os seguintes resultados:
 
 
@@ -454,7 +454,7 @@ III - de homologação judicial, independentemente de o acordo ocorrer antes ou 
 
 § 7 Em caso de descumprimento do acordo a que se refere o caput deste artigo, o investigado ou o demandado ficará impedido de celebrar novo acordo pelo prazo de 5 (cinco) anos, contado do conhecimento pelo Ministério Público do efetivo descumprimento.”
 
-“-----
+-----
 Art. 17A-C. A sentença proferida nos processos a que se refere esta Lei deverá, além de observar o disposto no art. 489 da Lei n 13105, de 16 de março de 2015 (Código de Processo Civil):
 
 
@@ -508,13 +508,13 @@ VII - indicar, na apuração da ofensa a princípios, critérios objetivos que j
 
 § 3 Não haverá remessa necessária nas sentenças de que trata esta Lei.”
 
-“-----
+-----
 Art. 17B-D. A ação por improbidade administrativa é repressiva, de caráter sancionatório, destinada à aplicação de sanções de caráter pessoal previstas nesta Lei, e não constitui ação civil, vedado seu ajuizamento para o controle de legalidade de políticas públicas e para a proteção do patrimônio público e social, do meio ambiente e de outros interesses difusos, coletivos e individuais homogêneos.
 
 
 Parágrafo único. Ressalvado o disposto nesta Lei, o controle de legalidade de políticas públicas e a responsabilidade de agentes públicos, inclusive políticos, entes públicos e governamentais, por danos ao meio ambiente, ao consumidor, a bens e direitos de valor artístico, estético, histórico, turístico e paisagístico, a qualquer outro interesse difuso ou coletivo, à ordem econômica, à ordem urbanística, à honra e à dignidade de grupos raciais, étnicos ou religiosos e ao patrimônio público e social submetem-se aos termos da Lei n 7347, de 24 de julho de 1985..”
 
-“-----
+-----
 Art. 18. A sentença que julgar procedente a ação fundada nos arts. 9 e 10 desta Lei condenará ao ressarcimento dos danos e à perda ou à reversão dos bens e valores ilicitamente adquiridos, conforme o caso, em favor da pessoa jurídica prejudicada pelo ilícito.
 
 
@@ -529,7 +529,7 @@ Art. 18. A sentença que julgar procedente a ação fundada nos arts. 9 e 10 des
 
 § 4 O juiz poderá autorizar o parcelamento, em até 48 (quarenta e oito) parcelas mensais corrigidas monetariamente, do débito resultante de condenação pela prática de improbidade administrativa se o réu demonstrar incapacidade financeira de saldá-lo de imediato.” (NR)
 
-“-----
+-----
 Art. 18-A. A requerimento do réu, na fase de cumprimento da sentença, o juiz unificará eventuais sanções aplicadas com outras já impostas em outros processos, tendo em vista a eventual continuidade de ilícito ou a prática de diversas ilicitudes, observado o seguinte:
 
 
@@ -541,7 +541,7 @@ II - no caso de prática de novos atos ilícitos pelo mesmo sujeito, o juiz soma
 
 Parágrafo único. As sanções de suspensão de direitos políticos e de proibição de contratar ou de receber incentivos fiscais ou creditícios do poder público observarão o limite máximo de 20 (vinte) anos.”
 
-“-----
+-----
 Art. 20. .............................................................................
 
 
@@ -550,7 +550,7 @@ Art. 20. .......................................................................
 
 § 2 O afastamento previsto no § 1 deste artigo será de até 90 (noventa) dias, prorrogáveis uma única vez por igual prazo, mediante decisão motivada.” (NR)
 
-“-----
+-----
 Art. 21. .........................................................................................
 
 
@@ -573,13 +573,13 @@ I - da efetiva ocorrência de dano ao patrimônio público, salvo quanto à pena
 
 § 5 Sanções eventualmente aplicadas em outras esferas deverão ser compensadas com as sanções aplicadas nos termos desta Lei.” (NR)
 
-“-----
+-----
 Art. 22. Para apurar qualquer ilícito previsto nesta Lei, o Ministério Público, de ofício, a requerimento de autoridade administrativa ou mediante representação formulada de acordo com o disposto no art. 14 desta Lei, poderá instaurar inquérito civil ou procedimento investigativo assemelhado e requisitar a instauração de inquérito policial.
 
 
 Parágrafo único. Na apuração dos ilícitos previstos nesta Lei, será garantido ao investigado a oportunidade de manifestação por escrito e de juntada de documentos que comprovem suas alegações e auxiliem na elucidação dos fatos.” (NR)
 
-“-----
+-----
 Art. 23. A ação para a aplicação das sanções previstas nesta Lei prescreve em 8 (oito) anos, contados a partir da ocorrência do fato ou, no caso de infrações permanentes, do dia em que cessou a permanência.
 
 
@@ -630,10 +630,10 @@ V - pela publicação de decisão ou acórdão do Supremo Tribunal Federal que c
 
 § 8 O juiz ou o tribunal, depois de ouvido o Ministério Público, deverá, de ofício ou a requerimento da parte interessada, reconhecer a prescrição intercorrente da pretensão sancionadora e decretá-la de imediato, caso, entre os marcos interruptivos referidos no § 4, transcorra o prazo previsto no § 5 deste artigo.” (NR)
 
-“-----
+-----
 Art. 23-A. É dever do poder público oferecer contínua capacitação aos agentes públicos e políticos que atuem com prevenção ou repressão de atos de improbidade administrativa.”
 
-“-----
+-----
 Art. 23A-B. Nas ações e nos acordos regidos por esta Lei, não haverá adiantamento de custas, de preparo, de emolumentos, de honorários periciais e de quaisquer outras despesas.
 
 
@@ -642,7 +642,7 @@ Art. 23A-B. Nas ações e nos acordos regidos por esta Lei, não haverá adianta
 
 § 2 Haverá condenação em honorários sucumbenciais em caso de improcedência da ação de improbidade se comprovada má-fé.”
 
-“-----
+-----
 Art. 23B-C. Atos que ensejem enriquecimento ilícito, perda patrimonial, desvio, apropriação, malbaratamento ou dilapidação de recursos públicos dos partidos políticos, ou de suas fundações, serão responsabilizados nos termos da Lei n 9096, de 19 de setembro de 1995.”         (ADI 7236)
 
 -----
