@@ -1,10 +1,38 @@
 /* direito.love — app.js (rev UX/UI — busca ok, chips, consultar) */
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+/* Service Worker: registra, força atualização e recarrega quando assumir */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+
+      // se já existe um SW novo "waiting", ativa na hora
+      if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+
+      // quando encontrar update, manda instalar + pular espera
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            sw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+
+      // quando o novo SW assumir o controle, recarrega 1x
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      });
+    } catch (e) {
+      // silencioso
+    }
   });
 }
+
 
 /* Helpers */
 const $ = (s) => document.querySelector(s);
