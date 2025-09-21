@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- viewport-fit=cover ativa a safe-area do iOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>direito.love — Leitor jurídico</title>
 
   <link rel="manifest" href="manifest.webmanifest">
@@ -12,7 +13,8 @@
   <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <link rel="stylesheet" href="style.css">
+  <!-- cache bust para evitar pegar CSS antigo do service worker -->
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <!-- TOP BAR -->
@@ -196,6 +198,7 @@
   <!-- TOASTS -->
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js"></script>
+  <!-- cache bust para evitar JS antigo do service worker -->
+  <script src="app.js?v=9"></script>
 </body>
 </html>
