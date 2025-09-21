@@ -38,7 +38,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .block-empty{color:var(--muted);font-style:italic;padding:8px 0}
 
 /* ====== Chips ====== */
-/* Limitados à largura do site no desktop */
+/* No desktop: limitados à largura do site, sticky abaixo da topbar */
 .chips-bar{
   position:sticky;
   top:var(--topbar-h);
@@ -150,49 +150,39 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .bottombar{ padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 .content{  padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 
-/* ====== Mobile: topbar em 2 faixas + logo maior ====== */
+/* ====== Mobile simples: topbar em coluna + chips fixos ====== */
 @media (max-width: 767px){
-  :root{ --topbar-mobile-h: 112px; }  /* fallback; JS atualiza */
+  :root{
+    --topbar-mobile-h: 112px; /* altura das duas faixas (logo + input) */
+    --chips-h: 56px;          /* altura aproximada dos chips */
+  }
 
-  .topbar{height:auto}
+  .topbar{ height: auto; }
   .topbar .wrap{
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:8px 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
   }
-  .brand{height:44px}     /* logo maior */
-  .search{margin:0;width:100%}
-  .search input{height:46px}
+  .brand{ height: 44px; }      /* logo um pouco maior */
+  .search{ margin: 0; width: 100%; }
+  .search input{ height: 46px; }
 
-  /* conteúdo começa depois da topbar de 2 andares */
-  .content{padding-top:calc(var(--topbar-mobile-h) + 10px)}
-
-  /* chips colam logo abaixo da topbar e respeitam a largura da página */
+  /* Chips: FIXOS logo abaixo da topbar e limitados à largura do site */
   .chips-bar{
-    top: var(--topbar-mobile-h);
-    padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px);
-    padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
-  }
-}
-/* ==== FIX MOBILE: chips fixos logo abaixo da topbar, com respiro exato ==== */
-@media (max-width: 767px){
-  :root{ --chips-h: 56px; } /* fallback; o JS mede e corrige */
-
-  .chips-bar{
-    position: fixed !important;
+    position: fixed;
     left: 0; right: 0;
-    top: var(--topbar-mobile-h) !important;
-    bottom: auto !important;
+    top: var(--topbar-mobile-h);
     z-index: 260;
     background: var(--top);
     border-bottom: 1px solid var(--line);
-    padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px) !important;
-    padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px) !important;
+    padding: 6px 8px;
+    padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px);
+    padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
   }
 
-  /* conteúdo começa depois da topbar (2 faixas) + altura real dos chips */
+  /* Conteúdo começa depois da topbar + chips */
   .content{
-    padding-top: calc(var(--topbar-mobile-h) + var(--chips-h) + 10px) !important;
+    padding-top: calc(var(--topbar-mobile-h) + var(--chips-h) + 10px);
   }
 }
