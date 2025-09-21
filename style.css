@@ -1,4 +1,4 @@
-/* Base do seu arquivo + ajustes pontuais */
+/* ====== Base ====== */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 :root{
@@ -20,7 +20,7 @@ html,body{margin:0;height:100%}
 body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,Arial;color:var(--ink);background:var(--bg)}
 .wrap{width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 8px}
 
-/* topbar */
+/* ====== Topbar ====== */
 .topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-h);background:var(--top);z-index:300;border-bottom:1px solid var(--line)}
 .topbar .wrap{height:100%;display:flex;align-items:center;gap:12px}
 .brand{height:40px;display:block;cursor:pointer}
@@ -30,14 +30,27 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .spinner.show{display:block}
 @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
 
-/* conteúdo */
+/* ====== Conteúdo ====== */
 .content{padding:calc(var(--topbar-h) + 10px) 0 110px}
+.stack{display:flex;flex-direction:column;gap:12px}
 .block{margin:16px 0 10px}
 .block-title{font-weight:600;margin:0 0 8px;color:#111}
 .block-empty{color:var(--muted);font-style:italic;padding:8px 0}
 
-/* CHIPS (NOVO) */
-.chips-bar{position:sticky;top:var(--topbar-h);z-index:260;display:flex;align-items:center;gap:8px;background:var(--top);border-bottom:1px solid var(--line);padding:6px 8px}
+/* ====== Chips ====== */
+/* Limitados à largura do site no desktop */
+.chips-bar{
+  position:sticky;
+  top:var(--topbar-h);
+  z-index:260;
+  display:flex;align-items:center;gap:8px;
+  background:var(--top);border-bottom:1px solid var(--line);
+  padding:6px 8px;
+
+  /* simula .wrap sem mexer no HTML */
+  padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px);
+  padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
+}
 .chips-scroll{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .chips-bar .chip{display:inline-flex;align-items:center;white-space:nowrap;padding:.4rem .7rem;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:600}
 .chips-bar .chip[aria-pressed="true"]{background:#111;color:#fff;border-color:#111}
@@ -46,7 +59,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
   .chips-arrow{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:999px;background:#fff}
 }
 
-/* cards */
+/* ====== Cards ====== */
 .card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 0 rgba(2,8,20,.02);margin:12px 0}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--blue-soft);color:#1745b6;font-weight:600;font-size:.92rem;text-decoration:none}
 .card .body{white-space:pre-wrap;margin:8px 0 10px;color:#1f2937}
@@ -54,7 +67,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .card .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .card .toggle{border:1px solid #d6dbe6;background:#fff;border-radius:12px;height:32px;padding:0 12px;font-weight:600;color:#111;text-decoration:none;display:inline-flex;align-items:center}
 
-/* checkbox */
+/* ====== Checkbox ====== */
 .chk{width:32px;height:32px;border-radius:10px;border:2px solid #cfd4e2;background:#fff;display:grid;place-items:center;cursor:pointer;align-self:flex-start;box-shadow:0 1px 0 rgba(0,0,0,.03)}
 .chk:focus-visible{outline:3px solid #cfe0ff; outline-offset:2px}
 .chk[data-checked="true"]{background:#0f172a;border-color:#0f172a;color:#fff}
@@ -62,7 +75,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .chk[data-checked="true"] svg{opacity:1}
 .chk svg path{stroke-width:2.5}
 
-/* bottom bar */
+/* ====== Bottom bar ====== */
 .bottombar{position:fixed;left:0;right:0;bottom:0;background:var(--bottom);border-top:1px solid var(--line);z-index:250}
 .bar-inner{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 0}
 .bar-group{display:flex;gap:10px;margin:0 auto}
@@ -72,7 +85,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .btn.soft{background:#f6f7fb}
 .btn-ghost{background:#fff}
 
-/* Ajuste MOBILE para não encavalar botões da base */
+/* Ajuste MOBILE: evitar encavalamento */
 @media (max-width: 540px){
   .bar-inner{flex-wrap:wrap;gap:8px}
   .bar-group{width:100%;justify-content:space-between}
@@ -80,7 +93,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
   #viewBtn{width:100%}
 }
 
-/* modais */
+/* ====== Modais ====== */
 .modal{position:fixed;inset:0;display:grid;place-items:center;z-index:1000}
 .modal[hidden]{display:none}
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,15,25,.35);backdrop-filter:saturate(1.2) blur(4px);z-index:0}
@@ -133,11 +146,21 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 
 @keyframes hilite{0%{background:#fff9c2}100%{background:#fff}}
 
-/* Top bar em 2 faixas SÓ no mobile (como você pediu) */
+/* ====== Mobile: topbar em 2 faixas + logo maior ====== */
 @media (max-width: 767px){
+  :root{
+    /* altura aproximada das duas faixas (logo + input) */
+    --topbar-mobile-h: 112px;
+  }
   .topbar{height:auto}
   .topbar .wrap{flex-direction:column;align-items:center;justify-content:center;padding:8px 0}
-  .brand{height:34px}
+  .brand{height:42px} /* logo maior */
   .search{margin:0;width:100%}
   .search input{height:46px}
+  .content{padding-top:calc(var(--topbar-mobile-h) + 10px)}
+  .chips-bar{
+    top: var(--topbar-mobile-h);
+    padding-left: max(calc((100vw - var(--wrap-max)) / 2), 8px);
+    padding-right: max(calc((100vw - var(--wrap-max)) / 2), 8px);
+  }
 }
