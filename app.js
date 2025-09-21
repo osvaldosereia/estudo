@@ -545,7 +545,6 @@ actions.append(toggle, planaltoBtn);
 
 
   left.append(pill, body, actions);
-  actions.append(toggle);
 
   const chk = document.createElement("button");
   chk.className = "chk";
