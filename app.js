@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (revisado)
+   direito.love — app.js (revisado + snippet + highlight no título)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -147,9 +147,7 @@ function highlightAll(plainText, tokens) {
 
 /** Sanitiza quebras e espaços */
 function sanitize(txt) {
-  return (txt || "")
-    .replace(/\r\n?/g, "\n")
-  ;
+  return (txt || "").replace(/\r\n?/g, "\n");
 }
 
 /** Divide por linhas com 5+ hifens (-----) */
@@ -198,6 +196,28 @@ async function parseFile(url, label) {
   const items = blocks.map((b, i) => parseBlock(b, i, url, label));
   state.cacheParsed.set(url, items);
   return items;
+}
+
+/* ---------- Snippet inteligente para preview ---------- */
+// Gera um preview de ~200 caracteres centrado na 1ª ocorrência de qualquer token.
+// Se não houver match, cai no começo do texto.
+function makeSnippet(body, tokens, limit = CARD_CHAR_LIMIT) {
+  const txt = (body || "").replace(/\s+/g, " ").trim();
+  if (!txt) return "";
+  if (!tokens?.length) return txt.slice(0, limit) + (txt.length > limit ? "…" : "");
+
+  const rx = new RegExp(
+    `\\b(${tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`,
+    "iu"
+  );
+  const m = rx.exec(txt);
+  if (!m) return txt.slice(0, limit) + (txt.length > limit ? "…" : "");
+
+  const idx = Math.max(0, m.index - Math.floor(limit / 2));
+  let slice = txt.slice(idx, idx + limit);
+  if (idx > 0) slice = "…" + slice;
+  if (idx + limit < txt.length) slice = slice + "…";
+  return slice;
 }
 
 /* ---------- Busca ---------- */
@@ -259,26 +279,19 @@ async function search(term) {
 }
 
 /* ---------- Cards ---------- */
-function truncateText(s, n = CARD_CHAR_LIMIT) {
-  if (!s) return "";
-  const clean = s.replace(/\s+/g, " ").trim();
-  if (clean.length <= n) return clean;
-  return clean.slice(0, n - 1) + "…";
-}
-
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
 
-  // título (sem duplicação)
+  // TÍTULO (com highlight)
   const h = document.createElement("h4");
   h.className = "card-title";
-  h.textContent = item.title;
+  h.innerHTML = tokens.length ? highlightAll(item.title, tokens) : item.title;
 
-  // preview: usa SÓ body (sem título) + limite 200 chars
+  // PREVIEW: snippet em torno da 1ª ocorrência + highlight
   const preview = document.createElement("p");
   preview.className = "card-prev";
-  const prevText = truncateText(item.body || "", CARD_CHAR_LIMIT);
+  const prevText = makeSnippet(item.body || "", tokens, CARD_CHAR_LIMIT);
   preview.innerHTML = tokens.length ? highlightAll(prevText, tokens) : prevText;
 
   // rodapé
@@ -332,14 +345,14 @@ function hideModal(modalEl) {
   modalEl.hidden = true;
 }
 
-/** Leitor: nunca usa `text` no corpo para evitar duplicação do título */
+/** Leitor: título grifado e corpo sem duplicação */
 function openReader(item, tokens = []) {
   if (!els.readerModal) return;
 
-  // título
-  els.readerTitle.textContent = item.title;
+  // título com highlight
+  els.readerTitle.innerHTML = tokens.length ? highlightAll(item.title, tokens) : item.title;
 
-  // corpo: APENAS body
+  // corpo: APENAS body (nunca `text`) para não duplicar caput
   const body = (item.body && item.body.trim()) ? item.body : "";
   const htmlMarked = tokens.length ? highlightAll(body, tokens) : body;
 
@@ -384,7 +397,7 @@ els.viewBtn?.addEventListener("click", () => {
     els.selectedStack.appendChild(empty);
   } else {
     for (const it of state.selected.values()) {
-      // nos cards do modal, a lógica é a MESMA (título no h4, preview só do body)
+      // usa o mesmo padrão do card normal (sem duplicação)
       els.selectedStack.appendChild(renderCard(it, [], { context: "selected" }));
     }
   }
