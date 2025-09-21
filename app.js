@@ -388,6 +388,7 @@ function buildChips(results){
 
   // mostra a barra
   els.chipsBar.hidden = false;
+  setChipsMetrics();
 
   // evita listeners acumulados
   const scroll = els.chipsScroll;
@@ -568,6 +569,8 @@ function setMobileTopbarHeight() {
     setTimeout(setMobileTopbarHeightOnce, 120);
     setTimeout(setMobileTopbarHeightOnce, 320);
     requestAnimationFrame(setMobileTopbarHeightOnce);
+    setChipsMetrics();
+
   };
   afterBrandLoaded(measure);
 }
@@ -579,7 +582,20 @@ document.addEventListener('visibilitychange', () => {
 });
 new MutationObserver(() => setMobileTopbarHeightOnce())
   .observe(document.body, { subtree:true, childList:true, attributes:true });
+/* ===== Altura dinâmica dos chips no mobile ===== */
+function setChipsMetrics(){
+  if (!window.matchMedia('(max-width: 767px)').matches) return;
+  const bar = els.chipsBar;
+  if (!bar || bar.hidden) return;
+  // mede a altura efetiva (varia com zoom, fontes, etc.)
+  const h = Math.round(bar.getBoundingClientRect().height) || 56;
+  document.documentElement.style.setProperty('--chips-h', h + 'px');
+}
+window.addEventListener('resize', setChipsMetrics);
+window.addEventListener('orientationchange', setChipsMetrics);
 
 /* init */
 updateBottom();
 setMobileTopbarHeight();
+setChipsMetrics();
+
