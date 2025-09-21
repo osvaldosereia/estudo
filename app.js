@@ -382,14 +382,25 @@ function renderBlock(term, items, tokens) {
 
 /* ---------- cards ---------- */
 function highlight(text, tokens) {
-  let safe = escHTML(text || "");
-  tokens.forEach((t) => {
-    if (!t) return;
-    const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-    safe = safe.replace(re, "<mark>$1</mark>");
-  });
-  return safe;
+  const src = escHTML(text || "");
+  if (!tokens?.length) return src;
+
+  // Transforma cada letra em "letra + \p{M}*" para casar variações com acento.
+  const toDiacriticRx = (t) =>
+    t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")      // escapa meta
+     .replace(/\p{L}/gu, (ch) => ch + "\\p{M}*"); // permite diacríticos
+
+  const parts = tokens
+    .filter(Boolean)
+    .map(toDiacriticRx);
+
+  if (!parts.length) return src;
+
+  // \b... word boundaries; 'giu' = global, case-insensitive, unicode
+  const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
+  return src.replace(rx, "<mark>$1</mark>");
 }
+
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
   // corta em limite sem quebrar no meio da palavra
@@ -430,12 +441,14 @@ body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-body.innerHTML = truncatedHTML(item.text, tokens); // mantém início do artigo visível no card
-      toggle.textContent = "ver texto";
-    } else {
-      body.textContent = item.text; // texto integral (título + corpo)
-      toggle.textContent = "ocultar";
-    }
+  body.innerHTML = truncatedHTML(item.text, tokens);
+  toggle.textContent = "ver texto";
+} else {
+  // mantém destaque também no modo expandido
+  body.innerHTML = highlight(item.text, tokens);
+  toggle.textContent = "ocultar";
+}
+
   });
 
   left.append(pill, body, actions);
