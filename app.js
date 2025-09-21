@@ -615,8 +615,9 @@ async function openReader(item, tokens = []) {
 
       const body = document.createElement("div");
       const h4 = document.createElement("h4");
-      h4.textContent = `${a.title} — ${a.source}`;
+      h4.textContent = a.title;
       h4.style.fontWeight = "normal"; // sem negrito no leitor
+
 
       const txt = document.createElement("div");
       txt.className = "a-body";
