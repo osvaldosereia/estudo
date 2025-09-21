@@ -1,13 +1,12 @@
 :root{
-  /* Tema — camadas de cinza e superfícies */
-  --bg:#f7f7fb;            /* fundo da página */
-  --surface:#ffffff;       /* cartões e modais */
-  --surface-2:#fafafa;     /* caixas internas */
-  --ink:#0f172a;           /* texto principal (slate-900) */
-  --ink-weak:#1f2937;      /* texto secundário */
-  --line:#e5e7eb;          /* borda suave */
-  --line-strong:#d1d5db;   /* borda forte */
-  --chip-active:#111827;   /* chip ativo */
+  --bg:#f7f7fb;          /* fundo */
+  --surface:#ffffff;     /* cartões/modais */
+  --surface-2:#fafafa;   /* caixas internas */
+  --ink:#0f172a;         /* texto principal */
+  --ink-weak:#1f2937;    /* texto secundário */
+  --line:#e5e7eb;        /* borda suave */
+  --line-strong:#d1d5db; /* borda forte */
+  --chip-active:#111827; /* chip ativo */
 }
 
 /* RESET + BASE */
@@ -58,7 +57,7 @@ a{color:inherit}
 .btn-ghost{border:1px dashed var(--line);background:var(--surface)}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer}
 
-/* MODAIS (visuais base preservados) */
+/* MODAIS — base preservada */
 .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .modal[hidden]{display:none}
 .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.32)}
@@ -90,7 +89,7 @@ fieldset.prefs label{display:block;margin:.4rem 0}
 .toasts{position:fixed;right:12px;bottom:90px;display:flex;flex-direction:column;gap:8px;z-index:10}
 .toast{background:#111;color:#fff;border-radius:10px;padding:8px 10px}
 
-/* Chips Bar (isolada) */
+/* Chips (isolados) */
 .chips-bar{display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:8}
 .chips-bar .chips-scroll{display:flex;gap:.5rem;overflow-x:auto;scroll-behavior:smooth;padding:.25rem 0;flex:1}
 .chips-bar .chip{white-space:nowrap;border:1px solid var(--line);padding:.35rem .6rem;border-radius:999px;font-size:.875rem;cursor:pointer;user-select:none;background:var(--surface)}
@@ -100,7 +99,7 @@ fieldset.prefs label{display:block;margin:.4rem 0}
   .chips-bar .chips-arrow{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
 }
 
-/* MOBILE: topbar em 2 faixas (opcional; pode manter) */
+/* MOBILE (opcional; pode remover se quiser manter o antigo) */
 @media (max-width: 767px){
   .topbar .wrap{display:flex;flex-direction:column;gap:.5rem;align-items:center;justify-content:center}
   .topbar .brand{margin:0 auto}
