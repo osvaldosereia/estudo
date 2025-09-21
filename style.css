@@ -16,11 +16,24 @@ html,body{margin:0;height:100%}
 }
 @media (min-width:768px){ :root{ --fs:16px } }
 
-body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-syste...","Segoe UI",Roboto,Arial;color:var(--ink);background:var(--bg)}
+/* corrigido: família de fontes completa (sem truncar) */
+body{
+  font:400 var(--fs)/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+}
+
 .wrap{width:min(var(--wrap-max), 92vw); margin:0 auto; padding:0 8px}
 
 /* topbar */
-.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-...ound:var(--top);z-index:300;border-bottom:1px solid var(--line)}
+/* corrigido: height e background sem truncar */
+.topbar{
+  position:fixed; top:0; left:0; right:0;
+  height:var(--topbar-h);
+  background:var(--top);
+  z-index:300;
+  border-bottom:1px solid var(--line);
+}
 .topbar .wrap{height:100%;display:flex;align-items:center;gap:12px}
 .brand{height:40px;display:block;cursor:pointer}
 .search{margin-left:auto;position:relative;flex:0 1 560px}
@@ -75,13 +88,13 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-syste...","Segoe UI",
 
 @keyframes hilite{0%{background:#fff9c2}100%{background:#fff}}
 
-mark.hl {
-  background: #cfe8ff; /* azul clarinho */
-  padding: 0 .15em;
-  border-radius: .2em;
+mark.hl{
+  background:#cfe8ff; /* azul clarinho */
+  padding:0 .15em;
+  border-radius:.2em;
 }
 
-/* === Ajustes de layout para botões de ação (ver texto + Planalto) === */
+/* === Ações do card (ver texto + Planalto) === */
 .card .actions{
   display:flex;
   flex-wrap:wrap;
@@ -89,36 +102,23 @@ mark.hl {
   gap:10px;
   margin-top:10px;
 }
-
 .card .actions .toggle{
-  appearance:none;
-  -webkit-appearance:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  height:34px;
-  padding:0 14px;
-  font-size:13px;
-  line-height:1;
-  background:#fff;
-  color:var(--ink);
-  border:1px solid var(--line-strong);
-  border-radius:999px;
-  cursor:pointer;
-  text-decoration:none;
+  appearance:none; -webkit-appearance:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  height:34px; padding:0 14px; font-size:13px; line-height:1;
+  background:#fff; color:var(--ink);
+  border:1px solid var(--line-strong); border-radius:999px;
+  cursor:pointer; text-decoration:none;
   transition:border-color .15s ease, box-shadow .15s ease, color .15s ease, background .15s ease;
 }
-
 .card .actions .toggle:hover{
-  border-color:var(--blue);
-  color:var(--blue);
+  border-color:var(--blue); color:var(--blue);
   box-shadow:0 1px 2px rgba(2,8,20,.07);
 }
-
 .card .actions a.toggle{ text-decoration:none; }
 
-/* Ajuste do botão de seleção (check) para não colidir com os botões de ação em telas estreitas */
-@media (max-width: 420px){
-  .card{ padding-bottom: 14px; }
-  .card .chk{ top: 10px; right: 10px; }
+/* check não colidir em telas estreitas */
+@media (max-width:420px){
+  .card{ padding-bottom:14px; }
+  .card .chk{ top:10px; right:10px; }
 }
