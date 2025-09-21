@@ -418,7 +418,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const body = document.createElement("div");
   body.className = "body is-collapsed";
   // PREVIEW: usa o body quando existir para não “ecoar” o título
-  body.innerHTML = truncatedHTML(item.body || item.text, tokens);
+body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (título + caput)
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
@@ -430,7 +430,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-      body.innerHTML = truncatedHTML(item.body || item.text, tokens);
+body.innerHTML = truncatedHTML(item.text, tokens); // mantém início do artigo visível no card
       toggle.textContent = "ver texto";
     } else {
       body.textContent = item.text; // texto integral (título + corpo)
