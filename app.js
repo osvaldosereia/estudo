@@ -59,6 +59,10 @@ const state = {
   selected: new Map(),
   cacheTxt: new Map(),
   cacheParsed: new Map(),
+  currentTerm: "",
+  currentTokens: [],
+  currentResults: [],
+  blockTitleEl: null,
 };
 
 /* Toast */
@@ -244,13 +248,13 @@ function renderCard(item, tokens=[], ctx={context:"results"}){
 
   const pill = document.createElement("a");
   pill.href="#"; pill.className="pill"; pill.textContent=item.source;
-  pill.addEventListener("click",(e)=>{e.preventDefault(); openReader(item);});
+  pill.addEventListener("click",(e)=>{e.preventDefault(); openReader(item, tokens);});
 
   const body = document.createElement("div");
   body.className="body is-collapsed";
   body.innerHTML = truncatedHTML(item.text, tokens);
   body.style.cursor="pointer";
-  body.addEventListener("click", ()=> openReader(item));
+  body.addEventListener("click", ()=> openReader(item, tokens));
 
   const actions = document.createElement("div");
   actions.className="actions";
@@ -300,6 +304,7 @@ function renderBlock(term, items, tokens){
   const title = document.createElement("div");
   title.className="block-title";
   title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
+  state.blockTitleEl = title; // guardar para atualizar com o filtro
   block.appendChild(title);
 
   if (!items.length){
@@ -314,27 +319,52 @@ function renderBlock(term, items, tokens){
 }
 
 /* Chips */
+function visibleCardsCount(){
+  return Array.from(els.stack.querySelectorAll(".card")).filter(c => !c.hidden).length;
+}
+function updateBlockTitleWithFilter(filterName){
+  if (!state.blockTitleEl) return;
+  const n = visibleCardsCount();
+  const base = `Busca: ‘${state.currentTerm}’ (${n} resultados`;
+  const suffix = (filterName && filterName!=="Todos") ? ` — filtro: ${filterName}` : "";
+  state.blockTitleEl.textContent = base + suffix + ")";
+}
 function buildChips(results){
+  // sem resultados? esconde a barra e sai
+  if (!results || results.length === 0) {
+    if (els.chipsBar) els.chipsBar.hidden = true;
+    return;
+  }
+
   const set = new Set(results.map(r => r.source));
   const list = ["Todos", ...set];
+
+  // limpa os chips
   els.chipsScroll.innerHTML = "";
 
+  // monta os chips
   list.forEach((name, i)=>{
     const b = document.createElement("button");
-    b.className="chip"; b.type="button"; b.textContent=name;
+    b.className="chip";
+    b.type="button";
+    b.textContent=name;
     b.setAttribute("aria-pressed", i===0 ? "true" : "false");
     b.addEventListener("click", ()=>{
       els.chipsScroll.querySelectorAll(".chip").forEach(x=> x.setAttribute("aria-pressed","false"));
       b.setAttribute("aria-pressed","true");
       filterByChip(name);
+      updateBlockTitleWithFilter(name);
     });
     els.chipsScroll.appendChild(b);
   });
 
+  // mostra a barra
   els.chipsBar.hidden = false;
+
+  // evita listeners acumulados
   const scroll = els.chipsScroll;
-  els.chipsPrev?.addEventListener("click", ()=> scroll.scrollBy({left:-200, behavior:"smooth"}));
-  els.chipsNext?.addEventListener("click", ()=> scroll.scrollBy({left:200, behavior:"smooth"}));
+  if (els.chipsPrev) els.chipsPrev.onclick = () => scroll.scrollBy({left:-200, behavior:"smooth"});
+  if (els.chipsNext) els.chipsNext.onclick = () => scroll.scrollBy({left: 200, behavior:"smooth"});
 }
 function filterByChip(name){
   const cards = els.stack.querySelectorAll(".card");
@@ -407,10 +437,15 @@ async function openReader(item, tokens=[]){
   }catch(e){ toast("Erro ao abrir o arquivo."); console.warn(e); hideModal(els.readerModal); }
 }
 
-/* Eventos */
+/* Eventos globais */
 els.form?.addEventListener("submit", (e)=>{ e.preventDefault(); doSearch(); });
 els.q?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); doSearch(); }});
-els.brand?.addEventListener("click", ()=>{ if(els.q) els.q.value=""; if(els.stack) els.stack.innerHTML=""; toast("Busca reiniciada."); });
+els.brand?.addEventListener("click", ()=>{
+  if(els.q) els.q.value="";
+  if(els.stack) els.stack.innerHTML="";
+  if(els.chipsBar) els.chipsBar.hidden = true;
+  toast("Busca reiniciada.");
+});
 
 document.addEventListener("click", (e)=>{
   if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
@@ -432,28 +467,12 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
-/* Ver / Estudar / Questões */
-els.viewBtn?.addEventListener("click", ()=>{
-  const container = els.selectedStack; if (!container) return;
-  container.innerHTML = "";
-  if (!state.selected.size){
-    const empty = document.createElement("div"); empty.className="block-empty"; empty.textContent="Nenhum bloco selecionado."; container.appendChild(empty);
-  } else {
-    for (const it of state.selected.values()){
-      const c = renderCard(it, [], {context:"selected"});
-      container.appendChild(c);
-    }
-  }
-  showModal(els.selectedModal);
-});
-els.studyBtn?.addEventListener("click", ()=>{ if (state.selected.size) showModal(els.studyModal); });
-els.questionsBtn?.addEventListener("click", ()=>{ if (state.selected.size) showModal(els.questionsModal); });
-
 /* Execução da busca */
 async function doSearch(){
   const term = (els.q?.value || "").trim();
   if (!term) return;
 
+  state.currentTerm = term;
   els.stack.innerHTML="";
   els.stack.setAttribute("aria-busy","true");
   const skel=document.createElement("section"); skel.className="block";
@@ -464,6 +483,7 @@ async function doSearch(){
 
   try{
     const tokens = tokenize(term);
+    state.currentTokens = tokens.slice();
     const normQuery = norm(term);
     const queryHasLegalKeyword = /\b(art|art\.|artigo|s[uú]mula)\b/i.test(normQuery);
     const {wordTokens, numTokens} = splitTokens(tokens);
@@ -485,9 +505,12 @@ async function doSearch(){
       }catch(e){ console.warn("Falha ao buscar:", label, e); }
     }
 
+    state.currentResults = results.slice();
+
     skel.remove();
     renderBlock(term, results, tokens);
     buildChips(results);
+    updateBlockTitleWithFilter("Todos");
     toast(`${results.length} resultado(s) encontrados.`);
   } finally {
     els.stack.setAttribute("aria-busy","false");
@@ -495,53 +518,40 @@ async function doSearch(){
     els.q?.select();
   }
 }
+
 /* ===== Altura real da topbar no mobile (duas faixas) — robusto para iOS ===== */
 function setMobileTopbarHeightOnce() {
   if (!window.matchMedia('(max-width: 767px)').matches) return;
   const tb = document.querySelector('.topbar');
   if (!tb) return;
-  // getBoundingClientRect é mais estável no iOS do que offsetHeight
   const h = Math.round(tb.getBoundingClientRect().height) || 112;
   document.documentElement.style.setProperty('--topbar-mobile-h', h + 'px');
 }
-
 function afterBrandLoaded(cb){
   const img = document.querySelector('.brand');
   if (!img) { cb(); return; }
   if (img.complete && img.naturalHeight > 0) { cb(); return; }
-  // chama quando a imagem da logo terminar de carregar
   img.addEventListener('load', cb, { once:true });
-  // fallback em 500ms (caso o cache já tenha carregado mas não disparou 'load')
   setTimeout(cb, 500);
 }
-
 function setMobileTopbarHeight() {
-  // mede no load, depois que a logo estiver pronta, e remede em alguns ticks
   const measure = () => {
     setMobileTopbarHeightOnce();
-    // remede em alguns ciclos porque o Safari ajusta layout tardiamente
     setTimeout(setMobileTopbarHeightOnce, 120);
     setTimeout(setMobileTopbarHeightOnce, 320);
     requestAnimationFrame(setMobileTopbarHeightOnce);
   };
   afterBrandLoaded(measure);
 }
-
-// re-calcula em mudanças relevantes
 window.addEventListener('load', setMobileTopbarHeight);
 window.addEventListener('resize', setMobileTopbarHeight);
 window.addEventListener('orientationchange', setMobileTopbarHeight);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) setMobileTopbarHeight();
 });
-
-// DOM changes (abre/fecha teclado, chips, etc.)
 new MutationObserver(() => setMobileTopbarHeightOnce())
   .observe(document.body, { subtree:true, childList:true, attributes:true });
-
 
 /* init */
 updateBottom();
 setMobileTopbarHeight();
-
-
