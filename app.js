@@ -708,14 +708,24 @@ async function buildQuestionsPrompt(includedSet) {
   const tpl = await loadQuestionsTemplate();
 
   const opts = Array.from(document.querySelectorAll(".qopt"))
-    .filter((i) => i.checked)
-    .map((i) => i.value);
-  const prefLines = [];
-  if (opts.includes("casos2"))         prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2")) prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))            prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("pegadinhas"))     prefLines.push("- Misture os entendimentos para criar pegadinhas.");
-  const prefs = prefLines.join("\n");
+  .filter((i) => i.checked)
+  .map((i) => i.value);
+
+const prefLines = [];
+if (opts.includes("casos2"))                  prefLines.push("- Inclua 2 Casos Concretos.");
+if (opts.includes("dissertativas2"))          prefLines.push("- Inclua 2 Dissertativas.");
+if (opts.includes("vf2"))                     prefLines.push("- Inclua 2 V ou F.");
+if (opts.includes("mcq_1correta"))            prefLines.push("- Questões múltipla escolha A–E com apenas 1 correta (sem 'todas' ou 'nenhuma').");
+if (opts.includes("dificuldade_balanceada"))  prefLines.push("- Balancear dificuldade: 3 fáceis, 4 médias e 3 difíceis.");
+if (opts.includes("bloom_mix"))               prefLines.push("- Distribuir pelo modelo Bloom: 30% lembrar, 40% aplicar, 30% analisar.");
+if (opts.includes("enunciado_autossuficiente")) prefLines.push("- Enunciados devem ser autossuficientes e neutros.");
+if (opts.includes("distratores_plausiveis"))  prefLines.push("- Distratores devem ser plausíveis (erros típicos OAB/FGV).");
+if (opts.includes("alternativas_padronizadas")) prefLines.push("- Alternativas com extensão padronizada (variação ≤ 15%).");
+if (opts.includes("tempo_alvo"))              prefLines.push("- Considerar tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min.");
+if (opts.includes("pegadinhas"))              prefLines.push("- Misturar entendimentos para criar pegadinhas recorrentes.");
+
+const prefs = prefLines.join("\n");
+
 
   const parts = [tpl.trim(), ""];
   if (prefs) parts.push("Preferências:", prefs, "");
