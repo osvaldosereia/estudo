@@ -462,7 +462,6 @@ function renderBlock(term, items, tokens) {
 function highlight(text, tokens) {
   if (!tokens?.length) return escHTML(text || "");
 
-  // Trabalha em NFD para casar base + diacrítico; volta a NFC no fim
   const srcEsc = escHTML(text || "");
   const srcNFD = srcEsc.normalize("NFD");
 
@@ -473,17 +472,13 @@ function highlight(text, tokens) {
   const parts = tokens.filter(Boolean).map(toDiacriticRx);
   if (!parts.length) return srcEsc;
 
-  // borda de palavra: evita “art” em “partido”
   const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
   const markedNFD = srcNFD.replace(rx, "<mark>$1</mark>");
   return markedNFD.normalize("NFC");
 }
 
-
-
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
-  // corta em limite sem quebrar no meio da palavra
   let out = base.slice(0, CARD_CHAR_LIMIT);
   const cut = out.lastIndexOf(" ");
   if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
@@ -493,6 +488,7 @@ function truncatedHTML(fullText, tokens) {
   }
   return highlight(escHTML(out), tokens);
 }
+
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
@@ -500,53 +496,55 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const left = document.createElement("div");
 
-  const pill = document.createElement("a");
-  pill.href = "#";
-  pill.className = "pill";
-  pill.textContent = item.source;
-  pill.addEventListener("click", (e) => { e.preventDefault(); openReader(item); });
+  // Só mostra o chip se não for no modal de leitura
+  if (item.source && ctx.context !== "reader") {
+    const pill = document.createElement("a");
+    pill.href = "#";
+    pill.className = "pill";
+    pill.textContent = item.source;
+    pill.addEventListener("click", (e) => { 
+      e.preventDefault(); 
+      openReader(item); 
+    });
+    left.append(pill);
+  }
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // PREVIEW: usa o body quando existir para não “ecoar” o título
-body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (título + caput)
+  body.innerHTML = truncatedHTML(item.text, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
   const actions = document.createElement("div");
-actions.className = "actions";
+  actions.className = "actions";
 
-// Botão ver texto
-const toggle = document.createElement("button");
-toggle.className = "toggle";
-toggle.textContent = "ver texto";
-toggle.addEventListener("click", () => {
-  const collapsed = body.classList.toggle("is-collapsed");
-  if (collapsed) {
-    body.innerHTML = truncatedHTML(item.text, tokens);
-    toggle.textContent = "ver texto";
-  } else {
-    body.innerHTML = highlight(item.text, tokens);
-    toggle.textContent = "ocultar";
-  }
-});
+  // Botão ver texto
+  const toggle = document.createElement("button");
+  toggle.className = "toggle";
+  toggle.textContent = "ver texto";
+  toggle.addEventListener("click", () => {
+    const collapsed = body.classList.toggle("is-collapsed");
+    if (collapsed) {
+      body.innerHTML = truncatedHTML(item.text, tokens);
+      toggle.textContent = "ver texto";
+    } else {
+      body.innerHTML = highlight(item.text, tokens);
+      toggle.textContent = "ocultar";
+    }
+  });
 
-// Botão Planalto
-const planaltoBtn = document.createElement("button");
-planaltoBtn.className = "toggle";
-planaltoBtn.textContent = "Planalto";
-planaltoBtn.addEventListener("click", () => {
-  window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
-});
+  // Botão Planalto
+  const planaltoBtn = document.createElement("button");
+  planaltoBtn.className = "toggle";
+  planaltoBtn.textContent = "Planalto";
+  planaltoBtn.addEventListener("click", () => {
+    window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
+  });
 
+  actions.append(toggle, planaltoBtn);
+  left.append(body, actions);
 
-// Adiciona os dois botões lado a lado
-actions.append(toggle, planaltoBtn);
-
-
-
-  left.append(pill, body, actions);
-
+  // Checkbox à direita
   const chk = document.createElement("button");
   chk.className = "chk";
   chk.setAttribute("aria-label", "Selecionar bloco");
@@ -589,48 +587,11 @@ async function openReader(item, tokens = []) {
   try {
     const items = await parseFile(item.fileUrl, item.source);
     els.readerBody.innerHTML = "";
+
     items.forEach((a) => {
-      const row = document.createElement("div");
-      row.className = "article";
-      row.id = a.htmlId;
-
-      const chk = document.createElement("button");
-      chk.className = "chk a-chk";
-      chk.setAttribute("aria-label", "Selecionar bloco");
-      chk.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const sync = () => { chk.dataset.checked = state.selected.has(a.id) ? "true" : "false"; };
-      sync();
-      chk.addEventListener("click", () => {
-        if (state.selected.has(a.id)) {
-          state.selected.delete(a.id);
-          toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
-        } else {
-          if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
-          state.selected.set(a.id, a);
-          toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
-        }
-        els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-        sync();
-        updateBottom();
-      });
-
-      const body = document.createElement("div");
-      const h4 = document.createElement("h4");
-      h4.textContent = a.title;
-      h4.style.fontWeight = "normal"; // sem negrito no leitor
-
-
-      const txt = document.createElement("div");
-      txt.className = "a-body";
-      // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
-const baseText   = a.body && a.body.trim() ? a.body : "";
-const withBreaks = addRespirationsForDisplay(baseText);
-const withMarks  = highlight(withBreaks, tokens);
-txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
-
-      body.append(h4, txt);
-      row.append(body, chk);
-      els.readerBody.appendChild(row);
+      const card = renderCard(a, tokens, { context: "reader" });
+      card.id = a.htmlId;
+      els.readerBody.appendChild(card);
     });
 
     const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
@@ -646,6 +607,7 @@ txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
     hideModal(els.readerModal);
   }
 }
+
 
 /* ---------- MODAIS ---------- */
 function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
