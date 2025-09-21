@@ -145,8 +145,6 @@ function hasAllWordTokens(bag, wordTokens) {
   return wordTokens.every((w) => bagHasTokenWord(bag, w));
 }
 
-
-
 // Regras dos números:
 // - Sem “art|artigo|súmula” na query → exigir números exatos em qualquer parte do card
 // - Com “art|artigo|súmula” na query → cada número precisa estar próximo desses termos no MESMO card
@@ -175,7 +173,7 @@ function pluralVariants(t) {
   if (t.endsWith("m")) v.add(t.slice(0, -1) + "ns");  // “homem” ↔ “homens”
   if (t.endsWith("ao")) {
     const base = t.slice(0, -2);
-    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes"); // “cidadão” set qdo normalizado
+    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes");
   }
   return [...v];
 }
@@ -194,7 +192,6 @@ function withinOneSubstitutionStrict(a, b) {
   return diff === 1;                                 // exatamente 1 diferença
 }
 
-
 // Checa se UM token de palavra existe no bag por PALAVRA INTEIRA (com tolerância)
 function bagHasTokenWord(bag, token) {
   const words = getBagWords(bag);
@@ -212,8 +209,6 @@ function bagHasTokenWord(bag, token) {
   }
   return false;
 }
-
-
 
 /* ---------- catálogo (select) ---------- */
 /* Converte automatico URLs do GitHub (blob) em RAW + encodeURI */
@@ -289,8 +284,6 @@ async function parseFile(url, sourceLabel) {
 }
 
 /* ---------- "Respiros" (só no leitor) ---------- */
-/* Insere linha em branco ANTES de marcadores no INÍCIO da linha,
-   sem alterar o texto original na fonte (apenas para exibição). */
 function addRespirationsForDisplay(s) {
   if (!s) return "";
   const RX_INCISO  = /^(?:[IVXLCDM]{1,8})(?:\s*(?:\)|\.|[-–—]))(?:\s+|$)/;
@@ -393,7 +386,7 @@ async function doSearch() {
         for (const it of items) {
           const bag = norm(it.text);
 
-          // Palavras: exige TODAS (cobre o requisito de >2 palavras)
+          // Palavras: exige TODAS
           const okWords = hasAllWordTokens(bag, wordTokens);
 
           // Números: exatos; e, se “art|artigo|súmula” presente, próximos no mesmo card
@@ -436,7 +429,7 @@ function renderBlock(term, items, tokens) {
   els.stack.append(block);
 }
 
-/* ---------- cards ---------- */
+/* ---------- destaque/preview ---------- */
 function highlight(text, tokens) {
   if (!tokens?.length) return escHTML(text || "");
 
@@ -457,11 +450,8 @@ function highlight(text, tokens) {
   return markedNFD.normalize("NFC");
 }
 
-
-
 function truncatedHTML(fullText, tokens) {
   const base = fullText || "";
-  // corta em limite sem quebrar no meio da palavra
   let out = base.slice(0, CARD_CHAR_LIMIT);
   const cut = out.lastIndexOf(" ");
   if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
@@ -471,6 +461,66 @@ function truncatedHTML(fullText, tokens) {
   }
   return highlight(escHTML(out), tokens);
 }
+
+/* ---------- LINK DO PLANALTO (novo) ---------- */
+// Mapa de fontes -> URL base no Planalto
+const PLANALTO_BASE = {
+  "CF88": "http://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm",
+  "Código Civil": "http://www.planalto.gov.br/ccivil_03/leis/2002/L10406.htm",
+  "Processo Civil": "http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm",
+  "Código Penal": "http://www.planalto.gov.br/ccivil_03/decreto-lei/del2848.htm",
+  "Processo Penal": "http://www.planalto.gov.br/ccivil_03/decreto-lei/del3689.htm",
+  "CDC": "http://www.planalto.gov.br/ccivil_03/leis/l8078.htm",
+  "Código Eleitoral": "http://www.planalto.gov.br/ccivil_03/leis/l4737.htm",
+  "CLT": "http://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm",
+  "Cód. Tributário Nacional": "http://www.planalto.gov.br/ccivil_03/leis/l5172.htm",
+  "Cód. Trânsito Brasileiro": "http://www.planalto.gov.br/ccivil_03/leis/l9503.htm",
+  "Código Florestal": "http://www.planalto.gov.br/ccivil_03/leis/l12651.htm",
+  "Cód. Proc. Penal Militar": "http://www.planalto.gov.br/ccivil_03/decreto-lei/del1002.htm",
+  "Cód. Penal Militar": "http://www.planalto.gov.br/ccivil_03/decreto-lei/del1001.htm",
+  "Estatuto da OAB": "http://www.planalto.gov.br/ccivil_03/leis/l8906.htm",
+  "Lei Maria da Penha": "http://www.planalto.gov.br/ccivil_03/leis/l11340.htm",
+  "Lei da Improbidade Administrativa": "http://www.planalto.gov.br/ccivil_03/leis/l8429.htm",
+  "Lei de Execução Penal": "http://www.planalto.gov.br/ccivil_03/leis/l7210.htm",
+  "Lei de Drogas": "http://www.planalto.gov.br/ccivil_03/leis/l11343.htm",
+  "Mandado de Segurança": "http://www.planalto.gov.br/ccivil_03/_ato2007-2010/2009/lei/l12016.htm"
+};
+
+// Extrai nº do artigo ("Art. 123", "Art. 123-A") → "123"
+function getArticleNumberFromTitle(title = "") {
+  const m = title.match(/\bArt\.?\s*(\d{1,4})\b/i);
+  return m ? m[1] : null;
+}
+
+// Gera fragmento de rolagem: usa o começo do título como âncora de texto
+function buildTextFragmentSnippet(title = "") {
+  // pega até ~80 chars do título (o texto mais único possível)
+  const snippet = (title || "").trim().slice(0, 80);
+  return snippet ? `#:~:text=${encodeURIComponent(snippet)}` : "";
+}
+
+// Fallback para busca precisa no Planalto
+function buildFallbackSearch(source, artNum) {
+  const q = [`site:planalto.gov.br`, source || "", artNum ? `Art. ${artNum}` : ""]
+    .filter(Boolean)
+    .join(" ");
+  return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+}
+
+// URL final para o botão "Planalto"
+function generatePlanaltoURL(item) {
+  const base = PLANALTO_BASE[item.source];
+  const art = getArticleNumberFromTitle(item.title || item.text || "");
+  if (base) {
+    // tenta rolar usando Scroll-To-Text Fragment (Chromium)
+    const frag = buildTextFragmentSnippet(item.title || item.text || "");
+    return `${base}${frag}`;
+  }
+  // sem base conhecida → busca no Google, focada no artigo
+  return buildFallbackSearch(item.source, art);
+}
+
+/* ---------- cards ---------- */
 function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const card = document.createElement("article");
   card.className = "card";
@@ -486,31 +536,38 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const body = document.createElement("div");
   body.className = "body is-collapsed";
-  // PREVIEW: usa o body quando existir para não “ecoar” o título
-body.innerHTML = truncatedHTML(item.text, tokens); // mostra início do artigo (título + caput)
+  body.innerHTML = truncatedHTML(item.text, tokens);
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
   const actions = document.createElement("div");
   actions.className = "actions";
+
+  // Botão "Planalto" (novo)
+  const plan = document.createElement("a");
+  plan.className = "toggle";
+  plan.textContent = "Planalto";
+  plan.href = generatePlanaltoURL(item);
+  plan.target = "_blank";
+  plan.rel = "noopener";
+
   const toggle = document.createElement("button");
   toggle.className = "toggle";
   toggle.textContent = "ver texto";
   toggle.addEventListener("click", () => {
     const collapsed = body.classList.toggle("is-collapsed");
     if (collapsed) {
-  body.innerHTML = truncatedHTML(item.text, tokens);
-  toggle.textContent = "ver texto";
-} else {
-  // mantém destaque também no modo expandido
-  body.innerHTML = highlight(item.text, tokens);
-  toggle.textContent = "ocultar";
-}
-
+      body.innerHTML = truncatedHTML(item.text, tokens);
+      toggle.textContent = "ver texto";
+    } else {
+      // mantém destaque também no modo expandido
+      body.innerHTML = highlight(item.text, tokens);
+      toggle.textContent = "ocultar";
+    }
   });
 
   left.append(pill, body, actions);
-  actions.append(toggle);
+  actions.append(toggle, plan); // mantém ordem: "ver texto" e, ao lado, "Planalto"
 
   const chk = document.createElement("button");
   chk.className = "chk";
@@ -586,10 +643,9 @@ async function openReader(item, tokens = []) {
 
       const txt = document.createElement("div");
       txt.className = "a-body";
-      // IMPORTANTE: usar APENAS o body (quando existir) para não duplicar o título
-const withBreaks = addRespirationsForDisplay(a.body || a.text);
-const withMarks  = highlight(withBreaks, tokens);
-txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
+      const withBreaks = addRespirationsForDisplay(a.body || a.text);
+      const withMarks  = highlight(withBreaks, tokens);
+      txt.innerHTML    = withMarks.replace(/\n/g, "<br>");
 
       body.append(h4, txt);
       row.append(chk, body);
