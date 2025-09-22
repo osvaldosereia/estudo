@@ -56,6 +56,7 @@ const els = {
 
   /* toasts */
   toasts: $("#toasts"),
+
   /* menu/compare */
   studyMenu: $("#studyMenu"),
 
@@ -64,8 +65,11 @@ const els = {
   compareList: $("#compareList"),
   compareUpdate: $("#compareUpdate"),
   copyCompareBtn: $("#copyCompareBtn"),
-
 };
+
+// garantir que comece oculto ao carregar a página
+if (els.studyMenu) els.studyMenu.hidden = true;
+
 
 /* ---------- estado ---------- */
 const MAX_SEL = 6;
