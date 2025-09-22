@@ -158,7 +158,19 @@ mark.hl {
 }
 
 
-/* === Overrides: alinhar botões na base e à direita (cards e modal) === */
-.card{grid-template-columns:1fr !important;}
-.card .actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;}
-.card .chk{align-self:auto;}
+
+/* Pill mais discreto */
+.pill {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  background: #eef3ff;
+  color: #1e3a8a;
+  opacity: 0.85;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+.pill:hover {
+  background: #dbeafe;
+  opacity: 1;
+}
