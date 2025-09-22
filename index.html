@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>direito.love — Leitor jurídico</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- TOPO E BUSCA -->
+  <header class="topbar" role="banner">
+    <div class="wrap">
+      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
+      <form class="search" id="searchForm" role="search" aria-label="Buscar">
+        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
+        <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+      </form>
+    </div>
+  </header>
+
+  <!-- RESULTADOS -->
+  <main class="content">
+    <div class="wrap">
+      <div id="searchIndex" class="search-index" hidden></div>
+      <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
+    </div>
+  </main>
+
+  <!-- BARRA INFERIOR (vazia para foco no índice) -->
+  <footer class="bottombar" role="contentinfo"></footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
