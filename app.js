@@ -708,18 +708,25 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
     sync();
     updateBottom();
-// criar botão "limpar selecionados"
-const clearBtn = document.createElement("button");
-clearBtn.className = "btn icon-only";
-clearBtn.innerHTML = "🗑️";
-clearBtn.setAttribute("aria-label", "Limpar seleção");
-clearBtn.addEventListener("click", () => {
-  state.selected.clear();
-  updateBottom();
-  toast("Seleção limpa.");
-  els.stack?.querySelectorAll(".card").forEach((c) => c.querySelector(".chk")?.removeAttribute("data-checked"));
-});
-els.viewBtn?.after(clearBtn);
+// cria botão "limpar selecionados" apenas uma vez
+if (!document.getElementById("clearSelectedBtn")) {
+  const clearBtn = document.createElement("button");
+  clearBtn.id = "clearSelectedBtn";
+  clearBtn.className = "btn icon-only";
+  clearBtn.innerHTML = "🗑️";
+  clearBtn.setAttribute("aria-label", "Limpar seleção");
+
+  clearBtn.addEventListener("click", () => {
+    state.selected.clear();
+    updateBottom();
+    toast("Seleção limpa.");
+    els.stack?.querySelectorAll(".card").forEach((c) =>
+      c.querySelector(".chk")?.removeAttribute("data-checked")
+    );
+  });
+
+  els.viewBtn?.after(clearBtn);
+}
   });
 
   card.append(left, chk);
@@ -946,15 +953,22 @@ els.brand?.addEventListener("click", () => {
 
 /* ---------- init ---------- */
 updateBottom();
-// criar botão "limpar selecionados"
-const clearBtn = document.createElement("button");
-clearBtn.className = "btn icon-only";
-clearBtn.innerHTML = "🗑️";
-clearBtn.setAttribute("aria-label", "Limpar seleção");
-clearBtn.addEventListener("click", () => {
-  state.selected.clear();
-  updateBottom();
-  toast("Seleção limpa.");
-  els.stack?.querySelectorAll(".card").forEach((c) => c.querySelector(".chk")?.removeAttribute("data-checked"));
-});
-els.viewBtn?.after(clearBtn);
+// cria botão "limpar selecionados" apenas uma vez
+if (!document.getElementById("clearSelectedBtn")) {
+  const clearBtn = document.createElement("button");
+  clearBtn.id = "clearSelectedBtn";
+  clearBtn.className = "btn icon-only";
+  clearBtn.innerHTML = "🗑️";
+  clearBtn.setAttribute("aria-label", "Limpar seleção");
+
+  clearBtn.addEventListener("click", () => {
+    state.selected.clear();
+    updateBottom();
+    toast("Seleção limpa.");
+    els.stack?.querySelectorAll(".card").forEach((c) =>
+      c.querySelector(".chk")?.removeAttribute("data-checked")
+    );
+  });
+
+  els.viewBtn?.after(clearBtn);
+}
