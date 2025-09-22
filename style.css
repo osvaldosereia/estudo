@@ -239,10 +239,11 @@ mark.hl {
 
 /* === Floating Search Index (botão/menu) === */
 .search-index {
-  display: none; /* começa invisível */
+  display: none; /* começa escondido */
   margin: 0 0 12px 0;
-  text-align: right;
+  text-align: right; /* alinha o botão à direita da wrap */
 }
+
 
 .search-index .si-trigger {
   display: inline-flex;
