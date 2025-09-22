@@ -15,80 +15,63 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- TOP BAR -->
   <header class="topbar" role="banner">
     <div class="wrap">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
-      <form class="search" id="searchForm" role="search" aria-label="Buscar">
-        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
-        <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+      <button id="brandBtn" class="brand" aria-label="Reiniciar busca">💚 direito.love</button>
+
+      <form id="searchForm" class="search" role="search" aria-label="Buscar artigos e leis">
+        <input id="searchInput" class="field" type="search" inputmode="search" placeholder="Sobre o que vamos falar?" autocomplete="off" />
+        <button class="icon-btn" aria-label="Buscar">🔎</button>
+        <span id="searchSpinner" class="spinner" aria-hidden="true" hidden>...</span>
       </form>
+
+      <div class="file-select">
+        <label for="codeSelect" class="visually-hidden">Escolher arquivo</label>
+        <select id="codeSelect">
+          <option value="" disabled selected>Escolher arquivo…</option>
+
+          <optgroup label="Códigos">
+            <option value="data/codigo_penal.txt">Código Penal</option>
+            <option value="data/codigo_civil.txt">Código Civil</option>
+            <option value="data/cpc.txt">Processo Civil (CPC)</option>
+            <option value="data/cf88.txt">Constituição (CF/88)</option>
+            <option value="data/clt.txt">CLT</option>
+            <option value="data/cdc.txt">Código de Defesa do Consumidor</option>
+            <option value="data/ctb.txt">Código de Trânsito Brasileiro</option>
+            <option value="data/eca.txt">ECA</option>
+          </optgroup>
+
+          <optgroup label="Leis">
+            <option value="data/leis/lmp.txt">Lei Maria da Penha</option>
+            <option value="data/leis/ldrogas.txt">Lei de Drogas</option>
+            <option value="data/leis/lep.txt">Lei de Execução Penal</option>
+          </optgroup>
+
+          <optgroup label="Súmulas">
+            <option value="data/sumulas/stj.txt">Súmulas STJ</option>
+            <option value="data/sumulas/stf.txt">Súmulas STF</option>
+          </optgroup>
+
+          <optgroup label="Enunciados">
+            <option value="data/enunciados/enunciados.txt">Jornadas de Direito</option>
+          </optgroup>
+
+          <optgroup label="Julgados">
+            <option value="data/julgados/julgados.txt">Julgados</option>
+            <option value="data/julgados/julgados1.txt">Julgados</option>
+            <option value="data/julgados/julgados2.txt">Julgados</option>
+            <option value="data/julgados/julgados3.txt">Julgados</option>
+            <option value="data/julgados/julgados4.txt">Julgados</option>
+            <option value="data/julgados/julgados5.txt">Julgados</option>
+          </optgroup>
+        </select>
+      </div>
     </div>
   </header>
 
-  <!-- Catálogo (oculto) -->
-  <select id="codeSelect" hidden>
-    <option value="">—</option>
-    <optgroup label="Códigos">
-      <option value="data/codigos/codigo_civil.txt">Código Civil</option>
-      <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
-      <option value="data/codigos/codigo_penal.txt">Código Penal</option>
-      <option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
-      <option value="data/codigos/CDC.txt">CDC</option>
-      <option value="data/codigos/codigo_eleitoral.txt">Código Eleitoral</option>
-      <option value="data/codigos/CLT.txt">CLT</option>
-      <option value="data/codigos/codigo_tributario_nacional.txt">Cód. Tributário Nacional</option>
-      <option value="data/codigos/codigo_de_transito_brasileiro.txt">Cód. Trânsito Brasileiro</option>
-      <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
-      <option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
-
-</optgroup>
-    <optgroup label="Súmulas">
-      <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
-      <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
-      
-    </optgroup>
-    
-    </optgroup>
-    <optgroup label="Enunciados">
-      <option value="data/enunciados/enunciados.txt">Jornadas de Direito</option>
-      </optgroup>
-
- </optgroup>
-    <optgroup label="Julgados">
-      <option value="data/julgados/julgados.txt">Julgados</option>
-      <option value="data/julgados/julgados1.txt">Julgados</option>
-      <option value="data/julgados/julgados2.txt">Julgados</option>
-     <option value="data/julgados/julgados3.txt">Julgados</option>
-      <option value="data/julgados/julgados4.txt">Julgados</option>
-      <option value="data/julgados/julgados5.txt">Julgados</option>
-     <option value="data/julgados/julgados6.txt">Julgados</option>
-
-      </optgroup>
-
-    </optgroup>
-    <optgroup label="Leis">
-      <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
-      <option value="data/leis/lei_da_improbidade_administrativa.txt">Lei da Improbidade Administrativa</option>
-      <option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
-      <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
-      <option value="data/leis/lei_do_mandado_de_seguranca.txt">Mandado de Segurança</option>
-    </optgroup>
-    <optgroup label="Estatutos">
-      <option value="data/estatutos/ECA.txt">ECA</option>
-      <option value="data/estatutos/estatuto_oab.txt">Estatuto da OAB</option>
-    </optgroup>
-    </optgroup>
-    <optgroup label="Constituição">
-      <option value="data/CF88/CF88.txt">Constituição Federal 1988</option>
-    </optgroup>
-  </select>
-
-  <!-- RESULTADOS -->
-  <main class="content">
+  <main class="page">
     <div class="wrap">
-      <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
+      <section id="resultsStack" class="stack" aria-live="polite"></section>
     </div>
   </main>
 
@@ -96,10 +79,20 @@
   <footer class="bottombar" role="contentinfo">
     <div class="wrap bar-inner">
       <div class="bar-group">
-        <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
-        <button id="questionsBtn" class="btn btn-primary" aria-label="Criar questões" disabled>Criar Questões</button>
+        <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>
+          <span class="long">Estudar</span><span class="short" aria-hidden="true">IA</span>
+        </button>
       </div>
-      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 Selecionados – Ver</button>
+
+      <!-- Botão Selecionados + badge (moderno) -->
+      <button id="viewBtn" class="btn btn-ghost btn-selected" aria-haspopup="dialog">
+        <span class="short" aria-hidden="true">Ver</span>
+        <span class="long">Selecionados</span>
+        <span id="selBadge" class="badge">0</span>
+      </button>
+
+      <!-- Botão quadrado de limpar rápido (mostra só quando houver seleção) -->
+      <button id="clearSelBtn" class="icon-btn" title="Limpar seleção" aria-label="Limpar seleção">✕</button>
     </div>
   </footer>
 
@@ -119,19 +112,27 @@
     </div>
   </div>
 
-  <!-- MODAL: ESTUDAR -->
+  <!-- MODAL: ESTUDAR (agora com chips de modo) -->
   <div id="studyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="studyTitle" hidden>
     <div class="modal-backdrop" data-close-study></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
         <span id="studyTitle" class="title">Estudar com I.A.</span>
+
+        <!-- Chips de modo: Estudar | 2 min | Questões -->
+        <div id="studyModes" class="mode-chips">
+          <button id="modeDeep" class="chip" type="button">Estudar</button>
+          <button id="modeQuick" class="chip" type="button">2 min</button>
+          <button id="modeQuestions" class="chip" type="button">Questões</button>
+        </div>
+
         <button class="icon-btn" data-close-study aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
         <p class="muted">Com esse prompt você vai estudar sobre:</p>
         <ul id="studyList" class="mini-list"></ul>
         <div class="mini-actions">
-          <button id="studyUpdate" class="btn soft">Atualizar lista</button>
+          <button id="studyUpdate" class="btn soft" type="button">Atualizar lista</button>
         </div>
         <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
         <div class="ia-grid">
@@ -141,7 +142,7 @@
           <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
         <div class="copy-prompt">
-          <button class="btn soft" id="copyPromptBtn">Usar outra I.A.</button>
+          <button class="btn soft" id="copyPromptBtn" type="button">Usar outra I.A.</button>
         </div>
       </div>
       <div class="modal-foot">
@@ -150,7 +151,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CRIAR QUESTÕES -->
+  <!-- MODAL: CRIAR QUESTÕES (mantido) -->
   <div id="questionsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="questionsTitle" hidden>
     <div class="modal-backdrop" data-close-questions></div>
     <div class="modal-card" role="document">
@@ -159,31 +160,24 @@
         <button class="icon-btn" data-close-questions aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
-        <fieldset class="prefs">
-          <legend>Preferências</legend>
-         <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
-<label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
-<label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
-<label><input type="checkbox" class="qopt" value="mcq_1correta" checked> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
-<label><input type="checkbox" class="qopt" value="dificuldade_balanceada" checked> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
-<label><input type="checkbox" class="qopt" value="bloom_mix" checked> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
-<label><input type="checkbox" class="qopt" value="enunciado_autossuficiente" checked> Enunciado autossuficiente e neutro</label>
-<label><input type="checkbox" class="qopt" value="distratores_plausiveis" checked> Distratores plausíveis (erros típicos OAB/FGV)</label>
-<label><input type="checkbox" class="qopt" value="alternativas_padronizadas" checked> Padronizar extensão das alternativas (variação ≤ 15%)</label>
-<label><input type="checkbox" class="qopt" value="tempo_alvo" checked> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
-
+        <fieldset class="qopts">
+          <legend>Preferências de questões</legend>
+          <label><input type="checkbox" class="qopt" value="casos2" checked> Casos concretos (2)</label>
+          <label><input type="checkbox" class="qopt" value="vf1"> Verdadeiro ou falso (1)</label>
+          <label><input type="checkbox" class="qopt" value="bloom"> Taxonomia de Bloom</label>
+          <label><input type="checkbox" class="qopt" value="tempo"> Tempo-alvo (min)</label>
         </fieldset>
 
-        <label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
+        <label class="obs-label" for="questionsObs">Inclua algum contexto, foco ou instrução específica (opcional):</label>
         <div class="obs-row">
-          <textarea id="questionsObs" class="obs-input" rows="3" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos."></textarea>
+          <textarea id="questionsObs" class="obs-input" rows="3" placeholder="Ex.: foque em pegadinhas frequentes no tema X; contraste com Y; use nível intermediário com foco em tutela de urgência; inclua exemplos práticos."></textarea>
           <button id="includeObsBtn" class="btn soft" type="button">Incluir</button>
         </div>
 
         <p class="muted">Com esse prompt você vai gerar questões sobre:</p>
         <ul id="questionsList" class="mini-list"></ul>
         <div class="mini-actions">
-          <button id="questionsUpdate" class="btn soft">Atualizar lista</button>
+          <button id="questionsUpdate" class="btn soft" type="button">Atualizar lista</button>
         </div>
 
         <p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
@@ -194,7 +188,7 @@
           <a class="chip" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a>
         </div>
         <div class="copy-prompt">
-          <button class="btn soft" id="copyQuestionsBtn">Usar outra I.A.</button>
+          <button class="btn soft" id="copyQuestionsBtn" type="button">Usar outra I.A.</button>
         </div>
       </div>
       <div class="modal-foot">
@@ -204,11 +198,13 @@
   </div>
 
   <!-- MODAL: VER SELECIONADOS -->
-  <div id="selectedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selTitle" hidden>
+  <div id="selectedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="selectedTitle" hidden>
     <div class="modal-backdrop" data-close-sel></div>
     <div class="modal-card" role="document">
       <div class="modal-head">
-        <span id="selTitle" class="title">Selecionados (máx. 6)</span>
+        <span id="selectedTitle" class="title">Selecionados</span>
+        <!-- novo: limpar tudo no cabeçalho -->
+        <button id="clearAllBtn" class="btn soft small" type="button" aria-label="Limpar tudo">Limpar tudo</button>
         <button class="icon-btn" data-close-sel aria-label="Fechar">✕</button>
       </div>
       <div class="modal-body">
