@@ -198,7 +198,7 @@ mark.hl {
   font-size: 14px;
   height: 36px;
   padding: 0 14px;
-  border-radius: 10px;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   transition: all 0.2s ease-in-out;
 }
@@ -214,7 +214,7 @@ mark.hl {
   width: auto;
   height: 36px;
   font-size: 18px;
-  border-radius: 10px;
+  border-radius: 6px;
   line-height: 1;
 }
 
