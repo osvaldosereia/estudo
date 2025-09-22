@@ -128,12 +128,31 @@ mark.hl {
   background: #f5f6f8; /* cinza claro, igual fundo do site */
 }
 
-/* alinhamento dos cards dentro do modal */
-.modal-body .card {
-  align-items: center;
+/* tornar botões mais discretos e padronizados */
+.btn {
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+  font-weight: 500;
+  font-size: 14px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: all 0.2s ease-in-out;
 }
 
-/* ajuste fino no botão chk dentro do modal */
-.modal-body .card .chk {
-  align-self: center !important;
+.btn:hover {
+  background: #f9f9f9;
+  border-color: #ccc;
+}
+
+/* estilo só para botões icônicos */
+.btn.icon-only {
+  padding: 0 10px;
+  width: auto;
+  height: 36px;
+  font-size: 18px;
+  border-radius: 10px;
+  line-height: 1;
 }
