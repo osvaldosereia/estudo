@@ -1,30 +1,21 @@
-```javascript
-/* app.js – direito.love (Leitor jurídico)
-   - Busca em múltiplos arquivos .txt
-   - Renderiza cards com destaques
-   - Seleção de trechos (máx. 8)
-   - Modais: Leitor, Estudar, Questões, Selecionados
-   - Índice flutuante: por arquivo (nome | abrir | contagem)
-*/
-
-(() => {
+/* app.js — direito.love (robusto) */
+document.addEventListener("DOMContentLoaded", () => {
   // ==========================
-  // Utilidades
+  // Helpers
   // ==========================
-  const $ = (sel, el = document) => el.querySelector(sel);
-  const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
-  const on = (el, ev, fn, opts) => el.addEventListener(ev, fn, opts);
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
   const escapeReg = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
   const DEBOUNCE_MS = 250;
-  const MAX_RESULTS_PER_DOC = 50;   // sanidade
+  const MAX_RESULTS_PER_DOC = 50;
   const MAX_SELECTED = 8;
 
   // ==========================
-  // DOM refs
+  // DOM
   // ==========================
   const codeSelect = $("#codeSelect");
   const searchForm = $("#searchForm");
@@ -36,7 +27,6 @@
   const studyBtn = $("#studyBtn");
   const questionsBtn = $("#questionsBtn");
 
-  // Modais
   const readerModal = $("#readerModal");
   const readerBody = $("#readerBody");
   const readerSelCount = $("#selCount");
@@ -54,7 +44,7 @@
   const selectedModal = $("#selectedModal");
   const selectedStack = $("#selectedStack");
 
-  // Índice flutuante
+  // Índice (agora com elementos garantidos)
   const siRoot = $("#searchIndex");
   const siTrigger = siRoot ? $(".si-trigger", siRoot) : null;
   const siPanel = siRoot ? $(".si-panel", siRoot) : null;
@@ -68,19 +58,23 @@
   for (const og of $$("#codeSelect optgroup")) {
     const group = og.getAttribute("label") || "";
     for (const opt of $$("option", og)) {
-      const url = opt.value;
+      const url = opt.value?.trim();
       const name = opt.textContent.trim();
-      if (url && name) catalog.push({ name, url, group });
+      if (url && name) {
+        // Resolve relativo ao documento (garante /estudo/… no GitHub Pages)
+        const abs = new URL(url, document.baseURI).toString();
+        catalog.push({ name, url: abs, group });
+      }
     }
   }
 
-  /** @type {Map<string,string>} */
-  const textCache = new Map(); // url -> content
+  /** cache de textos */
+  const textCache = new Map();  // url -> string
 
   async function getText(url) {
     if (textCache.has(url)) return textCache.get(url);
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao carregar: ${url}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
     const txt = await res.text();
     textCache.set(url, txt);
     return txt;
@@ -100,23 +94,34 @@
   });
 
   function setBusy(v) {
-    searchForm.setAttribute("aria-busy", v ? "true" : "false");
-    searchSpinner.classList.toggle("show", !!v);
+    searchForm?.setAttribute("aria-busy", v ? "true" : "false");
+    searchSpinner?.classList.toggle("show", !!v);
   }
 
   function clearResults() {
     resultsStack.innerHTML = "";
   }
 
+  const selected = new Set();
+  const selectedData = new Map();
+  const firstCardId = new Map();
+
+  function refreshBottom() {
+    const count = selected.size;
+    viewBtn.textContent = `${count} ✔️ – Ver`;
+    const enable = count > 0;
+    [studyBtn, questionsBtn].forEach(b => (b.disabled = !enable));
+    readerSelCount.textContent = `${count}/${MAX_SELECTED}`;
+  }
+
   function normalizeQuery(q) {
-    return q.trim();
+    return (q || "").trim();
   }
 
   function snippetAround(text, idx, qlen, span = 120) {
     const start = clamp(idx - span, 0, Math.max(0, text.length - 1));
     const end = clamp(idx + qlen + span, 0, text.length);
     let snip = text.slice(start, end).replace(/\s+/g, " ");
-    // corta sem quebrar no meio das palavras
     if (start > 0) snip = snip.replace(/^[^ ]+/, "…");
     if (end < text.length) snip = snip.replace(/[^ ]+$/, "") + "…";
     return snip;
@@ -128,22 +133,19 @@
     return s.replace(rx, `<mark class="hl">$1</mark>`);
   }
 
-  // ==========================
-  // Renderização
-  // ==========================
-  /** Atualiza o estado dos botões inferiores */
-  function refreshBottom() {
-    const count = selected.size;
-    viewBtn.textContent = `${count} ✔️ – Ver`;
-    const enable = count > 0;
-    [studyBtn, questionsBtn].forEach(b => (b.disabled = !enable));
-    readerSelCount.textContent = `${count}/${MAX_SELECTED}`;
+  function toast(msg, ms = 1800) {
+    const box = document.getElementById("toasts");
+    if (!box) return console.warn("[toast]", msg);
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    box.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = "0";
+      setTimeout(() => box.removeChild(t), 300);
+    }, ms);
   }
 
-  /** Mapa de doc -> id do primeiro card (para o índice rolar até lá) */
-  const firstCardId = new Map();
-
-  /** Constrói um card de resultado */
   function makeCard({ docName, url, snippetHTML, iResult }) {
     const id = `res-${docName.replace(/\W+/g, "-")}-${iResult}`;
     if (!firstCardId.has(docName)) firstCardId.set(docName, id);
@@ -154,7 +156,7 @@
     el.dataset.doc = docName;
 
     el.innerHTML = `
-      <div class="pill" data-open="${encodeURIComponent(url)}">
+      <div class="pill">
         <span style="width:10px;height:10px;border-radius:3px;background:#9ecbff;display:inline-block"></span>
         <span>${docName}</span>
         <a href="${url}" target="_blank" rel="noopener" style="margin-left:6px; text-decoration:underline; color:#1e3a8a">(abrir)</a>
@@ -170,9 +172,8 @@
       </div>
     `;
 
-    // seleção
     const chk = $(".chk", el);
-    on(chk, "click", (e) => toggleSelect(el, docName, snippetHTML));
+    on(chk, "click", () => toggleSelect(el, docName, snippetHTML));
     on(chk, "keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
@@ -180,20 +181,11 @@
       }
     });
 
-    // ver texto
     const btnReader = $('.btn.toggle[data-action="reader"]', el);
     on(btnReader, "click", () => openReader(docName, url));
 
     return el;
   }
-
-  // ==========================
-  // Seleção & dados selecionados
-  // ==========================
-  /** @type {Set<string>} */
-  const selected = new Set();
-  /** @type {Map<string, {doc:string, snippet:string}>} */
-  const selectedData = new Map();
 
   function toggleSelect(cardEl, docName, snippetHTML) {
     const key = cardEl.id;
@@ -216,37 +208,23 @@
     refreshBottom();
   }
 
-  function toast(msg, ms = 1800) {
-    const box = document.getElementById("toasts");
-    if (!box) return alert(msg);
-    const t = document.createElement("div");
-    t.className = "toast";
-    t.textContent = msg;
-    box.appendChild(t);
-    setTimeout(() => {
-      t.style.opacity = "0";
-      setTimeout(() => box.removeChild(t), 300);
-    }, ms);
-  }
-
   // ==========================
   // Índice flutuante
   // ==========================
   function toggleIndex(open) {
     if (!siRoot) return;
-    const isOpen = open ?? siPanel.classList.contains("open") === false;
-    siPanel.classList.toggle("open", isOpen);
-    siTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    const want = open ?? !siPanel.classList.contains("open");
+    siPanel.classList.toggle("open", want);
+    siTrigger.setAttribute("aria-expanded", want ? "true" : "false");
   }
-
-  if (siTrigger) on(siTrigger, "click", () => toggleIndex());
+  on(siTrigger, "click", () => toggleIndex());
 
   function buildSearchIndex(counts, firstIds, query) {
     if (!siRoot) return;
     siList.innerHTML = "";
     const items = Object.entries(counts)
       .filter(([, n]) => n > 0)
-      .sort((a,b) => a[0].localeCompare(b[0]));
+      .sort((a, b) => a[0].localeCompare(b[0]));
     if (items.length === 0) {
       siRoot.hidden = true;
       siRoot.setAttribute("aria-hidden", "true");
@@ -256,7 +234,8 @@
     siRoot.setAttribute("aria-hidden", "false");
 
     for (const [doc, n] of items) {
-      const url = (catalog.find(c => c.name === doc) || {}).url;
+      const entry = catalog.find(c => c.name === doc);
+      const url = entry?.url;
       const li = document.createElement("li");
       li.className = "si-item";
       li.innerHTML = `
@@ -265,23 +244,18 @@
         <button class="si-open" type="button">abrir</button>
         <span class="si-count">${n}</span>
       `;
-      // abrir arquivo
-      $(".si-open", li).addEventListener("click", (e) => {
+      $(".si-open", li)?.addEventListener("click", (e) => {
         e.stopPropagation();
         if (url) window.open(url, "_blank", "noopener");
       });
-      // rolar até o primeiro card do doc
       li.addEventListener("click", () => {
         const id = firstIds.get(doc);
-        if (!id) return;
-        const el = document.getElementById(id);
+        const el = id && document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         toggleIndex(false);
       });
-
       siList.appendChild(li);
     }
-    // abre automaticamente se houver query
     if (query) toggleIndex(true);
   }
 
@@ -291,7 +265,6 @@
   async function openReader(docName, url) {
     try {
       const txt = await getText(url);
-      // Mostra como "artigos" em blocos por parágrafos
       const parts = txt.split(/\n{2,}/).map(s => s.trim()).filter(Boolean).slice(0, 200);
       const frag = document.createDocumentFragment();
       parts.forEach((p, i) => {
@@ -300,7 +273,7 @@
         sec.innerHTML = `
           <div class="a-chk"></div>
           <div>
-            <h4>${docName} — ${i+1}</h4>
+            <h4>${docName} — ${i + 1}</h4>
             <div class="a-body">${p.replace(/\n/g, "<br>")}</div>
           </div>
         `;
@@ -328,82 +301,63 @@
     modalEl.hidden = true;
     modalEl.setAttribute("aria-hidden", "true");
   }
-
-  // Fechar pelos data-attrs
   $$("[data-close-modal]").forEach(b => on(b, "click", () => closeModal(readerModal)));
   $$("[data-close-study]").forEach(b => on(b, "click", () => closeModal(studyModal)));
   $$("[data-close-questions]").forEach(b => on(b, "click", () => closeModal(questionsModal)));
   $$("[data-close-sel]").forEach(b => on(b, "click", () => closeModal(selectedModal)));
-  // Backdrops
-  $$(".modal-backdrop").forEach(b => on(b, "click", (e) => {
-    const id = b.parentElement?.id;
-    if (id) closeModal(document.getElementById(id));
+  $$(".modal-backdrop").forEach(b => on(b, "click", () => {
+    const parent = b.parentElement;
+    if (parent) closeModal(parent);
   }));
 
   // ==========================
   // Estudar / Questões / Selecionados
   // ==========================
   function rebuildLists() {
-    // extrai docs únicos das seleções
     const docs = Array.from(new Set(Array.from(selectedData.values()).map(v => v.doc)));
     studyList.innerHTML = docs.map(d => `<li class="mini-item"><div class="mini-title">${d}</div></li>`).join("");
     questionsList.innerHTML = docs.map(d => `<li class="mini-item"><div class="mini-title">${d}</div></li>`).join("");
   }
 
-  on(studyBtn, "click", () => {
-    rebuildLists();
-    openModal(studyModal);
-  });
-  on(questionsBtn, "click", () => {
-    rebuildLists();
-    openModal(questionsModal);
-  });
+  on(studyBtn, "click", () => { rebuildLists(); openModal(studyModal); });
+  on(questionsBtn, "click", () => { rebuildLists(); openModal(questionsModal); });
   on(viewBtn, "click", () => {
-    // Mostra os selecionados (cards compactos)
     const items = Array.from(selectedData.values());
-    selectedStack.innerHTML = items.map((it, i) => `
-      <article class="card">
-        <div class="body">${it.snippet}</div>
-      </article>
+    selectedStack.innerHTML = items.map(it => `
+      <article class="card"><div class="body">${it.snippet}</div></article>
     `).join("");
     openModal(selectedModal);
   });
-
   on(studyUpdate, "click", () => rebuildLists());
   on(questionsUpdate, "click", () => rebuildLists());
 
-  function buildStudyPrompt() {
+  on(copyPromptBtn, "click", async () => {
     const topics = Array.from(new Set(Array.from(selectedData.values()).map(v => v.doc)));
-    return `Quero estudar os seguintes tópicos jurídicos: ${topics.join(", ")}.
+    const prompt = `Quero estudar os seguintes tópicos jurídicos: ${topics.join(", ")}.
 - Explique de forma didática, com exemplos práticos e comparações quando útil.
 - Estruture em: visão geral, conceitos-chave, jurisprudência relevante, pegadinhas de prova, check-list de revisão.`;
-  }
-  function buildQuestionsPrompt() {
+    await navigator.clipboard.writeText(prompt);
+    toast("Prompt copiado!");
+  });
+  on(copyQuestionsBtn, "click", async () => {
     const topics = Array.from(new Set(Array.from(selectedData.values()).map(v => v.doc)));
-    return `Gere uma lista de questões inéditas sobre: ${topics.join(", ")}.
+    const prompt = `Gere uma lista de questões inéditas sobre: ${topics.join(", ")}.
 Regras:
 - 2 casos concretos, 2 dissertativas, 2 V/F, e 4 múltipla escolha (A–E, 1 correta).
 - Balanceie a dificuldade (3 fáceis, 4 médias, 3 difíceis).
 - Alternativas com extensão semelhante; enunciados autossuficientes; distratores plausíveis.`;
-  }
-
-  on(copyPromptBtn, "click", async () => {
-    await navigator.clipboard.writeText(buildStudyPrompt());
-    toast("Prompt copiado!");
-  });
-  on(copyQuestionsBtn, "click", async () => {
-    await navigator.clipboard.writeText(buildQuestionsPrompt());
+    await navigator.clipboard.writeText(prompt);
     toast("Prompt copiado!");
   });
 
   // ==========================
-  // Execução da busca
+  // Execução da busca (robusta)
   // ==========================
   async function runSearch(query) {
     const q = normalizeQuery(query);
     if (q.length < 2) {
       clearResults();
-      siRoot && (siRoot.hidden = true, siRoot.setAttribute("aria-hidden","true"));
+      if (siRoot) { siRoot.hidden = true; siRoot.setAttribute("aria-hidden","true"); }
       return;
     }
 
@@ -412,17 +366,29 @@ Regras:
     firstCardId.clear();
 
     try {
-      // Carrega todos os textos em paralelo (lazy no 1º uso)
-      const texts = await Promise.all(catalog.map(async c => ({
-        doc: c.name,
-        url: c.url,
-        text: await getText(c.url)
-      })));
+      // tenta carregar todos; não falha o conjunto se um quebrar
+      const loads = await Promise.allSettled(
+        catalog.map(async c => ({
+          doc: c.name,
+          url: c.url,
+          text: await getText(c.url)
+        }))
+      );
 
-      const counts = {}; // doc -> n
+      const failed = loads.filter(x => x.status === "rejected");
+      if (failed.length) {
+        toast(`Aviso: ${failed.length} arquivo(s) não carregaram.`);
+        console.warn("Falhas de carregamento:", failed);
+      }
+
+      const ok = loads
+        .filter(x => x.status === "fulfilled")
+        .map(x => x.value);
+
+      const counts = {};
       const frag = document.createDocumentFragment();
 
-      for (const { doc, url, text } of texts) {
+      for (const { doc, url, text } of ok) {
         const rx = new RegExp(escapeReg(q), "ig");
         let m, i = 0, n = 0;
         while ((m = rx.exec(text)) && i < MAX_RESULTS_PER_DOC) {
@@ -436,17 +402,15 @@ Regras:
             iResult: i
           }));
           i++;
-          // Evita loop infinito quando q é vazio (já checamos q.length>=2)
-          if (m.index === rx.lastIndex) rx.lastIndex++;
+          if (m.index === rx.lastIndex) rx.lastIndex++; // segurança
         }
         counts[doc] = n;
       }
 
-      // Se nada encontrado
-      const total = Object.values(counts).reduce((a,b) => a+b, 0);
+      const total = Object.values(counts).reduce((a,b) => a + b, 0);
       if (total === 0) {
         resultsStack.innerHTML = `<p class="block-empty">Nada encontrado para “${q}”.</p>`;
-        siRoot && (siRoot.hidden = true, siRoot.setAttribute("aria-hidden","true"));
+        if (siRoot) { siRoot.hidden = true; siRoot.setAttribute("aria-hidden","true"); }
       } else {
         resultsStack.appendChild(frag);
         buildSearchIndex(counts, firstCardId, q);
@@ -454,7 +418,7 @@ Regras:
 
     } catch (err) {
       console.error(err);
-      resultsStack.innerHTML = `<p class="block-empty">Erro ao buscar. Tente novamente.</p>`;
+      resultsStack.innerHTML = `<p class="block-empty">Erro ao buscar. Veja o console.</p>`;
     } finally {
       setBusy(false);
     }
@@ -465,26 +429,21 @@ Regras:
   // ==========================
   refreshBottom();
 
-  // Opção: abrir/fechar índice com ESC
   on(document, "keydown", (e) => {
     if (e.key === "Escape") {
       if (siPanel?.classList.contains("open")) toggleIndex(false);
-      else {
-        // fecha qualquer modal aberto
-        [readerModal, studyModal, questionsModal, selectedModal]
-          .forEach(m => !m.hidden && closeModal(m));
-      }
+      else [readerModal, studyModal, questionsModal, selectedModal]
+        .forEach(m => !m.hidden && m && (m.hidden = true, m.setAttribute("aria-hidden","true")));
     }
   });
 
-  // Se quiser disparar busca ao carregar com hash (?q=)
+  // Busca inicial se vier ?q=
   try {
-    const url = new URL(location.href);
-    const q = url.searchParams.get("q");
+    const u = new URL(location.href);
+    const q = u.searchParams.get("q");
     if (q) {
       searchInput.value = q;
       runSearch(q);
     }
   } catch {}
-})();
-```
+});
