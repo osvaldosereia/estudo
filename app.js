@@ -132,7 +132,6 @@ function stripThousandDots(s) {
 }
 
 /* ---------- CÓDIGOS: abreviações/sinônimos → rótulo do <select> ---------- */
-/* Lado direito = rótulo EXATO do <option> do seu <select id="codeSelect"> */
 const CODE_ABBREVS = new Map(Object.entries({
   // CF88
   "cf": "CF88",
@@ -209,7 +208,7 @@ const CODE_ABBREVS = new Map(Object.entries({
   "estatuto da oab": "Estatuto da OAB",
   "oab": "Estatuto da OAB",
 
-  // Leis (rótulo = option)
+  // Leis
   "lei maria da penha": "Lei Maria da Penha",
   "lmp": "Lei Maria da Penha",
 
@@ -228,7 +227,7 @@ const CODE_ABBREVS = new Map(Object.entries({
 
 /* Detecta se a query contém uma dica de código (abreviação/sinônimo) */
 function detectCodeFromQuery(rawQuery) {
-  const q = ` ${norm(rawQuery)} `; // acolchoado para evitar falsos positivos
+  const q = ` ${norm(rawQuery)} `;
   for (const [abbr, label] of CODE_ABBREVS.entries()) {
     const needle = ` ${abbr} `;
     if (q.includes(needle) || q.trim() === abbr) {
@@ -245,8 +244,8 @@ function tokenize(query) {
   const raw = q.split(/\s+/).filter(Boolean);
   const tokens = [];
   for (const w of raw) {
-    if (/^\d{1,4}$/.test(w)) tokens.push(w);          // número exato (1–4 dígitos)
-    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);  // palavra 3+ letras
+    if (/^\d{1,4}$/.test(w)) tokens.push(w);
+    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);
   }
   return Array.from(new Set(tokens));
 }
@@ -258,33 +257,24 @@ function splitTokens(tokens) {
   return { wordTokens, numTokens };
 }
 
-/* número "exato" dentro de um texto normalizado (1 não casa 10/100; 11 ≠ 1)
-   Trata pontos de milhar: "1.000" ≡ "1000" */
+/* número exato; trata 1.000 ≡ 1000 */
 function hasExactNumber(bag, n) {
   const bagNum = stripThousandDots(bag);
   const rx = new RegExp(`(?:^|\\D)${n}(?:\\D|$)`, "g");
   return rx.test(bagNum);
 }
 
-/* keyword proximity (≤12 chars) e regra "linha começa com" (≤15 chars) */
+/* proximidade & regra "linha começa com" */
 const KW_RX = /\b(art\.?|artigo|s[uú]mula)\b/iu;
 const KW_ART_RX = /^\s*(art\.?|artigo)\b/i;
 const KW_SUM_RX = /^\s*s[uú]mula\b/i;
 
-/* retorna true se o número N:
-   (a) está a ≤12 chars da keyword (art/art./artigo/súmula), e
-   (b) SE a query começar por "art|art.|artigo|súmula":
-       o número aparece nos 15 primeiros caracteres da linha que começa com esse marcador. */
 function numberRespectsWindows(text, n, queryMode /* "art"|"sumula"|null */) {
   const raw = String(text);
-
-  // (a) janela curta ≤12 chars
-  // captura "KW ... N" com até 12 não-alfa-num entre o fim da KW e o primeiro dígito
   const nearRx = new RegExp(String.raw`\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(${n})(?:\b|[^0-9])`, "i");
   const nearOK = nearRx.test(stripThousandDots(raw));
   if (!nearOK) return false;
 
-  // (b) se query começa com o marcador → precisa estar nos 15 primeiros chars da linha
   if (!queryMode) return true;
 
   const lines = raw.split(/\r?\n/);
@@ -292,10 +282,8 @@ function numberRespectsWindows(text, n, queryMode /* "art"|"sumula"|null */) {
 
   for (const line of lines) {
     if (!wantStart.test(line)) continue;
-    const clean = stripThousandDots(norm(line)); // normaliza e remove "1.000"
-    // pega a parte da linha após o marcador inicial
+    const clean = stripThousandDots(norm(line));
     const after = clean.replace(queryMode === "art" ? KW_ART_RX : KW_SUM_RX, "").trimStart();
-    // índice do número (como string) após o marcador
     const idx = after.indexOf(n);
     if (idx !== -1 && idx <= 15) return true;
   }
@@ -499,7 +487,6 @@ function matchesNumbers(item, numTokens, queryHasLegalKeyword, queryMode) {
     return numTokens.every((n) => hasExactNumber(bag, n));
   }
 
-  // com keyword jurídica na query: precisa (a) proximidade ≤12 e (b) (se houver) regra ≤15 no início da linha
   return numTokens.every((n) => numberRespectsWindows(item.text, n, queryMode));
 }
 
@@ -507,7 +494,6 @@ async function doSearch() {
   const termRaw = (els.q.value || "").trim();
   if (!termRaw) return;
 
-  // trata 1.000 → 1000 na query
   const term = stripThousandDots(termRaw);
 
   els.stack.innerHTML = "";
@@ -528,10 +514,8 @@ async function doSearch() {
     const normQuery = norm(term);
     const queryMode = detectQueryMode(normQuery); // "art" | "sumula" | null
 
-    // dica de código (cc, cp, cpc, "codigo civil", etc.)
     const codeInfo = detectCodeFromQuery(normQuery);
 
-    // tokens válidos (palavras 3+ e números 1–4)
     let tokens = tokenize(normQuery);
     if (!tokens.length) {
       skel.remove();
@@ -540,7 +524,6 @@ async function doSearch() {
       return;
     }
 
-    // se houve codeInfo, remove do conjunto de palavras os termos que só serviram p/ identificar o código
     if (codeInfo) {
       tokens = tokens.filter((tk) => !codeInfo.keyWords.has(tk));
     }
@@ -548,7 +531,6 @@ async function doSearch() {
     const queryHasLegalKeyword = KW_RX.test(normQuery);
     const { wordTokens, numTokens } = splitTokens(tokens);
 
-    // monta a lista de arquivos; se codeInfo → filtra pelo rótulo do <option>
     let allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
       .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
       .filter((o) => o.url);
@@ -566,10 +548,8 @@ async function doSearch() {
         const items = await parseFile(url, label);
         for (const it of items) {
           const bag = norm(stripThousandDots(it.text));
-
           const okWords = hasAllWordTokens(bag, wordTokens);
           const okNums  = matchesNumbers(it, numTokens, queryHasLegalKeyword, queryMode);
-
           if (okWords && okNums) results.push(it);
         }
       } catch (e) {
@@ -604,7 +584,13 @@ function renderBlock(term, items, tokens) {
   } else {
     items.forEach((it) => block.appendChild(renderCard(it, tokens)));
   }
+
   els.stack.append(block);
+
+  // ✅ Atualiza o índice flutuante imediatamente após renderizar
+  if (typeof window.__rebuildSearchIndex === "function") {
+    window.__rebuildSearchIndex();
+  }
 }
 
 /* ---------- cards ---------- */
@@ -641,7 +627,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const left = document.createElement("div");
 
-  // chip do código (não no modal leitor)
   if (item.source && ctx.context !== "reader") {
     const pill = document.createElement("a");
     pill.href = "#";
@@ -663,7 +648,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const actions = document.createElement("div");
   actions.className = "actions";
 
-  // ver texto
   const toggle = document.createElement("button");
   toggle.className = "toggle";
   toggle.textContent = "ver texto";
@@ -678,7 +662,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
   });
 
-  // Planalto
   const planaltoBtn = document.createElement("button");
   planaltoBtn.className = "toggle";
   planaltoBtn.textContent = "Planalto";
@@ -686,7 +669,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
   });
 
-  // check na mesma linha (à direita)
   const chk = document.createElement("button");
   chk.className = "chk";
   chk.setAttribute("aria-label", "Selecionar bloco");
@@ -705,25 +687,26 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
     sync();
     updateBottom();
-// cria botão "limpar selecionados" apenas uma vez
-if (!document.getElementById("clearSelectedBtn")) {
-  const clearBtn = document.createElement("button");
-  clearBtn.id = "clearSelectedBtn";
-  clearBtn.className = "btn icon-only";
-  clearBtn.innerHTML = "🗑️";
-  clearBtn.setAttribute("aria-label", "Limpar seleção");
 
-  clearBtn.addEventListener("click", () => {
-    state.selected.clear();
-    updateBottom();
-    toast("Seleção limpa.");
-    els.stack?.querySelectorAll(".card").forEach((c) =>
-      c.querySelector(".chk")?.removeAttribute("data-checked")
-    );
-  });
+    // cria botão "limpar selecionados" apenas uma vez
+    if (!document.getElementById("clearSelectedBtn")) {
+      const clearBtn = document.createElement("button");
+      clearBtn.id = "clearSelectedBtn";
+      clearBtn.className = "btn icon-only";
+      clearBtn.innerHTML = "🗑️";
+      clearBtn.setAttribute("aria-label", "Limpar seleção");
 
-  els.viewBtn?.after(clearBtn);
-}
+      clearBtn.addEventListener("click", () => {
+        state.selected.clear();
+        updateBottom();
+        toast("Seleção limpa.");
+        els.stack?.querySelectorAll(".card").forEach((c) =>
+          c.querySelector(".chk")?.removeAttribute("data-checked")
+        );
+      });
+
+      els.viewBtn?.after(clearBtn);
+    }
   });
 
   actions.append(toggle, planaltoBtn, chk);
@@ -740,7 +723,6 @@ async function openReader(item, tokens = []) {
   els.readerBody && (els.readerBody.innerHTML = "");
   showModal(els.readerModal);
 
-  // skeleton
   for (let i = 0; i < 3; i++) {
     const s = document.createElement("div");
     s.className = "skel block";
@@ -1014,7 +996,6 @@ if (!document.getElementById("clearSelectedBtn")) {
     btn.addEventListener("click", ()=>{
       if (!currentGroups) return;
       if (Object.keys(currentGroups).length < 3){
-        // Se for 1–2 grupos, foca direto no primeiro
         const key = Object.keys(currentGroups)[0];
         if (key) focusGroup(key);
         return;
@@ -1034,14 +1015,12 @@ if (!document.getElementById("clearSelectedBtn")) {
   }
 
   function collectGroups(){
-    // Estratégia: varrer cards na UI e inferir "arquivo" pelo chip .pill
     const cards = Array.from(document.querySelectorAll(".card"));
     if (!cards.length) return null;
 
     const groups = {};
     for (const c of cards){
       const pill = c.querySelector(".pill");
-      // Fallback: usa data-file se existir
       const key = (pill && pill.textContent.trim()) || c.getAttribute("data-file") || "Outros";
       if(!groups[key]) groups[key] = [];
       groups[key].push(c);
@@ -1072,7 +1051,6 @@ if (!document.getElementById("clearSelectedBtn")) {
     if (!cards || !cards.length) return;
     const target = cards[0];
     target.scrollIntoView({behavior:"smooth", block:"start"});
-    // Fecha o painel se aberto
     if (sel.panel.classList.contains("open")){
       sel.panel.classList.remove("open");
       sel.trigger.setAttribute("aria-expanded","false");
@@ -1088,20 +1066,17 @@ if (!document.getElementById("clearSelectedBtn")) {
       sel.container.setAttribute("aria-hidden","true");
       return;
     }
-    // Mostra quando houver resultados
     sel.container.hidden = false;
     sel.container.setAttribute("aria-hidden","false");
 
     const groupCount = Object.keys(currentGroups).length;
     sel.trigger.textContent = groupCount >= 3 ? "Índice (arquivos)" : "Índice";
     rebuildList(currentGroups);
-    // Se menos de 3 grupos, painel fica fechado e clique vai direto
     sel.panel.classList.remove("open");
     sel.trigger.setAttribute("aria-expanded","false");
   }
 
-  // Atualiza quando a busca renderiza resultados:
-  // 1) MutationObserver no body (barato: só observa adições .card)
+  // Observa mutações de DOM (surgimento/sumir de .card)
   const mo = new MutationObserver((records)=>{
     let changed = false;
     for (const r of records){
@@ -1118,10 +1093,9 @@ if (!document.getElementById("clearSelectedBtn")) {
   });
   mo.observe(document.documentElement || document.body, { childList:true, subtree:true });
 
-  // Também atualiza ao limpar a busca (quando cards somem)
   window.addEventListener("hashchange", updateIndex);
   document.addEventListener("DOMContentLoaded", updateIndex);
 
-  // Exponho opcionalmente para chamadas manuais após doSearch():
+  // Exponho para chamadas manuais (usado em renderBlock)
   window.__rebuildSearchIndex = updateIndex;
 })();
