@@ -36,12 +36,73 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .block-empty{color:var(--muted);font-style:italic;padding:8px 0}
 
 /* cards */
-.card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 0 rgba(2,8,20,.02);margin:12px 0}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--blue-soft);color:#1745b6;font-weight:600;font-size:.92rem;text-decoration:none}
-.card .body{white-space:pre-wrap;margin:8px 0 10px;color:#1f2937}
-.card .body mark{background:#dfeaff;border-radius:6px;padding:0 .15em}
-.card .actions{display:flex;gap:8px;align-items:center}
-.card .toggle{border:1px solid #d6dbe6;background:#fff;border-radius:12px;height:32px;padding:0 12px;font-weight:600;color:#111}
+.card {
+  display: grid;
+  grid-template-columns: 1fr !important; /* força uma única coluna */
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(2,8,20,.02);
+  margin: 12px 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #1e3a8a;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-decoration: none;
+  opacity: 0.85;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.pill:hover {
+  background: #dbeafe;
+  opacity: 1;
+}
+
+.card .body {
+  white-space: pre-wrap;
+  margin: 8px 0 10px;
+  color: #1f2937;
+}
+
+.card .body mark {
+  background: #dfeaff;
+  border-radius: 6px;
+  padding: 0 .15em;
+}
+
+.card .actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end; /* alinha tudo à direita */
+  margin-top: 8px;
+}
+
+.card .toggle {
+  border: 1px solid #d6dbe6;
+  background: #fff;
+  border-radius: 12px;
+  height: 32px;
+  padding: 0 12px;
+  font-weight: 600;
+  color: #111;
+}
+
+.card .chk {
+  align-self: auto; /* evita subir pro topo */
+}
 
 /* checkbox minimal e legível */
 .chk{width:32px;height:32px;border-radius:10px;border:2px solid #cfd4e2;background:#fff;display:grid;place-items:center;cursor:pointer;align-self:flex-start;box-shadow:0 1px 0 rgba(0,0,0,.03)}
