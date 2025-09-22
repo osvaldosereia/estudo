@@ -1,0 +1,22 @@
+.search-index[hidden] {
+  display: none;
+}
+.search-index {
+  text-align: right;
+  margin: 0 0 12px 0;
+}
+.search-index .si-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.search-index .si-panel.open {
+  display: block;
+}
