@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>direito.love — Leitor jurídico</title>
+<link href="manifest.webmanifest" rel="manifest"/>
+<meta content="#ffffff" name="theme-color"/>
+<link href="icons/favicon-32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="icons/favicon-192.png" rel="icon" sizes="192x192" type="image/png"/>
+<link href="icons/apple-touch-icon.png" rel="apple-touch-icon"/>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<!-- TOP BAR -->
+<header class="topbar" role="banner">
+<div class="wrap">
+<img alt="direito.love" class="brand" id="brandBtn" src="icons/logo.png"/>
+<form aria-label="Buscar" class="search" id="searchForm" role="search">
+<input aria-label="Buscar no texto" autocomplete="off" id="searchInput" placeholder="Buscar no texto…" type="search"/>
+<div aria-hidden="true" class="spinner" id="searchSpinner"></div>
+</form>
+</div>
+</header>
+<!-- Catálogo (oculto) -->
+<select hidden="" id="codeSelect">
+<option value="">—</option>
+<optgroup label="Códigos">
+<option value="data/codigos/codigo_civil.txt">Código Civil</option>
+<option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
+<option value="data/codigos/codigo_penal.txt">Código Penal</option>
+<option value="data/codigos/codigo_processo_penal.txt">Processo Penal</option>
+<option value="data/codigos/CDC.txt">CDC</option>
+<option value="data/codigos/codigo_eleitoral.txt">Código Eleitoral</option>
+<option value="data/codigos/CLT.txt">CLT</option>
+<option value="data/codigos/codigo_tributario_nacional.txt">Cód. Tributário Nacional</option>
+<option value="data/codigos/codigo_de_transito_brasileiro.txt">Cód. Trânsito Brasileiro</option>
+<option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
+<option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
+<option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
+</optgroup>
+<optgroup label="Súmulas">
+<option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
+<option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
+</optgroup>
+
+<optgroup label="Enunciados">
+<option value="data/enunciados/enunciados.txt">Jornadas de Direito</option>
+</optgroup>
+
+<optgroup label="Julgados">
+<option value="data/julgados/julgados.txt">Julgados</option>
+<option value="data/julgados/julgados1.txt">Julgados</option>
+<option value="data/julgados/julgados2.txt">Julgados</option>
+<option value="data/julgados/julgados3.txt">Julgados</option>
+<option value="data/julgados/julgados4.txt">Julgados</option>
+<option value="data/julgados/julgados5.txt">Julgados</option>
+<option value="data/julgados/julgados6.txt">Julgados</option>
+</optgroup>
+
+<optgroup label="Leis">
+<option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
+<option value="data/leis/lei_da_improbidade_administrativa.txt">Lei da Improbidade Administrativa</option>
+<option value="data/leis/lei_de_execucao_penal.txt">Lei de Execução Penal</option>
+<option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
+<option value="data/leis/lei_do_mandado_de_seguranca.txt">Mandado de Segurança</option>
+</optgroup>
+<optgroup label="Estatutos">
+<option value="data/estatutos/ECA.txt">ECA</option>
+<option value="data/estatutos/estatuto_oab.txt">Estatuto da OAB</option>
+</optgroup>
+
+<optgroup label="Constituição">
+<option value="data/CF88/CF88.txt">Constituição Federal 1988</option>
+</optgroup>
+</select>
+<!-- RESULTADOS -->
+<main class="content">
+<div class="wrap">
+<section aria-busy="false" aria-live="polite" class="stack" id="resultsStack"></section>
+</div>
+</main>
+<!-- BARRA INFERIOR -->
+<footer class="bottombar" role="contentinfo">
+<div class="wrap bar-inner">
+<div class="bar-group">
+<button aria-label="Estudar com I.A." class="btn btn-primary" disabled="" id="studyBtn">Estudar</button>
+<button aria-label="Criar Questões" class="btn btn-primary" disabled="" id="questionsBtn">Questões</button>
+</div>
+<button aria-haspopup="dialog" class="btn btn-ghost" id="viewBtn">0 ✔️ – Ver</button>
+</div>
+</footer>
+<!-- MODAL: LEITOR -->
+<div aria-labelledby="readerTitle" aria-modal="true" class="modal" hidden="" id="readerModal" role="dialog">
+<div class="modal-backdrop" data-close-modal=""></div>
+<div class="modal-card" role="document">
+<div class="modal-head">
+<span class="title" id="readerTitle">Leitor</span>
+<div class="modal-meta"><span id="selCount">0/6</span></div>
+<button aria-label="Fechar" class="icon-btn" data-close-modal="">✕</button>
+</div>
+<div class="modal-body" id="readerBody" tabindex="0"></div>
+<div class="modal-foot">
+<button aria-label="Fechar" class="icon-btn foot-close" data-close-modal="">✕</button>
+</div>
+</div>
+</div>
+<!-- MODAL: ESTUDAR -->
+
+<!-- MODAL: CRIAR QUESTÕES -->
+<div aria-labelledby="questionsTitle" aria-modal="true" class="modal" hidden="" id="questionsModal" role="dialog">
+<div class="modal-backdrop" data-close-questions=""></div>
+<div class="modal-card" role="document">
+<div class="modal-head">
+<span class="title" id="questionsTitle">Criar Questões</span>
+<button aria-label="Fechar" class="icon-btn" data-close-questions="">✕</button>
+</div>
+<div class="modal-body">
+<fieldset class="prefs">
+<legend>Preferências</legend>
+<label><input checked="" class="qopt" type="checkbox" value="casos2"/> Incluir 2 Casos Concretos</label>
+<label><input checked="" class="qopt" type="checkbox" value="dissertativas2"/> Incluir 2 Dissertativas</label>
+<label><input checked="" class="qopt" type="checkbox" value="vf2"/> Incluir 2 V ou F</label>
+<label><input checked="" class="qopt" type="checkbox" value="mcq_1correta"/> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
+<label><input checked="" class="qopt" type="checkbox" value="dificuldade_balanceada"/> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
+<label><input checked="" class="qopt" type="checkbox" value="bloom_mix"/> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
+<label><input checked="" class="qopt" type="checkbox" value="enunciado_autossuficiente"/> Enunciado autossuficiente e neutro</label>
+<label><input checked="" class="qopt" type="checkbox" value="distratores_plausiveis"/> Distratores plausíveis (erros típicos OAB/FGV)</label>
+<label><input checked="" class="qopt" type="checkbox" value="alternativas_padronizadas"/> Padronizar extensão das alternativas (variação ≤ 15%)</label>
+<label><input checked="" class="qopt" type="checkbox" value="tempo_alvo"/> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
+</fieldset>
+<label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
+<div class="obs-row">
+<textarea class="obs-input" id="questionsObs" placeholder="(Opcional) Ex.: foco em tutela de urgência; inclua exemplos práticos." rows="3"></textarea>
+<button class="btn soft" id="includeObsBtn" type="button">Incluir</button>
+</div>
+<p class="muted">Com esse prompt você vai gerar questões sobre:</p>
+<ul class="mini-list" id="questionsList"></ul>
+<div class="mini-actions">
+<button class="btn soft" id="questionsUpdate">Atualizar lista</button>
+</div>
+<p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
+<div class="ia-grid">
+<a class="chip" href="https://chat.openai.com/" rel="noopener" target="_blank">ChatGPT</a>
+<a class="chip" href="https://gemini.google.com/" rel="noopener" target="_blank">Gemini</a>
+<a class="chip" href="https://copilot.microsoft.com/" rel="noopener" target="_blank">Copilot</a>
+<a class="chip" href="https://www.perplexity.ai/" rel="noopener" target="_blank">Perplexity</a>
+</div>
+<div class="copy-prompt">
+<button class="btn soft" id="copyQuestionsBtn">Usar outra I.A.</button>
+</div>
+</div>
+<div class="modal-foot">
+<button aria-label="Fechar" class="icon-btn foot-close" data-close-questions="">✕</button>
+</div>
+</div>
+</div>
+<!-- MODAL: VER SELECIONADOS -->
+<div aria-labelledby="selTitle" aria-modal="true" class="modal" hidden="" id="selectedModal" role="dialog">
+<div class="modal-backdrop" data-close-sel=""></div>
+<div class="modal-card" role="document">
+<div class="modal-head">
+<span class="title" id="selTitle">Selecionados (máx. 8)</span>
+<button aria-label="Fechar" class="icon-btn" data-close-sel="">✕</button>
+</div>
+<div class="modal-body">
+<section id="selectedStack"></section>
+</div>
+<div class="modal-foot">
+<button aria-label="Fechar" class="icon-btn foot-close" data-close-sel="">✕</button>
+</div>
+</div>
+</div>
+<!-- TOASTS -->
+<div aria-atomic="true" aria-live="polite" class="toasts" id="toasts"></div>
+<script src="app.js"></script>
+
+<div aria-labelledby="studyTitle" aria-modal="true" class="modal" hidden="" id="studyModal" role="dialog">
+<div class="modal-backdrop" data-close-study=""></div>
+<div class="modal-card" role="document">
+<div class="modal-head">
+<span class="title" id="studyTitle">Estudo com I.A.</span>
+<button aria-label="Fechar" class="icon-btn" data-close-study="">✕</button>
+</div>
+<div class="modal-tabs">
+<button class="chip tab-btn active" data-tab="prova">Para Prova</button>
+<button class="chip tab-btn" data-tab="aprofundado">Aprofundado</button>
+<button class="chip tab-btn" data-tab="questoes">Questões</button>
+<button class="chip tab-btn" data-tab="comparativo">Comparativo</button>
+</div>
+<div class="modal-body tab-content" id="tab-prova">
+<p class="muted">Com esse prompt você vai estudar sobre:</p>
+<ul class="mini-list" id="studyList"></ul>
+<div class="mini-actions">
+<button class="btn soft" id="studyUpdate">Atualizar lista</button>
+</div>
+<p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
+<div class="ia-grid">
+<a class="chip" href="https://chat.openai.com/" rel="noopener" target="_blank">ChatGPT</a>
+<a class="chip" href="https://gemini.google.com/" rel="noopener" target="_blank">Gemini</a>
+<a class="chip" href="https://copilot.microsoft.com/" rel="noopener" target="_blank">Copilot</a>
+<a class="chip" href="https://www.perplexity.ai/" rel="noopener" target="_blank">Perplexity</a>
+</div>
+<div class="copy-prompt">
+<button class="btn soft" id="copyPromptBtn">Usar outra I.A.</button>
+</div>
+</div>
+<div class="modal-body tab-content" hidden="" id="tab-aprofundado">
+<p class="muted">Com esse prompt você vai estudar sobre:</p>
+<ul class="mini-list" id="studyList"></ul>
+<div class="mini-actions">
+<button class="btn soft" id="studyUpdate">Atualizar lista</button>
+</div>
+<p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
+<div class="ia-grid">
+<a class="chip" href="https://chat.openai.com/" rel="noopener" target="_blank">ChatGPT</a>
+<a class="chip" href="https://gemini.google.com/" rel="noopener" target="_blank">Gemini</a>
+<a class="chip" href="https://copilot.microsoft.com/" rel="noopener" target="_blank">Copilot</a>
+<a class="chip" href="https://www.perplexity.ai/" rel="noopener" target="_blank">Perplexity</a>
+</div>
+<div class="copy-prompt">
+<button class="btn soft" id="copyPromptBtn">Usar outra I.A.</button>
+</div>
+</div>
+<div class="modal-body tab-content" hidden="" id="tab-questoes">
+<fieldset class="prefs">
+<legend>Preferências</legend>
+<label><input checked="" class="qopt" type="checkbox" value="casos2"/> Incluir 2 Casos Concretos</label>
+<label><input checked="" class="qopt" type="checkbox" value="dissertativas2"/> Incluir 2 Dissertativas</label>
+<label><input checked="" class="qopt" type="checkbox" value="vf2"/> Incluir 2 V ou F</label>
+<label><input checked="" class="qopt" type="checkbox" value="mcq_1correta"/> Múltipla escolha A–E com apenas 1 correta</label>
+<label><input checked="" class="qopt" type="checkbox" value="dificuldade_balanceada"/> Balancear dificuldade</label>
+<label><input checked="" class="qopt" type="checkbox" value="bloom_mix"/> Bloom mix: lembrar/aplicar/analisar</label>
+<label><input checked="" class="qopt" type="checkbox" value="enunciado_autossuficiente"/> Enunciado autossuficiente e neutro</label>
+<label><input checked="" class="qopt" type="checkbox" value="distratores_plausiveis"/> Distratores plausíveis</label>
+<label><input checked="" class="qopt" type="checkbox" value="alternativas_padronizadas"/> Padronizar tamanho das alternativas</label>
+<label><input checked="" class="qopt" type="checkbox" value="tempo_alvo"/> Tempo-alvo: objetivas e discursivas</label>
+</fieldset>
+<label class="obs-label" for="questionsObs">Inclua alguma informação para personalizar as questões.</label>
+<div class="obs-row">
+<textarea class="obs-input" id="questionsObs" placeholder="Ex: foco em tutela de urgência, incluir exemplos." rows="3"></textarea>
+<button class="btn soft" id="includeObsBtn" type="button">Incluir</button>
+</div>
+<p class="muted">Com esse prompt você vai gerar questões sobre:</p>
+<ul class="mini-list" id="questionsList"></ul>
+<div class="mini-actions">
+<button class="btn soft" id="questionsUpdate">Atualizar lista</button>
+</div>
+<p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
+<div class="ia-grid">
+<a class="chip" href="https://chat.openai.com/" rel="noopener" target="_blank">ChatGPT</a>
+<a class="chip" href="https://gemini.google.com/" rel="noopener" target="_blank">Gemini</a>
+<a class="chip" href="https://copilot.microsoft.com/" rel="noopener" target="_blank">Copilot</a>
+<a class="chip" href="https://www.perplexity.ai/" rel="noopener" target="_blank">Perplexity</a>
+</div>
+<div class="copy-prompt">
+<button class="btn soft" id="copyQuestionsBtn">Usar outra I.A.</button>
+</div>
+</div>
+<div class="modal-body tab-content" hidden="" id="tab-comparativo">
+<p class="muted">Com esse prompt você vai comparar os artigos selecionados:</p>
+<ul class="mini-list" id="compareList"></ul>
+<div class="mini-actions">
+<button class="btn soft" id="compareUpdate">Atualizar lista</button>
+</div>
+<p class="muted small-note">Abra a sua I.A. preferida e cole o prompt.</p>
+<div class="ia-grid">
+<a class="chip" href="https://chat.openai.com/" rel="noopener" target="_blank">ChatGPT</a>
+<a class="chip" href="https://gemini.google.com/" rel="noopener" target="_blank">Gemini</a>
+<a class="chip" href="https://copilot.microsoft.com/" rel="noopener" target="_blank">Copilot</a>
+<a class="chip" href="https://www.perplexity.ai/" rel="noopener" target="_blank">Perplexity</a>
+</div>
+<div class="copy-prompt">
+<button class="btn soft" id="copyCompareBtn">Usar outra I.A.</button>
+</div>
+</div>
+<div class="modal-foot">
+<button aria-label="Fechar" class="icon-btn foot-close" data-close-study="">✕</button>
+</div>
+</div>
+</div>
+</body>
+</html>
