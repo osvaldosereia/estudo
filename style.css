@@ -257,9 +257,11 @@ mark.hl{
 
 /* Lista e itens */
 .search-index .si-list{ list-style:none; margin:0; padding:4px; }
+
+/* >>> Itens em linha: dot | nome | abrir | contagem */
 .search-index .si-item{
   display:grid;
-  grid-template-columns:12px 1fr auto; /* marcador | nome | contagem */
+  grid-template-columns:10px 1fr auto auto;
   align-items:center;
   gap:10px;
   padding:10px 12px;
@@ -267,11 +269,43 @@ mark.hl{
   border:1px solid transparent;
   cursor:pointer;
   font-size:14px;
+  line-height:1.2;
 }
 .search-index .si-item:hover{ background:#f6f8fb; border-color:#e7ecf6; }
 
 .search-index .si-dot{ width:8px; height:8px; border-radius:3px; background:#4AA3FF; }
-.search-index .si-count{ font-variant-numeric:tabular-nums; color:var(--muted,#6b7280); margin-left:8px; }
+
+/* Nome: uma linha com ellipsis */
+.search-index .si-name{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#0B1F33;
+}
+
+/* Botão "abrir" (sem quebrar) */
+.search-index .si-open{
+  appearance:none;
+  border:0;
+  background:transparent;
+  font-size:13px;
+  color:#2757F7;
+  padding:6px 8px;
+  border-radius:8px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.search-index .si-open:hover{ background:rgba(39,87,247,.08); }
+
+/* Contagem à direita */
+.search-index .si-count{
+  font-variant-numeric:tabular-nums;
+  color:var(--muted,#6b7280);
+  min-width:18px;
+  text-align:right;
+  white-space:nowrap;
+}
 
 /* Mobile */
 @media (max-width:640px){
