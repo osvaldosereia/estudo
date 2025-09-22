@@ -127,3 +127,13 @@ mark.hl {
   scroll-behavior: smooth;
   background: #f5f6f8; /* cinza claro, igual fundo do site */
 }
+
+/* alinhamento dos cards dentro do modal */
+.modal-body .card {
+  align-items: center;
+}
+
+/* ajuste fino no botão chk dentro do modal */
+.modal-body .card .chk {
+  align-self: center !important;
+}
