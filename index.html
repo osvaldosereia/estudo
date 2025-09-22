@@ -29,6 +29,7 @@
   <!-- Catálogo (oculto) -->
   <select id="codeSelect" hidden>
     <option value="">—</option>
+
     <optgroup label="Códigos">
       <option value="data/codigos/codigo_civil.txt">Código Civil</option>
       <option value="data/codigos/codigo_processo_civil.txt">Processo Civil</option>
@@ -42,32 +43,27 @@
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
       <option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
       <option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
+    </optgroup>
 
-</optgroup>
     <optgroup label="Súmulas">
       <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
       <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
-      
     </optgroup>
-    
-    </optgroup>
+
     <optgroup label="Enunciados">
       <option value="data/enunciados/enunciados.txt">Jornadas de Direito</option>
-      </optgroup>
+    </optgroup>
 
- </optgroup>
     <optgroup label="Julgados">
       <option value="data/julgados/julgados.txt">Julgados</option>
       <option value="data/julgados/julgados1.txt">Julgados</option>
       <option value="data/julgados/julgados2.txt">Julgados</option>
-     <option value="data/julgados/julgados3.txt">Julgados</option>
+      <option value="data/julgados/julgados3.txt">Julgados</option>
       <option value="data/julgados/julgados4.txt">Julgados</option>
       <option value="data/julgados/julgados5.txt">Julgados</option>
-     <option value="data/julgados/julgados6.txt">Julgados</option>
-
-      </optgroup>
-
+      <option value="data/julgados/julgados6.txt">Julgados</option>
     </optgroup>
+
     <optgroup label="Leis">
       <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
       <option value="data/leis/lei_da_improbidade_administrativa.txt">Lei da Improbidade Administrativa</option>
@@ -75,11 +71,12 @@
       <option value="data/leis/lei_de_drogas.txt">Lei de Drogas</option>
       <option value="data/leis/lei_do_mandado_de_seguranca.txt">Mandado de Segurança</option>
     </optgroup>
+
     <optgroup label="Estatutos">
       <option value="data/estatutos/ECA.txt">ECA</option>
       <option value="data/estatutos/estatuto_oab.txt">Estatuto da OAB</option>
     </optgroup>
-    </optgroup>
+
     <optgroup label="Constituição">
       <option value="data/CF88/CF88.txt">Constituição Federal 1988</option>
     </optgroup>
@@ -161,17 +158,17 @@
       <div class="modal-body">
         <fieldset class="prefs">
           <legend>Preferências</legend>
-         <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
-<label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
-<label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
-<label><input type="checkbox" class="qopt" value="mcq_1correta" checked> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
-<label><input type="checkbox" class="qopt" value="dificuldade_balanceada" checked> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
-<label><input type="checkbox" class="qopt" value="bloom_mix" checked> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
-<label><input type="checkbox" class="qopt" value="enunciado_autossuficiente" checked> Enunciado autossuficiente e neutro</label>
-<label><input type="checkbox" class="qopt" value="distratores_plausiveis" checked> Distratores plausíveis (erros típicos OAB/FGV)</label>
-<label><input type="checkbox" class="qopt" value="alternativas_padronizadas" checked> Padronizar extensão das alternativas (variação ≤ 15%)</label>
-<label><input type="checkbox" class="qopt" value="tempo_alvo" checked> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
 
+          <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
+          <label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
+          <label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
+          <label><input type="checkbox" class="qopt" value="mcq_1correta" checked> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
+          <label><input type="checkbox" class="qopt" value="dificuldade_balanceada" checked> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
+          <label><input type="checkbox" class="qopt" value="bloom_mix" checked> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
+          <label><input type="checkbox" class="qopt" value="enunciado_autossuficiente" checked> Enunciado autossuficiente e neutro</label>
+          <label><input type="checkbox" class="qopt" value="distratores_plausiveis" checked> Distratores plausíveis (erros típicos OAB/FGV)</label>
+          <label><input type="checkbox" class="qopt" value="alternativas_padronizadas" checked> Padronizar extensão das alternativas (variação ≤ 15%)</label>
+          <label><input type="checkbox" class="qopt" value="tempo_alvo" checked> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
         </fieldset>
 
         <label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
@@ -225,7 +222,16 @@
 
   <script src="app.js"></script>
 
-  <!-- Floating Search Index -->
-  <div id="searchIndex" class="search-index" hidden aria-hidden="true"></div>
+  <!-- Floating Search Index (estrutura pronta p/ JS preencher) -->
+  <div id="searchIndex" class="search-index" hidden aria-hidden="true">
+    <button class="si-trigger" type="button" aria-expanded="false" aria-controls="siPanel">
+      Índice (arquivos)
+    </button>
+    <div id="siPanel" class="si-panel" role="dialog" aria-label="Índice de arquivos">
+      <ul class="si-list" id="siList">
+        <!-- JS insere <li class="si-item"><span class="si-dot"></span><span class="si-name">Nome</span><span class="si-count">0</span></li> -->
+      </ul>
+    </div>
+  </div>
 </body>
 </html>
