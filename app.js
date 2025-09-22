@@ -85,7 +85,7 @@ function toast(msg) {
 }
 function updateBottom() {
   const n = state.selected.size;
-  els.viewBtn && (els.viewBtn.textContent = `${n} Selecionados – Ver`);
+  els.viewBtn && (els.viewBtn.textContent = `${n} ✔️ – Ver`);
   els.studyBtn && (els.studyBtn.disabled = n === 0);
   els.questionsBtn && (els.questionsBtn.disabled = n === 0);
   els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
