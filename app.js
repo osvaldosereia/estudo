@@ -85,7 +85,7 @@ function toast(msg) {
 }
 function updateBottom() {
   const n = state.selected.size;
-  els.viewBtn && (els.viewBtn.textContent = `${n} ✔️ – Ver`);
+  els.viewBtn && (els.viewBtn.textContent = `✔️ ${n}`);
   els.studyBtn && (els.studyBtn.disabled = n === 0);
   els.questionsBtn && (els.questionsBtn.disabled = n === 0);
   els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
@@ -708,6 +708,18 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
     sync();
     updateBottom();
+// criar botão "limpar selecionados"
+const clearBtn = document.createElement("button");
+clearBtn.className = "btn icon-only";
+clearBtn.innerHTML = "🗑️";
+clearBtn.setAttribute("aria-label", "Limpar seleção");
+clearBtn.addEventListener("click", () => {
+  state.selected.clear();
+  updateBottom();
+  toast("Seleção limpa.");
+  els.stack?.querySelectorAll(".card").forEach((c) => c.querySelector(".chk")?.removeAttribute("data-checked"));
+});
+els.viewBtn?.after(clearBtn);
   });
 
   card.append(left, chk);
@@ -934,3 +946,15 @@ els.brand?.addEventListener("click", () => {
 
 /* ---------- init ---------- */
 updateBottom();
+// criar botão "limpar selecionados"
+const clearBtn = document.createElement("button");
+clearBtn.className = "btn icon-only";
+clearBtn.innerHTML = "🗑️";
+clearBtn.setAttribute("aria-label", "Limpar seleção");
+clearBtn.addEventListener("click", () => {
+  state.selected.clear();
+  updateBottom();
+  toast("Seleção limpa.");
+  els.stack?.querySelectorAll(".card").forEach((c) => c.querySelector(".chk")?.removeAttribute("data-checked"));
+});
+els.viewBtn?.after(clearBtn);
