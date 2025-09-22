@@ -646,7 +646,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     const pill = document.createElement("a");
     pill.href = "#";
     pill.className = "pill";
-    pill.textContent = item.source;
+    pill.textContent = `📘 ${item.source} (abrir)`;
     pill.addEventListener("click", (e) => { 
       e.preventDefault(); 
       openReader(item); 
