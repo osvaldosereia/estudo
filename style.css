@@ -200,7 +200,7 @@ mark.hl{
 }
 
 /* Pill mais discreto (reforço) */
-.pill{ font-size:.8rem; padding:4px 10px; background:#eef3ff; color:#1e3a8a; opacity:.85; font-weight:500; cursor:pointer; transition:background .2s ease, opacity .2s ease }
+.pill{ font-size:.8rem; padding:4px 10px; background:#fff; color:#1e3a8a; opacity:.85; font-weight:500; cursor:pointer; transition:background .2s ease, opacity .2s ease }
 .pill:hover{ background:#dbeafe; opacity:1 }
 
 /* ===== Resultado em grupos (accordion por arquivo) ===== */
