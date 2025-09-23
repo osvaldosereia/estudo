@@ -755,7 +755,7 @@ planaltoBtn.addEventListener("click", () => {
   if (hasExpandable) {
     const toggle = document.createElement("button");
     toggle.className = "toggle";
-    toggle.textContent = "ver texto";
+    toggle.textContent = "⏷";
     toggle.setAttribute("aria-expanded", "false");
     toggle.addEventListener("click", () => {
       const expanded = toggle.getAttribute("aria-expanded") === "true";
