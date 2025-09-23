@@ -212,19 +212,6 @@ mark.hl{
   box-shadow:0 1px 0 rgba(2,8,20,.02);
   overflow:hidden;                 /* raio só no contêiner */
 }
-.group-head{
-  display: grid;
-  grid-template-columns: 1fr max-content 24px; /* título | contador | seta */
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: #fff;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  cursor: pointer;
-  text-align: left;
-  font-weight: 600;
-}
 
 .group-head:focus-visible{outline:3px solid #cfe0ff; outline-offset:2px}
 .group-title{
@@ -253,3 +240,38 @@ mark.hl{
 .group-head[aria-expanded="true"] .group-caret{ transform:rotate(0) }
 .group-body{ padding:10px 12px }
 .group-body[hidden]{ display:none } /* colapsado = escondido */
+
+/* --- Correção: contador à direita, seta no fim (flex) --- */
+.group-head{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.group-title{
+  flex: 1 1 auto;        /* ocupa o meio, empurra os demais */
+  min-width: 0;
+}
+
+.group-count{
+  margin-left: auto;     /* joga o número para a direita */
+  min-width: 36px;       /* largura mínima p/ alinhar verticalmente */
+  height: 26px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  text-align: right;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: #1745b5;
+  font-weight: 700;
+}
+
+.group-caret{
+  margin-left: 10px;     /* seta depois do número, à direita */
+  transform: rotate(-90deg);
+  transition: transform .15s;
+}
+.group-head[aria-expanded="true"] .group-caret{ transform: rotate(0) }
