@@ -224,6 +224,7 @@ mark.hl{
   cursor:pointer;
   text-align:left;
   font-weight:600;
+  width:100%; 
 }
 .group-head:focus-visible{outline:3px solid #cfe0ff; outline-offset:2px}
 
