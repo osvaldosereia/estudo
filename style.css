@@ -212,7 +212,9 @@ mark.hl{
   box-shadow:0 1px 0 rgba(2,8,20,.02);
   overflow:hidden;                 /* raio só no contêiner */
 }
-.group-head{ /* versão final: flex */
+/* ===== Resultado em grupos (accordion por arquivo) ===== */
+
+.group-head{
   display:flex;
   align-items:center;
   justify-content:flex-start;
@@ -224,18 +226,17 @@ mark.hl{
   cursor:pointer;
   text-align:left;
   font-weight:600;
-  width:100%; 
+  width:100%;        /* garante largura total do cabeçalho */
 }
-.group-head:focus-visible{outline:3px solid #cfe0ff; outline-offset:2px}
 
+/* estas três regras vêm logo depois de .group-head */
 .group-title{
-  flex:1 1 auto;       /* ocupa o espaço e empurra os demais */
+  flex:1 1 auto;     /* título ocupa o espaço central */
   min-width:0;
 }
-
 .group-count{
-  margin-left:auto;     /* alinha o número à direita */
-  min-width:36px;       /* coluna visual estável */
+  margin-left:auto;  /* contador vai para a direita */
+  min-width:36px;
   height:26px;
   padding:0 8px;
   display:inline-grid;
@@ -246,9 +247,8 @@ mark.hl{
   color:#1745b5;
   font-weight:700;
 }
-
 .group-caret{
-  margin-left:10px;     /* seta depois do número, à direita */
+  margin-left:10px;  /* seta fica após o número */
   transform:rotate(-90deg);
   transition:transform .15s;
 }
