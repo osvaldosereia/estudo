@@ -103,24 +103,19 @@ function escHTML(s) {
   }[m]));
 }
 
-/* ===== Planalto (links) ===== */
-function makePlanaltoURL(title, source) {
-  const match = title.match(/\d{1,4}[A-Za-zº-]?/);
-  const artNum = match ? match[0].replace("º", "") : "";
+// Google (busca com texto do card)
+const planaltoBtn = document.createElement("button");
+planaltoBtn.className = "toggle";
+planaltoBtn.textContent = "Google";
+planaltoBtn.addEventListener("click", () => {
+  // Monta busca com todo o texto do card (limitado para evitar URL gigante)
+  const raw = (item.title + "\n" + item.text).replace(/\s+/g, " ").trim();
+  const maxLen = 1800; // margem segura para a maioria dos navegadores
+  const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+  const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+});
 
-  const bases = {
-    "Código Penal": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del2848compilado.htm",
-    "Código Civil": "https://www.planalto.gov.br/ccivil_03/leis/2002/L10406compilada.htm",
-    "Processo Civil": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105compilada.htm",
-    "CF88": "https://www.planalto.gov.br/ccivil_03/constituicao/ConstituicaoCompilado.htm",
-    "CLT": "https://www.planalto.gov.br/ccivil_03/decreto-lei/Del5452compilado.htm",
-    "CDC": "https://www.planalto.gov.br/ccivil_03/leis/L8078compilado.htm",
-    "Código de Trânsito Brasileiro": "https://www.planalto.gov.br/ccivil_03/leis/L9503Compilado.htm",
-    "ECA": "https://www.planalto.gov.br/ccivil_03/leis/L8069compilado.htm",
-  };
-  const baseUrl = bases[source] || "https://www.planalto.gov.br/ccivil_03/";
-  return artNum ? `${baseUrl}#art${artNum}` : baseUrl;
-}
 
 /* ============================================================
    BUSCA — abreviações & regras
