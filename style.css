@@ -383,3 +383,28 @@ mark.hl{
   object-fit:contain;
 }
 
+/* título da barra inferior */
+.bottombar .bar-inner .bar-title{
+  flex: 0 0 100%;        /* ocupa a linha inteira acima dos botões */
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 6px 0 2px;
+}
+
+/* garantir centralização dos botões (se já tiver, mantenha o center) */
+.bottombar .bar-inner{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;  /* centraliza tudo */
+  align-items: center;
+  gap: 12px;
+}
+
+.bottombar .bar-group{
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
