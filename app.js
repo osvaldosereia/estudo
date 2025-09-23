@@ -56,14 +56,6 @@ const els = {
 
   /* toasts */
   toasts: $("#toasts"),
-
-  /* índice */
-  idxWrap: $("#resultsIndexWrap"),
-  idxToggle: $("#resultsIndexToggle"),
-  idxPanel: $("#resultsIndexPanel"),
-  idxSheet: $("#resultsIndexSheet"),
-  idxSheetClose: $("#indexSheetClose"),
-  idxList: $("#resultsIndexList"),
 };
 
 /* ---------- estado ---------- */
@@ -701,28 +693,18 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   }
 
   const body = document.createElement("div");
-  body.className = "body is-collapsed";
-  body.innerHTML = truncatedHTML(item.text, tokens);
+  body.className = "body";
+  if (ctx.context === "reader") {
+    body.innerHTML = highlight(item.text, tokens);
+  } else {
+    body.classList.add("is-collapsed");
+    body.innerHTML = truncatedHTML(item.text, tokens);
+  }
   body.style.cursor = "pointer";
   body.addEventListener("click", () => openReader(item));
 
   const actions = document.createElement("div");
   actions.className = "actions";
-
-  // ver texto
-  const toggle = document.createElement("button");
-  toggle.className = "toggle";
-  toggle.textContent = "ver texto";
-  toggle.addEventListener("click", () => {
-    const collapsed = body.classList.toggle("is-collapsed");
-    if (collapsed) {
-      body.innerHTML = truncatedHTML(item.text, tokens);
-      toggle.textContent = "ver texto";
-    } else {
-      body.innerHTML = highlight(item.text, tokens);
-      toggle.textContent = "ocultar";
-    }
-  });
 
   // Planalto
   const planaltoBtn = document.createElement("button");
@@ -751,30 +733,51 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
     sync();
     updateBottom();
-// cria botão "limpar selecionados" apenas uma vez
-if (!document.getElementById("clearSelectedBtn")) {
-  const clearBtn = document.createElement("button");
-  clearBtn.id = "clearSelectedBtn";
-  clearBtn.className = "btn icon-only";
-  clearBtn.innerHTML = "🗑️";
-  clearBtn.setAttribute("aria-label", "Limpar seleção");
+    // cria botão "limpar selecionados" apenas uma vez
+    if (!document.getElementById("clearSelectedBtn")) {
+      const clearBtn = document.createElement("button");
+      clearBtn.id = "clearSelectedBtn";
+      clearBtn.className = "btn icon-only";
+      clearBtn.innerHTML = "🗑️";
+      clearBtn.setAttribute("aria-label", "Limpar seleção");
 
-  clearBtn.addEventListener("click", () => {
-    state.selected.clear();
-    updateBottom();
-    toast("Seleção limpa.");
-    els.stack?.querySelectorAll(".card").forEach((c) =>
-      c.querySelector(".chk")?.removeAttribute("data-checked")
-    );
+      clearBtn.addEventListener("click", () => {
+        state.selected.clear();
+        updateBottom();
+        toast("Seleção limpa.");
+        els.stack?.querySelectorAll(".card").forEach((c) =>
+          c.querySelector(".chk")?.removeAttribute("data-checked")
+        );
+      });
+
+      els.viewBtn?.after(clearBtn);
+    }
   });
 
-  els.viewBtn?.after(clearBtn);
-}
-  });
+  /* ---- "ver texto" CONDICIONAL + montar ações ---- */
+  const text = (item.text || "").trim();
+  const hasExpandable =
+    (ctx?.context !== "reader") &&
+    (text.length > CARD_CHAR_LIMIT || (item.body && item.body.trim().length > 0));
 
-  actions.append(toggle, planaltoBtn, chk);
+  if (hasExpandable) {
+    const toggle = document.createElement("button");
+    toggle.className = "toggle";
+    toggle.textContent = "ver texto";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      toggle.textContent = expanded ? "ver texto" : "ocultar";
+      body.innerHTML = expanded ? truncatedHTML(item.text, tokens) : highlight(item.text, tokens);
+      body.classList.toggle("is-collapsed", expanded);
+    });
+    actions.append(toggle, planaltoBtn, chk);
+  } else {
+    actions.append(planaltoBtn, chk);
+  }
+
   left.append(body, actions);
-
   card.append(left);
   return card;
 }
@@ -1018,5 +1021,3 @@ if (!document.getElementById("clearSelectedBtn")) {
 
   els.viewBtn?.after(clearBtn);
 }
-
-
