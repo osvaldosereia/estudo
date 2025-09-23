@@ -297,3 +297,10 @@ mark.hl{
   outline: 3px solid rgba(255,255,255,.55);
   outline-offset: 2px;
 }
+
+/* Cor do número (badge) */
+.group-count{
+  background: #28386b;   /* fundo do badge */
+  color: #fff;        /* cor do número */
+  border: 1px solid rgba(0,0,0,.15);
+}
