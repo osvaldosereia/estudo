@@ -366,3 +366,20 @@ mark.hl{
   gap:10px;
   margin:0;                  /* <-- remove o auto */
 }
+
+/* botão de card só com ícone */
+.card .toggle.btn--icon{
+  width:36px;
+  height:32px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.card .toggle.btn--icon img{
+  width:18px;
+  height:18px;
+  display:block;
+  object-fit:contain;
+}
+
