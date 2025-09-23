@@ -213,19 +213,19 @@ mark.hl{
   overflow:hidden;                 /* raio só no contêiner */
 }
 .group-head{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;      /* título + número à esquerda */
-  gap:10px;
-  padding:12px 14px;
-  background:#fff;
-  border:0;
-  border-bottom:1px solid var(--line);
-  cursor:pointer;
-  text-align:left;
-  font-weight:600;
+  display: grid;
+  grid-template-columns: 1fr max-content 24px; /* título | contador | seta */
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
 }
+
 .group-head:focus-visible{outline:3px solid #cfe0ff; outline-offset:2px}
 .group-title{
   flex:0 1 auto;
