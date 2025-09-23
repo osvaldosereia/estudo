@@ -259,9 +259,9 @@ mark.hl{
 
 /* ===== Cor na barra dos títulos (grupo) ===== */
 :root{
-  --group-head-bg: #142B6F;         /* cor principal da barra */
-  --group-head-bg-hover: #0f235c;   /* hover/aberto */
-  --group-head-text: #fff;          /* cor do texto/ícones */
+  --group-head-bg: #e6ebfa;         /* cor principal da barra */
+  --group-head-bg-hover: #d4deff;   /* hover/aberto */
+  --group-head-text: #28386b;          /* cor do texto/ícones */
 }
 
 .group{
