@@ -691,7 +691,10 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   // Google (busca com texto do card)
 const planaltoBtn = document.createElement("button");
 planaltoBtn.className = "toggle";
-planaltoBtn.textContent = "Google";
+// coloque isso no lugar
+planaltoBtn.className = "toggle btn--icon";
+planaltoBtn.setAttribute("aria-label", "Pesquisar no Google");
+planaltoBtn.innerHTML = '<img src="icons/google.png" alt="" width="18" height="18">';
 planaltoBtn.addEventListener("click", () => {
   const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
   const maxLen = 1800; // margem segura para a maioria dos navegadores
