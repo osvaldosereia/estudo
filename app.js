@@ -60,7 +60,7 @@ const els = {
 
 /* ---------- estado ---------- */
 const MAX_SEL = 6;
-const CARD_CHAR_LIMIT = 200;
+const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
 const state = {
