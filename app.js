@@ -103,20 +103,6 @@ function escHTML(s) {
   }[m]));
 }
 
-// Google (busca com texto do card)
-const planaltoBtn = document.createElement("button");
-planaltoBtn.className = "toggle";
-planaltoBtn.textContent = "Google";
-planaltoBtn.addEventListener("click", () => {
-  // Monta busca com todo o texto do card (limitado para evitar URL gigante)
-  const raw = (item.title + "\n" + item.text).replace(/\s+/g, " ").trim();
-  const maxLen = 1800; // margem segura para a maioria dos navegadores
-  const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
-  const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-});
-
-
 
 /* ============================================================
    BUSCA — abreviações & regras
@@ -702,13 +688,18 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const actions = document.createElement("div");
   actions.className = "actions";
 
-  // Planalto
-  const planaltoBtn = document.createElement("button");
-  planaltoBtn.className = "toggle";
-  planaltoBtn.textContent = "Planalto";
-  planaltoBtn.addEventListener("click", () => {
-    window.open(makePlanaltoURL(item.title, item.source), "_blank", "noopener,noreferrer");
-  });
+  // Google (busca com texto do card)
+const planaltoBtn = document.createElement("button");
+planaltoBtn.className = "toggle";
+planaltoBtn.textContent = "Google";
+planaltoBtn.addEventListener("click", () => {
+  const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
+  const maxLen = 1800; // margem segura para a maioria dos navegadores
+  const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+  const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+});
+
 
   // check na mesma linha (à direita)
   const chk = document.createElement("button");
