@@ -652,9 +652,6 @@ function renderBlock(term, items, tokens) {
   els.stack.append(block);
 }
 
-  els.stack.append(block);
-}
-
 /* ---------- cards ---------- */
 function highlight(text, tokens) {
   if (!tokens?.length) return escHTML(text || "");
