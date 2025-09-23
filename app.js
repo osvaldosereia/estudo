@@ -753,17 +753,18 @@ planaltoBtn.addEventListener("click", () => {
     (text.length > CARD_CHAR_LIMIT || (item.body && item.body.trim().length > 0));
 
   if (hasExpandable) {
-    const toggle = document.createElement("button");
-    toggle.className = "toggle";
-    toggle.textContent = "▼";
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.addEventListener("click", () => {
-      const expanded = toggle.getAttribute("aria-expanded") === "true";
-      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-      toggle.textContent = expanded ? "ver texto" : "▲";
-      body.innerHTML = expanded ? truncatedHTML(item.text, tokens) : highlight(item.text, tokens);
-      body.classList.toggle("is-collapsed", expanded);
-    });
+   const toggle = document.createElement("button");
+toggle.className = "toggle";
+toggle.textContent = "▼";                // rótulo inicial (recolhido)
+toggle.setAttribute("aria-expanded", "false");
+toggle.addEventListener("click", () => {
+  const expanded = toggle.getAttribute("aria-expanded") === "true";
+  toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+  toggle.textContent = expanded ? "▼" : "▲";  // <— aqui é o pulo do gato
+  body.innerHTML = expanded ? truncatedHTML(item.text, tokens)
+                            : highlight(item.text, tokens);
+  body.classList.toggle("is-collapsed", expanded);
+});
     actions.append(toggle, planaltoBtn, chk);
   } else {
     actions.append(planaltoBtn, chk);
