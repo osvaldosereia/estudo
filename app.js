@@ -59,7 +59,7 @@ const els = {
 };
 
 /* ---------- estado ---------- */
-const MAX_SEL = 6;
+const MAX_SEL = 12;
 const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
@@ -727,7 +727,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
       if (ctx.context === "selected") card.remove();
     } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 6 blocos."); return; }
+      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 12 blocos."); return; }
       state.selected.set(item.id, { ...item });
       toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
