@@ -982,7 +982,6 @@ b) do produto do crime ou de qualquer bem ou valor que constitua proveito auferi
 
 § 1o Poderá ser decretada a perda de bens ou valores equivalentes ao produto ou proveito do crime quando estes não forem encontrados ou quando se localizarem no exterior. (Incluído pela Lei nº 12.694, de 2012)
 
------
 § 2o Na hipótese do § 1o, as medidas assecuratórias previstas na legislação processual poderão abranger bens ou valores equivalentes do investigado ou acusado para posterior decretação de perda. (Incluído pela Lei nº 12.694, de 2012)
 
 -----
@@ -1000,7 +999,7 @@ II - transferidos a terceiros a título gratuito ou mediante contraprestação i
 
 § 4º Na sentença condenatória, o juiz deve declarar o valor da diferença apurada e especificar os bens cuja perda for decretada. (Incluído pela Lei nº 13.964, de 2019)
 
------
+
 § 5º Os instrumentos utilizados para a prática de crimes por organizações criminosas e milícias deverão ser declarados perdidos em favor da União ou do Estado, dependendo da Justiça onde tramita a ação penal, ainda que não ponham em perigo a segurança das pessoas, a moral ou a ordem pública, nem ofereçam sério risco de ser utilizados para o cometimento de novos crimes. (Incluído pela Lei nº 13.964, de 2019)
 
 -----
@@ -1036,7 +1035,7 @@ Reabilitação
 -----
 Art. 93 - A reabilitação alcança quaisquer penas aplicadas em sentença definitiva, assegurando ao condenado o sigilo dos registros sobre o seu processo e condenação. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
------
+
 Parágrafo único - A reabilitação poderá, também, atingir os efeitos da condenação, previstos no art. 92 deste Código, vedada reintegração na situação anterior, nos casos dos incisos I e II do mesmo artigo. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
 -----
@@ -1048,7 +1047,7 @@ II - tenha dado, durante esse tempo, demonstração efetiva e constante de bom c
 
 III - tenha ressarcido o dano causado pelo crime ou demonstre a absoluta impossibilidade de o fazer, até o dia do pedido, ou exiba documento que comprove a renúncia da vítima ou novação da dívida. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
------
+
 Parágrafo único - Negada a reabilitação, poderá ser requerida, a qualquer tempo, desde que o pedido seja instruído com novos elementos comprobatórios dos requisitos necessários. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
 -----
@@ -1150,7 +1149,6 @@ Parágrafo único - Importa renúncia tácita ao direito de queixa a prática de
 Perdão do ofendido
 
 -----
------
 Art. 105 - O perdão do ofendido, nos crimes em que somente se procede mediante queixa, obsta ao prosseguimento da ação. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
 -----
@@ -1192,7 +1190,6 @@ VII - (Revogado pela Lei nº 11.106, de 2005)
 
 VIII - (Revogado pela Lei nº 11.106, de 2005)
 
------
 IX - pelo perdão judicial, nos casos previstos em lei.
 
 -----
@@ -1314,10 +1311,9 @@ VI - pela reincidência. (Redação dada pela Lei nº 9.268, de 1º.4.1996)
 
 § 1º - Excetuados os casos dos incisos V e VI deste artigo, a interrupção da prescrição produz efeitos relativamente a todos os autores do crime. Nos crimes conexos, que sejam objeto do mesmo processo, estende-se aos demais a interrupção relativa a qualquer deles. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
------
 § 2º - Interrompida a prescrição, salvo a hipótese do inciso V deste artigo, todo o prazo começa a correr, novamente, do dia da interrupção. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
------
+
 -----
 Art. 118 - As penas mais leves prescrevem com as mais graves. (Redação dada pela Lei nº 7.209, de 11.7.1984)
 
@@ -1484,7 +1480,6 @@ II - se a vítima é menor ou tem diminuída, por qualquer causa, a capacidade d
 -----
 Infanticídio
 
------
 Art. 123 - Matar, sob a influência do estado puerperal, o próprio filho, durante o parto ou logo após:
 
 Pena - detenção, de dois a seis anos.
@@ -1492,7 +1487,6 @@ Pena - detenção, de dois a seis anos.
 -----
 Aborto provocado pela gestante ou com seu consentimento
 
------
 Art. 124 - Provocar aborto em si mesma ou consentir que outrem lho provoque: (Vide ADPF 54)
 
 Pena - detenção, de um a três anos.
@@ -1500,13 +1494,11 @@ Pena - detenção, de um a três anos.
 -----
 Aborto provocado por terceiro
 
------
 Art. 125 - Provocar aborto, sem o consentimento da gestante:
 
 -----
 Pena - reclusão, de três a dez anos.
 
------
 Art. 126 - Provocar aborto com o consentimento da gestante: (Vide ADPF 54)
 
 Pena - reclusão, de um a quatro anos.
@@ -1516,8 +1508,6 @@ Parágrafo único. Aplica-se a pena do artigo anterior, se a gestante não é ma
 -----
 Forma qualificada
 
------
------
 Art. 127 - As penas cominadas nos dois artigos anteriores são aumentadas de um terço, se, em conseqüência do aborto ou dos meios empregados para provocá-lo, a gestante sofre lesão corporal de natureza grave; e são duplicadas, se, por qualquer dessas causas, lhe sobrevém a morte.
 
 -----
@@ -4963,7 +4953,7 @@ Pena - reclusão, de 6 (seis) meses a 3 (três) anos, e multa. (Incluído pela L
 
 § 1º Consideram-se condição de contorno as informações e os levantamentos suficientes e necessários para a definição da solução de projeto e dos respectivos preços pelo licitante, incluídos sondagens, topografia, estudos de demanda, condições ambientais e demais elementos ambientais impactantes, considerados requisitos mínimos ou obrigatórios em normas técnicas que orientam a elaboração de projetos. (Incluído pela Lei nº 14.133, de 2021)
 
------
+
 § 2º Se o crime é praticado com o fim de obter benefício, direto ou indireto, próprio ou de outrem, aplica-se em dobro a pena prevista no caput deste artigo. (Incluído pela Lei nº 14.133, de 2021)
 
 -----
@@ -5019,7 +5009,7 @@ Pena - reclusão, de 2 (dois) a 4 (quatro) anos, e multa. (Redação dada pela L
 
 § 1o As penas aumentam-se de um sexto a um terço, se o crime é praticado mediante suborno ou se cometido com o fim de obter prova destinada a produzir efeito em processo penal, ou em processo civil em que for parte entidade da administração pública direta ou indireta.(Redação dada pela Lei nº 10.268, de 28.8.2001)
 
------
+
 § 2o O fato deixa de ser punível se, antes da sentença no processo em que ocorreu o ilícito, o agente se retrata ou declara a verdade.(Redação dada pela Lei nº 10.268, de 28.8.2001)
 
 -----
@@ -5403,16 +5393,16 @@ DISPOSIÇÕES COMUNS
 Art. 359-T. Não constitui crime previsto neste Título a manifestação crítica aos poderes constitucionais nem a atividade jornalística ou a reivindicação de direitos e garantias constitucionais por meio de passeatas, de reuniões, de greves, de aglomerações ou de qualquer outra forma de manifestação política com propósitos sociais. (Incluído pela Lei nº 14.197, de 2021) (Vigência)
 
 -----
------
+
 Art. 359-U. (VETADO).” (Incluído pela Lei nº 14.197, de 2021) (Vigência)
 
 -----
 DISPOSIÇÕES FINAIS
 
 -----
------
+
 Art. 360 - Ressalvada a legislação especial sobre os crimes contra a existência, a segurança e a integridade do Estado e contra a guarda e o emprego da economia popular, os crimes de imprensa e os de falência, os de responsabilidade do Presidente da República e dos Governadores ou Interventores, e os crimes militares, revogam-se as disposições em contrário.
 -----
 
------
+
 Art. 361 - Este Código entrará em vigor no dia 1º de janeiro de 1942.
