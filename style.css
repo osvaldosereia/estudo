@@ -351,3 +351,18 @@ mark.hl{
   color: #28386b;        /* cor do número */
   border: 1px solid rgba(0,0,0,.15);
 }
+/* centralizar os botões da barra inferior */
+.bar-inner{
+  display:flex;
+  gap:12px;
+  justify-content:center;   /* <-- era space-between */
+  align-items:center;
+  padding:12px 0;
+  flex-wrap:wrap;            /* quebra no mobile se precisar */
+}
+
+.bar-group{
+  display:flex;
+  gap:10px;
+  margin:0;                  /* <-- remove o auto */
+}
