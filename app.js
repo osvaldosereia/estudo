@@ -755,12 +755,12 @@ planaltoBtn.addEventListener("click", () => {
   if (hasExpandable) {
     const toggle = document.createElement("button");
     toggle.className = "toggle";
-    toggle.textContent = "⏷";
+    toggle.textContent = "▼";
     toggle.setAttribute("aria-expanded", "false");
     toggle.addEventListener("click", () => {
       const expanded = toggle.getAttribute("aria-expanded") === "true";
       toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-      toggle.textContent = expanded ? "ver texto" : "ocultar";
+      toggle.textContent = expanded ? "ver texto" : "▲";
       body.innerHTML = expanded ? truncatedHTML(item.text, tokens) : highlight(item.text, tokens);
       body.classList.toggle("is-collapsed", expanded);
     });
