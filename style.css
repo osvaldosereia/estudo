@@ -112,7 +112,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .modal[hidden]{display:none}
 .modal-backdrop{position:fixed;inset:0;background:rgba(10,15,25,.35);backdrop-filter:saturate(1.2) blur(4px);z-index:0}
 .modal-card{position:relative;z-index:1;width:min(900px,96vw);max-height:88vh;background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
-.modal-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-strong);background:#fff}
+.modal-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-strong);background:#e6e6e6}
 .modal-head .title{font-weight:600;color:#111}
 .modal-meta{margin-left:auto;color:#6b7280}
 .modal-body{padding:14px 16px;overflow:auto;scroll-behavior:smooth}
