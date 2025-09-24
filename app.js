@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09 • minimal + UX polido)
+   direito.love — app.js (2025-09 • minimal + IA panel + dataEngine stubs)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -14,10 +14,9 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const now = () => Date.now();
-
-function debounce(fn, ms=150){
-  let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
-}
+function debounce(fn, ms=150){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function isTextInput(el){ return ["INPUT","TEXTAREA"].includes(el?.tagName) || el?.isContentEditable; }
 
 /* ---------- elementos ---------- */
 const els = {
@@ -39,12 +38,48 @@ const els = {
   fabSearchWrap: $(".fab-search-wrap"),
   fabSearchForm: $("#fabSearchForm"),
   fabSearchInput: $("#fabSearchInput"),
+
+  // IA Sheet
+  iaSheet: $("#iaSheet"),
+  iaSheetTitle: $("#iaSheetTitle"),
+  iaCurrent: $("#iaCurrent"),
 };
 
 /* ---------- estado ---------- */
 let selectedCard = null;
 let selectPausedUntil = 0; // focus-lock
 let io, observed = [];
+
+/* ==========================
+   dataEngine — STUBS prontos pra plugar /data/
+   ========================== */
+const dataEngine = {
+  /** Carrega índices/arquivos, se precisar */
+  async loadIndex(){
+    // TODO: aqui você pluga a leitura de /data/ (fetch JSON, etc.)
+    // por agora, nada a fazer (stub)
+    return true;
+  },
+  /** Busca por q e retorna { groups: [{title, items:[{title, preview, code, articleId}]}] } */
+  async search(q){
+    // TODO: substituir por busca real em /data/
+    // STUB: um grupo único com 7 itens artificiais
+    if(!q || q.trim().length < 2){
+      return { groups: [] };
+    }
+    const items = Array.from({length:7}, (_,i)=>({
+      title: `Título do item ${i+1}`,
+      preview: `Trecho inicial do conteúdo ${i+1}. Texto curto de prévia para leitura rápida…`,
+      code: "Penal",
+      articleId: `art_${i+1}`
+    }));
+    return { groups: [{ title: `Resultados para “${q}”`, items }] };
+  },
+  /** Abre modal real (texto/código) — placeholder por enquanto */
+  async open({code, articleId, mode="text"}){
+    toast(`(stub) Abrindo ${mode} — ${code} / ${articleId}`);
+  }
+};
 
 /* ---------- init ---------- */
 if (document.readyState === "loading") {
@@ -53,10 +88,12 @@ if (document.readyState === "loading") {
   init();
 }
 
-function init(){
+async function init(){
+  await dataEngine.loadIndex();
   setupSplash();
   setupFabCluster();
   setupKeyboardShortcuts();
+  setupSheet();
   // demo: se não é primeira visita e não há resultados, mostra uma busca inicial
   if(localStorage.getItem("dl_firstVisitDone") === "1" && !els.stack.children.length){
     runSearch("art. 129 CP");
@@ -75,13 +112,11 @@ function setupSplash(){
     await runSearch(q);
     localStorage.setItem("dl_firstVisitDone","1");
     setSplashVisible(false);
-    pulseSearchOnce(); // mostra a lupa com pulse sutil após entrar
+    pulseSearchOnce(); // descobre a lupa sutilmente
   });
 }
-
 function setSplashVisible(v){
-  if(!els.splash) return;
-  els.splash.setAttribute("aria-hidden", v ? "false":"true");
+  els.splash?.setAttribute("aria-hidden", v ? "false":"true");
 }
 
 /* ---------- FABs ---------- */
@@ -103,57 +138,42 @@ function setupFabCluster(){
     els.fabSearchInput.value = "";
   });
 
-  // Ação principal
+  // Ação principal → abre o painel das IAs
   els.fabAction?.addEventListener("click", ()=>{
     if(!selectedCard){ blinkCluster(); return; }
-    applyPrimaryAction(selectedCard);
+    openSheet();
     selectPausedUntil = now()+2000; // pausa auto-seleção
   });
 }
-
 function setSearchOpen(open){
   els.fabSearchWrap.setAttribute("aria-expanded", open ? "true":"false");
-  if(open){
-    setTimeout(()=> els.fabSearchInput?.focus(), 10);
-  }
+  if(open){ setTimeout(()=> els.fabSearchInput?.focus(), 10); }
 }
-
 function pulseSearchOnce(){
-  // um "ping" sutil na lupa para descoberta — só 1x
   els.fabSearch?.classList.add("pulse-once");
   els.fabSearch?.addEventListener("animationend", ()=> els.fabSearch?.classList.remove("pulse-once"), {once:true});
 }
-
 function blinkCluster(){
-  // feedback curto se clicar sem card selecionado
   els.fabCluster?.animate([{transform:"translateY(0)"},{transform:"translateY(-3px)"},{transform:"translateY(0)"}], {duration:180});
 }
 
-/* ---------- Busca (stub com estados) ---------- */
+/* ---------- Busca (usa dataEngine) ---------- */
 async function runSearch(q){
-  // Estados: skeleton → resultados/empty → fim
   renderSkeleton();
-
-  // Simula latência leve (trocar depois pela sua busca real)
-  await sleep(400);
-
-  // lógica dummy: se consulta muito curta, retorna vazio
-  const hasResults = q.length >= 2;
+  await sleep(200); // latência leve
+  const res = await dataEngine.search(q);
   els.stack.innerHTML = "";
 
-  if(!hasResults){
+  if(!res.groups.length){
     renderEmptyState(q);
     return;
   }
 
-  const count = 7; // simulação
-  const group = elGroup(`Resultados para “${escapeHtml(q)}”`, count);
-  els.stack.appendChild(group);
-
-  // marcador de fim
+  for(const g of res.groups){
+    els.stack.appendChild(elGroup(g.title, g.items));
+  }
   renderEndState();
 
-  // Auto-seleção após render
   await sleep(30);
   setupAutoSelection();
   updateFabActionLabel();
@@ -196,7 +216,7 @@ function renderEndState(){
 
 /* ---------- UI: Grupo/Itens (flat, sem botões nos cards) ---------- */
 let groupCounter = 0;
-function elGroup(title, count){
+function elGroup(title, items){
   const gid = `group_${++groupCounter}`;
 
   const g = document.createElement("section");
@@ -211,8 +231,8 @@ function elGroup(title, count){
   h.setAttribute("aria-controls", `${gid}_body`);
   h.setAttribute("aria-expanded", "false");
   h.innerHTML = `
-    <span class="group-title">${title}</span>
-    <span class="group-meta">${count} itens</span>
+    <span class="group-title">${escapeHtml(title)}</span>
+    <span class="group-meta">${items.length} itens</span>
     <span class="chev" aria-hidden="true">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M6 9l6 6 6-6"/></svg>
     </span>
@@ -228,18 +248,20 @@ function elGroup(title, count){
   body.className = "group-body";
   body.id = `${gid}_body`;
 
-  for(let i=1;i<=count;i++){
+  for(const it of items){
     const c = document.createElement("article");
     c.className = "card";
     c.tabIndex = 0;
+    c.dataset.code = it.code || "";
+    c.dataset.articleId = it.articleId || "";
     c.innerHTML = `
       <div class="card-title">
-        <span class="pill">Penal</span>
-        <strong>Título do item ${i}</strong>
+        <span class="pill">${escapeHtml(it.code || "—")}</span>
+        <strong>${escapeHtml(it.title || "Item")}</strong>
       </div>
-      <p class="card-text">Trecho inicial do conteúdo ${i}. Texto curto de prévia para leitura rápida…</p>
+      <p class="card-text">${escapeHtml(it.preview || "")}</p>
     `;
-    // Clique/foco no card apenas controla seleção (sem botões inline)
+    // Clique/foco no card apenas controla seleção
     c.addEventListener("click", ()=> { setSelectedCard(c); selectPausedUntil = now()+1200; });
     c.addEventListener("focusin", ()=> { setSelectedCard(c); selectPausedUntil = now()+1200; });
     body.appendChild(c);
@@ -247,13 +269,6 @@ function elGroup(title, count){
 
   g.append(h, body);
   return g;
-}
-
-/* ---------- Ações ---------- */
-function applyPrimaryAction(card){
-  // Ação padrão: abrir texto (plugue seu modal real aqui)
-  const title = cardTitle(card);
-  toast(`Abrindo texto de: ${title}`);
 }
 
 /* ---------- Auto-seleção (IntersectionObserver) ---------- */
@@ -280,18 +295,13 @@ function reobserveCards(){
 }
 const onIntersect = debounce((entries)=>{
   if(now() < selectPausedUntil) return; // focus-lock
-  // pega os que têm pelo menos 60% visível
   const visibles = entries
     .filter(en => en.isIntersecting && en.intersectionRatio >= .6)
     .map(en => en.target);
-
   if(!visibles.length) return;
-
-  // seleciona o que está mais embaixo (último aparecendo)
   const byBottom = visibles
     .map(el => ({el, rect: el.getBoundingClientRect()}))
     .sort((a,b)=> (a.rect.bottom - b.rect.bottom));
-
   const last = byBottom[byBottom.length-1]?.el;
   if(last) setSelectedCard(last);
 }, 140);
@@ -308,8 +318,7 @@ function updateFabActionLabel(){
   const title = cardTitle(selectedCard);
   const label = title ? `Ver texto — ${title}` : `Selecione um item`;
   els.fabActionLabel.textContent = label;
-  // leitores de tela:
-  if(els.live) els.live.textContent = label;
+  els.live && (els.live.textContent = label);
 }
 function cardTitle(card){
   return card?.querySelector("strong")?.textContent?.trim() || "";
@@ -324,12 +333,10 @@ function setupKeyboardShortcuts(){
       setSearchOpen(true);
       return;
     }
-    // Esc fecha busca
+    // Esc fecha busca ou sheet
     if(ev.key === "Escape"){
-      if(els.fabSearchWrap.getAttribute("aria-expanded")==="true"){
-        setSearchOpen(false);
-      }
-      return;
+      if(els.iaSheet.getAttribute("aria-hidden")==="false"){ closeSheet(); return; }
+      if(els.fabSearchWrap.getAttribute("aria-expanded")==="true"){ setSearchOpen(false); return; }
     }
     // Navegação por setas entre cards visíveis
     if(ev.key === "ArrowDown" || ev.key === "ArrowUp"){
@@ -345,13 +352,38 @@ function setupKeyboardShortcuts(){
     // Enter/Space ativa ação se estiver num card
     if((ev.key === "Enter" || ev.key === " ") && selectedCard && !isTextInput(ev.target)){
       ev.preventDefault();
-      applyPrimaryAction(selectedCard);
+      openSheet();
       selectPausedUntil = now()+2000;
     }
   });
 }
-function isTextInput(el){
-  return ["INPUT","TEXTAREA"].includes(el?.tagName) || el?.isContentEditable;
+
+/* ---------- IA Sheet ---------- */
+function setupSheet(){
+  // fechar por backdrop/ícone
+  els.iaSheet?.addEventListener("click", (e)=>{
+    if(e.target.matches("[data-sheet-dismiss]")) closeSheet();
+  });
+  els.iaSheet?.querySelector(".sheet-close")?.addEventListener("click", closeSheet);
+
+  // clicks nas IAs (sem integração real ainda)
+  $$(".chip-ia").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ia = btn.getAttribute("data-ia");
+      const title = cardTitle(selectedCard) || "Item";
+      toast(`(stub) ${ia} — usando “${title}”`);
+      // manter sheet aberto ou fechar? Vamos fechar para fluxo limpo
+      closeSheet();
+    });
+  });
+}
+function openSheet(){
+  const title = cardTitle(selectedCard) || "Item selecionado";
+  $("#iaCurrent").textContent = title;
+  els.iaSheet.setAttribute("aria-hidden","false");
+}
+function closeSheet(){
+  els.iaSheet.setAttribute("aria-hidden","true");
 }
 
 /* ---------- Toast simples ---------- */
@@ -372,9 +404,4 @@ function toast(text){
   el.textContent = text;
   el.style.opacity = "1";
   toastT = setTimeout(()=> el.style.opacity = "0", 1400);
-}
-
-/* ---------- Utils ---------- */
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
