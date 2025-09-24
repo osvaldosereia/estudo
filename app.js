@@ -45,7 +45,7 @@ const els = {
 };
 
 /* ---------- estado ---------- */
-const MAX_SEL = 12;
+const MAX_SEL = 3;
 const CARD_CHAR_LIMIT = 250;
 const PREV_MAX = 60;
 
@@ -650,7 +650,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   /* ===== IA: função de query (reuso) ===== */
   const makeQuery = () => {
     const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
-    const maxLen = 1800; // segurança p/ URL
+    const maxLen = 4000; // segurança p/ URL
     return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
   };
 
