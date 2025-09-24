@@ -2,69 +2,75 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>direito.love — Início</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    html, body {
-  margin: 0;
-  padding: 0;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  /* Trava overflow lateral em qualquer aparelho */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
 
-    body {
-  background: #fff;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  height: 100vh;
-  font-family: ui-sans-serif, system-ui;
-}
+  /* Corpo centralizado com altura certa no mobile */
+  body {
+    background: #fff;
+    font-family: ui-sans-serif, system-ui;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100svh; /* compatível com iOS moderno */
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
 
+  .home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+  }
 
-    .home-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 30px;
-      width: 92vw;
-      max-width: 560px;
-      text-align: center;
-    }
+  .home-logo {
+    width: 220px;
+    max-width: 100%;
+    display: block;
+  }
 
+  .home-form {
+    width: 100%;
+    position: relative;
+  }
+
+  .home-form input {
+    width: 100%;
+    height: 46px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid #cfd4e2;
+    font-size: 16px;
+    outline: none;
+  }
+
+  @media (max-width: 480px) {
     .home-logo {
-      width: 220px;
-      max-width: 100%;
-    }
-
-    .home-form {
-      width: 80%;
-      position: relative;
+      width: 180px;
     }
 
     .home-form input {
-      width: 100%;
-      height: 46px;
-      padding: 0 16px;
-      border-radius: 999px;
-      border: 1px solid #cfd4e2;
+      height: 42px;
       font-size: 16px;
-      outline: none;
     }
+  }
+</style>
 
-    @media (max-width: 480px) {
-      .home-logo {
-        width: 180px;
-      }
-
-      .home-form input {
-        height: 42px;
-        font-size: 15px;
-      }
-    }
-  </style>
 </head>
 <body>
 
