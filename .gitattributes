@@ -1,0 +1,38 @@
+# Normaliza tudo como texto com LF por padrão
+* text=auto eol=lf
+
+# Web/code (sempre LF)
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+*.json text eol=lf
+*.txt  text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.svg  text eol=lf   # SVG é texto (ok manter LF)
+
+# Scripts
+*.sh   text eol=lf   # shell quebra com CRLF
+*.bat  text eol=crlf # se tiver scripts Windows
+*.cmd  text eol=crlf
+
+# Imagens/ícones (binário — NÃO normalizar)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+
+# Fonts (se usar)
+*.woff  binary
+*.woff2 binary
+
+# Outros binários comuns (se aparecerem)
+*.pdf  binary
+*.zip  binary
+
+# Pastas de ícones (opcional, mas ajuda a evitar erro humano)
+icons/* binary
