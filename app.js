@@ -968,11 +968,11 @@ function reorderBaseControlsAndCenter() {
   parent.style.margin = "";
 
   // --- ajuste do espaçador (largura reservada pro HUB) ---
+   // --- ajuste do espaçador (largura reservada pro HUB) ---
   if (spacer) {
-    let basis = 160;                 // desktop
-    if (window.innerWidth <= 480) basis = 120;
-    if (window.innerWidth <= 380) basis = 96;
-    if (window.innerWidth <= 340) basis = 84;
+    let basis = 140;                    // desktop confortável
+    if (window.innerWidth <= 480) basis = 56;  // <= mobile: bem menor
+    if (window.innerWidth <= 360) basis = 48;  // muito estreito
     spacer.style.flex = `0 0 ${basis}px`;
     spacer.style.height = "1px";
   }
