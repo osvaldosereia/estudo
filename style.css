@@ -501,16 +501,16 @@ mark.hl{
   .bottombar { 
     padding-bottom: max(8px, env(safe-area-inset-bottom)); 
   }
-  .bottombar .bar-inner {
+  bottombar .bar-inner {
     justify-content: center;
-    flex-wrap: nowrap;         /* não quebra linha */
-    overflow: hidden;          /* sem scroll lateral */
+    flex-wrap: wrap;           /* <-- permitir quebrar linha */
+    overflow: hidden;
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left:  max(12px, env(safe-area-inset-left));
     padding-right: max(12px, env(safe-area-inset-right));
     gap: 10px;
-  }
+ }
 
   .bottombar .bar-group { gap: 8px; }
 
