@@ -318,3 +318,19 @@ mark.hl{background:#cfe8ff;padding:0 .15em;border-radius:.2em}
   .hub-menu{gap:4px}
   #clearSelectedBtn,#viewBtn,#baseHubWrap,#baseHubSpacer{flex:0 0 auto}
 }
+/* === Alinhamento da bottombar no mobile === */
+@media (max-width: 480px) {
+  /* todos com a MESMA altura */
+  .btn, #viewBtn, .round-btn { height: 34px; }
+  .round-btn { width: 34px; }            /* o rocket fica do mesmo tamanho */
+  .bottombar .bar-inner { align-items: center; gap: 8px; }
+
+  /* reserva menor pro menu retrátil abrir à esquerda */
+  #baseHubSpacer { flex-basis: 56px !important; } /* era ~76+ e quebrava linha */
+  .hub-menu { gap: 4px; }
+}
+
+/* muito estreito */
+@media (max-width: 360px) {
+  #baseHubSpacer { flex-basis: 48px !important; }
+}
