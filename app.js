@@ -704,14 +704,14 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   /* ===== Check (pilha) — permanece nos cards ===== */
   const chk = document.createElement("button");
-  chk.className = "chk";
-  chk.setAttribute("aria-label", "Selecionar bloco");
-  chk.innerHTML = `
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-      <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
-    </svg>
-    <span>Estudar com I.A.</span>
-  `;
+chk.className = "chk";
+chk.setAttribute("aria-label", "Selecionar bloco");
+chk.innerHTML = `
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+  </svg>
+`;
+
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
   chk.addEventListener("click", () => {
