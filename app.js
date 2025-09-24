@@ -910,7 +910,7 @@ function ensureBaseHub() {
 }
 
 // reordena e mantém tudo em UMA LINHA, centralizado
-function function reorderBaseControlsAndCenter() {
+function reorderBaseControlsAndCenter() {
   const parent = els.viewBtn?.parentElement;
   if (!parent || !els.viewBtn) return;
 
