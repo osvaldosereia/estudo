@@ -591,6 +591,6 @@ mark.hl{
   }
 }
 /* Ocultar botão chk dentro dos cards */
-.card .chk {
+.chk {
   display: none !important;
 }
