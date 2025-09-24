@@ -739,6 +739,31 @@ iaButtons.forEach(({ cls, label, icon }) => {
 
 aiMenu.appendChild(aiTrigger);
 aiMenu.appendChild(aiRadial);
+   
+/* abrir/fechar o menu radial */
+const closeMenu = () => {
+  aiMenu.classList.remove("is-open");
+  aiTrigger.setAttribute("aria-expanded", "false");
+  aiRadial.setAttribute("aria-hidden", "true");
+};
+
+aiTrigger.addEventListener("click", (ev) => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const isOpen = aiMenu.classList.toggle("is-open");
+  aiTrigger.setAttribute("aria-expanded", String(isOpen));
+  aiRadial.setAttribute("aria-hidden", String(!isOpen));
+});
+
+/* fecha ao clicar fora */
+document.addEventListener("click", (ev) => {
+  if (!aiMenu.contains(ev.target)) closeMenu();
+});
+
+/* fecha com ESC */
+aiMenu.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") closeMenu();
+});
 
 /* inserir ao lado dos outros botões: faremos isso no bloco do 'actions.append' mais abaixo */
 
