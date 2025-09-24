@@ -703,6 +703,44 @@ planaltoBtn.addEventListener("click", () => {
   window.open(url, "_blank", "noopener,noreferrer");
 });
 
+/* --- BOTÃO GATILHO + MENU RADIAL DE IAs (somente UI) --- */
+const aiMenu = document.createElement("div");
+aiMenu.className = "ai-menu";
+
+/* gatilho redondo */
+const aiTrigger = document.createElement("button");
+aiTrigger.className = "btn btn--icon ai-trigger";
+aiTrigger.setAttribute("aria-label", "Abrir atalhos de I.A.");
+aiTrigger.setAttribute("aria-expanded", "false");
+aiTrigger.innerHTML = `<img src="icons/ai-hub.png" alt="">`;
+
+/* radial com 4 botões (apenas UI por enquanto) */
+const aiRadial = document.createElement("div");
+aiRadial.className = "ai-radial";
+aiRadial.setAttribute("role", "menu");
+aiRadial.setAttribute("aria-hidden", "true");
+
+const iaButtons = [
+  { cls: "pos-top",    label: "Abrir no ChatGPT",    icon: "icons/ai-chatgpt.png" },
+  { cls: "pos-right",  label: "Abrir no Gemini",     icon: "icons/ai-gemini.png" },
+  { cls: "pos-bottom", label: "Abrir no Copilot",    icon: "icons/ai-copilot.png" },
+  { cls: "pos-left",   label: "Abrir no Perplexity", icon: "icons/ai-perplexity.png" },
+];
+
+iaButtons.forEach(({ cls, label, icon }) => {
+  const a = document.createElement("a");
+  a.href = "#";
+  a.className = `btn btn--icon ai-item ${cls}`;
+  a.setAttribute("aria-label", label);
+  a.innerHTML = `<img src="${icon}" alt="">`;
+  a.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+  aiRadial.appendChild(a);
+});
+
+aiMenu.appendChild(aiTrigger);
+aiMenu.appendChild(aiRadial);
+
+/* inserir ao lado dos outros botões: faremos isso no bloco do 'actions.append' mais abaixo */
 
   // check na mesma linha (à direita)
   const chk = document.createElement("button");
@@ -768,9 +806,9 @@ toggle.addEventListener("click", () => {
                             : highlight(item.text, tokens);
   body.classList.toggle("is-collapsed", expanded);
 });
-    actions.append(toggle, planaltoBtn, chk);
+    actions.append(toggle, planaltoBtn, aiMenu, chk);
   } else {
-    actions.append(planaltoBtn, chk);
+    actions.append(planaltoBtn, aiMenu, chk);
   }
 
   left.append(body, actions);
