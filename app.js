@@ -663,7 +663,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   hubMenu.className = "hub-menu";
 
   // Prefixo fixo que será enviado antes do conteúdo do card
-  const PREFIX = "Explique o tema abaixo como se fosse um professor de Direito com um amplo conhecimento e com uma didática dinâmica, detalhada e exemplificativa";
+  const PREFIX = "Ensine o tema abaixo como se eu fosse um estudante de Direito exigente: explique com didática de alto nível, incluindo conceito jurídico, exemplos práticos, visão doutrinária, jurisprudência majoritária, aplicação em provas e prática jurídica, erros comuns e dicas de memorização.";
 
   // Monta a query do card (prefixo + título + corpo), com compactação e limite para URL
   const makeCardQuery = () => {
@@ -878,7 +878,7 @@ function ensureBaseHub() {
     hubMenu.className = "hub-menu";
 
     // prefixo fixo que será incluído antes do conteúdo selecionado
-    const PREFIX = "Explique o tema abaixo como se fosse um professor de Direito com um amplo conhecimento e com uma didática dinâmica, detalhada e exemplificativa:  ";
+    const PREFIX = "Ensine o tema abaixo como se eu fosse um estudante de Direito exigente: explique com didática de alto nível, incluindo conceito jurídico, exemplos práticos, visão doutrinária, jurisprudência majoritária, aplicação em provas e prática jurídica, erros comuns e dicas de memorização.  ";
 
     const makeAggregateQuery = () => {
       if (!state.selected.size) { toast("Selecione blocos para usar no HUB."); return null; }
