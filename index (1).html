@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>direito.love — Início</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="historico-flutuante/style.css">
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: #fff;
+      font-family: ui-sans-serif, system-ui;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .home-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+    }
+
+    .home-logo {
+      width: 220px;
+      max-width: 100%;
+      display: block;
+    }
+
+    .home-form {
+      width: 80%;
+      position: relative;
+    }
+
+    .home-form input {
+      width: 100%;
+      height: 56px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid #cfd4e2;
+      font-size: 16px;
+      outline: none;
+    }
+
+    @media (max-width: 480px) {
+      .home-logo {
+        width: 180px;
+      }
+
+      .home-form input {
+        height: 56px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="home-container">
+    <img src="icons/logo.png" alt="direito.love" class="home-logo" />
+    <form class="home-form" onsubmit="redirect(event)">
+      <input type="search" id="homeInput" placeholder="Digite o tema ou artigo..." autofocus autocomplete="off" />
+    </form>
+  </div>
+
+  <!-- Botão flutuante + Modal de Histórico -->
+  <button id="btnHistorico" class="round-btn" aria-label="Histórico de buscas" title="Histórico">📜</button>
+
+  <div id="modalHistorico" class="modal" hidden>
+    <div class="modal-backdrop" data-close-historico></div>
+    <div class="modal-card" style="max-width:460px">
+      <div class="modal-head">
+        <span class="title">Histórico de buscas</span>
+        <button class="icon-btn" data-close-historico aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <ul id="listaHistorico" class="mini-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function redirect(e) {
+      e.preventDefault();
+      const term = document.getElementById("homeInput").value.trim();
+      if (term.length < 2) return;
+      salvarHistorico(term);
+      const url = `buscador.html?q=${encodeURIComponent(term)}`;
+      window.location.href = url;
+    }
+
+    // Histórico Local (mesmo código do historico.js embutido)
+    const HIST_MAX = 50;
+    const HIST_KEY = "busca_historico";
+
+    function salvarHistorico(busca) {
+      if (!busca || busca.length < 2) return;
+      let hist = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+      hist = hist.filter(x => x !== busca);
+      hist.unshift(busca);
+      if (hist.length > HIST_MAX) hist = hist.slice(0, HIST_MAX);
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+    }
+
+    function mostrarHistorico() {
+      const modal = document.getElementById("modalHistorico");
+      const lista = document.getElementById("listaHistorico");
+      lista.innerHTML = "";
+      const hist = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+      if (!hist.length) {
+        const li = document.createElement("li");
+        li.textContent = "Nenhuma busca recente.";
+        li.className = "muted";
+        lista.appendChild(li);
+      } else {
+        hist.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "mini-item";
+          const btn = document.createElement("button");
+          btn.className = "btn soft";
+          btn.textContent = item;
+          btn.addEventListener("click", () => {
+            window.location.href = `buscador.html?q=${encodeURIComponent(item)}`;
+          });
+          li.appendChild(btn);
+          lista.appendChild(li);
+        });
+      }
+      modal.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("btnHistorico");
+      if (btn) btn.addEventListener("click", mostrarHistorico);
+      document.querySelectorAll("[data-close-historico]").forEach(el =>
+        el.addEventListener("click", () => {
+          const modal = document.getElementById("modalHistorico");
+          modal.hidden = true;
+          document.body.style.overflow = "";
+        })
+      );
+    });
+  </script>
+</body>
+</html>
