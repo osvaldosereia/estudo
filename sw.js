@@ -1,6 +1,6 @@
 // sw.js — direito.love (cache leve com versionamento por querystring)
 
-const CACHE_NAME = 'dlove-v7';
+const CACHE_NAME = 'dlove-v8';
 const CORE = [
   './',
   'index.html',
