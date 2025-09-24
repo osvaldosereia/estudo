@@ -546,6 +546,25 @@ mark.hl{
     padding-left:  max(12px, env(safe-area-inset-left));
     padding-right: max(18px, env(safe-area-inset-right));
   }
+  /* título da barra: linha própria acima dos botões (mobile) */
+@media (max-width: 480px) {
+  .bottombar .bar-inner .bar-title {
+    display: block;
+    order: -1;          /* vem primeiro */
+    flex: 0 0 100%;     /* ocupa a linha inteira */
+    text-align: center;
+    font-size: .9rem;
+    line-height: 1.25;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 6px 0 2px;
+  }
+
+  /* garante que botões não tentem ocupar a linha toda */
+  .bottombar .bar-group,
+  #viewBtn { flex: 0 0 auto; }
+}
+
 
   /* garante que nada estique até a borda */
   #clearSelectedBtn, #viewBtn, #baseHubWrap, #baseHubSpacer {
