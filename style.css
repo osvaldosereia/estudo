@@ -593,4 +593,10 @@ mark.hl{
 /* Ocultar botão chk dentro dos cards */
 .chk {
   display: none !important;
+  visibility: hidden;
+  width: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
