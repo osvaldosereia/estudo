@@ -1,25 +1,19 @@
-/* Reset básico */
+/* Reset */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 img{max-width:100%;display:block}
 
-/* Tokens */
+/* Tokens (grayscale clean) */
 :root{
   --wrap-max:920px;
 
-  --bg:#f5f6f8;
-  --ink:#0f172a;
-  --muted:#6b7280;
-  --line:#e1e6ef;
+  --bg:#f5f6f8;     /* fundo da página (não tudo branco) */
+  --card:#ffffff;   /* fundo dos cards */
+  --ink:#0f1115;    /* texto principal (preto) */
+  --muted:#6b7280;  /* texto secundário */
+  --line:#e6e9ee;   /* linhas/bordas */
 
-  --blue:#2563eb;
-  --blue-soft:#e9f0ff;
-
-  --card:#ffffff;
-  --elev:0 10px 30px rgba(2,8,20,.06);
-  --elev-soft:0 8px 20px rgba(2,8,20,.05);
-
-  --radius:16px;
+  --radius:12px;
   --radius-pill:999px;
 
   --safe: max(env(safe-area-inset-bottom), 16px);
@@ -29,14 +23,18 @@ img{max-width:100%;display:block}
 body{
   background:var(--bg);
   color:var(--ink);
-  font:400 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  font:400 15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";
 }
 .wrap{max-width:var(--wrap-max);margin:0 auto;padding:16px}
 
+/* Utilidade A11y */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
 /* Splash */
 .splash{
-  position:fixed;inset:0;background:linear-gradient(180deg,#fff, #f7f9ff);
-  display:none;align-items:center;justify-content:center;z-index:9999;
+  position:fixed;inset:0;background:#fff;display:none;align-items:center;justify-content:center;z-index:9999;
 }
 .splash[aria-hidden="false"]{display:flex}
 .splash-inner{width:min(680px,90vw);text-align:center}
@@ -44,93 +42,117 @@ body{
 .splash-form{display:flex;gap:8px;justify-content:center}
 .splash-form input{
   flex:1;min-width:0;height:48px;border-radius:12px;border:1px solid var(--line);
-  background:#fff;padding:0 14px;font-size:16px;outline:0;
+  background:#fff;padding:0 14px;font-size:15px;outline:0;
 }
-.btn{height:48px;border-radius:12px;border:1px solid transparent;padding:0 16px;cursor:pointer}
-.btn-primary{background:var(--ink);color:#fff}
+.btn{height:48px;border-radius:12px;border:1px solid var(--line);padding:0 16px;background:#fff;color:var(--ink);cursor:pointer}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:#fff}
 .splash-hint{margin-top:10px;color:var(--muted);font-size:13px}
 
-/* Resultados */
-.results-stack{display:grid;gap:14px}
+/* Resultados (stack) */
+.results-stack{display:grid;gap:12px}
 
-/* Grupo colapsável minimal */
+/* Grupo colapsável (flat, sem sombras) */
 .group{
   border:1px solid var(--line);
   background:var(--card);
-  border-radius:16px;box-shadow:var(--elev-soft);
+  border-radius:var(--radius);
   overflow:hidden;
 }
 .group-h{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;cursor:pointer;user-select:none;
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;cursor:pointer;user-select:none;background:#fff;border:none;outline:0;
 }
-.group-title{font-weight:600}
-.group-meta{color:var(--muted);font-size:13px}
-.group-chevron{transition:transform .18s ease}
-.group[aria-expanded="true"] .group-chevron{transform:rotate(180deg)}
-.group-body{display:none;border-top:1px solid var(--line)}
+.group-title{font-weight:600;font-size:14.5px}
+.group-meta{color:var(--muted);font-size:12.5px;margin-left:8px}
+.group-h .chev{display:inline-flex;margin-left:auto;color:var(--ink);transition:transform .18s ease}
+.group[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.group-body{display:none;border-top:1px solid var(--line);background:#fff}
 .group[aria-expanded="true"] .group-body{display:block}
 
-/* Card */
+/* Card minimal (1 coluna, sem sombra) */
 .card{
-  padding:16px;border-bottom:1px solid var(--line);background:#fff;
-  display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;
+  padding:16px;border-top:1px solid var(--line);background:#fff;
 }
-.card:last-child{border-bottom:none}
-.card-title{display:inline-flex;align-items:center;gap:8px}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--blue-soft);color:#1745a0;font-weight:600;font-size:12px}
-.card-actions{display:flex;gap:8px;align-self:end;justify-self:end}
-.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
-.btn-ghost:focus{outline:2px solid #c9d6ff;outline-offset:2px}
+.group-body .card:first-child{border-top:none}
+.card-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card-title strong{font-weight:600;font-size:14.5px}
+.card-text{color:var(--ink)}
 
-/* Destaque do card selecionado (auto-seleção) */
+/* Pílula contornada (Penal/Civil…) */
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);color:var(--ink);font-weight:500;font-size:12.5px
+}
+
+/* Destaque do card selecionado */
 .card.is-selected{
-  position:relative;box-shadow:var(--elev);
+  position:relative;background:#fafafa;
 }
 .card.is-selected::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);
-  border-top-left-radius:12px;border-bottom-left-radius:12px;
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink);border-top-left-radius:8px;border-bottom-left-radius:8px;
 }
 
-/* FAB Cluster */
+/* Hover (desktop) */
+@media (hover:hover){
+  .card:hover{background:#fafafa}
+}
+
+/* FAB Cluster (sem sombra, só borda) */
 .fab-cluster{
   position:fixed;right:16px;bottom:calc(var(--safe) + 16px);
   display:flex;flex-direction:column;gap:12px;z-index:999;
 }
 .fab{
-  width:56px;height:56px;border-radius:16px;border:1px solid var(--line);
-  background:#fff;box-shadow:var(--elev);display:inline-flex;align-items:center;justify-content:center;
-  cursor:pointer;outline:0;
+  width:56px;height:56px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--ink);cursor:pointer;outline:0;
 }
 .fab svg{display:block}
 .fab:active{transform:translateY(1px)}
 .fab-primary{
   min-width:56px;gap:10px;padding:0 14px;justify-content:center;
-  background:var(--ink);color:#fff;border-color:transparent;
+  font-weight:600;
 }
-.fab-primary span{white-space:nowrap;max-width:40vw;overflow:hidden;text-overflow:ellipsis}
+.fab-primary span{
+  white-space:nowrap;max-width:40vw;overflow:hidden;text-overflow:ellipsis;
+}
 .fab-logo img{width:40px;height:40px}
 
 /* Lupa retrátil */
 .fab-search-wrap{display:flex;align-items:center;gap:8px}
-.fab-search-form{
-  display:none;
-}
+.fab-search-form{display:none}
 .fab-search-wrap[aria-expanded="true"] .fab-search-form{
-  display:block;
-  background:#fff;border:1px solid var(--line);box-shadow:var(--elev);border-radius:12px;
+  display:block;background:#fff;border:1px solid var(--line);border-radius:12px;
 }
 .fab-search-form input{
-  width:min(70vw,520px);height:44px;border:none;outline:0;padding:0 12px;background:transparent;
+  width:min(70vw,520px);height:44px;border:none;outline:0;padding:0 12px;background:transparent;font-size:15px
 }
 
-/* Utilidades */
-.hidden{display:none !important}
+/* Pulse sutil da lupa (descoberta) */
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+  100%{transform:scale(1)}
+}
+.fab.pulse-once{animation:pulse .7s ease-in-out 1}
 
-/* Acessibilidade focus */
-:focus-visible{outline:2px solid #a7c1ff;outline-offset:2px}
+/* Focus A11y */
+:focus-visible{outline:2px solid rgba(15,17,21,.55);outline-offset:2px}
 
-/* Pequenos ajustes responsivos */
+/* Skeleton / estados */
+.skel{display:grid;gap:12px}
+.skel-card{
+  border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:16px;
+}
+.skel-line{height:12px;background:#f0f2f5;border-radius:6px;margin:8px 0}
+.skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}
+
+.state-empty, .state-end{
+  text-align:center;color:var(--muted);font-size:13.5px;padding:16px 8px;
+}
+.state-empty svg{display:block;margin:10px auto 6px;color:var(--ink)}
+
+/* Responsivo */
 @media (min-width: 960px){
   .fab-primary span{max-width:360px}
 }
