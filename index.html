@@ -13,6 +13,32 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- OVERRIDE: garante título da barra em linha própria no mobile -->
+  <style>
+    @media (max-width:480px){
+      .bottombar .bar-inner{
+        display:flex;
+        flex-wrap:wrap;           /* permite quebrar linha */
+        justify-content:center;
+        gap:12px;
+        padding-left:max(12px, env(safe-area-inset-left));
+        padding-right:max(12px, env(safe-area-inset-right));
+      }
+      .bottombar .bar-inner .bar-title{
+        order:-1;                 /* vem antes dos botões */
+        flex:0 0 100%;            /* ocupa a linha inteira */
+        margin:6px 0 2px;
+        text-align:center;
+        font-size:.9rem;
+        line-height:1.25;
+        color:var(--muted);
+        font-weight:600;
+      }
+      /* garante que os botões não “peçam” 100% */
+      .bottombar .bar-group, #viewBtn { flex:0 0 auto; }
+    }
+  </style>
 </head>
 <body>
   <!-- TOP BAR -->
@@ -42,28 +68,23 @@
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
       <option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
       <option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
-
-</optgroup>
+    </optgroup>
     <optgroup label="Súmulas">
       <option value="data/sumulas/sumulas_stf.txt">Súmulas do STF</option>
       <option value="data/sumulas/sumulas_stj.txt">Súmulas do STJ</option>
-          
     </optgroup>
     <optgroup label="Enunciados">
       <option value="data/enunciados/enunciados.txt">Jornadas de Direito</option>
-      </optgroup>
-
+    </optgroup>
     <optgroup label="Julgados">
       <option value="data/julgados/julgados.txt">Julgados</option>
       <option value="data/julgados/julgados1.txt">Julgados</option>
       <option value="data/julgados/julgados2.txt">Julgados</option>
-     <option value="data/julgados/julgados3.txt">Julgados</option>
+      <option value="data/julgados/julgados3.txt">Julgados</option>
       <option value="data/julgados/julgados4.txt">Julgados</option>
       <option value="data/julgados/julgados5.txt">Julgados</option>
-     <option value="data/julgados/julgados6.txt">Julgados</option>
-
-      </optgroup>
-
+      <option value="data/julgados/julgados6.txt">Julgados</option>
+    </optgroup>
     <optgroup label="Leis">
       <option value="data/leis/lei_maria_da_penha.txt">Lei Maria da Penha</option>
       <option value="data/leis/lei_da_improbidade_administrativa.txt">Lei da Improbidade Administrativa</option>
@@ -81,26 +102,24 @@
   </select>
 
   <!-- RESULTADOS -->
-<main class="content">
-  <div class="wrap">
-    <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
-  </div>
-</main>
-
+  <main class="content">
+    <div class="wrap">
+      <section id="resultsStack" class="stack" aria-live="polite" aria-busy="false"></section>
+    </div>
+  </main>
 
   <!-- BARRA INFERIOR -->
-<footer class="bottombar" role="contentinfo">
-  <div class="wrap bar-inner">
-    <div class="bar-title">Adicione temas para estudar em conjunto</div>
+  <footer class="bottombar" role="contentinfo">
+    <div class="wrap bar-inner">
+      <div class="bar-title">Adicione temas para estudar em conjunto</div>
 
-    <div class="bar-group">
-      <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
-      <button id="questionsBtn" class="btn btn-primary" aria-label="Criar Questões" disabled>Questões</button>
+      <div class="bar-group">
+        <button id="studyBtn" class="btn btn-primary" aria-label="Estudar com I.A." disabled>Estudar</button>
+        <button id="questionsBtn" class="btn btn-primary" aria-label="Criar Questões" disabled>Questões</button>
+      </div>
+      <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 ✔️ – Ver</button>
     </div>
-    <button id="viewBtn" class="btn btn-ghost" aria-haspopup="dialog">0 ✔️ – Ver</button>
-  </div>
-</footer>
-
+  </footer>
 
   <!-- MODAL: LEITOR -->
   <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
@@ -160,17 +179,16 @@
       <div class="modal-body">
         <fieldset class="prefs">
           <legend>Preferências</legend>
-         <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
-<label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
-<label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
-<label><input type="checkbox" class="qopt" value="mcq_1correta" checked> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
-<label><input type="checkbox" class="qopt" value="dificuldade_balanceada" checked> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
-<label><input type="checkbox" class="qopt" value="bloom_mix" checked> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
-<label><input type="checkbox" class="qopt" value="enunciado_autossuficiente" checked> Enunciado autossuficiente e neutro</label>
-<label><input type="checkbox" class="qopt" value="distratores_plausiveis" checked> Distratores plausíveis (erros típicos OAB/FGV)</label>
-<label><input type="checkbox" class="qopt" value="alternativas_padronizadas" checked> Padronizar extensão das alternativas (variação ≤ 15%)</label>
-<label><input type="checkbox" class="qopt" value="tempo_alvo" checked> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
-
+          <label><input type="checkbox" class="qopt" value="casos2" checked> Incluir 2 Casos Concretos</label>
+          <label><input type="checkbox" class="qopt" value="dissertativas2" checked> Incluir 2 Dissertativas</label>
+          <label><input type="checkbox" class="qopt" value="vf2" checked> Incluir 2 V ou F</label>
+          <label><input type="checkbox" class="qopt" value="mcq_1correta" checked> Múltipla escolha A–E com apenas 1 correta (sem “todas/nenhuma”)</label>
+          <label><input type="checkbox" class="qopt" value="dificuldade_balanceada" checked> Balancear dificuldade: 3 fáceis, 4 médias, 3 difíceis</label>
+          <label><input type="checkbox" class="qopt" value="bloom_mix" checked> Bloom mix: 30% lembrar, 40% aplicar, 30% analisar</label>
+          <label><input type="checkbox" class="qopt" value="enunciado_autossuficiente" checked> Enunciado autossuficiente e neutro</label>
+          <label><input type="checkbox" class="qopt" value="distratores_plausiveis" checked> Distratores plausíveis (erros típicos OAB/FGV)</label>
+          <label><input type="checkbox" class="qopt" value="alternativas_padronizadas" checked> Padronizar extensão das alternativas (variação ≤ 15%)</label>
+          <label><input type="checkbox" class="qopt" value="tempo_alvo" checked> Tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min</label>
         </fieldset>
 
         <label class="obs-label" for="questionsObs">Inclua alguma informação para deixar suas questões únicas e inéditas.</label>
