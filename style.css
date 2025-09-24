@@ -100,7 +100,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
   border-radius:999px;
   border:1px solid var(--line);
   background:#fff;
-  color:#var(--ink);
+  color:var(--ink);
   font-weight:600;
   cursor:pointer;
   box-shadow:0 1px 0 rgba(0,0,0,.03);
@@ -122,7 +122,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 
 /* bottom bar */
 .bottombar{position:fixed;left:0;right:0;bottom:0;background:var(--bottom);border-top:1px solid var(--line);z-index:250}
-.bar-inner{display:flex;gap:12px;justify-content:center;align-items:center;padding:12px 0;flex-wrap:wrap} /* wrap não afeta desktop se couber */
+.bar-inner{display:flex;gap:12px;justify-content:center;align-items:center;padding:12px 0;flex-wrap:wrap} /* wrap permite o título ficar na linha de cima */
 .bar-group{display:flex;gap:10px;margin:0}
 .btn{height:44px;padding:0 18px;border-radius:999px;border:1px solid #cfd4e2;background:#fff;font-weight:600;color:#0b1220}
 .btn[disabled]{opacity:.55;cursor:not-allowed}
@@ -130,7 +130,7 @@ body{font:400 var(--fs)/1.6 ui-sans-serif,system-ui,-apple-system,"SF Pro Text",
 .btn.soft{background:#f6f7fb}
 .btn-ghost{background:#fff}
 
-/* título da barra inferior (desktop: inline, mobile: linha própria via media query) */
+/* título da barra inferior (desktop: inline, mobile: linha própria via media) */
 .bottombar .bar-inner .bar-title{
   flex:0 0 auto;
   text-align:center;
@@ -270,17 +270,17 @@ mark.hl{background:#cfe8ff;padding:0 .15em;border-radius:.2em}
 .hub-menu{display:inline-flex;gap:8px;align-items:center;opacity:0;pointer-events:none;transform:translateX(8px);transition:opacity .18s ease,transform .18s ease}
 .hub-menu.open{opacity:1;pointer-events:auto;transform:translateX(0)}
 
-/* ===== MOBILE (<=480px): título em linha própria ===== */
+/* ===== MOBILE (<=480px): título em linha própria e botões em uma linha ===== */
 @media (max-width:480px){
   .bottombar{padding-bottom:max(8px,env(safe-area-inset-bottom))}
   .bottombar .bar-inner{
     justify-content:center;
-    flex-wrap:wrap;             /* permite quebrar a linha do título */
+    flex-wrap:wrap;             /* título em cima, botões embaixo */
     overflow:hidden;
     padding-top:10px;padding-bottom:10px;
     padding-left:max(12px,env(safe-area-inset-left));
     padding-right:max(12px,env(safe-area-inset-right));
-    gap:10px;
+    gap:8px;
   }
   /* TÍTULO: vira primeira linha */
   .bottombar .bar-inner .bar-title{
@@ -289,52 +289,31 @@ mark.hl{background:#cfe8ff;padding:0 .15em;border-radius:.2em}
     margin:6px 0 2px;
     font-size:.9rem;
     color:var(--muted);
+    text-align:center;
   }
   .bottombar .bar-group{gap:8px}
   #clearSelectedBtn,#viewBtn,#baseHubWrap,#baseHubSpacer{flex:0 0 auto}
   #viewBtn{min-width:56px;height:34px;padding:0 12px}
   .btn{height:34px;padding:0 12px}
   .btn.icon-only{padding:0 10px}
-  /* reserva para abrir 3 ícones do HUB à esquerda */
-  #baseHubSpacer{flex-basis:76px !important}
+  .round-btn{width:34px;height:34px}
+  /* reserva para abrir 3 ícones do HUB à esquerda (otimizada) */
+  #baseHubSpacer{flex-basis:56px !important}
 }
 
-/* aparelhos bem estreitos */
-/* Ajustes extras para telas ultra estreitas (Pixel 5 etc) */
-@media (max-width: 340px) {
-  .bottombar .bar-inner {
-    gap: 6px;
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
+/* aparelhos muito estreitos (ex.: 320–360px) */
+@media (max-width:360px){
+  .bottombar .bar-inner{
+    padding-left:max(16px,env(safe-area-inset-left));
+    padding-right:max(16px,env(safe-area-inset-right));
   }
-
-  #baseHubSpacer {
-    flex-basis: 72px !important;
-  }
-
-  #clearSelectedBtn,
-  #viewBtn,
-  #baseHubWrap {
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  .btn,
-  .round-btn {
-    height: 32px;
-  }
-
-  #viewBtn {
-    padding: 0 8px;
-  }
-
-  .btn.icon-only {
-    padding: 0 8px;
-  }
+  #baseHubSpacer{flex-basis:48px !important}
+  .btn,#viewBtn,.round-btn{height:32px}
+  .btn{padding:0 10px}
+  .round-btn{width:32px}
 }
 
-
-/* ===== MOBILE LARGO (<=820px): respiro e hub mais compacto ===== */
+/* ===== MOBILE LARGO (<=820px): respiro lateral e hub mais compacto ===== */
 @media (max-width:820px){
   .bottombar .bar-inner{
     padding-left:max(12px,env(safe-area-inset-left));
@@ -342,20 +321,4 @@ mark.hl{background:#cfe8ff;padding:0 .15em;border-radius:.2em}
   }
   .hub-menu{gap:4px}
   #clearSelectedBtn,#viewBtn,#baseHubWrap,#baseHubSpacer{flex:0 0 auto}
-}
-/* === Alinhamento da bottombar no mobile === */
-@media (max-width: 480px) {
-  /* todos com a MESMA altura */
-  .btn, #viewBtn, .round-btn { height: 34px; }
-  .round-btn { width: 34px; }            /* o rocket fica do mesmo tamanho */
-  .bottombar .bar-inner { align-items: center; gap: 8px; }
-
-  /* reserva menor pro menu retrátil abrir à esquerda */
-  #baseHubSpacer { flex-basis: 56px !important; } /* era ~76+ e quebrava linha */
-  .hub-menu { gap: 4px; }
-}
-
-/* muito estreito */
-@media (max-width: 360px) {
-  #baseHubSpacer { flex-basis: 48px !important; }
 }
