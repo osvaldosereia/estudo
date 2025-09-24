@@ -540,3 +540,19 @@ mark.hl{
     flex: 0 0 auto;
   }
 }
+/* ===== Ajuste fino do espaço do HUB no mobile ===== */
+@media (max-width: 820px) {
+  /* os 3 botões retráteis ocupam menos largura visual */
+  .hub-menu { gap: 6px; }
+
+  /* reduz a reserva lateral (era 96px) */
+  #baseHubSpacer { flex-basis: 80px !important; }
+}
+
+@media (max-width: 360px) {
+  /* manter gap menor nos aparelhos mais estreitos */
+  .hub-menu { gap: 6px; }
+
+  /* reduz mais um pouco a reserva (era 84px) */
+  #baseHubSpacer { flex-basis: 72px !important; }
+}
