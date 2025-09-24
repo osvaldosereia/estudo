@@ -300,14 +300,39 @@ mark.hl{background:#cfe8ff;padding:0 .15em;border-radius:.2em}
 }
 
 /* aparelhos bem estreitos */
-@media (max-width:360px){
-  .bottombar .bar-inner{
-    padding-left:max(20px,env(safe-area-inset-left));
-    padding-right:max(20px,env(safe-area-inset-right));
+/* Ajustes extras para telas ultra estreitas (Pixel 5 etc) */
+@media (max-width: 340px) {
+  .bottombar .bar-inner {
+    gap: 6px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
   }
-  #baseHubSpacer{flex-basis:64px !important}
-  .btn,#viewBtn{height:32px}
+
+  #baseHubSpacer {
+    flex-basis: 72px !important;
+  }
+
+  #clearSelectedBtn,
+  #viewBtn,
+  #baseHubWrap {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .btn,
+  .round-btn {
+    height: 32px;
+  }
+
+  #viewBtn {
+    padding: 0 8px;
+  }
+
+  .btn.icon-only {
+    padding: 0 8px;
+  }
 }
+
 
 /* ===== MOBILE LARGO (<=820px): respiro e hub mais compacto ===== */
 @media (max-width:820px){
