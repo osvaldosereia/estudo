@@ -20,22 +20,6 @@
     <div class="wrap">
       <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
       <form class="search" id="searchForm" role="search" aria-label="Buscar">
-        <select id="codeSelect" aria-label="Escolher arquivo">
-          <optgroup label="Códigos">
-            <option value="data/codigos/codigo_penal.txt" selected>Código Penal</option>
-            <option value="data/codigos/codigo_processo_penal.txt">Código de Processo Penal</option>
-            <option value="data/codigos/codigo_civil.txt">Código Civil</option>
-            <option value="data/codigos/codigo_processo_civil.txt">Código de Processo Civil</option>
-          </optgroup>
-          <optgroup label="Súmulas">
-            <option value="data/sumulas/sumulas_stf.txt">Súmulas STF</option>
-            <option value="data/sumulas/sumulas_stj.txt">Súmulas STJ</option>
-          </optgroup>
-          <optgroup label="Constituição">
-            <option value="data/CF88/CF88.txt">Constituição Federal 1988</option>
-          </optgroup>
-        </select>
-
         <div class="search-box">
           <input id="searchInput" type="search" placeholder="Buscar termos (ex.: 'artigo 129', 'lesão corporal')" autocomplete="off" />
           <span id="searchSpinner" class="spinner" aria-hidden="true" hidden></span>
@@ -52,7 +36,7 @@
     </div>
   </main>
 
-  <!-- MODAL: LEITOR (permanece) -->
+  <!-- MODAL: LEITOR -->
   <div id="readerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="readerTitle" hidden>
     <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-card" role="document">
