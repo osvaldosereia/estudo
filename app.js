@@ -965,9 +965,7 @@ function reorderBaseControlsAndCenter() {
   parent.style.margin = "0 auto";             // <- centraliza na barra
   parent.style.justifyContent = "center";
 
-  // respiro lateral menor no mobile
-  parent.style.paddingLeft  = (window.innerWidth <= 420 ? "6px" : "8px");
-  parent.style.paddingRight = (window.innerWidth <= 420 ? "6px" : "8px");
+  
 
   // espaçador: ajusta para caber os 3 botões do menu
   if (spacer) {
