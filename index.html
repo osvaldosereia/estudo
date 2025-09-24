@@ -32,7 +32,7 @@
     <section id="resultsStack" class="results-stack" aria-live="polite"></section>
   </main>
 
-  <!-- LIVE region para leitores de tela -->
+  <!-- Região live para leitores de tela -->
   <div id="live" class="sr-only" aria-live="polite"></div>
 
   <!-- FAB CLUSTER (logo + lupa retrátil + ação) -->
@@ -46,14 +46,39 @@
         <input id="fabSearchInput" name="q" type="search" placeholder="Buscar..." autocomplete="off" />
       </form>
       <button id="fabSearch" class="fab" aria-label="Abrir busca" title="Buscar (/)">
-        <!-- ícone lupa -->
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/>
+        </svg>
       </button>
     </div>
 
     <button id="fabAction" class="fab fab-primary" aria-label="Aplicar no item selecionado">
       <span id="fabActionLabel">Ver texto</span>
     </button>
+  </div>
+
+  <!-- BOTTOM SHEET: painél das IAs -->
+  <div id="iaSheet" class="sheet" aria-hidden="true" aria-modal="true" role="dialog" aria-labelledby="iaSheetTitle">
+    <div class="sheet-backdrop" data-sheet-dismiss></div>
+    <div class="sheet-panel" role="document">
+      <header class="sheet-h">
+        <strong id="iaSheetTitle">Escolha a IA</strong>
+        <button class="sheet-close" type="button" data-sheet-dismiss aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.18 12 2.89 5.71 4.3 4.29 10.59 10.6l6.3-6.31z"/></svg>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="sheet-sub">Ação para o item selecionado:</p>
+        <p id="iaCurrent" class="sheet-current">—</p>
+        <div class="ia-grid">
+          <button class="chip-ia" data-ia="chatgpt" aria-label="ChatGPT">ChatGPT</button>
+          <button class="chip-ia" data-ia="gemini" aria-label="Gemini">Gemini</button>
+          <button class="chip-ia" data-ia="perplexity" aria-label="Perplexity">Perplexity</button>
+          <button class="chip-ia" data-ia="copilot" aria-label="Copilot">Copilot</button>
+        </div>
+        <p class="sheet-note">Obs.: sem integração real por enquanto — só visual.</p>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
