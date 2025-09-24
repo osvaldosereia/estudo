@@ -522,7 +522,7 @@ mark.hl{
 @media (max-width: 360px) {
   .bottombar .bar-inner {
     padding-left:  max(30px, env(safe-area-inset-left));
-    padding-right: max(30px, env(safe-area-inset-right));
+    padding-right: max(50px, env(safe-area-inset-right));
   }
   #baseHubSpacer { flex-basis: 84px !important; }
   .btn, #viewBtn { height: 32px; }
@@ -532,7 +532,7 @@ mark.hl{
   .bottombar .bar-inner {
     /* laterais com safe-area, sem alterar layout do desktop */
     padding-left:  max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
+    padding-right: max(18px, env(safe-area-inset-right));
   }
 
   /* garante que nada estique até a borda */
