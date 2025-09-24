@@ -1,10 +1,10 @@
 /* ==========================
-   direito.love — app.js (limpo)
-   Ajustes aplicados:
-   - Sem barra inferior
-   - Sem modais Estudar/Questões
-   - Sem botões "Estudar com I.A." e "Google" nos cards
-   - Toggle à ESQUERDA; FAB à DIREITA abrindo 3 botões para a ESQUERDA
+   direito.love — app.js (somente o que você pediu)
+   - Top bar intacta (logo + busca)
+   - Sem barra inferior / sem modais Estudar/Questões
+   - Sem botões Estudar/Google nos cards
+   - Toggle à esquerda; FAB à direita abre 3 bolinhas para a esquerda
+   - Parser inalterado (split por "-----")
    ========================== */
 
 /* Service Worker (opcional) */
@@ -18,13 +18,11 @@ if ("serviceWorker" in navigator) {
 const $ = (s) => document.querySelector(s);
 
 const els = {
-  /* topo/busca */
   form: $("#searchForm"),
   q: $("#searchInput"),
   spinner: $("#searchSpinner"),
   stack: $("#resultsStack"),
   brand: $("#brandBtn"),
-  codeSelect: $("#codeSelect"),
 
   /* leitor */
   readerModal: $("#readerModal"),
@@ -37,14 +35,17 @@ const els = {
 };
 
 /* ---------- estado ---------- */
-const MAX_SEL = 6;               // ainda exibimos no cabeçalho do Leitor (0/6)
-const CARD_CHAR_LIMIT = 200;     // limite para "ver mais"
+const DEFAULT_FILE = "data/codigos/codigo_penal.txt"; // como não há seletor, usamos um padrão
+const DEFAULT_LABEL = "Código Penal";
+
+const MAX_SEL = 6;
+const CARD_CHAR_LIMIT = 200;
 const PREV_MAX = 60;
 
 const state = {
-  selected: new Map(),     // reservado (sem UI de seleção no card)
-  cacheTxt: new Map(),     // url -> string
-  cacheParsed: new Map(),  // url -> items[]
+  selected: new Map(),
+  cacheTxt: new Map(),
+  cacheParsed: new Map(),
   urlToLabel: new Map(),
 };
 
@@ -73,7 +74,7 @@ function escHTML(s) {
   }[m]));
 }
 
-/* ---------- busca e parsing ---------- */
+/* ---------- IO ---------- */
 async function loadFile(url) {
   if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
   const res = await fetch(url);
@@ -83,7 +84,7 @@ async function loadFile(url) {
   return txt;
 }
 
-/* Cada artigo/bloco separado por "-----" */
+/* ---------- parser (inalterado) ---------- */
 async function parseFile(url, label) {
   const key = url;
   if (state.cacheParsed.has(key)) return state.cacheParsed.get(key);
@@ -92,14 +93,12 @@ async function parseFile(url, label) {
   const chunks = raw.split(/\n-{2,}\s*\n/g).map(s => s.trim()).filter(Boolean);
 
   const items = chunks.map((chunk, idx) => {
-    // Título = 1ª linha; corpo = resto
     const nl = chunk.indexOf("\n");
-    let title = (nl >= 0 ? chunk.slice(0, nl) : chunk).trim();
-    let body = (nl >= 0 ? chunk.slice(nl+1) : "").trim();
+    const title = (nl >= 0 ? chunk.slice(0, nl) : chunk).trim();
+    const body  = (nl >= 0 ? chunk.slice(nl+1) : "").trim();
 
-    const id = `${label.replace(/\s+/g,'_').toLowerCase()}_${idx+1}`;
     return {
-      id,
+      id: `${label.replace(/\s+/g,'_').toLowerCase()}_${idx+1}`,
       title,
       text: chunk,
       body,
@@ -113,12 +112,11 @@ async function parseFile(url, label) {
   return items;
 }
 
-/* ---------- busca local por tokens ---------- */
+/* ---------- busca ---------- */
 function matchItem(item, tokens) {
   const hay = norm(item.title + " " + item.text);
   return tokens.every(t => hay.includes(t));
 }
-
 function highlight(text, tokens) {
   let h = escHTML(text);
   tokens.forEach(t => {
@@ -128,7 +126,6 @@ function highlight(text, tokens) {
   });
   return h;
 }
-
 function truncatedHTML(text, tokens) {
   const clean = text.replace(/\s+/g, " ").trim();
   const truncated = clean.slice(0, CARD_CHAR_LIMIT) + (clean.length > CARD_CHAR_LIMIT ? "…" : "");
@@ -140,7 +137,7 @@ function renderCard(item, tokens = [], ctx = {}) {
   const card = document.createElement("article");
   card.className = "card";
 
-  // header (pill com fonte)
+  // header
   const head = document.createElement("div");
   head.className = "head";
   const pill = document.createElement("button");
@@ -150,12 +147,12 @@ function renderCard(item, tokens = [], ctx = {}) {
   pill.addEventListener("click", () => openReader(item, tokens));
   head.appendChild(pill);
 
-  // corpo
+  // body
   const body = document.createElement("div");
   body.className = "body is-collapsed";
   body.innerHTML = truncatedHTML(item.text, tokens);
 
-  // ações
+  // actions
   const actions = document.createElement("div");
   actions.className = "actions";
   const leftZone = document.createElement("div");
@@ -172,7 +169,7 @@ function renderCard(item, tokens = [], ctx = {}) {
   if (hasExpandable) {
     const toggle = document.createElement("button");
     toggle.className = "toggle";
-    toggle.textContent = "▼";                // recolhido
+    toggle.textContent = "▼";
     toggle.setAttribute("aria-expanded", "false");
     toggle.addEventListener("click", () => {
       const expanded = toggle.getAttribute("aria-expanded") === "true";
@@ -185,14 +182,14 @@ function renderCard(item, tokens = [], ctx = {}) {
     leftZone.append(toggle);
   }
 
-  /* ---- FAB à DIREITA (abre 3 bolinhas PNG para a ESQUERDA) ---- */
+  /* ---- FAB à DIREITA (3 bolinhas PNG pra esquerda) ---- */
   const fab = document.createElement("div");
   fab.className = "fab";
 
   const fabMenu = document.createElement("div");
   fabMenu.className = "fab-menu";
 
-  const icons = ["icons/btn1.png", "icons/btn2.png", "icons/btn3.png"]; // substitua pelos seus PNGs
+  const icons = ["icons/btn1.png", "icons/btn2.png", "icons/btn3.png"];
   icons.forEach((src, i) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -213,7 +210,7 @@ function renderCard(item, tokens = [], ctx = {}) {
   fabMain.className = "fab-main";
   const mainImg = document.createElement("img");
   mainImg.alt = "Mais ações";
-  mainImg.src = "icons/more.png"; // ícone principal PNG
+  mainImg.src = "icons/more.png";
   fabMain.appendChild(mainImg);
   fabMain.addEventListener("click", (ev) => {
     ev.stopPropagation();
@@ -226,15 +223,15 @@ function renderCard(item, tokens = [], ctx = {}) {
 
   actions.append(leftZone, rightZone);
 
-  // montar card
+  // mount
   const left = document.createElement("div");
   left.append(head, body, actions);
-
   card.append(left);
+
   return card;
 }
 
-/* ---------- Leitor (modal) ---------- */
+/* ---------- Leitor ---------- */
 async function openReader(item, tokens = []) {
   els.readerTitle && (els.readerTitle.textContent = item.source);
   updateSelCount();
@@ -250,7 +247,7 @@ async function openReader(item, tokens = []) {
   }
 
   try {
-    const items = await parseFile(item.fileUrl, item.source);
+    const items = await parseFile(item.fileUrl || DEFAULT_FILE, item.source || DEFAULT_LABEL);
     els.readerBody.innerHTML = "";
 
     items.forEach((a) => {
@@ -273,7 +270,7 @@ async function openReader(item, tokens = []) {
   }
 }
 
-/* ---------- MODAL: abrir/fechar ---------- */
+/* ---------- Modal ---------- */
 function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
 function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflow = ""; } }
 
@@ -294,18 +291,16 @@ document.addEventListener("keydown", (e) => {
 els.form?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const q = (els.q?.value || "").trim();
-  const fileUrl = els.codeSelect?.value || "";
-  if (!fileUrl) { toast("Escolha um arquivo."); return; }
+  const fileUrl = DEFAULT_FILE;
+  const label = DEFAULT_LABEL;
 
   els.stack.setAttribute("aria-busy", "true");
   els.spinner.hidden = false;
   els.stack.innerHTML = "";
 
   try {
-    const label = els.codeSelect.options[els.codeSelect.selectedIndex]?.text || "Arquivo";
     const items = await parseFile(fileUrl, label);
     const tokens = norm(q).split(/\s+/).filter(Boolean);
-
     const results = q ? items.filter(it => matchItem(it, tokens)) : items.slice(0, 20);
 
     if (!results.length) {
@@ -315,6 +310,9 @@ els.form?.addEventListener("submit", async (e) => {
       els.stack.appendChild(empty);
     } else {
       for (const it of results) {
+        // injeta o fileUrl/label para o leitor funcionar
+        it.fileUrl = fileUrl;
+        it.source = label;
         const card = renderCard(it, tokens);
         els.stack.appendChild(card);
       }
