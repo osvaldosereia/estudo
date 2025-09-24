@@ -800,8 +800,13 @@ document.addEventListener("keydown", (e) => {
 /* ---------- HUB da BASE + Lixeira + Visor ---------- */
 
 // cria/garante o botão de lixeira depois do visor
+/* ---------- HUB da BASE + Lixeira + Visor (ordem central) ---------- */
+
+// cria/garante o botão de lixeira
 function ensureClearSelectedBtn() {
-  if (!document.getElementById("clearSelectedBtn") && els.viewBtn?.parentElement) {
+  const parent = els.viewBtn?.parentElement;
+  if (!parent) return;
+  if (!document.getElementById("clearSelectedBtn")) {
     const clearBtn = document.createElement("button");
     clearBtn.id = "clearSelectedBtn";
     clearBtn.className = "btn icon-only";
@@ -811,16 +816,18 @@ function ensureClearSelectedBtn() {
       state.selected.clear();
       updateBottom();
       toast("Seleção limpa.");
-      // limpa visuais de seleção nos cards já renderizados
-      document.querySelectorAll(".card .chk[data-checked='true']").forEach((b) => b.removeAttribute("data-checked"));
+      document.querySelectorAll(".card .chk[data-checked='true']")
+        .forEach((b) => b.removeAttribute("data-checked"));
     });
-    els.viewBtn.after(clearBtn);
+    parent.appendChild(clearBtn);
   }
 }
 
-// cria/garante o HUB da base antes do visor
+// cria/garante o HUB da base
 function ensureBaseHub() {
-  if (!document.getElementById("baseHubWrap") && els.viewBtn?.parentElement) {
+  const parent = els.viewBtn?.parentElement;
+  if (!parent) return;
+  if (!document.getElementById("baseHubWrap")) {
     const hubWrap = document.createElement("div");
     hubWrap.id = "baseHubWrap";
     hubWrap.className = "hub-wrap";
@@ -829,10 +836,7 @@ function ensureBaseHub() {
     hubMenu.className = "hub-menu";
 
     const makeAggregateQuery = () => {
-      if (!state.selected.size) {
-        toast("Selecione blocos para usar no HUB.");
-        return null;
-      }
+      if (!state.selected.size) { toast("Selecione blocos para usar no HUB."); return null; }
       const parts = [];
       let i = 1;
       for (const it of state.selected.values()) {
@@ -840,7 +844,7 @@ function ensureBaseHub() {
         if (i++ >= MAX_SEL) break;
       }
       const raw = parts.join("\n\n").replace(/\s+/g, " ").trim();
-      const maxLen = 1800; // segurança p/ URL
+      const maxLen = 1800;
       return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
     };
 
@@ -850,8 +854,7 @@ function ensureBaseHub() {
     hubBtn1.setAttribute("aria-label", "perplexity");
     hubBtn1.innerHTML = '<img src="icons/ai-perplexity.png" alt="">';
     hubBtn1.addEventListener("click", () => {
-      const q = makeAggregateQuery();
-      if (!q) return;
+      const q = makeAggregateQuery(); if (!q) return;
       window.open(`https://www.perplexity.ai/search?q=${q}`, "_blank", "noopener");
     });
 
@@ -861,8 +864,7 @@ function ensureBaseHub() {
     hubBtn2.setAttribute("aria-label", "copilot");
     hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
     hubBtn2.addEventListener("click", () => {
-      const q = makeAggregateQuery();
-      if (!q) return;
+      const q = makeAggregateQuery(); if (!q) return;
       window.open(`https://www.bing.com/copilotsearch?q=${q}`, "_blank", "noopener");
     });
 
@@ -872,8 +874,7 @@ function ensureBaseHub() {
     hubBtn3.setAttribute("aria-label", "google-ai");
     hubBtn3.innerHTML = '<img src="icons/ai-gemini.png" alt="">';
     hubBtn3.addEventListener("click", () => {
-      const q = makeAggregateQuery();
-      if (!q) return;
+      const q = makeAggregateQuery(); if (!q) return;
       window.open(`https://www.google.com/search?q=${q}&udm=50`, "_blank", "noopener");
     });
 
@@ -893,26 +894,56 @@ function ensureBaseHub() {
     });
 
     hubWrap.append(hubMenu, hubMain);
-
-    els.viewBtn.before(hubWrap);
+    parent.appendChild(hubWrap);
   }
 }
 
-// alinhamento à direita em TODAS as larguras para o trio da base
-function applyBaseAlignment() {
+// cria/garante o espaçador (reserva área para o menu abrir à esquerda do HUB)
+function ensureBaseSpacer() {
   const parent = els.viewBtn?.parentElement;
   if (!parent) return;
+  if (!document.getElementById("baseHubSpacer")) {
+    const spacer = document.createElement("div");
+    spacer.id = "baseHubSpacer";
+    // width calculada para ~3 botões redondos + folga
+    spacer.style.flex = "0 0 160px"; // ajuste fino se necessário
+    spacer.style.height = "1px";     // mínimo, só reserva largura
+    parent.appendChild(spacer);
+  }
+}
 
-  // layout por JS, sem depender de CSS externo
+// reordena: limpar | contador | espaçador | hub — e centraliza tudo
+function reorderBaseControlsAndCenter() {
+  const parent = els.viewBtn?.parentElement;
+  if (!parent || !els.viewBtn) return;
+
+  const clearBtn = document.getElementById("clearSelectedBtn");
+  const hubWrap  = document.getElementById("baseHubWrap");
+  const spacer   = document.getElementById("baseHubSpacer");
+
+  // garante estilos do container
   parent.style.display = "flex";
   parent.style.width = "100%";
   parent.style.alignItems = "center";
   parent.style.gap = "8px";
-  parent.style.justifyContent = "flex-end"; // sempre à direita
+  parent.style.justifyContent = "center"; // CENTRALIZADO
+
+  // reserva dinâmica (opcional): encolhe um pouco em telas muito pequenas
+  const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  if (spacer) {
+    const base = 160; // alvo
+    spacer.style.flexBasis = (vw < 380 ? 120 : base) + "px";
+  }
+
+  // coloca na ordem desejada
+  if (clearBtn) parent.appendChild(clearBtn);
+  parent.appendChild(els.viewBtn);
+  if (spacer) parent.appendChild(spacer);
+  if (hubWrap) parent.appendChild(hubWrap);
 }
 
+window.addEventListener("resize", reorderBaseControlsAndCenter);
 
-window.addEventListener("resize", applyBaseAlignment);
 
 /* ---------- init ---------- */
 updateBottom();
@@ -921,8 +952,10 @@ updateBottom();
 document.getElementById("studyBtn")?.remove();
 document.getElementById("questionsBtn")?.remove();
 
-// Garante HUB, Lixeira e alinhamento
+// Garante HUB, Lixeira, Espaçador e centralização
 ensureBaseHub();
 ensureClearSelectedBtn();
-applyBaseAlignment();
+ensureBaseSpacer();
+reorderBaseControlsAndCenter();
+
 
