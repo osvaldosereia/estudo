@@ -824,6 +824,20 @@ function ensureClearSelectedBtn() {
 }
 
 // cria/garante o HUB da base
+// cria/garante o espaçador (reserva área para o menu abrir à esquerda do HUB)
+function ensureBaseSpacer() {
+  const parent = els.viewBtn?.parentElement;
+  if (!parent) return;
+  if (!document.getElementById("baseHubSpacer")) {
+    const spacer = document.createElement("div");
+    spacer.id = "baseHubSpacer";
+    spacer.style.flex = "0 0 160px"; // valor padrão; será ajustado no reorder
+    spacer.style.height = "1px";     // mínimo, só reserva largura
+    parent.appendChild(spacer);
+  }
+}
+
+// cria/garante o HUB da base antes do visor (mantido)
 function ensureBaseHub() {
   const parent = els.viewBtn?.parentElement;
   if (!parent) return;
@@ -848,7 +862,6 @@ function ensureBaseHub() {
       return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
     };
 
-    // Perplexity
     const hubBtn1 = document.createElement("button");
     hubBtn1.className = "round-btn";
     hubBtn1.setAttribute("aria-label", "perplexity");
@@ -858,7 +871,6 @@ function ensureBaseHub() {
       window.open(`https://www.perplexity.ai/search?q=${q}`, "_blank", "noopener");
     });
 
-    // Copilot
     const hubBtn2 = document.createElement("button");
     hubBtn2.className = "round-btn";
     hubBtn2.setAttribute("aria-label", "copilot");
@@ -868,7 +880,6 @@ function ensureBaseHub() {
       window.open(`https://www.bing.com/copilotsearch?q=${q}`, "_blank", "noopener");
     });
 
-    // Google AI Mode
     const hubBtn3 = document.createElement("button");
     hubBtn3.className = "round-btn";
     hubBtn3.setAttribute("aria-label", "google-ai");
@@ -898,21 +909,7 @@ function ensureBaseHub() {
   }
 }
 
-// cria/garante o espaçador (reserva área para o menu abrir à esquerda do HUB)
-function ensureBaseSpacer() {
-  const parent = els.viewBtn?.parentElement;
-  if (!parent) return;
-  if (!document.getElementById("baseHubSpacer")) {
-    const spacer = document.createElement("div");
-    spacer.id = "baseHubSpacer";
-    // width calculada para ~3 botões redondos + folga
-    spacer.style.flex = "0 0 160px"; // ajuste fino se necessário
-    spacer.style.height = "1px";     // mínimo, só reserva largura
-    parent.appendChild(spacer);
-  }
-}
-
-// reordena: limpar | contador | espaçador | hub — e centraliza tudo
+// reordena e mantém tudo em UMA LINHA, centralizado
 function reorderBaseControlsAndCenter() {
   const parent = els.viewBtn?.parentElement;
   if (!parent || !els.viewBtn) return;
@@ -921,28 +918,40 @@ function reorderBaseControlsAndCenter() {
   const hubWrap  = document.getElementById("baseHubWrap");
   const spacer   = document.getElementById("baseHubSpacer");
 
-  // garante estilos do container
+  // container: sempre 1 linha
   parent.style.display = "flex";
   parent.style.width = "100%";
   parent.style.alignItems = "center";
-  parent.style.gap = "8px";
-  parent.style.justifyContent = "center"; // CENTRALIZADO
+  parent.style.flexWrap = "nowrap";          // <- impede quebrar em 2 linhas
+  parent.style.gap = (window.innerWidth <= 420 ? "6px" : "8px");
 
-  // reserva dinâmica (opcional): encolhe um pouco em telas muito pequenas
-  const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  // respiro lateral reduzido no mobile
+  parent.style.paddingLeft  = (window.innerWidth <= 420 ? "8px" : "12px");
+  parent.style.paddingRight = (window.innerWidth <= 420 ? "8px" : "12px");
+
+  // centralizado
+  parent.style.justifyContent = "center";
+
+  // espaçador: encolhe em telas estreitas (3 botões + folga)
   if (spacer) {
-    const base = 160; // alvo
-    spacer.style.flexBasis = (vw < 380 ? 120 : base) + "px";
+    let basis = 160; // desktop
+    if (window.innerWidth <= 420) basis = 120;
+    if (window.innerWidth <= 360) basis = 100;
+    if (window.innerWidth <= 330) basis = 88;
+    spacer.style.flex = `0 0 ${basis}px`;
   }
 
-  // coloca na ordem desejada
+  // impede que os itens cresçam
+  [clearBtn, els.viewBtn, hubWrap, spacer].forEach(el => {
+    if (el) el.style.flexShrink = "0";
+  });
+
+  // ordem: limpar | contador | espaçador | hub
   if (clearBtn) parent.appendChild(clearBtn);
   parent.appendChild(els.viewBtn);
   if (spacer) parent.appendChild(spacer);
   if (hubWrap) parent.appendChild(hubWrap);
 }
-
-window.addEventListener("resize", reorderBaseControlsAndCenter);
 
 
 /* ---------- init ---------- */
@@ -952,10 +961,11 @@ updateBottom();
 document.getElementById("studyBtn")?.remove();
 document.getElementById("questionsBtn")?.remove();
 
-// Garante HUB, Lixeira, Espaçador e centralização
 ensureBaseHub();
 ensureClearSelectedBtn();
 ensureBaseSpacer();
 reorderBaseControlsAndCenter();
+window.addEventListener("resize", reorderBaseControlsAndCenter);
+
 
 
