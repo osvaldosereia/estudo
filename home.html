@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>direito.love — Início</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      font-family: ui-sans-serif, system-ui;
+    }
+
+    .home-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      width: 92vw;
+      max-width: 560px;
+      text-align: center;
+    }
+
+    .home-logo {
+      width: 180px;
+      max-width: 80%;
+    }
+
+    .home-form {
+      width: 100%;
+      position: relative;
+    }
+
+    .home-form input {
+      width: 100%;
+      height: 46px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid #cfd4e2;
+      font-size: 16px;
+      outline: none;
+    }
+
+    @media (max-width: 480px) {
+      .home-logo {
+        width: 140px;
+      }
+
+      .home-form input {
+        height: 42px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="home-container">
+    <img src="icons/logo.png" alt="direito.love" class="home-logo" />
+
+    <form class="home-form" onsubmit="redirect(event)">
+      <input type="search" id="homeInput" placeholder="Digite o tema ou artigo..." autofocus autocomplete="off" />
+    </form>
+  </div>
+
+  <script>
+    function redirect(e) {
+      e.preventDefault();
+      const term = document.getElementById("homeInput").value.trim();
+      if (term.length < 2) return;
+      const url = `index.html?q=${encodeURIComponent(term)}`;
+      window.location.href = url;
+    }
+  </script>
+
+</body>
+</html>
