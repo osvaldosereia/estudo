@@ -663,7 +663,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   hubMenu.className = "hub-menu";
 
   // Prefixo fixo que será enviado antes do conteúdo do card
-  const PREFIX = "Professor de direito me prepare para a prova da oab. Tema:";
+  const PREFIX = "Explique o tema abaixo como se fosse um professor de Direito com um amplo conhecimento e com uma didática dinâmica, detalhada e exemplificativa";
 
   // Monta a query do card (prefixo + título + corpo), com compactação e limite para URL
   const makeCardQuery = () => {
@@ -878,7 +878,7 @@ function ensureBaseHub() {
     hubMenu.className = "hub-menu";
 
     // prefixo fixo que será incluído antes do conteúdo selecionado
-    const PREFIX = "Professor de direito me prepare para a prova da oab. Tema:  ";
+    const PREFIX = "Explique o tema abaixo como se fosse um professor de Direito com um amplo conhecimento e com uma didática dinâmica, detalhada e exemplificativa:  ";
 
     const makeAggregateQuery = () => {
       if (!state.selected.size) { toast("Selecione blocos para usar no HUB."); return null; }
