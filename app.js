@@ -26,8 +26,8 @@ const els = {
   codeSelect: $("#codeSelect"),
 
   /* barra inferior */
-  studyBtn: $("#studyBtn"),
-  questionsBtn: $("#questionsBtn"),
+  // Removidos: studyBtn, questionsBtn (não existem mais)
+  // O visor usa o antigo viewBtn como contador estático (sem click)
   viewBtn: $("#viewBtn"),
 
   /* leitor */
@@ -39,20 +39,6 @@ const els = {
   /* selecionados */
   selectedModal: $("#selectedModal"),
   selectedStack: $("#selectedStack"),
-
-  /* estudar */
-  studyModal: $("#studyModal"),
-  studyList: $("#studyList"),
-  studyUpdate: $("#studyUpdate"),
-  copyPromptBtn: $("#copyPromptBtn"),
-
-  /* criar questões */
-  questionsModal: $("#questionsModal"),
-  questionsList: $("#questionsList"),
-  questionsUpdate: $("#questionsUpdate"),
-  copyQuestionsBtn: $("#copyQuestionsBtn"),
-  includeObsBtn: $("#includeObsBtn"),
-  questionsObs: $("#questionsObs"),
 
   /* toasts */
   toasts: $("#toasts"),
@@ -68,11 +54,7 @@ const state = {
   cacheTxt: new Map(),     // url -> string
   cacheParsed: new Map(),  // url -> items[]
   urlToLabel: new Map(),
-  promptTpl: null,         // estudo
-  promptQTpl: null,        // questões
-  pendingObs: "",          // obs do usuário (questões)
-  studyIncluded: new Set(),
-  questionsIncluded: new Set(),
+  // Removidos: promptTpl, promptQTpl, pendingObs, studyIncluded, questionsIncluded
 };
 
 /* ---------- util ---------- */
@@ -85,10 +67,13 @@ function toast(msg) {
 }
 function updateBottom() {
   const n = state.selected.size;
-  els.viewBtn && (els.viewBtn.textContent = `✔️ ${n}`);
-  els.studyBtn && (els.studyBtn.disabled = n === 0);
-  els.questionsBtn && (els.questionsBtn.disabled = n === 0);
-  els.selCount && (els.selCount.textContent = `${n}/${MAX_SEL}`);
+  // visor como contador estático (n/MAX_SEL)
+  if (els.viewBtn) {
+    els.viewBtn.textContent = `${n}/${MAX_SEL}`;
+    els.viewBtn.setAttribute("aria-label", `Selecionados: ${n} de ${MAX_SEL}`);
+    els.viewBtn.style.pointerEvents = "none"; // não abre modal
+  }
+  if (els.selCount) els.selCount.textContent = `${n}/${MAX_SEL}`;
 }
 function norm(s) {
   return (s || "")
@@ -103,7 +88,6 @@ function escHTML(s) {
   }[m]));
 }
 
-
 /* ============================================================
    BUSCA — abreviações & regras
    ============================================================ */
@@ -114,7 +98,6 @@ function stripThousandDots(s) {
 }
 
 /* ---------- CÓDIGOS: abreviações/sinônimos → rótulo do <select> ---------- */
-/* Lado direito = rótulo EXATO do <option> do seu <select id="codeSelect"> */
 const CODE_ABBREVS = new Map(Object.entries({
   // CF88
   "cf": "CF88",
@@ -253,15 +236,10 @@ const KW_RX = /\b(art\.?|artigo|s[uú]mula)\b/iu;
 const KW_ART_RX = /^\s*(art\.?|artigo)\b/i;
 const KW_SUM_RX = /^\s*s[uú]mula\b/i;
 
-/* retorna true se o número N:
-   (a) está a ≤12 chars da keyword (art/art./artigo/súmula), e
-   (b) SE a query começar por "art|art.|artigo|súmula":
-       o número aparece nos 15 primeiros caracteres da linha que começa com esse marcador. */
 function numberRespectsWindows(text, n, queryMode /* "art"|"sumula"|null */) {
   const raw = String(text);
 
   // (a) janela curta ≤12 chars
-  // captura "KW ... N" com até 12 não-alfa-num entre o fim da KW e o primeiro dígito
   const nearRx = new RegExp(String.raw`\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(${n})(?:\b|[^0-9])`, "i");
   const nearOK = nearRx.test(stripThousandDots(raw));
   if (!nearOK) return false;
@@ -274,10 +252,8 @@ function numberRespectsWindows(text, n, queryMode /* "art"|"sumula"|null */) {
 
   for (const line of lines) {
     if (!wantStart.test(line)) continue;
-    const clean = stripThousandDots(norm(line)); // normaliza e remove "1.000"
-    // pega a parte da linha após o marcador inicial
+    const clean = stripThousandDots(norm(line));
     const after = clean.replace(queryMode === "art" ? KW_ART_RX : KW_SUM_RX, "").trimStart();
-    // índice do número (como string) após o marcador
     const idx = after.indexOf(n);
     if (idx !== -1 && idx <= 15) return true;
   }
@@ -427,36 +403,6 @@ function addRespirationsForDisplay(s) {
   return out.join("\n");
 }
 
-/* ---------- templates de prompt ---------- */
-async function loadPromptTemplate() {
-  if (state.promptTpl) return state.promptTpl;
-  const CANDIDATES = [
-    "data/prompts/prompt_estudar.txt",
-    "data/prompt/prompt_estudar.txt",
-  ];
-  for (const p of CANDIDATES) {
-    try {
-      const r = await fetch(p, { cache: "no-cache" });
-      if (r.ok) { state.promptTpl = (await r.text()).trim(); return state.promptTpl; }
-    } catch {}
-  }
-  state.promptTpl = "Você é uma I.A. jurídica. Estruture um estudo claro e didático com base nos blocos abaixo.\n";
-  return state.promptTpl;
-}
-async function loadQuestionsTemplate() {
-  if (state.promptQTpl) return state.promptQTpl;
-  const PATH = "data/prompts/prompt_questoes.txt";
-  try {
-    const r = await fetch(PATH, { cache: "no-cache" });
-    if (!r.ok) throw new Error();
-    state.promptQTpl = (await r.text()).trim();
-  } catch {
-    state.promptQTpl = "";
-    toast("Não encontrei data/prompts/prompt_questoes.txt");
-  }
-  return state.promptQTpl;
-}
-
 /* ---------- busca ---------- */
 els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
 els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
@@ -569,7 +515,6 @@ async function doSearch() {
     els.q?.select();
   }
 }
-
 
 function renderBlock(term, items, tokens) {
   const block = document.createElement("section");
@@ -709,15 +654,13 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
   };
 
-  /* ===== HUB: BOTÃO REDONDO + 3 BOTÕES PARA ESQUERDA ===== */
+  /* ===== HUB DENTRO DO CARD (inalterado) ===== */
   const hubWrap = document.createElement("div");
   hubWrap.className = "hub-wrap";
 
-  // menu (3 botões) – abre para a esquerda
   const hubMenu = document.createElement("div");
-  hubMenu.className = "hub-menu"; // escondido por padrão
+  hubMenu.className = "hub-menu";
 
-  // Perplexity
   const hubBtn1 = document.createElement("button");
   hubBtn1.className = "round-btn";
   hubBtn1.setAttribute("aria-label", "perplexity");
@@ -726,7 +669,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     window.open(`https://www.perplexity.ai/search?q=${makeQuery()}`, "_blank", "noopener");
   });
 
-  // Copilot (Bing)
   const hubBtn2 = document.createElement("button");
   hubBtn2.className = "round-btn";
   hubBtn2.setAttribute("aria-label", "copilot");
@@ -735,7 +677,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     window.open(`https://www.bing.com/copilotsearch?q=${makeQuery()}`, "_blank", "noopener");
   });
 
-  // Google Search com AI Mode (udm=50)
   const hubBtn3 = document.createElement("button");
   hubBtn3.className = "round-btn";
   hubBtn3.setAttribute("aria-label", "google-ai");
@@ -746,7 +687,6 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   hubMenu.append(hubBtn1, hubBtn2, hubBtn3);
 
-  // botão “hub” (abre/fecha o menu)
   const hubMain = document.createElement("button");
   hubMain.className = "round-btn hub-main";
   hubMain.setAttribute("aria-label", "Abrir atalhos");
@@ -756,23 +696,22 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     hubMenu.classList.toggle("open");
   });
 
-  // fechar menu ao clicar fora
   document.addEventListener("click", (ev) => {
     if (!hubWrap.contains(ev.target)) hubMenu.classList.remove("open");
   });
 
   hubWrap.append(hubMenu, hubMain);
 
-  /* ===== Check (pilha) — APENAS O ÍCONE REDONDO ===== */
+  /* ===== Check (pilha) — permanece nos cards ===== */
   const chk = document.createElement("button");
-  chk.className = "chk";                 // mantém a classe para o estilo circular
-  chk.setAttribute("aria-label", "Selecionar bloco para estudar com I.A.");
-  chk.title = "Estudar com I.A.";        // tooltip
+  chk.className = "chk";
+  chk.setAttribute("aria-label", "Selecionar bloco");
   chk.innerHTML = `
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
       <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
     </svg>
-  `; // <<< sem texto/label, só o ícone
+    <span>Estudar com I.A.</span>
+  `;
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
   chk.addEventListener("click", () => {
@@ -787,27 +726,9 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     }
     sync();
     updateBottom();
-    if (!document.getElementById("clearSelectedBtn")) {
-      const clearBtn = document.createElement("button");
-      clearBtn.id = "clearSelectedBtn";
-      clearBtn.className = "btn icon-only";
-      clearBtn.innerHTML = "🗑️";
-      clearBtn.setAttribute("aria-label", "Limpar seleção");
-      clearBtn.addEventListener("click", () => {
-        state.selected.clear();
-        updateBottom();
-        toast("Seleção limpa.");
-        els.stack?.querySelectorAll(".card").forEach((c) =>
-          c.querySelector(".chk")?.removeAttribute("data-checked")
-        );
-      });
-      els.viewBtn?.after(clearBtn);
-    }
   });
 
-  /* ===== Montagem das ações =====
-     Ordem: [toggle à ESQUERDA] … [hubMenu <- hubMain] [check] à DIREITA
-  */
+  /* ===== Montagem das ações (cards) ===== */
   actions.append(toggle);
   actions.append(hubWrap, chk);
 
@@ -816,13 +737,11 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   return card;
 }
 
-
-
 /* ---------- Leitor (modal) ---------- */
 async function openReader(item, tokens = []) {
-  els.readerTitle && (els.readerTitle.textContent = item.source);
-  els.selCount && (els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`);
-  els.readerBody && (els.readerBody.innerHTML = "");
+  if (els.readerTitle) els.readerTitle.textContent = item.source;
+  if (els.selCount) els.selCount.textContent = `${state.selected.size}/${MAX_SEL}`;
+  if (els.readerBody) els.readerBody.innerHTML = "";
   showModal(els.readerModal);
 
   // skeleton
@@ -863,202 +782,144 @@ function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflo
 
 document.addEventListener("click", (e) => {
   if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
-  if (e.target.matches("[data-close-study]")) hideModal(els.studyModal);
-  if (e.target.matches("[data-close-questions]")) hideModal(els.questionsModal);
   if (e.target.matches("[data-close-sel]")) hideModal(els.selectedModal);
 
   if (els.readerModal && e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
-  if (els.studyModal && e.target === els.studyModal.querySelector(".modal-backdrop")) hideModal(els.studyModal);
-  if (els.questionsModal && e.target === els.questionsModal.querySelector(".modal-backdrop")) hideModal(els.questionsModal);
   if (els.selectedModal && e.target === els.selectedModal.querySelector(".modal-backdrop")) hideModal(els.selectedModal);
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (els.readerModal && !els.readerModal.hidden) hideModal(els.readerModal);
-    if (els.studyModal && !els.studyModal.hidden) hideModal(els.studyModal);
-    if (els.questionsModal && !els.questionsModal.hidden) hideModal(els.questionsModal);
     if (els.selectedModal && !els.selectedModal.hidden) hideModal(els.selectedModal);
   }
 });
 
-/* ---------- VER SELECIONADOS ---------- */
-els.viewBtn?.addEventListener("click", () => {
-  els.selectedStack.innerHTML = "";
-  if (!state.selected.size) {
-    const empty = document.createElement("div");
-    empty.className = "block-empty";
-    empty.textContent = "Nenhum bloco selecionado.";
-    els.selectedStack.appendChild(empty);
-  } else {
-    for (const it of state.selected.values()) {
-      const card = renderCard(it, [], { context: "selected" });
-      els.selectedStack.appendChild(card);
-    }
-  }
-  showModal(els.selectedModal);
-});
+/* ---------- VER SELECIONADOS (removido o clique do visor) ---------- */
+/* Não há mais click no visor; o modal de selecionados pode continuar existente se aberto por outro caminho */
 
-/* ---------- Estudar ---------- */
-els.studyBtn?.addEventListener("click", async () => {
-  if (!state.selected.size) return;
-  state.studyIncluded = new Set([...state.selected.keys()]);
-  buildMiniList(els.studyList, state.studyIncluded);
-  showModal(els.studyModal);
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
-});
-els.studyUpdate?.addEventListener("click", async () => {
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
-  toast("Lista atualizada e prompt copiado.");
-});
-els.copyPromptBtn?.addEventListener("click", async () => {
-  const prompt = await buildStudyPrompt(state.studyIncluded);
-  copyToClipboard(prompt);
-});
-async function buildStudyPrompt(includedSet) {
-  const tpl = await loadPromptTemplate();
-  const parts = [tpl.trim(), ""];
-  let i = 1;
-  for (const id of includedSet) {
-    const it = state.selected.get(id);
-    if (!it) continue;
-    parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, "");
-    if (i++ >= MAX_SEL) break;
+/* ---------- HUB da BASE + Lixeira + Visor ---------- */
+
+// cria/garante o botão de lixeira depois do visor
+function ensureClearSelectedBtn() {
+  if (!document.getElementById("clearSelectedBtn") && els.viewBtn?.parentElement) {
+    const clearBtn = document.createElement("button");
+    clearBtn.id = "clearSelectedBtn";
+    clearBtn.className = "btn icon-only";
+    clearBtn.innerHTML = "🗑️";
+    clearBtn.setAttribute("aria-label", "Limpar seleção");
+    clearBtn.addEventListener("click", () => {
+      state.selected.clear();
+      updateBottom();
+      toast("Seleção limpa.");
+      // limpa visuais de seleção nos cards já renderizados
+      document.querySelectorAll(".card .chk[data-checked='true']").forEach((b) => b.removeAttribute("data-checked"));
+    });
+    els.viewBtn.after(clearBtn);
   }
-  return parts.join("\n");
 }
 
-/* ---------- Criar Questões ---------- */
-els.questionsBtn?.addEventListener("click", async () => {
-  if (!state.selected.size) return;
-  state.questionsIncluded = new Set([...state.selected.keys()]);
-  buildMiniList(els.questionsList, state.questionsIncluded);
-  showModal(els.questionsModal);
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-});
-els.questionsUpdate?.addEventListener("click", async () => {
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-  toast("Lista atualizada e prompt copiado.");
-});
-els.copyQuestionsBtn?.addEventListener("click", async () => {
-  const prompt = await buildQuestionsPrompt(state.questionsIncluded);
-  copyToClipboard(prompt);
-});
-els.includeObsBtn?.addEventListener("click", () => {
-  state.pendingObs = (els.questionsObs.value || "").trim();
-  toast("Observação incluída.");
-});
-async function buildQuestionsPrompt(includedSet) {
-  const tpl = await loadQuestionsTemplate();
+// cria/garante o HUB da base antes do visor
+function ensureBaseHub() {
+  if (!document.getElementById("baseHubWrap") && els.viewBtn?.parentElement) {
+    const hubWrap = document.createElement("div");
+    hubWrap.id = "baseHubWrap";
+    hubWrap.className = "hub-wrap";
 
-  const opts = Array.from(document.querySelectorAll(".qopt"))
-    .filter((i) => i.checked)
-    .map((i) => i.value);
+    const hubMenu = document.createElement("div");
+    hubMenu.className = "hub-menu";
 
-  const prefLines = [];
-  if (opts.includes("casos2"))                  prefLines.push("- Inclua 2 Casos Concretos.");
-  if (opts.includes("dissertativas2"))          prefLines.push("- Inclua 2 Dissertativas.");
-  if (opts.includes("vf2"))                     prefLines.push("- Inclua 2 V ou F.");
-  if (opts.includes("mcq_1correta"))            prefLines.push("- Questões múltipla escolha A–E com apenas 1 correta (sem 'todas' ou 'nenhuma').");
-  if (opts.includes("dificuldade_balanceada"))  prefLines.push("- Balancear dificuldade: 3 fáceis, 4 médias e 3 difíceis.");
-  if (opts.includes("bloom_mix"))               prefLines.push("- Distribuir pelo modelo Bloom: 30% lembrar, 40% aplicar, 30% analisar.");
-  if (opts.includes("enunciado_autossuficiente")) prefLines.push("- Enunciados devem ser autossuficientes e neutros.");
-  if (opts.includes("distratores_plausiveis"))  prefLines.push("- Distratores devem ser plausíveis (erros típicos OAB/FGV).");
-  if (opts.includes("alternativas_padronizadas")) prefLines.push("- Alternativas com extensão padronizada (variação ≤ 15%).");
-  if (opts.includes("tempo_alvo"))              prefLines.push("- Considerar tempo-alvo: objetivas 1,5–2 min; discursivas 8–10 min.");
-  if (opts.includes("pegadinhas"))              prefLines.push("- Misturar entendimentos para criar pegadinhas recorrentes.");
+    const makeAggregateQuery = () => {
+      if (!state.selected.size) {
+        toast("Selecione blocos para usar no HUB.");
+        return null;
+      }
+      const parts = [];
+      let i = 1;
+      for (const it of state.selected.values()) {
+        parts.push(`### ${i}. ${it.title} — [${it.source}]`, it.text);
+        if (i++ >= MAX_SEL) break;
+      }
+      const raw = parts.join("\n\n").replace(/\s+/g, " ").trim();
+      const maxLen = 1800; // segurança p/ URL
+      return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+    };
 
-  const prefs = prefLines.join("\n");
-
-  const parts = [tpl.trim(), ""];
-  if (prefs) parts.push("Preferências:", prefs, "");
-  if (state.pendingObs) parts.push("Observação do usuário:", state.pendingObs, "");
-
-  let i = 1;
-  parts.push("Blocos-base:");
-  for (const id of includedSet) {
-    const it = state.selected.get(id);
-    if (!it) continue;
-    parts.push(`### ${i}. ${it.title} — [${it.source}]`);
-    parts.push(it.text, "");
-    if (i++ >= MAX_SEL) break;
-  }
-  return parts.join("\n");
-}
-
-/* ---------- mini-lists (modais) ---------- */
-function buildMiniList(container, includedSet) {
-  container.innerHTML = "";
-  const items = [...state.selected.values()];
-  items.forEach((it) => {
-    const li = document.createElement("li");
-    li.className = "mini-item";
-
-    const chk = document.createElement("button");
-    chk.className = "chk";
-    chk.setAttribute("aria-label", "Incluir/excluir do prompt");
-    chk.innerHTML = `
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
-  </svg>
-  <span>Estudar com I.A.</span>
-`;
-    const sync = () => { chk.dataset.checked = includedSet.has(it.id) ? "true" : "false"; };
-    sync();
-    chk.addEventListener("click", () => {
-      if (includedSet.has(it.id)) includedSet.delete(it.id);
-      else includedSet.add(it.id);
-      sync();
+    // Perplexity
+    const hubBtn1 = document.createElement("button");
+    hubBtn1.className = "round-btn";
+    hubBtn1.setAttribute("aria-label", "perplexity");
+    hubBtn1.innerHTML = '<img src="icons/ai-perplexity.png" alt="">';
+    hubBtn1.addEventListener("click", () => {
+      const q = makeAggregateQuery();
+      if (!q) return;
+      window.open(`https://www.perplexity.ai/search?q=${q}`, "_blank", "noopener");
     });
 
-    const title = document.createElement("div");
-    title.className = "mini-title";
-    const preview = (it.title.slice(0, PREV_MAX) + (it.title.length > PREV_MAX ? "…" : ""));
-    title.textContent = `${preview} — ${it.source}`;
+    // Copilot
+    const hubBtn2 = document.createElement("button");
+    hubBtn2.className = "round-btn";
+    hubBtn2.setAttribute("aria-label", "copilot");
+    hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
+    hubBtn2.addEventListener("click", () => {
+      const q = makeAggregateQuery();
+      if (!q) return;
+      window.open(`https://www.bing.com/copilotsearch?q=${q}`, "_blank", "noopener");
+    });
 
-    li.append(chk, title);
-    container.appendChild(li);
-  });
+    // Google AI Mode
+    const hubBtn3 = document.createElement("button");
+    hubBtn3.className = "round-btn";
+    hubBtn3.setAttribute("aria-label", "google-ai");
+    hubBtn3.innerHTML = '<img src="icons/ai-gemini.png" alt="">';
+    hubBtn3.addEventListener("click", () => {
+      const q = makeAggregateQuery();
+      if (!q) return;
+      window.open(`https://www.google.com/search?q=${q}&udm=50`, "_blank", "noopener");
+    });
+
+    hubMenu.append(hubBtn1, hubBtn2, hubBtn3);
+
+    const hubMain = document.createElement("button");
+    hubMain.className = "round-btn hub-main";
+    hubMain.setAttribute("aria-label", "Abrir atalhos");
+    hubMain.innerHTML = '<img src="icons/ai-hub.png" alt="">';
+    hubMain.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hubMenu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (ev) => {
+      if (!hubWrap.contains(ev.target)) hubMenu.classList.remove("open");
+    });
+
+    hubWrap.append(hubMenu, hubMain);
+
+    els.viewBtn.before(hubWrap);
+  }
 }
 
-/* ---------- copiar com toast ---------- */
-function copyToClipboard(txt) {
-  navigator.clipboard?.writeText(txt).then(
-    () => toast("✅ Prompt copiado. Cole na sua I.A. preferida."),
-    () => toast("Copie manualmente na sua I.A.")
-  );
+// alinhamento à direita no mobile (<= 768px) dos 3 elementos da base
+function applyMobileBaseAlignment() {
+  const parent = els.viewBtn?.parentElement;
+  if (!parent) return;
+  const isMobile = window.innerWidth <= 768;
+  // inline para não depender de CSS externo
+  parent.style.display = "flex";
+  parent.style.gap = "8px";
+  parent.style.alignItems = "center";
+  parent.style.justifyContent = isMobile ? "flex-end" : "flex-start";
 }
 
-/* ---------- logo: reset ---------- */
-els.brand?.addEventListener("click", () => {
-  els.q && (els.q.value = "");
-  els.stack && (els.stack.innerHTML = "");
-  els.q?.focus();
-  toast("Busca reiniciada.");
-});
+window.addEventListener("resize", applyMobileBaseAlignment);
 
 /* ---------- init ---------- */
 updateBottom();
-// cria botão "limpar selecionados" apenas uma vez
-if (!document.getElementById("clearSelectedBtn")) {
-  const clearBtn = document.createElement("button");
-  clearBtn.id = "clearSelectedBtn";
-  clearBtn.className = "btn icon-only";
-  clearBtn.innerHTML = "🗑️";
-  clearBtn.setAttribute("aria-label", "Limpar seleção");
 
-  clearBtn.addEventListener("click", () => {
-    state.selected.clear();
-    updateBottom();
-    toast("Seleção limpa.");
-    els.stack?.querySelectorAll(".card").forEach((c) =>
-      c.querySelector(".chk")?.removeAttribute("data-checked")
-    );
-  });
+// Remover quaisquer restos de botões antigos, se existirem no DOM
+document.getElementById("studyBtn")?.remove();
+document.getElementById("questionsBtn")?.remove();
 
-  els.viewBtn?.after(clearBtn);
-}
+// Garante HUB, Lixeira e alinhamento
+ensureBaseHub();
+ensureClearSelectedBtn();
+applyMobileBaseAlignment();
