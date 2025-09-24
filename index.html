@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>direito.love — Leitor jurídico</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffffff">
+
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="icons/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- SPLASH / LANDING (primeiro acesso) -->
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-inner">
+      <img src="icons/mini-logo.png" alt="direito.love" class="splash-logo" />
+      <form id="splashForm" class="splash-form" role="search" aria-label="Buscar no direito.love">
+        <input id="splashInput" name="q" type="search" placeholder="Sobre o que vamos falar?" autocomplete="off" />
+        <button type="submit" class="btn btn-primary">Início</button>
+      </form>
+      <p class="splash-hint">Ex.: <em>art. 129 CP</em> · <em>princípio da insignificância</em> · <em>citação por edital</em></p>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <main class="wrap" id="app" role="main">
+    <!-- chips/infos opcionais aqui se quiser -->
+    <section id="resultsStack" class="results-stack" aria-live="polite"></section>
+  </main>
+
+  <!-- FAB CLUSTER (logo + ação + lupa com busca retrátil) -->
+  <div class="fab-cluster" aria-live="polite">
+    <button id="fabLogo" class="fab fab-logo" aria-label="Voltar ao topo">
+      <img src="icons/logo.png" alt="" />
+    </button>
+
+    <div class="fab-search-wrap" aria-expanded="false">
+      <form id="fabSearchForm" class="fab-search-form" role="search" aria-label="Buscar no direito.love">
+        <input id="fabSearchInput" name="q" type="search" placeholder="Buscar..." autocomplete="off" />
+      </form>
+      <button id="fabSearch" class="fab" aria-label="Abrir busca">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
+      </button>
+    </div>
+
+    <button id="fabAction" class="fab fab-primary" aria-label="Aplicar no item selecionado">
+      <span id="fabActionLabel">Ver Texto</span>
+    </button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
