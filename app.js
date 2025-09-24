@@ -702,18 +702,26 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     body.classList.toggle("is-collapsed", expanded);
   });
 
-  /* ===== Google (ícone PNG) ===== */
-  const googleBtn = document.createElement("button");
-  googleBtn.className = "toggle btn--icon";
-  googleBtn.setAttribute("aria-label", "Pesquisar no Google");
-  googleBtn.innerHTML = '<img src="icons/google.png" alt="" width="18" height="18">';
-  googleBtn.addEventListener("click", () => {
-    const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
-    const maxLen = 1800;
-    const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
-    const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
+  // IA buttons (Perplexity, Copilot, Google AI Mode)
+const makeQuery = () => {
+  const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
+  const maxLen = 1800; // segurança p/ URL
+  return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+};
+
+hubBtn1.addEventListener("click", () => {
+  window.open(`https://www.perplexity.ai/search?q=${makeQuery()}`, "_blank", "noopener");
+});
+
+hubBtn2.addEventListener("click", () => {
+  window.open(`https://www.bing.com/copilotsearch?q=${makeQuery()}`, "_blank", "noopener");
+});
+
+hubBtn3.addEventListener("click", () => {
+  window.open(`https://www.google.com/search?q=${makeQuery()}&udm=50`, "_blank", "noopener");
+});
+
+
 
   /* ===== [NOVO] HUB: BOTÃO REDONDO + 3 BOTÕES PARA ESQUERDA ===== */
   const hubWrap = document.createElement("div");
@@ -812,7 +820,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
      Ordem: [toggle à ESQUERDA] … [hubMenu <- hubMain] [Google] [check] à DIREITA
   */
   actions.append(toggle);
-  actions.append(hubWrap, googleBtn, chk);
+  actions.append(hubWrap, chk);
 
   left.append(body, actions);
   card.append(left);
