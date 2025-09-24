@@ -878,7 +878,7 @@ function ensureBaseHub() {
     hubMenu.className = "hub-menu";
 
     // prefixo fixo que será incluído antes do conteúdo selecionado
-    const PREFIX = "Responda como tutor de Direito, cite artigos aplicáveis e proponha 3 questões ao final.";
+    const PREFIX = "Professor de direito me prepare para a prova da oab. Tema:  ";
 
     const makeAggregateQuery = () => {
       if (!state.selected.size) { toast("Selecione blocos para usar no HUB."); return null; }
