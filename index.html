@@ -91,6 +91,21 @@
       window.location.href = url;
     }
   </script>
+<!-- Botão flutuante + Modal de Histórico -->
+<button id="btnHistorico" class="round-btn" aria-label="Histórico de buscas" title="Histórico">📜</button>
+
+<div id="modalHistorico" class="modal" hidden>
+  <div class="modal-backdrop" data-close-historico></div>
+  <div class="modal-card" style="max-width:460px">
+    <div class="modal-head">
+      <span class="title">Histórico de buscas</span>
+      <button class="icon-btn" data-close-historico aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      <ul id="listaHistorico" class="mini-list"></ul>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
