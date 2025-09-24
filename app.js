@@ -898,19 +898,21 @@ function ensureBaseHub() {
   }
 }
 
-// alinhamento à direita no mobile (<= 768px) dos 3 elementos da base
-function applyMobileBaseAlignment() {
+// alinhamento à direita em TODAS as larguras para o trio da base
+function applyBaseAlignment() {
   const parent = els.viewBtn?.parentElement;
   if (!parent) return;
-  const isMobile = window.innerWidth <= 768;
-  // inline para não depender de CSS externo
+
+  // layout por JS, sem depender de CSS externo
   parent.style.display = "flex";
-  parent.style.gap = "8px";
+  parent.style.width = "100%";
   parent.style.alignItems = "center";
-  parent.style.justifyContent = isMobile ? "flex-end" : "flex-start";
+  parent.style.gap = "8px";
+  parent.style.justifyContent = "flex-end"; // sempre à direita
 }
 
-window.addEventListener("resize", applyMobileBaseAlignment);
+
+window.addEventListener("resize", applyBaseAlignment);
 
 /* ---------- init ---------- */
 updateBottom();
@@ -922,4 +924,5 @@ document.getElementById("questionsBtn")?.remove();
 // Garante HUB, Lixeira e alinhamento
 ensureBaseHub();
 ensureClearSelectedBtn();
-applyMobileBaseAlignment();
+applyBaseAlignment();
+
