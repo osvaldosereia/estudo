@@ -667,9 +667,9 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     pill.href = "#";
     pill.className = "pill";
     pill.textContent = `📘 ${item.source} (abrir)`;
-    pill.addEventListener("click", (e) => { 
-      e.preventDefault(); 
-      openReader(item); 
+    pill.addEventListener("click", (e) => {
+      e.preventDefault();
+      openReader(item);
     });
     left.append(pill);
   }
@@ -688,7 +688,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const actions = document.createElement("div");
   actions.className = "actions";
 
-  /* ===== [NOVO] TOGGLE (seta) ALINHADO À ESQUERDA ===== */
+  /* ===== TOGGLE (seta) ALINHADO À ESQUERDA ===== */
   const toggle = document.createElement("button");
   toggle.className = "toggle toggle-left";
   toggle.textContent = "▼";
@@ -702,28 +702,14 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     body.classList.toggle("is-collapsed", expanded);
   });
 
-  // IA buttons (Perplexity, Copilot, Google AI Mode)
-const makeQuery = () => {
-  const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
-  const maxLen = 1800; // segurança p/ URL
-  return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
-};
+  /* ===== IA: função de query (reuso) ===== */
+  const makeQuery = () => {
+    const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
+    const maxLen = 1800; // segurança p/ URL
+    return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+  };
 
-hubBtn1.addEventListener("click", () => {
-  window.open(`https://www.perplexity.ai/search?q=${makeQuery()}`, "_blank", "noopener");
-});
-
-hubBtn2.addEventListener("click", () => {
-  window.open(`https://www.bing.com/copilotsearch?q=${makeQuery()}`, "_blank", "noopener");
-});
-
-hubBtn3.addEventListener("click", () => {
-  window.open(`https://www.google.com/search?q=${makeQuery()}&udm=50`, "_blank", "noopener");
-});
-
-
-
-  /* ===== [NOVO] HUB: BOTÃO REDONDO + 3 BOTÕES PARA ESQUERDA ===== */
+  /* ===== HUB: BOTÃO REDONDO + 3 BOTÕES PARA ESQUERDA ===== */
   const hubWrap = document.createElement("div");
   hubWrap.className = "hub-wrap";
 
@@ -731,33 +717,36 @@ hubBtn3.addEventListener("click", () => {
   const hubMenu = document.createElement("div");
   hubMenu.className = "hub-menu"; // escondido por padrão
 
+  // Perplexity
   const hubBtn1 = document.createElement("button");
   hubBtn1.className = "round-btn";
   hubBtn1.setAttribute("aria-label", "perplexity");
   hubBtn1.innerHTML = '<img src="icons/ai-perplexity.png" alt="">';
   hubBtn1.addEventListener("click", () => {
-    // TODO: defina a ação 1
+    window.open(`https://www.perplexity.ai/search?q=${makeQuery()}`, "_blank", "noopener");
   });
 
+  // Copilot (Bing)
   const hubBtn2 = document.createElement("button");
   hubBtn2.className = "round-btn";
   hubBtn2.setAttribute("aria-label", "copilot");
   hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
   hubBtn2.addEventListener("click", () => {
-    // TODO: defina a ação 2
+    window.open(`https://www.bing.com/copilotsearch?q=${makeQuery()}`, "_blank", "noopener");
   });
 
+  // Google Search com AI Mode (udm=50)
   const hubBtn3 = document.createElement("button");
   hubBtn3.className = "round-btn";
-  hubBtn3.setAttribute("aria-label", "gemini");
+  hubBtn3.setAttribute("aria-label", "google-ai");
   hubBtn3.innerHTML = '<img src="icons/ai-gemini.png" alt="">';
   hubBtn3.addEventListener("click", () => {
-    // TODO: defina a ação 3
+    window.open(`https://www.google.com/search?q=${makeQuery()}&udm=50`, "_blank", "noopener");
   });
 
   hubMenu.append(hubBtn1, hubBtn2, hubBtn3);
 
-  // botão “hub” (ao lado do Google)
+  // botão “hub” (abre/fecha o menu)
   const hubMain = document.createElement("button");
   hubMain.className = "round-btn hub-main";
   hubMain.setAttribute("aria-label", "Abrir atalhos");
@@ -817,7 +806,7 @@ hubBtn3.addEventListener("click", () => {
   });
 
   /* ===== Montagem das ações =====
-     Ordem: [toggle à ESQUERDA] … [hubMenu <- hubMain] [Google] [check] à DIREITA
+     Ordem: [toggle à ESQUERDA] … [hubMenu <- hubMain] [check] à DIREITA
   */
   actions.append(toggle);
   actions.append(hubWrap, chk);
