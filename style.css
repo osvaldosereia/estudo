@@ -152,7 +152,28 @@ body{
 }
 .state-empty svg{display:block;margin:10px auto 6px;color:var(--ink)}
 
+/* BOTTOM SHEET (IA panel) */
+.sheet{position:fixed;inset:0;display:none;z-index:1000}
+.sheet[aria-hidden="false"]{display:block}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.25)}
+.sheet-panel{
+  position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+  border-radius:16px 16px 0 0;padding:14px 16px;
+}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sheet-h strong{font-weight:600;font-size:14.5px}
+.sheet-close{background:#fff;border:1px solid var(--line);border-radius:10px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.sheet-sub{color:var(--muted);font-size:12.5px;margin:8px 0 4px}
+.sheet-current{font-size:14px;margin:0 0 12px}
+.ia-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.chip-ia{
+  height:44px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  font-size:14px;cursor:pointer
+}
+.sheet-note{color:var(--muted);font-size:12.5px;margin-top:10px;text-align:center}
+
 /* Responsivo */
 @media (min-width: 960px){
   .fab-primary span{max-width:360px}
+  .sheet-panel{left:50%;transform:translateX(-50%);max-width:560px}
 }
