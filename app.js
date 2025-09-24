@@ -937,7 +937,7 @@ function reorderBaseControlsAndCenter() {
     let basis = 160; // desktop
     if (window.innerWidth <= 420) basis = 120;
     if (window.innerWidth <= 360) basis = 100;
-    if (window.innerWidth <= 330) basis = 88;
+    if (window.innerWidth <= 330) basis = 76;
     spacer.style.flex = `0 0 ${basis}px`;
   }
 
