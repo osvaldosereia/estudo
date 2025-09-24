@@ -688,32 +688,94 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const actions = document.createElement("div");
   actions.className = "actions";
 
-  // Google (busca com texto do card)
-const planaltoBtn = document.createElement("button");
-planaltoBtn.className = "toggle";
-// coloque isso no lugar
-planaltoBtn.className = "toggle btn--icon";
-planaltoBtn.setAttribute("aria-label", "Pesquisar no Google");
-planaltoBtn.innerHTML = '<img src="icons/google.png" alt="" width="18" height="18">';
-planaltoBtn.addEventListener("click", () => {
-  const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
-  const maxLen = 1800; // margem segura para a maioria dos navegadores
-  const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
-  const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-});
+  /* ===== [NOVO] TOGGLE (seta) ALINHADO À ESQUERDA ===== */
+  const toggle = document.createElement("button");
+  toggle.className = "toggle toggle-left";
+  toggle.textContent = "▼";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.addEventListener("click", () => {
+    const expanded = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+    toggle.textContent = expanded ? "▼" : "▲";
+    body.innerHTML = expanded ? truncatedHTML(item.text, tokens)
+                              : highlight(item.text, tokens);
+    body.classList.toggle("is-collapsed", expanded);
+  });
 
+  /* ===== Google (ícone PNG) ===== */
+  const googleBtn = document.createElement("button");
+  googleBtn.className = "toggle btn--icon";
+  googleBtn.setAttribute("aria-label", "Pesquisar no Google");
+  googleBtn.innerHTML = '<img src="icons/google.png" alt="" width="18" height="18">';
+  googleBtn.addEventListener("click", () => {
+    const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
+    const maxLen = 1800;
+    const query = encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
+    const url = `https://www.google.com/search?hl=pt-BR&q=${query}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
 
-  // check na mesma linha (à direita)
+  /* ===== [NOVO] HUB: BOTÃO REDONDO + 3 BOTÕES PARA ESQUERDA ===== */
+  const hubWrap = document.createElement("div");
+  hubWrap.className = "hub-wrap";
+
+  // menu (3 botões) – abre para a esquerda
+  const hubMenu = document.createElement("div");
+  hubMenu.className = "hub-menu"; // escondido por padrão
+
+  const hubBtn1 = document.createElement("button");
+  hubBtn1.className = "round-btn";
+  hubBtn1.setAttribute("aria-label", "Ação 1");
+  hubBtn1.innerHTML = '<img src="icons/bolt.png" alt="">';
+  hubBtn1.addEventListener("click", () => {
+    // TODO: defina a ação 1
+  });
+
+  const hubBtn2 = document.createElement("button");
+  hubBtn2.className = "round-btn";
+  hubBtn2.setAttribute("aria-label", "Ação 2");
+  hubBtn2.innerHTML = '<img src="icons/book.png" alt="">';
+  hubBtn2.addEventListener("click", () => {
+    // TODO: defina a ação 2
+  });
+
+  const hubBtn3 = document.createElement("button");
+  hubBtn3.className = "round-btn";
+  hubBtn3.setAttribute("aria-label", "Ação 3");
+  hubBtn3.innerHTML = '<img src="icons/share.png" alt="">';
+  hubBtn3.addEventListener("click", () => {
+    // TODO: defina a ação 3
+  });
+
+  hubMenu.append(hubBtn1, hubBtn2, hubBtn3);
+
+  // botão “hub” (ao lado do Google)
+  const hubMain = document.createElement("button");
+  hubMain.className = "round-btn hub-main";
+  hubMain.setAttribute("aria-label", "Abrir atalhos");
+  hubMain.innerHTML = '<img src="icons/hub.png" alt="">';
+  hubMain.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hubMenu.classList.toggle("open");
+  });
+
+  // fechar menu ao clicar fora
+  document.addEventListener("click", (ev) => {
+    if (!hubWrap.contains(ev.target)) hubMenu.classList.remove("open");
+  });
+
+  hubWrap.append(hubMenu, hubMain);
+
+  /* ===== Check (pilha) ===== */
   const chk = document.createElement("button");
   chk.className = "chk";
   chk.setAttribute("aria-label", "Selecionar bloco");
   chk.innerHTML = `
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
-  </svg>
-  <span>Estudar com I.A.</span>
-`;
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+      <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+    </svg>
+    <span>Estudar com I.A.</span>
+  `;
   const sync = () => { chk.dataset.checked = state.selected.has(item.id) ? "true" : "false"; };
   sync();
   chk.addEventListener("click", () => {
@@ -722,20 +784,18 @@ planaltoBtn.addEventListener("click", () => {
       toast(`Removido (${state.selected.size}/${MAX_SEL}).`);
       if (ctx.context === "selected") card.remove();
     } else {
-      if (state.selected.size >= MAX_SEL) { toast("⚠️ Limite de 12 blocos."); return; }
+      if (state.selected.size >= MAX_SEL) { toast(`⚠️ Limite de ${MAX_SEL} blocos.`); return; }
       state.selected.set(item.id, { ...item });
       toast(`Adicionado (${state.selected.size}/${MAX_SEL}).`);
     }
     sync();
     updateBottom();
-    // cria botão "limpar selecionados" apenas uma vez
     if (!document.getElementById("clearSelectedBtn")) {
       const clearBtn = document.createElement("button");
       clearBtn.id = "clearSelectedBtn";
       clearBtn.className = "btn icon-only";
       clearBtn.innerHTML = "🗑️";
       clearBtn.setAttribute("aria-label", "Limpar seleção");
-
       clearBtn.addEventListener("click", () => {
         state.selected.clear();
         updateBottom();
@@ -744,39 +804,21 @@ planaltoBtn.addEventListener("click", () => {
           c.querySelector(".chk")?.removeAttribute("data-checked")
         );
       });
-
       els.viewBtn?.after(clearBtn);
     }
   });
 
-  /* ---- "ver texto" CONDICIONAL + montar ações ---- */
-  const text = (item.text || "").trim();
-  const hasExpandable =
-    (ctx?.context !== "reader") &&
-    (text.length > CARD_CHAR_LIMIT || (item.body && item.body.trim().length > 0));
-
-  if (hasExpandable) {
-   const toggle = document.createElement("button");
-toggle.className = "toggle";
-toggle.textContent = "▼";                // rótulo inicial (recolhido)
-toggle.setAttribute("aria-expanded", "false");
-toggle.addEventListener("click", () => {
-  const expanded = toggle.getAttribute("aria-expanded") === "true";
-  toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-  toggle.textContent = expanded ? "▼" : "▲";  // <— aqui é o pulo do gato
-  body.innerHTML = expanded ? truncatedHTML(item.text, tokens)
-                            : highlight(item.text, tokens);
-  body.classList.toggle("is-collapsed", expanded);
-});
-    actions.append(toggle, planaltoBtn, chk);
-  } else {
-    actions.append(planaltoBtn, chk);
-  }
+  /* ===== Montagem das ações =====
+     Ordem: [toggle à ESQUERDA] … [hubMenu <- hubMain] [Google] [check] à DIREITA
+  */
+  actions.append(toggle);
+  actions.append(hubWrap, googleBtn, chk);
 
   left.append(body, actions);
   card.append(left);
   return card;
 }
+
 
 /* ---------- Leitor (modal) ---------- */
 async function openReader(item, tokens = []) {
