@@ -655,38 +655,57 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   };
 
   /* ===== HUB DENTRO DO CARD (inalterado) ===== */
+  /* ===== HUB DENTRO DO CARD (com prefixo fixo e bugfix) ===== */
   const hubWrap = document.createElement("div");
   hubWrap.className = "hub-wrap";
 
   const hubMenu = document.createElement("div");
   hubMenu.className = "hub-menu";
 
+  // Prefixo fixo que será enviado antes do conteúdo do card
+  const PREFIX = "Responda como tutor de Direito, cite artigos aplicáveis e proponha 3 questões ao final.";
+
+  // Monta a query do card (prefixo + título + corpo), com compactação e limite para URL
+  const makeCardQuery = () => {
+    const raw = (item.title + " " + item.text).replace(/\s+/g, " ").trim();
+    const body = `${PREFIX}\n\n${raw}`;
+    const maxLen = 1800; // segurança para não estourar a URL
+    return encodeURIComponent(body.length > maxLen ? body.slice(0, maxLen) : body);
+  };
+
+  // === Perplexity
   const hubBtn1 = document.createElement("button");
   hubBtn1.className = "round-btn";
   hubBtn1.setAttribute("aria-label", "perplexity");
   hubBtn1.innerHTML = '<img src="icons/ai-perplexity.png" alt="">';
   hubBtn1.addEventListener("click", () => {
-    window.open(`https://www.perplexity.ai/search?q=${makeQuery()}`, "_blank", "noopener");
+    const q = makeCardQuery();
+    window.open(`https://www.perplexity.ai/search?q=${q}`, "_blank", "noopener");
   });
 
+  // === Copilot
   const hubBtn2 = document.createElement("button");
   hubBtn2.className = "round-btn";
   hubBtn2.setAttribute("aria-label", "copilot");
   hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
   hubBtn2.addEventListener("click", () => {
-    window.open(`https://www.bing.com/copilotsearch?q=${makeQuery()}`, "_blank", "noopener");
+    const q = makeCardQuery();
+    window.open(`https://www.bing.com/copilotsearch?q=${q}`, "_blank", "noopener");
   });
 
+  // === Google (AI mode / udm=50)
   const hubBtn3 = document.createElement("button");
   hubBtn3.className = "round-btn";
   hubBtn3.setAttribute("aria-label", "google-ai");
   hubBtn3.innerHTML = '<img src="icons/ai-gemini.png" alt="">';
   hubBtn3.addEventListener("click", () => {
-    window.open(`https://www.google.com/search?q=${makeQuery()}&udm=50`, "_blank", "noopener");
+    const q = makeCardQuery();
+    window.open(`https://www.google.com/search?q=${q}&udm=50`, "_blank", "noopener");
   });
 
   hubMenu.append(hubBtn1, hubBtn2, hubBtn3);
 
+  // Botão principal do hub (abre/fecha o menu)
   const hubMain = document.createElement("button");
   hubMain.className = "round-btn hub-main";
   hubMain.setAttribute("aria-label", "Abrir atalhos");
@@ -696,11 +715,20 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     hubMenu.classList.toggle("open");
   });
 
-  document.addEventListener("click", (ev) => {
-    if (!hubWrap.contains(ev.target)) hubMenu.classList.remove("open");
-  });
+  // Fecha qualquer menu aberto ao clicar fora (instala uma única vez)
+  if (!window.__hubCloserInstalled) {
+    document.addEventListener("click", (ev) => {
+      document.querySelectorAll(".hub-wrap .hub-menu.open").forEach((menuEl) => {
+        if (!menuEl.parentElement.contains(ev.target)) {
+          menuEl.classList.remove("open");
+        }
+      });
+    });
+    window.__hubCloserInstalled = true;
+  }
 
   hubWrap.append(hubMenu, hubMain);
+
 
   /* ===== Check (pilha) — permanece nos cards ===== */
   const chk = document.createElement("button");
@@ -849,6 +877,9 @@ function ensureBaseHub() {
     const hubMenu = document.createElement("div");
     hubMenu.className = "hub-menu";
 
+    // prefixo fixo que será incluído antes do conteúdo selecionado
+    const PREFIX = "Responda como tutor de Direito, cite artigos aplicáveis e proponha 3 questões ao final.";
+
     const makeAggregateQuery = () => {
       if (!state.selected.size) { toast("Selecione blocos para usar no HUB."); return null; }
       const parts = [];
@@ -857,7 +888,10 @@ function ensureBaseHub() {
         parts.push(`### ${i}. ${it.title} — [${it.source}]`, it.text);
         if (i++ >= MAX_SEL) break;
       }
-      const raw = parts.join("\n\n").replace(/\s+/g, " ").trim();
+      // aplica o prefixo + conteúdo agregado
+      const rawBody = `${PREFIX}\n\n` + parts.join("\n\n");
+      // compacta espaços e limita tamanho para URL
+      const raw = rawBody.replace(/\s+/g, " ").trim();
       const maxLen = 1800;
       return encodeURIComponent(raw.length > maxLen ? raw.slice(0, maxLen) : raw);
     };
@@ -908,6 +942,7 @@ function ensureBaseHub() {
     parent.appendChild(hubWrap);
   }
 }
+
 
 // reordena e mantém tudo em UMA LINHA, centralizado
 function reorderBaseControlsAndCenter() {
