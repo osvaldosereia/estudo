@@ -28,7 +28,6 @@
 
   <!-- Catálogo (oculto) -->
   <select id="codeSelect" hidden>
-    <!-- (opções existentes mantidas) -->
     <option value="">—</option>
     <optgroup label="Códigos">
       <option value="data/codigos/codigo_civil.txt">Código Civil</option>
@@ -41,7 +40,7 @@
       <option value="data/codigos/codigo_tributario_nacional.txt">Cód. Tributário Nacional</option>
       <option value="data/codigos/codigo_de_transito_brasileiro.txt">Cód. Trânsito Brasileiro</option>
       <option value="data/codigos/codigo_florestal.txt">Código Florestal</option>
-      <option value="data/codigos//codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option>
+      <option value="data/codigos/codigo_processo_penal_militar.txt">Cód. Proc. Penal Militar</option><!-- corrigido -->
       <option value="data/codigos/codigo_penal_militar.txt">Cód. Penal Militar</option>
     </optgroup>
     <optgroup label="Súmulas">
@@ -99,6 +98,6 @@
   </div>
 
   <div id="toasts" class="toasts"></div>
-  <script src="app.js"></script>
+  <script src="app.js" defer></script><!-- defer para evitar race com o DOM -->
 </body>
 </html>
