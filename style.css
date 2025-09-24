@@ -590,3 +590,7 @@ mark.hl{
     flex-basis: 72px !important;
   }
 }
+/* Ocultar botão chk dentro dos cards */
+.card .chk {
+  display: none !important;
+}
