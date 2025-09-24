@@ -1,4 +1,4 @@
-/* ===== Reset básico ===== */
+/* ===== Reset ===== */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 img{max-width:100%;display:block}
@@ -32,7 +32,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
 .topbar .wrap{display:flex;align-items:center;gap:14px;height:var(--topbar-h)}
 .brand{height:28px; width:auto; cursor:pointer}
 .search{display:flex;gap:10px;align-items:center;margin-left:auto}
-.search select, .search input{height:36px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 10px}
+.search input{height:36px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 10px}
 .search .btn{height:36px;padding:0 14px;border-radius:999px;border:1px solid #cfd4e2;background:#fff;font-weight:600;color:#111;cursor:pointer}
 .search-box{position:relative;display:flex;align-items:center}
 .spinner{width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:#111;border-radius:50%;margin-left:-24px;animation:spin .9s linear infinite}
@@ -41,6 +41,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
 /* Conteúdo */
 .content{padding:calc(var(--topbar-h) + 12px) 0 40px}
 .stack{padding:8px 0}
+.block-empty{color:var(--muted);font-style:italic;padding:8px 0}
 
 /* Cards */
 .card{
@@ -64,7 +65,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
 .card .body{white-space:pre-wrap;margin:8px 0 10px;color:#1f2937}
 .card .body mark{background:#dfeaff;border-radius:6px;padding:0 .15em}
 
-/* ===== Barra de ações: esquerda (seta) + direita (FAB) ===== */
+/* ===== Ações: ESQUERDA (seta) + DIREITA (FAB) ===== */
 .card .actions{
   display:flex;
   align-items:center;
@@ -87,7 +88,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
   cursor:pointer;
 }
 
-/* ===== FAB (botão redondo + menu com 3 bolinhas que abre para a esquerda) ===== */
+/* ===== FAB (botão redondo + 3 bolinhas abrindo para a esquerda) ===== */
 .fab{ position:relative; height:40px; display:flex; align-items:center; }
 .fab-main{
   width:40px;height:40px;border-radius:50%;
@@ -119,7 +120,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
 .fab-item:hover{ box-shadow:0 2px 6px rgba(0,0,0,.08) }
 .fab-item img{ width:20px;height:20px;object-fit:contain;display:block }
 
-/* Ao abrir: aparecem em cascata, vindo da direita para a esquerda */
+/* Ao abrir: cascata direita->esquerda */
 .fab.open .fab-item{ opacity:1; transform:translateX(0) scale(1) }
 .fab.open .fab-item:nth-child(1){ transition-delay:.02s }
 .fab.open .fab-item:nth-child(2){ transition-delay:.06s }
@@ -138,7 +139,7 @@ body{background:var(--bg); color:var(--ink); font:14px/1.45 ui-sans-serif, syste
 .icon-btn{width:36px;height:36px;border:1px solid #d6dbe6;border-radius:12px;background:#fff;cursor:pointer}
 .foot-close{margin-left:auto}
 
-/* Artigos dentro do leitor */
+/* Artigos no leitor */
 .article{padding:16px 0;border-top:2px solid var(--line-strong);display:grid;grid-template-columns:auto 1fr;gap:14px}
 .article:first-child{border-top:0}
 .article h4{margin:0 0 6px;font-weight:600}
