@@ -521,8 +521,8 @@ mark.hl{
 /* aparelhos bem estreitos */
 @media (max-width: 360px) {
   .bottombar .bar-inner {
-    padding-left:  max(10px, env(safe-area-inset-left));
-    padding-right: max(10px, env(safe-area-inset-right));
+    padding-left:  max(30px, env(safe-area-inset-left));
+    padding-right: max(30px, env(safe-area-inset-right));
   }
   #baseHubSpacer { flex-basis: 84px !important; }
   .btn, #viewBtn { height: 32px; }
