@@ -910,7 +910,7 @@ function ensureBaseHub() {
 }
 
 // reordena e mantém tudo em UMA LINHA, centralizado
-function reorderBaseControlsAndCenter() {
+function function reorderBaseControlsAndCenter() {
   const parent = els.viewBtn?.parentElement;
   if (!parent || !els.viewBtn) return;
 
@@ -918,32 +918,35 @@ function reorderBaseControlsAndCenter() {
   const hubWrap  = document.getElementById("baseHubWrap");
   const spacer   = document.getElementById("baseHubSpacer");
 
-  // container: sempre 1 linha
+  // --- layout do grupo (central, sem ocupar a tela toda) ---
   parent.style.display = "flex";
-  parent.style.width = "100%";
+  parent.style.flexWrap = "nowrap";
   parent.style.alignItems = "center";
-  parent.style.flexWrap = "nowrap";          // <- impede quebrar em 2 linhas
   parent.style.gap = (window.innerWidth <= 420 ? "6px" : "8px");
 
-  // respiro lateral reduzido no mobile
-  parent.style.paddingLeft  = (window.innerWidth <= 420 ? "8px" : "12px");
-  parent.style.paddingRight = (window.innerWidth <= 420 ? "8px" : "12px");
-
-  // centralizado
+  // CENTRALIZA o grupo e limita a largura
+  parent.style.width = "auto";                // <- remove 100%
+  parent.style.maxWidth = "min(520px, 96vw)"; // <- largura máx do grupo
+  parent.style.margin = "0 auto";             // <- centraliza na barra
   parent.style.justifyContent = "center";
 
-  // espaçador: encolhe em telas estreitas (3 botões + folga)
+  // respiro lateral menor no mobile
+  parent.style.paddingLeft  = (window.innerWidth <= 420 ? "6px" : "8px");
+  parent.style.paddingRight = (window.innerWidth <= 420 ? "6px" : "8px");
+
+  // espaçador: ajusta para caber os 3 botões do menu
   if (spacer) {
-    let basis = 160; // desktop
-    if (window.innerWidth <= 420) basis = 120;
-    if (window.innerWidth <= 360) basis = 100;
-    if (window.innerWidth <= 330) basis = 76;
+    let basis = 160;                 // desktop
+    if (window.innerWidth <= 480) basis = 120;
+    if (window.innerWidth <= 380) basis = 96;
+    if (window.innerWidth <= 340) basis = 84;
     spacer.style.flex = `0 0 ${basis}px`;
+    spacer.style.height = "1px";
   }
 
-  // impede que os itens cresçam
+  // impede que os itens encolham/estiquem
   [clearBtn, els.viewBtn, hubWrap, spacer].forEach(el => {
-    if (el) el.style.flexShrink = "0";
+    if (el) { el.style.flexShrink = "0"; el.style.flexGrow = "0"; }
   });
 
   // ordem: limpar | contador | espaçador | hub
@@ -952,6 +955,7 @@ function reorderBaseControlsAndCenter() {
   if (spacer) parent.appendChild(spacer);
   if (hubWrap) parent.appendChild(hubWrap);
 }
+
 
 
 /* ---------- init ---------- */
