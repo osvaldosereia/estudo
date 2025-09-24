@@ -944,7 +944,7 @@ function ensureBaseHub() {
 }
 
 
-// reordena e mantém tudo em UMA LINHA, centralizado
+// reordena mantendo o grupo centralizado e PERMITINDO quebra no mobile
 function reorderBaseControlsAndCenter() {
   const parent = els.viewBtn?.parentElement;
   if (!parent || !els.viewBtn) return;
@@ -953,21 +953,21 @@ function reorderBaseControlsAndCenter() {
   const hubWrap  = document.getElementById("baseHubWrap");
   const spacer   = document.getElementById("baseHubSpacer");
 
-  // --- layout do grupo (central, sem ocupar a tela toda) ---
+  // --- layout do contêiner ---
   parent.style.display = "flex";
-  parent.style.flexWrap = "nowrap";
   parent.style.alignItems = "center";
+  parent.style.justifyContent = "center";
   parent.style.gap = (window.innerWidth <= 420 ? "6px" : "8px");
 
-  // CENTRALIZA o grupo e limita a largura
-  parent.style.width = "auto";                // <- remove 100%
-  parent.style.maxWidth = "min(520px, 96vw)"; // <- largura máx do grupo
-  parent.style.margin = "0 auto";             // <- centraliza na barra
-  parent.style.justifyContent = "center";
+  // permita quebra apenas no mobile (desktop segue sem quebrar)
+  parent.style.flexWrap = (window.innerWidth <= 480 ? "wrap" : "nowrap");
 
-  
+  // NÃO limite largura do .bar-inner (deixa o CSS mandar)
+  parent.style.width = "";
+  parent.style.maxWidth = "";
+  parent.style.margin = "";
 
-  // espaçador: ajusta para caber os 3 botões do menu
+  // --- ajuste do espaçador (largura reservada pro HUB) ---
   if (spacer) {
     let basis = 160;                 // desktop
     if (window.innerWidth <= 480) basis = 120;
@@ -977,17 +977,18 @@ function reorderBaseControlsAndCenter() {
     spacer.style.height = "1px";
   }
 
-  // impede que os itens encolham/estiquem
+  // não deixa os itens esticarem/encolherem
   [clearBtn, els.viewBtn, hubWrap, spacer].forEach(el => {
     if (el) { el.style.flexShrink = "0"; el.style.flexGrow = "0"; }
   });
 
-  // ordem: limpar | contador | espaçador | hub
+  // ordem: lixeira | contador | espaçador | hub
   if (clearBtn) parent.appendChild(clearBtn);
   parent.appendChild(els.viewBtn);
   if (spacer) parent.appendChild(spacer);
   if (hubWrap) parent.appendChild(hubWrap);
 }
+
 
 
 
