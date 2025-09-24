@@ -725,24 +725,24 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
 
   const hubBtn1 = document.createElement("button");
   hubBtn1.className = "round-btn";
-  hubBtn1.setAttribute("aria-label", "Ação 1");
-  hubBtn1.innerHTML = '<img src="icons/bolt.png" alt="">';
+  hubBtn1.setAttribute("aria-label", "perplexity");
+  hubBtn1.innerHTML = '<img src="icons/ai-perplexity.png" alt="">';
   hubBtn1.addEventListener("click", () => {
     // TODO: defina a ação 1
   });
 
   const hubBtn2 = document.createElement("button");
   hubBtn2.className = "round-btn";
-  hubBtn2.setAttribute("aria-label", "Ação 2");
-  hubBtn2.innerHTML = '<img src="icons/book.png" alt="">';
+  hubBtn2.setAttribute("aria-label", "copilot");
+  hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
   hubBtn2.addEventListener("click", () => {
     // TODO: defina a ação 2
   });
 
   const hubBtn3 = document.createElement("button");
   hubBtn3.className = "round-btn";
-  hubBtn3.setAttribute("aria-label", "Ação 3");
-  hubBtn3.innerHTML = '<img src="icons/share.png" alt="">';
+  hubBtn3.setAttribute("aria-label", "gemini");
+  hubBtn3.innerHTML = '<img src="icons/ai-gemini.png" alt="">';
   hubBtn3.addEventListener("click", () => {
     // TODO: defina a ação 3
   });
@@ -753,7 +753,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   const hubMain = document.createElement("button");
   hubMain.className = "round-btn hub-main";
   hubMain.setAttribute("aria-label", "Abrir atalhos");
-  hubMain.innerHTML = '<img src="icons/hub.png" alt="">';
+  hubMain.innerHTML = '<img src="icons/ai-hub.png" alt="">';
   hubMain.addEventListener("click", (e) => {
     e.stopPropagation();
     hubMenu.classList.toggle("open");
