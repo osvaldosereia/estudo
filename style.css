@@ -482,8 +482,20 @@ mark.hl{
 }
 /* ===== MOBILE FIX: barra inferior (<=480px) ===== */
 @media (max-width: 480px) {
-  /* esconde o título no mobile */
-  .bottombar .bar-inner .bar-title { display: none; }
+
+  * mostrar o título também no mobile, antes dos botões */
+.bottombar .bar-inner .bar-title {
+  display: block;
+  order: -1;          /* vem antes dos botões */
+  flex: 0 0 100%;     /* ocupa a linha inteira */
+  text-align: center;
+  font-size: .9rem;
+  line-height: 1.25;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 6px 0 2px;
+}
+
 
   /* respiro lateral + safe areas */
   .bottombar { 
