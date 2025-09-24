@@ -486,17 +486,16 @@ mark.hl{
   .bottombar .bar-inner .bar-title { display: none; }
 
   /* respiro lateral + safe areas */
-  .bottombar { 
-    padding-bottom: max(8px, env(safe-area-inset-bottom)); 
+  .bottombar {
+    padding-top: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   .bottombar .bar-inner {
     justify-content: center;
     flex-wrap: nowrap;         /* não quebra linha */
     overflow: hidden;          /* sem scroll lateral */
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left:  8px;         /* ← margem lateral otimizada */
+    padding-left: 8px;         /* ← margem lateral otimizada */
     padding-right: 8px;
     gap: 10px;
   }
@@ -504,47 +503,90 @@ mark.hl{
   .bottombar .bar-group { gap: 8px; }
 
   /* itens não crescem/encolhem */
-  #clearSelectedBtn, #viewBtn, #baseHubWrap, #baseHubSpacer {
+  #clearSelectedBtn,
+  #viewBtn,
+  #baseHubWrap,
+  #baseHubSpacer {
     flex: 0 0 auto;
   }
 
   /* contador enxuto */
-  #viewBtn { min-width: 56px; height: 34px; padding: 0 12px; }
+  #viewBtn {
+    min-width: 56px;
+    height: 34px;
+    padding: 0 12px;
+  }
 
   /* botões levemente menores */
-  .btn { height: 32px; padding: 0 12px; }
-  .btn.icon-only { padding: 0 10px; }
+  .btn {
+    height: 32px;
+    padding: 0 12px;
+  }
+
+  .btn.icon-only {
+    padding: 0 10px;
+  }
+
+  .round-btn {
+    width: 34px;
+    height: 34px;
+  }
 
   /* reserva para abrir os 3 ícones do HUB à esquerda */
-  #baseHubSpacer { flex-basis: 72px !important; } /* ← menor espaço lateral */
+  #baseHubSpacer {
+    flex-basis: 72px !important;
+  }
 }
 
 /* ===== APARELHOS BEM ESTREITOS (<=360px) ===== */
 @media (max-width: 360px) {
   .bottombar .bar-inner {
-    padding-left:  6px;
+    padding-left: 6px;
     padding-right: 6px;
   }
 
-  .hub-menu { gap: 6px; }
-  #baseHubSpacer { flex-basis: 64px !important; }
+  .hub-menu {
+    gap: 6px;
+  }
 
-  .btn, #viewBtn { height: 32px; }
-  .btn.icon-only { padding: 0 8px; }
+  #baseHubSpacer {
+    flex-basis: 64px !important;
+  }
+
+  .btn,
+  #viewBtn {
+    height: 32px;
+  }
+
+  .btn.icon-only {
+    padding: 0 8px;
+  }
+
+  .round-btn {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* ===== MOBILE LARGO (<=820px) ===== */
 @media (max-width: 820px) {
   .bottombar .bar-inner {
-    padding-left:  12px;
+    padding-left: 12px;
     padding-right: 12px;
   }
 
-  #clearSelectedBtn, #viewBtn, #baseHubWrap, #baseHubSpacer {
+  #clearSelectedBtn,
+  #viewBtn,
+  #baseHubWrap,
+  #baseHubSpacer {
     flex: 0 0 auto;
   }
 
-  .hub-menu { gap: 4px; }
-  #baseHubSpacer { flex-basis: 72px !important; }
-}
+  .hub-menu {
+    gap: 4px;
+  }
 
+  #baseHubSpacer {
+    flex-basis: 72px !important;
+  }
+}
