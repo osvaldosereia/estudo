@@ -482,18 +482,25 @@ mark.hl{
 }
 /* ===== MOBILE FIX: barra inferior (<=480px) ===== */
 @media (max-width: 480px) {
-  /* some o título "Adicione temas…" no mobile */
+  /* esconde o título no mobile */
   .bottombar .bar-inner .bar-title { display: none; }
 
-  /* grupo no centro, em UMA linha */
+  /* respiro lateral + safe areas */
+  .bottombar { 
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); 
+  }
   .bottombar .bar-inner {
     justify-content: center;
-    padding: 10px 6px;
-    flex-wrap: nowrap;          /* impede quebrar */
-    overflow: hidden;           /* evita scroll lateral */
+    flex-wrap: nowrap;         /* não quebra linha */
+    overflow: hidden;          /* sem scroll lateral */
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left:  max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    gap: 10px;
   }
 
-  .bottombar .bar-group { gap: 6px; }
+  .bottombar .bar-group { gap: 8px; }
 
   /* itens não crescem/encolhem */
   #clearSelectedBtn, #viewBtn, #baseHubWrap, #baseHubSpacer {
@@ -501,21 +508,22 @@ mark.hl{
   }
 
   /* contador enxuto */
-  #viewBtn { min-width: 52px; padding: 0 10px; height: 34px; }
+  #viewBtn { min-width: 56px; height: 34px; padding: 0 12px; }
 
   /* botões levemente menores */
-  .btn { height: 34px; padding: 0 10px; }
-  .btn.icon-only { padding: 0 8px; }
+  .btn { height: 34px; padding: 0 12px; }
+  .btn.icon-only { padding: 0 10px; }
 
   /* reserva para abrir os 3 ícones do HUB à esquerda */
   #baseHubSpacer { flex-basis: 96px !important; }
-
-  /* margem lateral menor */
-  .bar-inner { padding-left: 6px; padding-right: 6px; }
 }
 
 /* aparelhos bem estreitos */
 @media (max-width: 360px) {
+  .bottombar .bar-inner {
+    padding-left:  max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
   #baseHubSpacer { flex-basis: 84px !important; }
   .btn, #viewBtn { height: 32px; }
 }
