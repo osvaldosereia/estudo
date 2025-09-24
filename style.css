@@ -480,3 +480,42 @@ mark.hl{
   display: block;
   object-fit: contain;
 }
+/* ===== MOBILE FIX: barra inferior (<=480px) ===== */
+@media (max-width: 480px) {
+  /* some o título "Adicione temas…" no mobile */
+  .bottombar .bar-inner .bar-title { display: none; }
+
+  /* grupo no centro, em UMA linha */
+  .bottombar .bar-inner {
+    justify-content: center;
+    padding: 10px 6px;
+    flex-wrap: nowrap;          /* impede quebrar */
+    overflow: hidden;           /* evita scroll lateral */
+  }
+
+  .bottombar .bar-group { gap: 6px; }
+
+  /* itens não crescem/encolhem */
+  #clearSelectedBtn, #viewBtn, #baseHubWrap, #baseHubSpacer {
+    flex: 0 0 auto;
+  }
+
+  /* contador enxuto */
+  #viewBtn { min-width: 52px; padding: 0 10px; height: 34px; }
+
+  /* botões levemente menores */
+  .btn { height: 34px; padding: 0 10px; }
+  .btn.icon-only { padding: 0 8px; }
+
+  /* reserva para abrir os 3 ícones do HUB à esquerda */
+  #baseHubSpacer { flex-basis: 96px !important; }
+
+  /* margem lateral menor */
+  .bar-inner { padding-left: 6px; padding-right: 6px; }
+}
+
+/* aparelhos bem estreitos */
+@media (max-width: 360px) {
+  #baseHubSpacer { flex-basis: 84px !important; }
+  .btn, #viewBtn { height: 32px; }
+}
