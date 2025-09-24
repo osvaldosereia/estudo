@@ -511,7 +511,7 @@ mark.hl{
   #viewBtn { min-width: 56px; height: 34px; padding: 0 12px; }
 
   /* botões levemente menores */
-  .btn { height: 34px; padding: 0 12px; }
+  .btn { height: 32px; padding: 0 12px; }
   .btn.icon-only { padding: 0 10px; }
 
   /* reserva para abrir os 3 ícones do HUB à esquerda */
