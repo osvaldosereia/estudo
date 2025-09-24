@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09 • variante FAB + splash)
+   direito.love — app.js (2025-09 • minimal + UX polido)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -13,6 +13,7 @@ if ("serviceWorker" in navigator) {
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const now = () => Date.now();
 
 function debounce(fn, ms=150){
   let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
@@ -22,6 +23,7 @@ function debounce(fn, ms=150){
 const els = {
   app: $("#app"),
   stack: $("#resultsStack"),
+  live: $("#live"),
 
   // Splash
   splash: $("#splash"),
@@ -42,21 +44,30 @@ const els = {
 /* ---------- estado ---------- */
 let selectedCard = null;
 let selectPausedUntil = 0; // focus-lock
-const now = () => Date.now();
+let io, observed = [];
 
-/* ---------- inicialização ---------- */
-init();
+/* ---------- init ---------- */
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 function init(){
   setupSplash();
   setupFabCluster();
-  setupResultsDemoIfEmpty(); // opcional: para visualizar
+  setupKeyboardShortcuts();
+  // demo: se não é primeira visita e não há resultados, mostra uma busca inicial
+  if(localStorage.getItem("dl_firstVisitDone") === "1" && !els.stack.children.length){
+    runSearch("art. 129 CP");
+    pulseSearchOnce();
+  }
 }
 
 /* ---------- Splash ---------- */
 function setupSplash(){
-  const done = localStorage.getItem("dl_firstVisitDone") === "1";
-  setSplashVisible(!done);
+  const first = localStorage.getItem("dl_firstVisitDone") !== "1";
+  setSplashVisible(first);
   els.splashForm?.addEventListener("submit", async (e)=>{
     e.preventDefault();
     const q = (els.splashInput?.value || "").trim();
@@ -64,6 +75,7 @@ function setupSplash(){
     await runSearch(q);
     localStorage.setItem("dl_firstVisitDone","1");
     setSplashVisible(false);
+    pulseSearchOnce(); // mostra a lupa com pulse sutil após entrar
   });
 }
 
@@ -72,9 +84,9 @@ function setSplashVisible(v){
   els.splash.setAttribute("aria-hidden", v ? "false":"true");
 }
 
-/* ---------- FAB: logo / action / search retrátil ---------- */
+/* ---------- FABs ---------- */
 function setupFabCluster(){
-  // Logo → scroll to top
+  // Logo → topo
   els.fabLogo?.addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
 
   // Lupa retrátil
@@ -85,106 +97,151 @@ function setupFabCluster(){
   els.fabSearchForm?.addEventListener("submit", async (e)=>{
     e.preventDefault();
     const q = (els.fabSearchInput?.value || "").trim();
-    if(!q) return setSearchOpen(false);
+    if(!q) { setSearchOpen(false); return; }
     await runSearch(q);
     setSearchOpen(false);
     els.fabSearchInput.value = "";
   });
 
-  // Action → aplicar no item selecionado
+  // Ação principal
   els.fabAction?.addEventListener("click", ()=>{
     if(!selectedCard){ blinkCluster(); return; }
     applyPrimaryAction(selectedCard);
-    // foco do usuário → pausa auto-seleção por 2 segundos
-    selectPausedUntil = now()+2000;
+    selectPausedUntil = now()+2000; // pausa auto-seleção
   });
 }
 
 function setSearchOpen(open){
   els.fabSearchWrap.setAttribute("aria-expanded", open ? "true":"false");
   if(open){
-    // empurra cluster pra cima se teclado mobile abrir (efeito natural)
     setTimeout(()=> els.fabSearchInput?.focus(), 10);
   }
 }
 
+function pulseSearchOnce(){
+  // um "ping" sutil na lupa para descoberta — só 1x
+  els.fabSearch?.classList.add("pulse-once");
+  els.fabSearch?.addEventListener("animationend", ()=> els.fabSearch?.classList.remove("pulse-once"), {once:true});
+}
+
 function blinkCluster(){
+  // feedback curto se clicar sem card selecionado
   els.fabCluster?.animate([{transform:"translateY(0)"},{transform:"translateY(-3px)"},{transform:"translateY(0)"}], {duration:180});
 }
 
-/* ---------- Busca (stub: adapte à sua lógica) ---------- */
+/* ---------- Busca (stub com estados) ---------- */
 async function runSearch(q){
-  // Aqui você pluga sua lógica real de busca.
-  // Mantive um demo simples para testar a UI.
-  // TODO: substituir por fetch/parse do seu mecanismo atual.
+  // Estados: skeleton → resultados/empty → fim
+  renderSkeleton();
 
-  // Limpa
+  // Simula latência leve (trocar depois pela sua busca real)
+  await sleep(400);
+
+  // lógica dummy: se consulta muito curta, retorna vazio
+  const hasResults = q.length >= 2;
   els.stack.innerHTML = "";
 
-  // Agrupinho fake
-  const group = elGroup(`Resultados para “${q}”`, 7);
+  if(!hasResults){
+    renderEmptyState(q);
+    return;
+  }
+
+  const count = 7; // simulação
+  const group = elGroup(`Resultados para “${escapeHtml(q)}”`, count);
   els.stack.appendChild(group);
 
-  // Auto-seleção só após render
-  await sleep(50);
+  // marcador de fim
+  renderEndState();
+
+  // Auto-seleção após render
+  await sleep(30);
   setupAutoSelection();
   updateFabActionLabel();
 }
 
-/* ---------- Grupo/Itens (UI mínima para demo) ---------- */
+/* ---------- UI: Skeleton / Empty / End ---------- */
+function renderSkeleton(){
+  els.stack.innerHTML = `
+    <div class="skel" aria-hidden="true">
+      <div class="skel-card">
+        <div class="skel-line w60"></div>
+        <div class="skel-line w80"></div>
+        <div class="skel-line w40"></div>
+      </div>
+      <div class="skel-card">
+        <div class="skel-line w60"></div>
+        <div class="skel-line w80"></div>
+        <div class="skel-line w40"></div>
+      </div>
+    </div>
+  `;
+}
+function renderEmptyState(q){
+  els.stack.innerHTML = `
+    <div class="group" role="region" aria-label="Sem resultados">
+      <div class="state-empty">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
+        Nenhum resultado para <strong>${escapeHtml(q || "")}</strong>.<br/>
+        Tente: <em>art. 129</em> ou <em>insignificância</em>.
+      </div>
+    </div>
+  `;
+}
+function renderEndState(){
+  const end = document.createElement("div");
+  end.className = "state-end";
+  end.textContent = "— fim —";
+  els.stack.appendChild(end);
+}
+
+/* ---------- UI: Grupo/Itens (flat, sem botões nos cards) ---------- */
+let groupCounter = 0;
 function elGroup(title, count){
+  const gid = `group_${++groupCounter}`;
+
   const g = document.createElement("section");
   g.className = "group";
   g.setAttribute("aria-expanded","false");
+  g.setAttribute("aria-labelledby", `${gid}_h`);
 
   const h = document.createElement("button");
   h.className = "group-h";
   h.type = "button";
+  h.id = `${gid}_h`;
+  h.setAttribute("aria-controls", `${gid}_body`);
+  h.setAttribute("aria-expanded", "false");
   h.innerHTML = `
     <span class="group-title">${title}</span>
     <span class="group-meta">${count} itens</span>
-    <svg class="group-chevron" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 9l6 6 6-6"></path>
-    </svg>
+    <span class="chev" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M6 9l6 6 6-6"/></svg>
+    </span>
   `;
   h.addEventListener("click", ()=>{
     const open = g.getAttribute("aria-expanded")==="true";
     g.setAttribute("aria-expanded", open ? "false":"true");
-    // reprocessa seleção ao abrir/fechar
+    h.setAttribute("aria-expanded", open ? "false":"true");
     reobserveCards();
   });
 
   const body = document.createElement("div");
   body.className = "group-body";
+  body.id = `${gid}_body`;
 
   for(let i=1;i<=count;i++){
     const c = document.createElement("article");
     c.className = "card";
     c.tabIndex = 0;
     c.innerHTML = `
-      <div>
-        <div class="card-title">
-          <span class="pill">Penal</span>
-          <strong>Título do item ${i}</strong>
-        </div>
-        <p class="card-text">Trecho inicial do conteúdo ${i}…</p>
+      <div class="card-title">
+        <span class="pill">Penal</span>
+        <strong>Título do item ${i}</strong>
       </div>
-      <div class="card-actions">
-        <button class="btn btn-ghost" data-act="view">Ver Texto</button>
-        <button class="btn btn-ghost" data-act="code">Ver Código</button>
-        <button class="btn btn-ghost" data-act="planalto">Planalto</button>
-      </div>
+      <p class="card-text">Trecho inicial do conteúdo ${i}. Texto curto de prévia para leitura rápida…</p>
     `;
-    c.addEventListener("click", (ev)=>{
-      const actBtn = ev.target.closest("[data-act]");
-      if(actBtn){
-        // ações de card → lock seleção um pouco
-        selectPausedUntil = now()+2000;
-        handleInlineAction(c, actBtn.getAttribute("data-act"));
-        ev.stopPropagation();
-      }
-    });
-    c.addEventListener("focusin", ()=> { selectPausedUntil = now()+1200; setSelectedCard(c); });
+    // Clique/foco no card apenas controla seleção (sem botões inline)
+    c.addEventListener("click", ()=> { setSelectedCard(c); selectPausedUntil = now()+1200; });
+    c.addEventListener("focusin", ()=> { setSelectedCard(c); selectPausedUntil = now()+1200; });
     body.appendChild(c);
   }
 
@@ -193,78 +250,108 @@ function elGroup(title, count){
 }
 
 /* ---------- Ações ---------- */
-function handleInlineAction(card, act){
-  switch(act){
-    case "view": openReader(card, {mode:"text"}); break;
-    case "code": openReader(card, {mode:"code"}); break;
-    case "planalto": openPlanalto(card); break;
-  }
-}
 function applyPrimaryAction(card){
-  // Ação padrão: "Ver Texto"
-  openReader(card, {mode:"text"});
-}
-function openReader(card, {mode}={}){
-  const title = card.querySelector("strong")?.textContent || "Item";
-  const msg = `Abrindo ${mode==="code"?"o CÓDIGO":"o TEXTO"} de: ${title}`;
-  toast(msg);
-}
-function openPlanalto(card){
-  toast("Abrindo no Planalto (placeholder)"); // plugue seu link real aqui
+  // Ação padrão: abrir texto (plugue seu modal real aqui)
+  const title = cardTitle(card);
+  toast(`Abrindo texto de: ${title}`);
 }
 
-/* ---------- Auto-seleção por IntersectionObserver ---------- */
-let observer, observed = [];
+/* ---------- Auto-seleção (IntersectionObserver) ---------- */
 function setupAutoSelection(){
   cleanupObserver();
-  observer = new IntersectionObserver(onIntersect, {
-    root:null, rootMargin:"0px", threshold:[0, .25, .5, .6, .75, 1]
+  io = new IntersectionObserver(onIntersect, {
+    root:null, rootMargin:"0px", threshold:[0,.25,.5,.6,.75,1]
   });
   reobserveCards();
-  // evita selecionar “o primeiro lá no topo” sem interação: só após pequeno scroll
-  window.addEventListener("scroll", debounce(updateFabActionLabel, 150), {passive:true});
+  window.addEventListener("scroll", debounce(updateFabActionLabel, 120), {passive:true});
 }
-
+function cleanupObserver(){
+  if(io && observed.length){ observed.forEach(el=> io.unobserve(el)); }
+  observed = [];
+}
 function reobserveCards(){
-  if(!observer) return;
-  observed.forEach(el=> observer.unobserve(el));
+  if(!io) return;
+  observed.forEach(el=> io.unobserve(el));
   observed = $$(".group[aria-expanded='true'] .card");
-  observed.forEach(el=> observer.observe(el));
-  // limpa seleção se o card sumiu
+  observed.forEach(el=> io.observe(el));
   if(selectedCard && !observed.includes(selectedCard)){
     setSelectedCard(null);
   }
 }
-
 const onIntersect = debounce((entries)=>{
   if(now() < selectPausedUntil) return; // focus-lock
-  // filtra visíveis com ratio >= .6
+  // pega os que têm pelo menos 60% visível
   const visibles = entries
     .filter(en => en.isIntersecting && en.intersectionRatio >= .6)
     .map(en => en.target);
 
   if(!visibles.length) return;
 
-  // pega o que está mais embaixo (último na tela)
+  // seleciona o que está mais embaixo (último aparecendo)
   const byBottom = visibles
     .map(el => ({el, rect: el.getBoundingClientRect()}))
     .sort((a,b)=> (a.rect.bottom - b.rect.bottom));
 
   const last = byBottom[byBottom.length-1]?.el;
   if(last) setSelectedCard(last);
-}, 150);
+}, 140);
 
+/* ---------- Seleção, rótulo e Live region ---------- */
 function setSelectedCard(card){
   if(card === selectedCard) return;
   if(selectedCard) selectedCard.classList.remove("is-selected");
-  selectedCard = card;
+  selectedCard = card || null;
   if(selectedCard) selectedCard.classList.add("is-selected");
   updateFabActionLabel();
 }
-
 function updateFabActionLabel(){
-  const title = selectedCard?.querySelector("strong")?.textContent || "";
-  els.fabActionLabel.textContent = title ? `Ver Texto — ${title}` : "Ver Texto";
+  const title = cardTitle(selectedCard);
+  const label = title ? `Ver texto — ${title}` : `Selecione um item`;
+  els.fabActionLabel.textContent = label;
+  // leitores de tela:
+  if(els.live) els.live.textContent = label;
+}
+function cardTitle(card){
+  return card?.querySelector("strong")?.textContent?.trim() || "";
+}
+
+/* ---------- Teclado ---------- */
+function setupKeyboardShortcuts(){
+  document.addEventListener("keydown", (ev)=>{
+    // "/" abre busca
+    if(ev.key === "/" && !isTextInput(ev.target)){
+      ev.preventDefault();
+      setSearchOpen(true);
+      return;
+    }
+    // Esc fecha busca
+    if(ev.key === "Escape"){
+      if(els.fabSearchWrap.getAttribute("aria-expanded")==="true"){
+        setSearchOpen(false);
+      }
+      return;
+    }
+    // Navegação por setas entre cards visíveis
+    if(ev.key === "ArrowDown" || ev.key === "ArrowUp"){
+      const visible = $$(".group[aria-expanded='true'] .card");
+      if(!visible.length) return;
+      let idx = selectedCard ? visible.indexOf(selectedCard) : -1;
+      if(ev.key === "ArrowDown") idx = Math.min(idx+1, visible.length-1);
+      if(ev.key === "ArrowUp") idx = Math.max(idx-1, 0);
+      setSelectedCard(visible[idx]);
+      visible[idx].focus();
+      ev.preventDefault();
+    }
+    // Enter/Space ativa ação se estiver num card
+    if((ev.key === "Enter" || ev.key === " ") && selectedCard && !isTextInput(ev.target)){
+      ev.preventDefault();
+      applyPrimaryAction(selectedCard);
+      selectPausedUntil = now()+2000;
+    }
+  });
+}
+function isTextInput(el){
+  return ["INPUT","TEXTAREA"].includes(el?.tagName) || el?.isContentEditable;
 }
 
 /* ---------- Toast simples ---------- */
@@ -278,22 +365,16 @@ function toast(text){
     Object.assign(el.style,{
       position:"fixed",left:"50%",bottom:"calc(var(--safe) + 88px)",transform:"translateX(-50%)",
       background:"#111",color:"#fff",padding:"10px 14px",borderRadius:"10px",
-      boxShadow:"0 8px 20px rgba(0,0,0,.2)",zIndex:9999,fontSize:"14px",maxWidth:"80vw",textAlign:"center"
+      zIndex:9999,fontSize:"14px",maxWidth:"80vw",textAlign:"center",opacity:"0",transition:"opacity .15s ease"
     });
     document.body.appendChild(el);
   }
   el.textContent = text;
   el.style.opacity = "1";
-  toastT = setTimeout(()=> el.style.opacity = "0", 1600);
+  toastT = setTimeout(()=> el.style.opacity = "0", 1400);
 }
 
-/* ---------- Demo inicial se quiser ver sem back ---------- */
-function setupResultsDemoIfEmpty(){
-  if(els.stack.children.length) return;
-  // mostra splash na primeira visita; se não for primeira, mostra uma pesquisa demo
-  if(localStorage.getItem("dl_firstVisitDone") === "1"){
-    runSearch("art. 129 CP");
-  }else{
-    setSplashVisible(true);
-  }
+/* ---------- Utils ---------- */
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
