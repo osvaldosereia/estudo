@@ -1,5 +1,5 @@
 /* ==========================
-   direito.love — app.js (2025-09 • streamlined)
+   direito.love — app.js (2025-09 • variante FAB + splash)
    ========================== */
 
 /* Service Worker (opcional) */
@@ -11,576 +11,289 @@ if ("serviceWorker" in navigator) {
 
 /* ---------- helpers ---------- */
 const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+function debounce(fn, ms=150){
+  let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+}
+
+/* ---------- elementos ---------- */
 const els = {
-  /* topo/busca */
-  form: $("#searchForm"),
-  q: $("#searchInput"),
-  spinner: $("#searchSpinner"),
+  app: $("#app"),
   stack: $("#resultsStack"),
-  brand: $("#brandBtn"),
-  codeSelect: $("#codeSelect"),
 
-  /* leitor */
-  readerModal: $("#readerModal"),
-  readerBody: $("#readerBody"),
-  readerTitle: $("#readerTitle"),
+  // Splash
+  splash: $("#splash"),
+  splashForm: $("#splashForm"),
+  splashInput: $("#splashInput"),
 
-  /* toasts */
-  toasts: $("#toasts"),
+  // FABs
+  fabCluster: $(".fab-cluster"),
+  fabLogo: $("#fabLogo"),
+  fabAction: $("#fabAction"),
+  fabActionLabel: $("#fabActionLabel"),
+  fabSearch: $("#fabSearch"),
+  fabSearchWrap: $(".fab-search-wrap"),
+  fabSearchForm: $("#fabSearchForm"),
+  fabSearchInput: $("#fabSearchInput"),
 };
 
 /* ---------- estado ---------- */
-const CARD_CHAR_LIMIT = 250;
+let selectedCard = null;
+let selectPausedUntil = 0; // focus-lock
+const now = () => Date.now();
 
-const state = {
-  cacheTxt: new Map(),     // url -> string
-  cacheParsed: new Map(),  // url -> items[]
-  urlToLabel: new Map(),
-};
+/* ---------- inicialização ---------- */
+init();
 
-/* ---------- util ---------- */
-function toast(msg) {
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
-  els.toasts.appendChild(el);
-  setTimeout(() => el.remove(), 2400);
-}
-function norm(s) {
-  return (s || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
-function escHTML(s) {
-  return (s || "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[m]));
+function init(){
+  setupSplash();
+  setupFabCluster();
+  setupResultsDemoIfEmpty(); // opcional: para visualizar
 }
 
-/* ============================================================
-   BUSCA — abreviações & regras
-   ============================================================ */
-
-function stripThousandDots(s) {
-  return String(s).replace(/(?<=\d)\.(?=\d)/g, "");
-}
-
-/* ---------- CÓDIGOS: abreviações/sinônimos → rótulo do <select> ---------- */
-const CODE_ABBREVS = new Map(Object.entries({
-  "cf": "CF88","cf88": "CF88","cf/88": "CF88","crfb": "CF88","cr/88": "CF88",
-  "constituicao federal": "CF88","constituicao de 1988": "CF88",
-  "cc": "Código Civil","codigo civil": "Código Civil","cod civil": "Código Civil",
-  "cpc": "Processo Civil","codigo de processo civil": "Processo Civil","cod proc civil": "Processo Civil","proc civil": "Processo Civil",
-  "cp": "Código Penal","codigo penal": "Código Penal","cod penal": "Código Penal",
-  "cpp": "Processo Penal","codigo de processo penal": "Processo Penal","cod proc penal": "Processo Penal","proc penal": "Processo Penal",
-  "cdc": "CDC","codigo de defesa do consumidor": "CDC","defesa do consumidor": "CDC",
-  "ce": "Código Eleitoral","codigo eleitoral": "Código Eleitoral","cod eleitoral": "Código Eleitoral",
-  "clt": "CLT","consolidacao das leis do trabalho": "CLT",
-  "ctn": "Cód. Tributário Nacional","codigo tributario nacional": "Cód. Tributário Nacional","cod trib nacional": "Cód. Tributário Nacional",
-  "ctb": "Cód. Trânsito Brasileiro","codigo de transito brasileiro": "Cód. Trânsito Brasileiro","cod transito brasileiro": "Cód. Trânsito Brasileiro",
-  "codigo florestal": "Código Florestal","cod florestal": "Código Florestal",
-  "cpm": "Cód. Penal Militar","codigo penal militar": "Cód. Penal Militar","cod penal militar": "Cód. Penal Militar",
-  "cppm": "Cód. Proc. Penal Militar","codigo de processo penal militar": "Cód. Proc. Penal Militar","cod proc penal militar": "Cód. Proc. Penal Militar",
-  "eca": "ECA","estatuto da crianca e do adolescente": "ECA",
-  "estatuto da oab": "Estatuto da OAB","oab": "Estatuto da OAB",
-  "lei maria da penha": "Lei Maria da Penha","lmp": "Lei Maria da Penha",
-  "lei da improbidade administrativa": "Lei da Improbidade Administrativa","lia": "Lei da Improbidade Administrativa","lei de improbidade": "Lei da Improbidade Administrativa",
-  "lei de execucao penal": "Lei de Execução Penal","lep": "Lei de Execução Penal",
-  "lei de drogas": "Lei de Drogas",
-  "mandado de seguranca": "Mandado de Segurança","lei do mandado de seguranca": "Mandado de Segurança",
-}));
-
-function detectCodeFromQuery(rawQuery) {
-  const q = ` ${norm(rawQuery)} `;
-  for (const [abbr, label] of CODE_ABBREVS.entries()) {
-    const needle = ` ${abbr} `;
-    if (q.includes(needle) || q.trim() === abbr) {
-      const keyWords = new Set(abbr.split(/\s+/).filter(Boolean));
-      return { label, keyWords };
-    }
-  }
-  return null;
-}
-
-/* tokens */
-function tokenize(query) {
-  const q = norm(query);
-  const raw = q.split(/\s+/).filter(Boolean);
-  const tokens = [];
-  for (const w of raw) {
-    if (/^\d{1,4}$/.test(w)) tokens.push(w);
-    else if (/^\p{L}{3,}$/u.test(w)) tokens.push(w);
-  }
-  return Array.from(new Set(tokens));
-}
-function splitTokens(tokens) {
-  const wordTokens = [], numTokens  = [];
-  for (const t of tokens) (/^\d{1,4}$/.test(t) ? numTokens : wordTokens).push(t);
-  return { wordTokens, numTokens };
-}
-
-/* números exatos + janelas jurídicas */
-const KW_RX = /\b(art\.?|artigo|s[uú]mula)\b/iu;
-const KW_ART_RX = /^\s*(art\.?|artigo)\b/i;
-const KW_SUM_RX = /^\s*s[uú]mula\b/i;
-
-function hasExactNumber(bag, n) {
-  const bagNum = stripThousandDots(bag);
-  const rx = new RegExp(`(?:^|\\D)${n}(?:\\D|$)`, "g");
-  return rx.test(bagNum);
-}
-function numberRespectsWindows(text, n, queryMode) {
-  const raw = String(text);
-  const nearRx = new RegExp(String.raw`\b(art\.?|artigo|s[uú]mula)\b[^0-9a-zA-Z]{0,12}(${n})(?:\b|[^0-9])`, "i");
-  const nearOK = nearRx.test(stripThousandDots(raw));
-  if (!nearOK) return false;
-
-  if (!queryMode) return true;
-  const lines = raw.split(/\r?\n/);
-  const wantStart = queryMode === "art" ? KW_ART_RX : KW_SUM_RX;
-  for (const line of lines) {
-    if (!wantStart.test(line)) continue;
-    const clean = stripThousandDots(norm(line));
-    const after = clean.replace(queryMode === "art" ? KW_ART_RX : KW_SUM_RX, "").trimStart();
-    const idx = after.indexOf(n);
-    if (idx !== -1 && idx <= 15) return true;
-  }
-  return false;
-}
-
-/* parsing de arquivos */
-function toRawGitHub(url){
-  if(!url) return url;
-  const m = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^]+)$/);
-  if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
-  return url;
-}
-(() => {
-  els.codeSelect?.querySelectorAll("option").forEach((opt) => {
-    let url = (opt.value || "").trim();
-    const label = (opt.textContent || "").trim();
-    if (!url) return;
-    url = encodeURI(toRawGitHub(url));
-    opt.value = url;
-    state.urlToLabel.set(label, url);
+/* ---------- Splash ---------- */
+function setupSplash(){
+  const done = localStorage.getItem("dl_firstVisitDone") === "1";
+  setSplashVisible(!done);
+  els.splashForm?.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const q = (els.splashInput?.value || "").trim();
+    if(!q) return;
+    await runSearch(q);
+    localStorage.setItem("dl_firstVisitDone","1");
+    setSplashVisible(false);
   });
-})();
-
-function sanitize(s) {
-  return String(s)
-    .replace(/\uFEFF/g, "")
-    .replace(/\u00A0/g, " ")
-    .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+\n/g, "\n");
-}
-async function fetchText(url) {
-  url = encodeURI(url);
-  if (state.cacheTxt.has(url)) return state.cacheTxt.get(url);
-  const r = await fetch(url, { cache: "no-cache" });
-  if (!r.ok) throw new Error(`fetch-fail ${r.status} ${url}`);
-  const t = sanitize(await r.text());
-  state.cacheTxt.set(url, t);
-  return t;
-}
-function splitBlocks(txt) {
-  return sanitize(txt)
-    .split(/^\s*-{5,}\s*$/m)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-function parseBlock(block, idx, fileUrl, sourceLabel) {
-  const lines = block.split("\n");
-  const firstIdx = lines.findIndex((l) => l.trim().length > 0);
-  const first = firstIdx >= 0 ? lines[firstIdx].trim() : `Bloco ${idx + 1}`;
-  const rest  = lines.slice(firstIdx + 1).join("\n").trim();
-  const full  = [first, rest].filter(Boolean).join("\n");
-
-  return {
-    id: `${fileUrl}::art-${idx}`,
-    htmlId: `art-${idx}`,
-    source: sourceLabel,
-    title: first,
-    body: rest,
-    text: full,
-    fileUrl,
-  };
-}
-async function parseFile(url, sourceLabel) {
-  if (state.cacheParsed.has(url)) return state.cacheParsed.get(url);
-  const txt = await fetchText(url);
-  const blocks = splitBlocks(txt);
-  const items = blocks.map((b, i) => parseBlock(b, i, url, sourceLabel));
-  state.cacheParsed.set(url, items);
-  return items;
 }
 
-/* ---------- Busca ---------- */
-els.form?.addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
-els.q?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
-
-function detectQueryMode(normQuery) {
-  const trimmed = normQuery.trim();
-  if (/^(art\.?\b|artigo\b)/i.test(trimmed)) return "art";
-  if (/^s[uú]mula\b/i.test(trimmed)) return "sumula";
-  return null;
+function setSplashVisible(v){
+  if(!els.splash) return;
+  els.splash.setAttribute("aria-hidden", v ? "false":"true");
 }
-function getBagWords(bag) { return bag.match(/\b[a-z0-9]{3,}\b/g) || []; }
-function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-function pluralVariants(t) {
-  const v = new Set([t]);
-  if (!t.endsWith("s")) { v.add(t + "s"); v.add(t + "es"); }
-  else { v.add(t.slice(0, -1)); }
-  if (t.endsWith("m")) v.add(t.slice(0, -1) + "ns");
-  if (t.endsWith("ao")) {
-    const base = t.slice(0, -2);
-    v.add(base + "oes"); v.add(base + "aos"); v.add(base + "aes");
+
+/* ---------- FAB: logo / action / search retrátil ---------- */
+function setupFabCluster(){
+  // Logo → scroll to top
+  els.fabLogo?.addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
+
+  // Lupa retrátil
+  els.fabSearch?.addEventListener("click", ()=>{
+    const open = els.fabSearchWrap.getAttribute("aria-expanded") === "true";
+    setSearchOpen(!open);
+  });
+  els.fabSearchForm?.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const q = (els.fabSearchInput?.value || "").trim();
+    if(!q) return setSearchOpen(false);
+    await runSearch(q);
+    setSearchOpen(false);
+    els.fabSearchInput.value = "";
+  });
+
+  // Action → aplicar no item selecionado
+  els.fabAction?.addEventListener("click", ()=>{
+    if(!selectedCard){ blinkCluster(); return; }
+    applyPrimaryAction(selectedCard);
+    // foco do usuário → pausa auto-seleção por 2 segundos
+    selectPausedUntil = now()+2000;
+  });
+}
+
+function setSearchOpen(open){
+  els.fabSearchWrap.setAttribute("aria-expanded", open ? "true":"false");
+  if(open){
+    // empurra cluster pra cima se teclado mobile abrir (efeito natural)
+    setTimeout(()=> els.fabSearchInput?.focus(), 10);
   }
-  return [...v];
-}
-function withinOneSubstitutionStrict(a, b) {
-  if (a.length !== b.length) return false;
-  if (a.length < 4) return a === b;
-  if (a[0] !== b[0] || a[a.length - 1] !== b[b.length - 1]) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i] && ++diff > 1) return false;
-  }
-  return diff === 1;
-}
-function bagHasTokenWord(bag, token) {
-  const words = getBagWords(bag);
-  const vars = pluralVariants(token);
-  const rx = new RegExp(`\\b(${vars.map(escapeRx).join("|")})\\b`, "i");
-  if (rx.test(bag)) return true;
-  for (const w of words) for (const v of vars) if (withinOneSubstitutionStrict(v, w)) return true;
-  return false;
-}
-function hasAllWordTokens(bag, wordTokens) {
-  return wordTokens.every((w) => bagHasTokenWord(bag, w));
-}
-function matchesNumbers(item, numTokens, queryHasLegalKeyword, queryMode) {
-  if (!numTokens.length) return true;
-  const bag = norm(stripThousandDots(item.text));
-  if (!queryHasLegalKeyword) return numTokens.every((n) => hasExactNumber(bag, n));
-  return numTokens.every((n) => numberRespectsWindows(item.text, n, queryMode));
 }
 
-async function doSearch() {
-  const termRaw = (els.q.value || "").trim();
-  if (!termRaw) return;
+function blinkCluster(){
+  els.fabCluster?.animate([{transform:"translateY(0)"},{transform:"translateY(-3px)"},{transform:"translateY(0)"}], {duration:180});
+}
 
-  const term = stripThousandDots(termRaw);
+/* ---------- Busca (stub: adapte à sua lógica) ---------- */
+async function runSearch(q){
+  // Aqui você pluga sua lógica real de busca.
+  // Mantive um demo simples para testar a UI.
+  // TODO: substituir por fetch/parse do seu mecanismo atual.
 
+  // Limpa
   els.stack.innerHTML = "";
-  els.stack.setAttribute("aria-busy", "true");
-  const skel = document.createElement("section");
-  skel.className = "block";
-  const t = document.createElement("div");
-  t.className = "block-title";
-  t.textContent = `Busca: ‘${termRaw}’ (…)`;
-  skel.appendChild(t);
-  for (let i = 0; i < 2; i++) {
-    const s = document.createElement("div"); s.className = "skel block"; skel.appendChild(s);
-  }
-  els.stack.append(skel);
-  els.spinner?.classList.add("show");
 
-  try {
-    const normQuery = norm(term);
-    const queryMode = detectQueryMode(normQuery);
-    const codeInfo = detectCodeFromQuery(normQuery);
+  // Agrupinho fake
+  const group = elGroup(`Resultados para “${q}”`, 7);
+  els.stack.appendChild(group);
 
-    let tokens = tokenize(normQuery);
-    if (!tokens.length) {
-      skel.remove();
-      renderBlock(termRaw, [], []);
-      toast("Use palavras com 3+ letras ou números (1–4 dígitos).");
-      return;
-    }
-    if (codeInfo) tokens = tokens.filter((tk) => !codeInfo.keyWords.has(tk));
-
-    const queryHasLegalKeyword = KW_RX.test(normQuery);
-    const { wordTokens, numTokens } = splitTokens(tokens);
-
-    let allOptions = Array.from(els.codeSelect?.querySelectorAll("option") || [])
-      .map((o) => ({ url: (o.value || "").trim(), label: (o.textContent || "").trim() }))
-      .filter((o) => o.url);
-
-    if (codeInfo) {
-      allOptions = allOptions.filter((o) => o.label === codeInfo.label);
-      if (!allOptions.length) toast(`Não achei o arquivo para “${codeInfo.label}”. Confira o rótulo do catálogo.`);
-    }
-
-    const results = [];
-    for (const { url, label } of allOptions) {
-      try {
-        const items = await parseFile(url, label);
-        for (const it of items) {
-          const bag = norm(stripThousandDots(it.text));
-          const okWords = hasAllWordTokens(bag, wordTokens);
-          const okNums  = matchesNumbers(it, numTokens, queryHasLegalKeyword, queryMode);
-          if (okWords && okNums) results.push(it);
-        }
-      } catch (e) {
-        toast(`⚠️ Não carreguei: ${label}`);
-        console.warn("Falha ao buscar:", e);
-      }
-    }
-
-    skel.remove();
-    renderBlock(termRaw, results, tokens);
-    toast(`${results.length} resultado(s) encontrados.`);
-  } finally {
-    els.stack.setAttribute("aria-busy", "false");
-    els.spinner?.classList.remove("show");
-    els.q?.select();
-  }
+  // Auto-seleção só após render
+  await sleep(50);
+  setupAutoSelection();
+  updateFabActionLabel();
 }
 
-/* ---------- renderização ---------- */
-function highlight(text, tokens) {
-  if (!tokens?.length) return escHTML(text || "");
-  const srcEsc = escHTML(text || "");
-  const srcNFD = srcEsc.normalize("NFD");
-  const toDiacriticRx = (t) =>
-    t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\p{L}/gu, (ch) => ch + "\\p{M}*");
-  const parts = tokens.filter(Boolean).map(toDiacriticRx);
-  if (!parts.length) return srcEsc;
-  const rx = new RegExp(`\\b(${parts.join("|")})\\b`, "giu");
-  const markedNFD = srcNFD.replace(rx, "<mark>$1</mark>");
-  return markedNFD.normalize("NFC");
-}
+/* ---------- Grupo/Itens (UI mínima para demo) ---------- */
+function elGroup(title, count){
+  const g = document.createElement("section");
+  g.className = "group";
+  g.setAttribute("aria-expanded","false");
 
-function truncatedHTML(fullText, tokens) {
-  const base = fullText || "";
-  let out = base.slice(0, CARD_CHAR_LIMIT);
-  const cut = out.lastIndexOf(" ");
-  if (base.length > CARD_CHAR_LIMIT && cut > CARD_CHAR_LIMIT * 0.7) {
-    out = out.slice(0, cut) + "…";
-  } else if (base.length > CARD_CHAR_LIMIT) {
-    out = out.trim() + "…";
-  }
-  return highlight(escHTML(out), tokens);
-}
-
-function renderBlock(term, items, tokens) {
-  const block = document.createElement("section");
-  block.className = "block";
-  const title = document.createElement("div");
-  title.className = "block-title";
-  title.textContent = `Busca: ‘${term}’ (${items.length} resultados)`;
-  block.appendChild(title);
-
-  if (!items.length) {
-    const empty = document.createElement("div");
-    empty.className = "block-empty";
-    empty.textContent = `Nada por aqui com ‘${term}’. Tente outra palavra.`;
-    block.appendChild(empty);
-    els.stack.append(block);
-    return;
-  }
-
-  const groupsMap = new Map();
-  for (const it of items) {
-    const label = it.source || "Outros";
-    if (!groupsMap.has(label)) groupsMap.set(label, []);
-    groupsMap.get(label).push(it);
-  }
-
-  const groups = Array.from(groupsMap.entries()).sort((a,b)=> a[0].localeCompare(b[0]));
-  groups.forEach(([label, arr]) => {
-    const sec = document.createElement("section");
-    sec.className = "group";
-
-    const head = document.createElement("button");
-    head.className = "group-head";
-    head.setAttribute("aria-expanded","false");
-    head.innerHTML = `<span class="group-title">${label}</span><span class="group-count">${arr.length}</span><span class="group-caret" aria-hidden="true">▾</span>`;
-    sec.appendChild(head);
-
-    const body = document.createElement("div");
-    body.className = "group-body";
-    body.hidden = true;
-    arr.forEach((it)=> body.appendChild(renderCard(it, tokens)));
-    sec.appendChild(body);
-
-    head.addEventListener("click", ()=>{
-      const open = head.getAttribute("aria-expanded")==="true";
-      head.setAttribute("aria-expanded", open ? "false" : "true");
-      body.hidden = open;
-    });
-
-    block.appendChild(sec);
+  const h = document.createElement("button");
+  h.className = "group-h";
+  h.type = "button";
+  h.innerHTML = `
+    <span class="group-title">${title}</span>
+    <span class="group-meta">${count} itens</span>
+    <svg class="group-chevron" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 9l6 6 6-6"></path>
+    </svg>
+  `;
+  h.addEventListener("click", ()=>{
+    const open = g.getAttribute("aria-expanded")==="true";
+    g.setAttribute("aria-expanded", open ? "false":"true");
+    // reprocessa seleção ao abrir/fechar
+    reobserveCards();
   });
-
-  els.stack.append(block);
-}
-
-function renderCard(item, tokens = [], ctx = { context: "results" }) {
-  const card = document.createElement("article");
-  card.className = "card";
-  card.dataset.id = item.id;
-  if (item.source) card.setAttribute("data-source", item.source);
-
-  const left = document.createElement("div");
-
-  if (item.source && ctx.context !== "reader") {
-    const pill = document.createElement("a");
-    pill.href = "#";
-    pill.className = "pill";
-    pill.textContent = `📘 ${item.source} (abrir)`;
-    pill.addEventListener("click", (e) => { e.preventDefault(); openReader(item); });
-    left.append(pill);
-  }
 
   const body = document.createElement("div");
-  body.className = "body";
-  if (ctx.context === "reader") {
-    body.innerHTML = highlight(item.text, tokens);
-  } else {
-    body.classList.add("is-collapsed");
-    body.innerHTML = truncatedHTML(item.text, tokens);
-  }
-  body.style.cursor = "pointer";
-  body.addEventListener("click", () => openReader(item));
+  body.className = "group-body";
 
-  const actions = document.createElement("div");
-  actions.className = "actions";
-
-  /* ---- botão de expandir (seta) — à ESQUERDA ---- */
-  const text = (item.text || "").trim();
-  const hasExpandable =
-    (ctx?.context !== "reader") &&
-    (text.length > CARD_CHAR_LIMIT || (item.body && item.body.trim().length > 0));
-
-  if (hasExpandable) {
-    const toggle = document.createElement("button");
-    toggle.className = "toggle";
-    toggle.textContent = "▼";
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.addEventListener("click", (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      const expanded = toggle.getAttribute("aria-expanded") === "true";
-      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-      toggle.textContent = expanded ? "▼" : "▲";
-      body.innerHTML = expanded ? truncatedHTML(item.text, tokens)
-                                : highlight(item.text, tokens);
-      body.classList.toggle("is-collapsed", expanded);
+  for(let i=1;i<=count;i++){
+    const c = document.createElement("article");
+    c.className = "card";
+    c.tabIndex = 0;
+    c.innerHTML = `
+      <div>
+        <div class="card-title">
+          <span class="pill">Penal</span>
+          <strong>Título do item ${i}</strong>
+        </div>
+        <p class="card-text">Trecho inicial do conteúdo ${i}…</p>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost" data-act="view">Ver Texto</button>
+        <button class="btn btn-ghost" data-act="code">Ver Código</button>
+        <button class="btn btn-ghost" data-act="planalto">Planalto</button>
+      </div>
+    `;
+    c.addEventListener("click", (ev)=>{
+      const actBtn = ev.target.closest("[data-act]");
+      if(actBtn){
+        // ações de card → lock seleção um pouco
+        selectPausedUntil = now()+2000;
+        handleInlineAction(c, actBtn.getAttribute("data-act"));
+        ev.stopPropagation();
+      }
     });
-    actions.append(toggle);
+    c.addEventListener("focusin", ()=> { selectPausedUntil = now()+1200; setSelectedCard(c); });
+    body.appendChild(c);
   }
 
-  /* ---- AI-Hub à DIREITA + barra horizontal para a ESQUERDA ---- */
-  const aiMenu = document.createElement("div");
-  aiMenu.className = "ai-menu";
-
-  const aiTrigger = document.createElement("button");
-  aiTrigger.className = "btn btn--icon ai-trigger";
-  aiTrigger.setAttribute("aria-label", "Abrir atalhos de I.A.");
-  aiTrigger.setAttribute("aria-expanded", "false");
-  aiTrigger.innerHTML = `<img src="icons/ai-hub.png" alt="">`;
-
-  const aiBar = document.createElement("div");
-  aiBar.className = "ai-bar";
-  aiBar.setAttribute("role", "menu");
-  aiBar.setAttribute("aria-hidden", "true");
-
-  const iaButtons = [
-    { label: "Abrir no ChatGPT",    icon: "icons/ai-chatgpt.png" },
-    { label: "Abrir no Gemini",     icon: "icons/ai-gemini.png" },
-    { label: "Abrir no Copilot",    icon: "icons/ai-copilot.png" },
-    { label: "Abrir no Perplexity", icon: "icons/ai-perplexity.png" },
-  ];
-
-  iaButtons.forEach(({ label, icon }) => {
-    const a = document.createElement("a");
-    a.href = "#";
-    a.className = `btn btn--icon ai-item`;
-    a.setAttribute("aria-label", label);
-    a.innerHTML = `<img src="${icon}" alt="">`;
-    a.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); /* links virão depois */ });
-    aiBar.appendChild(a);
-  });
-
-  aiMenu.append(aiTrigger, aiBar);
-  actions.append(aiMenu); // fica à direita (CSS margin-left:auto no .ai-menu)
-
-  // abrir/fechar
-  const closeMenu = () => {
-    aiMenu.classList.remove("is-open");
-    aiTrigger.setAttribute("aria-expanded", "false");
-    aiBar.setAttribute("aria-hidden", "true");
-  };
-  aiTrigger.addEventListener("click", (ev) => {
-    ev.preventDefault(); ev.stopPropagation();
-    const isOpen = aiMenu.classList.toggle("is-open");
-    aiTrigger.setAttribute("aria-expanded", String(isOpen));
-    aiBar.setAttribute("aria-hidden", String(!isOpen));
-  });
-  document.addEventListener("click", (ev) => { if (!aiMenu.contains(ev.target)) closeMenu(); });
-  aiMenu.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeMenu(); });
-
-  left.append(body, actions);
-  card.append(left);
-  return card;
+  g.append(h, body);
+  return g;
 }
 
-/* ---------- Leitor (modal) ---------- */
-async function openReader(item, tokens = []) {
-  els.readerTitle && (els.readerTitle.textContent = item.source);
-  els.readerBody && (els.readerBody.innerHTML = "");
-  showModal(els.readerModal);
-
-  for (let i = 0; i < 3; i++) {
-    const s = document.createElement("div");
-    s.className = "skel block";
-    s.style.margin = "10px 0";
-    els.readerBody.appendChild(s);
+/* ---------- Ações ---------- */
+function handleInlineAction(card, act){
+  switch(act){
+    case "view": openReader(card, {mode:"text"}); break;
+    case "code": openReader(card, {mode:"code"}); break;
+    case "planalto": openPlanalto(card); break;
   }
+}
+function applyPrimaryAction(card){
+  // Ação padrão: "Ver Texto"
+  openReader(card, {mode:"text"});
+}
+function openReader(card, {mode}={}){
+  const title = card.querySelector("strong")?.textContent || "Item";
+  const msg = `Abrindo ${mode==="code"?"o CÓDIGO":"o TEXTO"} de: ${title}`;
+  toast(msg);
+}
+function openPlanalto(card){
+  toast("Abrindo no Planalto (placeholder)"); // plugue seu link real aqui
+}
 
-  try {
-    const items = await parseFile(item.fileUrl, item.source);
-    els.readerBody.innerHTML = "";
-    items.forEach((a) => {
-      const card = renderCard(a, tokens, { context: "reader" });
-      card.id = a.htmlId;
-      els.readerBody.appendChild(card);
-    });
-    const anchor = els.readerBody.querySelector(`#${CSS.escape(item.htmlId)}`);
-    if (anchor) {
-      anchor.scrollIntoView({ block: "center", behavior: "instant" });
-      anchor.classList.add("highlight");
-      setTimeout(() => anchor.classList.remove("highlight"), 1800);
-    }
-    els.readerBody.focus();
-  } catch (e) {
-    toast("Erro ao abrir o arquivo. Veja o console.");
-    console.warn(e);
-    hideModal(els.readerModal);
+/* ---------- Auto-seleção por IntersectionObserver ---------- */
+let observer, observed = [];
+function setupAutoSelection(){
+  cleanupObserver();
+  observer = new IntersectionObserver(onIntersect, {
+    root:null, rootMargin:"0px", threshold:[0, .25, .5, .6, .75, 1]
+  });
+  reobserveCards();
+  // evita selecionar “o primeiro lá no topo” sem interação: só após pequeno scroll
+  window.addEventListener("scroll", debounce(updateFabActionLabel, 150), {passive:true});
+}
+
+function reobserveCards(){
+  if(!observer) return;
+  observed.forEach(el=> observer.unobserve(el));
+  observed = $$(".group[aria-expanded='true'] .card");
+  observed.forEach(el=> observer.observe(el));
+  // limpa seleção se o card sumiu
+  if(selectedCard && !observed.includes(selectedCard)){
+    setSelectedCard(null);
   }
 }
 
-/* ---------- MODAIS (apenas leitor) ---------- */
-function showModal(el) { if (el) { el.hidden = false; document.body.style.overflow = "hidden"; } }
-function hideModal(el) { if (el) { el.hidden = true; document.body.style.overflow = ""; } }
+const onIntersect = debounce((entries)=>{
+  if(now() < selectPausedUntil) return; // focus-lock
+  // filtra visíveis com ratio >= .6
+  const visibles = entries
+    .filter(en => en.isIntersecting && en.intersectionRatio >= .6)
+    .map(en => en.target);
 
-document.addEventListener("click", (e) => {
-  if (e.target.matches("[data-close-modal]")) hideModal(els.readerModal);
-  if (els.readerModal && e.target === els.readerModal.querySelector(".modal-backdrop")) hideModal(els.readerModal);
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    if (els.readerModal && !els.readerModal.hidden) hideModal(els.readerModal);
+  if(!visibles.length) return;
+
+  // pega o que está mais embaixo (último na tela)
+  const byBottom = visibles
+    .map(el => ({el, rect: el.getBoundingClientRect()}))
+    .sort((a,b)=> (a.rect.bottom - b.rect.bottom));
+
+  const last = byBottom[byBottom.length-1]?.el;
+  if(last) setSelectedCard(last);
+}, 150);
+
+function setSelectedCard(card){
+  if(card === selectedCard) return;
+  if(selectedCard) selectedCard.classList.remove("is-selected");
+  selectedCard = card;
+  if(selectedCard) selectedCard.classList.add("is-selected");
+  updateFabActionLabel();
+}
+
+function updateFabActionLabel(){
+  const title = selectedCard?.querySelector("strong")?.textContent || "";
+  els.fabActionLabel.textContent = title ? `Ver Texto — ${title}` : "Ver Texto";
+}
+
+/* ---------- Toast simples ---------- */
+let toastT;
+function toast(text){
+  clearTimeout(toastT);
+  let el = $("#toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    Object.assign(el.style,{
+      position:"fixed",left:"50%",bottom:"calc(var(--safe) + 88px)",transform:"translateX(-50%)",
+      background:"#111",color:"#fff",padding:"10px 14px",borderRadius:"10px",
+      boxShadow:"0 8px 20px rgba(0,0,0,.2)",zIndex:9999,fontSize:"14px",maxWidth:"80vw",textAlign:"center"
+    });
+    document.body.appendChild(el);
   }
-});
+  el.textContent = text;
+  el.style.opacity = "1";
+  toastT = setTimeout(()=> el.style.opacity = "0", 1600);
+}
 
-/* ---------- logo: reset ---------- */
-els.brand?.addEventListener("click", () => {
-  els.q && (els.q.value = "");
-  els.stack && (els.stack.innerHTML = "");
-  els.q?.focus();
-  toast("Busca reiniciada.");
-});
+/* ---------- Demo inicial se quiser ver sem back ---------- */
+function setupResultsDemoIfEmpty(){
+  if(els.stack.children.length) return;
+  // mostra splash na primeira visita; se não for primeira, mostra uma pesquisa demo
+  if(localStorage.getItem("dl_firstVisitDone") === "1"){
+    runSearch("art. 129 CP");
+  }else{
+    setSplashVisible(true);
+  }
+}
