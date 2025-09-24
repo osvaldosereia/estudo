@@ -1,50 +1,184 @@
-/* ===== base existente mantida… ===== */
-/* (resto do seu CSS original permanece) */
+/* ================================
+   direito.love — style.css (full)
+   Alvo: UI minimalista para busca/leitor
+   ================================ */
 
-/* =========================
-   AÇÕES DO CARD E TOGGLE
-   ========================= */
-.card .actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding-top:8px;
+/* ---------- Reset & tokens ---------- */
+:root{
+  --bg: #ffffff;
+  --text: #0f172a;         /* slate-900 */
+  --muted: #475569;        /* slate-600 */
+  --line: #e5e7eb;         /* slate-200 */
+  --accent: #111827;
+  --brand: #111827;
+  --radius: 12px;
 }
 
-/* Seta de expandir (à ESQUERDA) */
-.card .actions .toggle{
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+}
+
+/* ---------- Utilities ---------- */
+.wrap{ max-width:980px; margin:0 auto; padding:0 16px; }
+.hidden{ display:none !important; }
+
+/* ---------- Topbar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:#fff;
+  border-bottom:1px solid var(--line, #E5E7EB);
+}
+.topbar .wrap{
+  display:flex; align-items:center; gap:14px; padding:10px 16px;
+}
+.brand{ width:32px; height:32px; display:block; cursor:pointer; }
+
+/* ---------- Search ---------- */
+.search{
+  display:flex; align-items:center; gap:10px; flex:1;
+}
+.search input[type="search"]{
+  appearance:none; -webkit-appearance:none;
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--line, #E5E7EB);
+  border-radius:10px;
+  outline:0;
+  font-size:15px;
+}
+.spinner{
+  width:18px; height:18px; border-radius:50%;
+  border:2px solid var(--line, #E5E7EB);
+  border-top-color:#111827;
+  animation:spin 1s linear infinite;
+  display:none;
+}
+.spinner.show{ display:inline-block; }
+@keyframes spin{ to{ transform:rotate(360deg)} }
+
+/* ---------- Content / results ---------- */
+.content{ padding:20px 0 40px; }
+.stack{ display:flex; flex-direction:column; gap:16px; }
+
+/* ---------- Blocks & groups ---------- */
+.block{
+  border:1px solid var(--line, #E5E7EB);
+  border-radius:var(--radius);
+  background:#fff;
+  padding:14px;
+}
+.block-title{
+  font-weight:700;
+  margin:0 0 10px;
+}
+.block-empty{
+  padding:14px;
+  color:var(--muted);
+  border:1px dashed var(--line, #E5E7EB);
+  border-radius:10px;
+  background:#fafafa;
+}
+
+.group{ border-top:1px solid var(--line, #E5E7EB); }
+.group:first-of-type{ border-top:0; }
+
+.group-head{
+  width:100%; text-align:left;
+  background:#fff; border:0; padding:12px 0;
+  display:flex; align-items:center; gap:10px;
+  font-weight:600; cursor:pointer;
+}
+.group-title{ flex:1; }
+.group-count{
+  font-size:12px; color:#475569; background:#F1F5F9;
+  padding:2px 8px; border-radius:999px; border:1px solid var(--line, #E5E7EB);
+}
+.group-caret{ opacity:.6; }
+.group-body{ display:flex; flex-direction:column; gap:12px; padding:0 0 10px; }
+
+/* ---------- Cards ---------- */
+.card{
+  border:1px solid var(--line, #E5E7EB);
+  border-radius:var(--radius);
+  background:#fff;
+  padding:12px;
+  overflow:visible; /* para o menu da AI não ser cortado */
+}
+
+/* “Pílula” com origem */
+.pill{
+  display:inline-block;
+  text-decoration:none;
+  color:#0f172a;
+  font-weight:600;
+  background:#F8FAFC;
+  border:1px solid var(--line, #E5E7EB);
+  border-radius:999px;
+  padding:4px 10px;
+  margin-bottom:8px;
+}
+
+/* Corpo do card (texto) */
+.body{ white-space:pre-wrap; word-break:break-word; }
+.body.is-collapsed{ max-height:7.6em; overflow:hidden; }
+
+/* Destaque de busca */
+mark{
+  background:#FEF08A;
+  color:inherit;
+  padding:0 2px;
+}
+
+/* ---------- Actions: seta à ESQUERDA + AI-Hub à DIREITA ---------- */
+.actions{
+  display:flex; align-items:center; gap:8px;
+  padding-top:8px;
+  overflow:visible;
+}
+
+/* Toggle (seta) – fica à esquerda por ser o primeiro item */
+.actions .toggle{
   padding:4px 8px;
   line-height:1;
-  border:1px solid var(--line);
+  border:1px solid var(--line, #E5E7EB);
   border-radius:8px;
   background:#fff;
   font-weight:600;
+  cursor:pointer;
 }
 
-/* =========================
-   AI-Hub: à DIREITA do card
-   e barra horizontal abrindo
-   para a ESQUERDA
-   ========================= */
-.ai-menu{ position:relative; margin-left:auto; } /* empurra para a direita */
-
-.ai-trigger.btn--icon{
-  width:36px; height:36px; border-radius:999px; padding:0;
-  display:inline-flex; align-items:center; justify-content:center; overflow:hidden;
+/* Botão ícone padrão (fallback se o projeto não tiver) */
+.btn.btn--icon,
+.btn--icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px;
+  border-radius:999px;
+  border:1px solid var(--line, #E5E7EB);
+  background:#fff;
+  cursor:pointer; padding:0;
 }
-.ai-trigger img{ width:22px; height:22px; display:block }
 
-/* barra horizontal que nasce à esquerda do trigger */
+/* ---------- AI-Hub (direita) com barra horizontal para ESQUERDA ---------- */
+.ai-menu{ position:relative; margin-left:auto; } /* empurra o menu para direita do card */
+
+.ai-trigger.btn--icon img{ width:22px; height:22px; display:block }
+
+/* barra que abre para a esquerda do gatilho */
 .ai-bar{
   position:absolute; top:50%; right:100%; transform:translateY(-50%);
   display:flex; gap:8px;
-  pointer-events:none; /* fechado não clica */
+  pointer-events:none; z-index:10;
 }
-
 .ai-item{
   width:36px; height:36px; border-radius:999px;
   display:inline-flex; align-items:center; justify-content:center;
-  background:#fff; border:1px solid var(--line);
+  background:#fff; border:1px solid var(--line, #E5E7EB);
   box-shadow:0 8px 20px rgba(2,8,20,.08);
   opacity:0; transform:translateX(6px) scale(.95);
   transition:transform .22s ease, opacity .18s ease;
@@ -67,17 +201,70 @@
   .ai-bar{ gap:6px; }
 }
 
-/* =========================
-   LIMPEZA: removidos
-   (barra inferior e modais)
-   ========================= */
+/* ---------- Modal (Leitor) ---------- */
+.modal[hidden]{ display:none !important; }
+.modal{
+  position:fixed; inset:0; z-index:60;
+}
+.modal-backdrop{
+  position:absolute; inset:0; background:rgba(2,6,23,.48);
+}
+.modal-card{
+  position:relative; z-index:1;
+  width:min(920px, 92vw);
+  margin:6vh auto;
+  background:#fff; border-radius:16px;
+  border:1px solid var(--line, #E5E7EB);
+  display:flex; flex-direction:column;
+  max-height:88vh; overflow:hidden;
+}
+.modal-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; border-bottom:1px solid var(--line, #E5E7EB);
+}
+.modal-head .title{ font-weight:700; }
+.icon-btn{
+  appearance:none; background:#fff; border:1px solid var(--line, #E5E7EB);
+  border-radius:10px; padding:6px 10px; cursor:pointer;
+}
+.modal-body{
+  padding:14px; overflow:auto;
+}
+.modal-foot{
+  padding:10px 14px; border-top:1px solid var(--line, #E5E7EB);
+  display:flex; justify-content:flex-end;
+}
+
+/* ---------- Skeleton ---------- */
+.skel.block{
+  height:18px; border-radius:8px; background:
+    linear-gradient(90deg, #f5f7fa 25%, #eef2f7 37%, #f5f7fa 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.2s ease-in-out infinite;
+}
+@keyframes shimmer{ 0%{background-position:100% 0} 100%{background-position:0 0} }
+
+/* ---------- Toasts ---------- */
+.toasts{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  z-index:70; display:flex; flex-direction:column; gap:8px;
+}
+.toast{
+  background:#111827; color:#fff; padding:10px 12px;
+  border-radius:10px; font-size:14px; box-shadow:0 10px 24px rgba(2,8,23,.2);
+}
+
+/* ---------- Highlights no leitor ---------- */
+.card.highlight{ outline:2px solid #111827; }
+
+/* ---------- Remoções pedidas (garantia) ---------- */
+/* Barra inferior e modais antigos (estudar/questões/selecionados) */
 .bottombar,
-.bar-inner,
-.bar-group,
-.btn-primary,
-.btn-ghost,
 .modal#studyModal,
 .modal#questionsModal,
-.modal#selectedModal {
-  display:none !important;
-}
+.modal#selectedModal { display:none !important; }
+
+/* Botões “Estudar com I.A.” e Google (se sobrar algo do HTML antigo) */
+.actions .chk,
+.actions .google-btn,
+#clearSelectedBtn { display:none !important; }
