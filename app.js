@@ -1006,4 +1006,14 @@ reorderBaseControlsAndCenter();
 window.addEventListener("resize", reorderBaseControlsAndCenter);
 
 
+// Executa a busca automaticamente se vier com ?q=...
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get("q");
+  if (q) {
+    const input = document.getElementById("searchInput");
+    if (input) input.value = q;
+    doSearch(); // já executa a busca
+  }
+});
 
