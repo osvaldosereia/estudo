@@ -15,25 +15,27 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- SPLASH / LANDING (primeiro acesso) -->
+  <!-- SPLASH / LANDING (primeira visita) -->
   <div id="splash" class="splash" aria-hidden="true">
     <div class="splash-inner">
-      <img src="icons/mini-logo.png" alt="direito.love" class="splash-logo" />
+      <img src="icons/logo.png" alt="direito.love" class="splash-logo" />
       <form id="splashForm" class="splash-form" role="search" aria-label="Buscar no direito.love">
         <input id="splashInput" name="q" type="search" placeholder="Sobre o que vamos falar?" autocomplete="off" />
         <button type="submit" class="btn btn-primary">Início</button>
       </form>
-      <p class="splash-hint">Ex.: <em>art. 129 CP</em> · <em>princípio da insignificância</em> · <em>citação por edital</em></p>
+      <p class="splash-hint">Ex.: <em>art. 129 CP</em> · <em>insignificância</em></p>
     </div>
   </div>
 
   <!-- CONTEÚDO -->
   <main class="wrap" id="app" role="main">
-    <!-- chips/infos opcionais aqui se quiser -->
     <section id="resultsStack" class="results-stack" aria-live="polite"></section>
   </main>
 
-  <!-- FAB CLUSTER (logo + ação + lupa com busca retrátil) -->
+  <!-- LIVE region para leitores de tela -->
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <!-- FAB CLUSTER (logo + lupa retrátil + ação) -->
   <div class="fab-cluster" aria-live="polite">
     <button id="fabLogo" class="fab fab-logo" aria-label="Voltar ao topo">
       <img src="icons/logo.png" alt="" />
@@ -43,13 +45,14 @@
       <form id="fabSearchForm" class="fab-search-form" role="search" aria-label="Buscar no direito.love">
         <input id="fabSearchInput" name="q" type="search" placeholder="Buscar..." autocomplete="off" />
       </form>
-      <button id="fabSearch" class="fab" aria-label="Abrir busca">
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
+      <button id="fabSearch" class="fab" aria-label="Abrir busca" title="Buscar (/)">
+        <!-- ícone lupa -->
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 015.292 13.708l4 4a1 1 0 11-1.414 1.414l-4-4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
       </button>
     </div>
 
     <button id="fabAction" class="fab fab-primary" aria-label="Aplicar no item selecionado">
-      <span id="fabActionLabel">Ver Texto</span>
+      <span id="fabActionLabel">Ver texto</span>
     </button>
   </div>
 
