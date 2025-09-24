@@ -663,7 +663,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   hubMenu.className = "hub-menu";
 
   // Prefixo fixo que será enviado antes do conteúdo do card
-  const PREFIX = "Responda como tutor de Direito, cite artigos aplicáveis e proponha 3 questões ao final.";
+  const PREFIX = "Professor de direito me prepare para a prova da oab. Tema:";
 
   // Monta a query do card (prefixo + título + corpo), com compactação e limite para URL
   const makeCardQuery = () => {
