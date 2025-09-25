@@ -15,42 +15,81 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- OVERRIDE: garante título da barra em linha própria no mobile -->
-  <style>
-    @media (max-width:480px){
-      .bottombar .bar-inner{
-        display:flex;
-        flex-wrap:wrap;           /* permite quebrar linha */
-        justify-content:center;
-        gap:12px;
-        padding-left:max(12px, env(safe-area-inset-left));
-        padding-right:max(12px, env(safe-area-inset-right));
-      }
-      .bottombar .bar-inner .bar-title{
-        order:-1;                 /* vem antes dos botões */
-        flex:0 0 100%;            /* ocupa a linha inteira */
-        margin:6px 0 2px;
-        text-align:center;
-        font-size:.9rem;
-        line-height:1.25;
-        color:var(--muted);
-        font-weight:600;
-      }
-      /* garante que os botões não “peçam” 100% */
-      .bottombar .bar-group, #viewBtn { flex:0 0 auto; }
+ <style>
+  @media (max-width:480px){
+    /* BARRA INFERIOR */
+    .bottombar .bar-inner{
+      display:flex;
+      flex-wrap:wrap;           /* permite quebrar linha */
+      justify-content:center;
+      gap:12px;
+      padding-left:max(12px, env(safe-area-inset-left));
+      padding-right:max(12px, env(safe-area-inset-right));
     }
-  </style>
+    .bottombar .bar-inner .bar-title{
+      order:-1;                 /* vem antes dos botões */
+      flex:0 0 100%;            /* ocupa a linha inteira */
+      margin:6px 0 2px;
+      text-align:center;
+      font-size:.9rem;
+      line-height:1.25;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .bottombar .bar-group, #viewBtn { flex:0 0 auto; }
+
+    /* TOPBAR MOBILE */
+    .topbar .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+    .topbar .brand {
+      width: 32px;
+      height: 32px;
+    }
+    .topbar .search {
+      flex: 1;
+      margin-left: 4px;
+    }
+    .topbar-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      width: 32px;
+      height: 32px;
+    }
+    .topbar-btn img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+</style>
+
 </head>
 <body>
   <!-- TOP BAR -->
   <header class="topbar" role="banner">
-    <div class="wrap">
-      <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
-      <form class="search" id="searchForm" role="search" aria-label="Buscar">
-        <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
-        <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
-      </form>
-    </div>
-  </header>
+  <div class="wrap">
+    <!-- Logo -->
+    <img src="icons/logo.png" alt="direito.love" class="brand" id="brandBtn">
+
+    <!-- Campo de busca -->
+    <form class="search" id="searchForm" role="search" aria-label="Buscar">
+      <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
+      <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
+    </form>
+
+    <!-- Botão extra no topo (só aparece no mobile com CSS) -->
+    <button class="topbar-btn" aria-label="Abrir menu">
+      <img src="icons/menu.png" alt="">
+    </button>
+  </div>
+</header>
+
 
   <!-- Catálogo (oculto) -->
   <select id="codeSelect" hidden>
