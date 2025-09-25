@@ -435,6 +435,9 @@ async function doSearch() {
   const termRaw = (els.q.value || "").trim();
   if (!termRaw) return;
 
+     saveToHistory(termRaw); // 👈 Aqui está a mágica
+
+
   // trata 1.000 → 1000 na query
   const term = stripThousandDots(termRaw);
 
@@ -1019,5 +1022,63 @@ document.addEventListener("DOMContentLoaded", () => {
     if (input) input.value = q;
     doSearch(); // já executa a busca
   }
+});
+/* === Histórico de buscas === */
+const MAX_HISTORY = 20;
+const HISTORY_KEY = "searchHistory";
+
+/* Salva a busca no localStorage */
+function saveToHistory(query) {
+  const trimmed = query.trim();
+  if (!trimmed) return;
+  let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  history = history.filter(q => q !== trimmed); // remove duplicata
+  history.unshift(trimmed); // adiciona no topo
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+/* Carrega as buscas no dropdown */
+function loadHistoryDropdown() {
+  const menu = document.getElementById("historyDropdown");
+  if (!menu) return;
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  menu.innerHTML = "";
+
+  if (history.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "Nenhuma busca recente.";
+    li.style.color = "#888";
+    li.style.fontStyle = "italic";
+    li.style.cursor = "default";
+    menu.appendChild(li);
+    return;
+  }
+
+  history.forEach((q) => {
+    const li = document.createElement("li");
+    li.textContent = q;
+    li.addEventListener("click", () => {
+      els.q.value = q;
+      menu.hidden = true;
+      doSearch(); // refaz busca
+    });
+    menu.appendChild(li);
+  });
+}
+
+/* Toggle do botão */
+document.getElementById("historyBtn")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById("historyDropdown");
+  if (!menu) return;
+  loadHistoryDropdown();
+  menu.hidden = !menu.hidden;
+});
+
+/* Fecha se clicar fora */
+document.addEventListener("click", () => {
+  const menu = document.getElementById("historyDropdown");
+  if (menu) menu.hidden = true;
 });
 
