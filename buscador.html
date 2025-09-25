@@ -106,14 +106,15 @@
       <input id="searchInput" type="search" placeholder="Buscar no texto…" autocomplete="off" aria-label="Buscar no texto" />
       <div class="spinner" id="searchSpinner" aria-hidden="true"></div>
     </form>
-
-    <!-- Botão extra no topo (só aparece no mobile com CSS) -->
-    <button class="topbar-btn" aria-label="Abrir menu">
-      <img src="icons/menu.png" alt="">
-    </button>
+   <!-- Botão com histórico -->
+    <div class="topbar-history">
+      <button class="topbar-btn" id="historyBtn" aria-label="Histórico de buscas">
+        <img src="icons/menu.png" alt="">
+      </button>
+      <ul id="historyDropdown" class="history-dropdown" hidden></ul>
+    </div>
   </div>
 </header>
-
 
   <!-- Catálogo (oculto) -->
   <select id="codeSelect" hidden>
