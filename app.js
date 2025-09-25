@@ -1060,7 +1060,7 @@ function loadHistoryDropdown() {
     li.textContent = q;
     li.addEventListener("click", () => {
       els.q.value = q;
-      menu.hidden = true;
+   menu.classList.remove("open");
       doSearch(); // refaz busca
     });
     menu.appendChild(li);
@@ -1075,7 +1075,6 @@ document.getElementById("historyBtn")?.addEventListener("click", (e) => {
   loadHistoryDropdown();
   menu.classList.toggle("open");
 });
-
 
 /* Fecha se clicar fora */
 document.addEventListener("click", (e) => {
