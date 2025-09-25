@@ -39,6 +39,34 @@
   .logo-desktop { display: inline; }
   .logo-mobile  { display: none; }
 
+  /* === MENU DE HISTÓRICO === */
+  .history-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    list-style: none;
+    padding: 6px 0;
+    margin: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 9999;
+    min-width: 220px;
+  }
+  .history-dropdown li {
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .history-dropdown li:hover {
+    background: #f2f2f2;
+  }
+
   @media (max-width: 480px) {
     /* BARRA INFERIOR */
     .bottombar .bar-inner {
@@ -86,6 +114,7 @@
     }
   }
 </style>
+
 
 
 
