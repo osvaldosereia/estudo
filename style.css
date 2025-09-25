@@ -621,3 +621,52 @@ mark.hl{
     right: 12px;
   }
 }
+/* ===== Dropdown de Histórico (Topbar) ===== */
+.topbar-history {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 6px 0;
+  min-width: 240px;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 999;
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-dropdown li {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.2s ease;
+}
+.history-dropdown li:hover {
+  background: #f0f2f8;
+}
+
+/* Mobile (ocupa quase a tela toda) */
+@media (max-width: 480px) {
+  .history-dropdown {
+    left: auto;
+    right: 0;
+    width: 90vw;
+  }
+}
