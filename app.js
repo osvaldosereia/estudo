@@ -762,7 +762,6 @@ chk.innerHTML = `
   });
 
   /* ===== Montagem das ações (cards) ===== */
-  actions.append(toggle);
   actions.append(hubWrap, chk);
 
   left.append(body, actions);
