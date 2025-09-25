@@ -15,13 +15,32 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- OVERRIDE: ajustes mobile para topbar e bottombar -->
+<!-- OVERRIDE: ajustes para topbar e bottombar -->
 <style>
-  /* Padrão: só mostra a logo desktop */
+  /* === BOTÃO DO TOPO (desktop e mobile) === */
+  .topbar-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .topbar-btn img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* === LOGOS (desktop e mobile) === */
   .logo-desktop { display: inline; }
   .logo-mobile  { display: none; }
 
   @media (max-width: 480px) {
-    /* === BARRA INFERIOR (mobile) === */
+    /* BARRA INFERIOR */
     .bottombar .bar-inner {
       display: flex;
       flex-wrap: wrap;
@@ -45,7 +64,7 @@
       flex: 0 0 auto;
     }
 
-    /* === TOPBAR MOBILE === */
+    /* TOPBAR MOBILE */
     .topbar .wrap {
       display: flex;
       align-items: center;
@@ -57,31 +76,17 @@
       flex: 1;
       margin-left: 4px;
     }
-    .topbar-btn {
-      background: none;
-      border: none;
-      padding: 4px;
-      width: 32px;
-      height: 32px;
-    }
-   .topbar-btn img {
-  width: 24px !important;
-  height: 24px !important;
-  object-fit: contain;
-  display: block;
-}
 
-
-
-    /* Troca logos no mobile */
+    /* Troca de logos no mobile */
     .logo-desktop { display: none !important; }
-    .logo-mobile  {
+    .logo-mobile {
       display: inline !important;
       width: 32px;
       height: 32px;
     }
   }
 </style>
+
 
 
 </head>
