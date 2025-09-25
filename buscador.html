@@ -14,41 +14,44 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- OVERRIDE: garante título da barra em linha própria no mobile -->
- <style>
-  @media (max-width:480px){
-    /* BARRA INFERIOR */
-    .bottombar .bar-inner{
-      display:flex;
-      flex-wrap:wrap;           /* permite quebrar linha */
-      justify-content:center;
-      gap:12px;
-      padding-left:max(12px, env(safe-area-inset-left));
-      padding-right:max(12px, env(safe-area-inset-right));
-    }
-    .bottombar .bar-inner .bar-title{
-      order:-1;                 /* vem antes dos botões */
-      flex:0 0 100%;            /* ocupa a linha inteira */
-      margin:6px 0 2px;
-      text-align:center;
-      font-size:.9rem;
-      line-height:1.25;
-      color:var(--muted);
-      font-weight:600;
-    }
-    .bottombar .bar-group, #viewBtn { flex:0 0 auto; }
+  <!-- OVERRIDE: ajustes mobile para topbar e bottombar -->
+<style>
+  /* Padrão: só mostra a logo desktop */
+  .logo-desktop { display: inline; }
+  .logo-mobile  { display: none; }
 
-    /* TOPBAR MOBILE */
+  @media (max-width: 480px) {
+    /* === BARRA INFERIOR (mobile) === */
+    .bottombar .bar-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
+    .bottombar .bar-inner .bar-title {
+      order: -1;
+      flex: 0 0 100%;
+      margin: 6px 0 2px;
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 1.25;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .bottombar .bar-group,
+    #viewBtn {
+      flex: 0 0 auto;
+    }
+
+    /* === TOPBAR MOBILE === */
     .topbar .wrap {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
       padding: 8px 12px;
-    }
-    .topbar .brand {
-      width: 32px;
-      height: 32px;
     }
     .topbar .search {
       flex: 1;
@@ -66,8 +69,17 @@
       height: auto;
       display: block;
     }
+
+    /* Troca logos no mobile */
+    .logo-desktop { display: none !important; }
+    .logo-mobile  {
+      display: inline !important;
+      width: 32px;
+      height: 32px;
+    }
   }
 </style>
+
 
 </head>
 <body>
@@ -75,7 +87,11 @@
   <header class="topbar" role="banner">
   <div class="wrap">
     <!-- Logo -->
-    <img src="icons/mini-logo.png" alt="direito.love" class="brand" id="brandBtn">
+<!-- Logo padrão (desktop) -->
+<img src="icons/logo.png" alt="direito.love" class="brand logo-desktop" id="brandBtn">
+
+<!-- Logo mini (mobile) -->
+<img src="icons/mini-logo.png" alt="direito.love" class="brand logo-mobile" id="brandBtnMobile">
 
     <!-- Campo de busca -->
     <form class="search" id="searchForm" role="search" aria-label="Buscar">
