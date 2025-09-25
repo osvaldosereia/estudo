@@ -682,7 +682,6 @@ mark.hl{
   }
 }
 .history-dropdown {
-  display: none;
   position: absolute;
   top: 50px;
   right: 12px;
@@ -696,8 +695,12 @@ mark.hl{
   max-height: 300px;
   overflow-y: auto;
   z-index: 9999;
-  min-width: 220px;
+  min-width: 180px;
+  max-width: 80vw;       /* <-- não deixa passar da tela */
+  word-break: break-word; /* <-- quebra nomes grandes */
+  font-size: 0.88rem;
 }
+
 
 .history-dropdown.open {
   display: block;
