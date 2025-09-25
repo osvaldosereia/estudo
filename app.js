@@ -1073,12 +1073,17 @@ document.getElementById("historyBtn")?.addEventListener("click", (e) => {
   const menu = document.getElementById("historyDropdown");
   if (!menu) return;
   loadHistoryDropdown();
-  menu.hidden = !menu.hidden;
+  menu.classList.toggle("open");
 });
 
+
 /* Fecha se clicar fora */
-document.addEventListener("click", () => {
+document.addEventListener("click", (e) => {
   const menu = document.getElementById("historyDropdown");
-  if (menu) menu.hidden = true;
+  if (!menu) return;
+  if (!document.getElementById("historyBtn")?.contains(e.target)) {
+    menu.classList.remove("open");
+  }
 });
+
 
