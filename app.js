@@ -691,15 +691,17 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
     window.open(`https://www.perplexity.ai/search?q=${q}`, "_blank", "noopener");
   });
 
-  // === Copilot
-  const hubBtn2 = document.createElement("button");
-  hubBtn2.className = "round-btn";
-  hubBtn2.setAttribute("aria-label", "copilot");
-  hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
-  hubBtn2.addEventListener("click", () => {
-    const q = makeCardQuery();
-    window.open(`https://www.bing.com/copilotsearch?q=${q}`, "_blank", "noopener");
-  });
+  // === Copilot (ajustado)
+const hubBtn2 = document.createElement("button");
+hubBtn2.className = "round-btn";
+hubBtn2.setAttribute("aria-label", "copilot");
+hubBtn2.innerHTML = '<img src="icons/ai-copilot.png" alt="">';
+hubBtn2.addEventListener("click", () => {
+  const q = makeCardQuery();
+  const encoded = encodeURIComponent(q);
+  window.open(`https://copilot.microsoft.com/?q=${encoded}`, "_blank", "noopener");
+});
+
 
   // === Google (AI mode / udm=50)
   const hubBtn3 = document.createElement("button");
