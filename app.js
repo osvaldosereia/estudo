@@ -634,6 +634,7 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
   actions.className = "actions";
 
   /* ===== TOGGLE (seta) ALINHADO À ESQUERDA ===== */
+  if (item.text.length > CARD_CHAR_LIMIT) {
   const toggle = document.createElement("button");
   toggle.className = "toggle toggle-left";
   toggle.textContent = "▼";
@@ -646,6 +647,10 @@ function renderCard(item, tokens = [], ctx = { context: "results" }) {
                               : highlight(item.text, tokens);
     body.classList.toggle("is-collapsed", expanded);
   });
+
+  actions.append(toggle);
+}
+
 
   /* ===== IA: função de query (reuso) ===== */
   const makeQuery = () => {
