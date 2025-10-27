@@ -184,8 +184,8 @@
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
                 <!-- Adicionar mais botões para outros códigos aqui -->
-                 <button onclick="loadCode('codigo-civil.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
-                    Código Civil
+                 <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
+                    Código Civil (Em breve)
                 </div>
                  <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
                     Constituição Federal (Em breve)
@@ -232,31 +232,11 @@
             </div>
         </div>
 
-        <!-- Botão Flutuante (FAB) - Opcional, pode ser removido -->
+        <!-- Botão Flutuante (FAB) - Removido por enquanto para focar nos botões inline
         <div id="fabContainer" class="fab-container hidden">
-            <div class="fab-options">
-                 <button class="fab-option" onclick="alert('Função 1 (ex: Anotar)')" aria-label="Anotar">
-                      <ion-icon name="create-outline"></ion-icon>
-                 </button>
-                 <button class="fab-option" onclick="alert('Função 2 (ex: Copiar)')" aria-label="Copiar">
-                      <ion-icon name="copy-outline"></ion-icon>
-                 </button>
-                 <button class="fab-option" onclick="alert('Função 3 (ex: Jurisprudência)')" aria-label="Jurisprudência">
-                      <ion-icon name="library-outline"></ion-icon>
-                 </button>
-                 <button class="fab-option" onclick="alert('Função 4 (ex: Compartilhar)')" aria-label="Compartilhar">
-                      <ion-icon name="share-social-outline"></ion-icon>
-                 </button>
-            </div>
-            <button id="fabMain" class="fab-main" onclick="toggleFab()" aria-label="Abrir opções">
-                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 icon-plus">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 icon-close hidden">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+             ... (código do FAB) ...
         </div>
+        -->
     </div>
 
     <script>
@@ -268,10 +248,10 @@
         const searchPrevBtn = document.getElementById('searchPrev');
         const searchNextBtn = document.getElementById('searchNext');
         const searchResultCountEl = document.getElementById('searchResultCount');
-        const fabContainer = document.getElementById('fabContainer');
-        const fabMain = document.getElementById('fabMain');
-        const iconPlus = fabMain.querySelector('.icon-plus');
-        const iconClose = fabMain.querySelector('.icon-close');
+        // const fabContainer = document.getElementById('fabContainer'); // Removido
+        // const fabMain = document.getElementById('fabMain'); // Removido
+        // const iconPlus = fabMain.querySelector('.icon-plus'); // Removido
+        // const iconClose = fabMain.querySelector('.icon-close'); // Removido
 
         const articleTextMap = new Map();
         let highlightMarkInstance;
@@ -283,11 +263,11 @@
             categorySelection.classList.add('flex');
             codeView.classList.add('hidden');
             codeView.classList.remove('flex');
-            fabContainer.classList.add('hidden');
-            fabContainer.classList.remove('open');
-            fabMain.classList.remove('open');
-            iconPlus.classList.remove('hidden');
-            iconClose.classList.add('hidden');
+            // fabContainer.classList.add('hidden'); // Removido
+            // fabContainer.classList.remove('open'); // Removido
+            // fabMain.classList.remove('open'); // Removido
+            // iconPlus.classList.remove('hidden'); // Removido
+            // iconClose.classList.add('hidden'); // Removido
             codeContent.innerHTML = '<p class="p-4 text-gray-500">Carregando conteúdo...</p>';
             resetSearch();
         }
@@ -297,8 +277,6 @@
             categorySelection.classList.remove('flex');
             codeView.classList.remove('hidden');
             codeView.classList.add('flex');
-            // Mantém FAB escondido por enquanto, focando nos botões inline
-            // fabContainer.classList.remove('hidden');
             codeTitle.textContent = title;
             searchInput.value = '';
             articleTextMap.clear();
@@ -328,7 +306,7 @@
                 setTimeout(() => {
                     prepareIframeContent(iframe);
                     addActionButtonsToIframe(iframe);
-                }, 150); // Aumentado ligeiramente o tempo
+                }, 200); // Aumentado um pouco mais o tempo
             };
             iframe.onerror = () => {
                 codeContent.innerHTML = '<p class="p-4 text-red-500">Erro ao carregar o conteúdo.</p>';
@@ -336,13 +314,7 @@
             codeContent.appendChild(iframe);
         }
 
-        function toggleFab() {
-            const isOpen = fabContainer.classList.toggle('open');
-            fabMain.classList.toggle('open');
-            iconPlus.classList.toggle('hidden', isOpen);
-            iconClose.classList.toggle('hidden', !isOpen);
-            fabMain.setAttribute('aria-label', isOpen ? 'Fechar opções' : 'Abrir opções');
-        }
+        // function toggleFab() { ... } // Removido
 
         // Verifica se é um elemento relevante (Artigo, Parágrafo, Inciso, etc.)
         function isRelevantElement(element) {
@@ -357,9 +329,16 @@
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
             while (currentElement && currentElement.tagName === 'P' && !isRelevantElement(currentElement)) {
-                text += "\n" + currentElement.textContent.trim(); // Concatena com nova linha
-                currentElement = currentElement.nextElementSibling;
+                // Inclui o texto do span.link-replacement, se houver
+                 const spanLink = currentElement.querySelector('span.link-replacement');
+                 text += "\n" + (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
+                 currentElement = currentElement.nextElementSibling;
             }
+             // Remove os textos dos links substituídos do final do texto principal, se houver
+             const spanLinkMain = startElement.querySelector('span.link-replacement');
+             if (spanLinkMain) {
+                text = text.replace(spanLinkMain.textContent.trim(), '').trim();
+             }
             return text;
         }
 
@@ -441,8 +420,12 @@
                          const uniqueArticleId = `article-${articleCounter}`;
                          p.dataset.articleId = uniqueArticleId;
 
-                         // Extrai texto e armazena
+                         // Extrai texto e armazena (agora dentro do if)
                          const fullText = extractArticleText(p);
+                         if (!fullText) { // Pula se não conseguiu extrair texto
+                            console.warn("Texto vazio para elemento:", p);
+                            return;
+                         }
                          articleTextMap.set(uniqueArticleId, fullText);
 
                          // Adiciona classe e tabindex para foco/touch
@@ -453,29 +436,29 @@
                          const buttonContainer = iframeDoc.createElement('div');
                          buttonContainer.classList.add('article-button-container');
 
-                         // Templates de Prompt (usando template literals para facilitar)
+                         // Define os prompts usando o fullText extraído
                          const prompts = {
-                            explain: `Explique de forma detalhada o seguinte texto jurídico, abordando seu significado, alcance e possíveis interpretações:\n\n"${fullText}"`, // Usa fullText diretamente
-                            glossary: `Crie um glossário explicando os termos jurídicos encontrados no seguinte texto:\n\n"${fullText}"`, // Usa fullText diretamente
-                            related: `Busque Súmulas, Enunciados, Teses (Repercussão Geral, Recursos Repetitivos, etc.) e artigos correlatos referentes ao seguinte dispositivo legal ou tema:\n\n"${fullText}"` // Usa fullText diretamente
+                            explain: `Explicação detalhada do artigo completo:\n\n"${fullText}"`,
+                            glossary: `Glossário jurídico dos termos no artigo completo:\n\n"${fullText}"`,
+                            related: `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${fullText}"`
                          };
 
-                         // Botões HTML (atenção aos escapes se usar aspas dentro do onclick)
+                         // Botões HTML com ícones corretos e chamadas de função
                          buttonContainer.innerHTML = `
-                             <button class="article-button" title="Explicação Detalhada (Google AI)" onclick="window.parent.handleArticleAction('explain', '${uniqueArticleId}')">
-                                 <ion-icon name="information-circle-outline"></ion-icon>
+                             <button class="article-button" title="Explicação Detalhada (IA)" onclick="window.parent.handleArticleAction('explain', '${uniqueArticleId}')">
+                                 <ion-icon name="information-circle-outline"></ion-icon> <!-- Ícone para Explicação -->
                              </button>
-                             <button class="article-button" title="Glossário Jurídico (Google AI)" onclick="window.parent.handleArticleAction('glossary', '${uniqueArticleId}')">
-                                 <ion-icon name="book-outline"></ion-icon>
+                             <button class="article-button" title="Glossário Jurídico (IA)" onclick="window.parent.handleArticleAction('glossary', '${uniqueArticleId}')">
+                                 <ion-icon name="book-outline"></ion-icon> <!-- Ícone para Glossário -->
                              </button>
-                             <button class="article-button" title="Súmulas e Correlatos (Google AI)" onclick="window.parent.handleArticleAction('related', '${uniqueArticleId}')">
-                                <ion-icon name="library-outline"></ion-icon>
+                             <button class="article-button" title="Súmulas e Correlatos (IA)" onclick="window.parent.handleArticleAction('related', '${uniqueArticleId}')">
+                                <ion-icon name="library-outline"></ion-icon> <!-- Ícone para Súmulas/Jurisprudência -->
                             </button>
                              <button class="article-button" title="Buscar Videoaula (YouTube)" onclick="window.parent.handleArticleAction('youtube', '${uniqueArticleId}')">
-                                <ion-icon name="logo-youtube"></ion-icon>
+                                <ion-icon name="logo-youtube"></ion-icon> <!-- Ícone para YouTube -->
                              </button>
                          `;
-                         // Adiciona dados dos prompts ao container (forma mais segura que inline JS complexo)
+                         // Adiciona dados dos prompts ao container
                          buttonContainer.dataset.promptExplain = prompts.explain;
                          buttonContainer.dataset.promptGlossary = prompts.glossary;
                          buttonContainer.dataset.promptRelated = prompts.related;
@@ -494,13 +477,30 @@
              }
          }
 
-        // Modificado para buscar prompts do dataset do botão clicado ou seu container
+        // Função que lida com o clique nos botões
         function handleArticleAction(action, uniqueArticleId) {
-             const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
+             const fullArticleText = articleTextMap.get(uniqueArticleId);
+             if (!fullArticleText) {
+                console.error("Texto completo não encontrado para o ID:", uniqueArticleId);
+                return; // Impede a execução se não houver texto
+             }
 
-             // Busca o container dos botões para pegar os prompts (se necessário)
+             // Ação YouTube
+             if (action === 'youtube') {
+                const articleMatch = fullArticleText.match(/Art\.\s*\d+[º°]?[\w-]*\.?/i);
+                // Tenta extrair apenas o número ou usa os primeiros 50 chars se não achar "Art."
+                const queryBase = articleMatch ? articleMatch[0] : fullArticleText.substring(0, 50).trim();
+                const searchQuery = `Videoaula ${queryBase} ${codeTitle.textContent}`;
+                const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+                console.log("Abrindo YouTube:", youtubeUrl);
+                window.open(youtubeUrl, '_blank');
+                return;
+             }
+
+             // Ações Google Search (IA)
              let promptText = '';
              try {
+                // Recupera o prompt específico do dataset do container
                 const iframeDoc = codeContent.querySelector('iframe')?.contentDocument;
                 const articleElement = iframeDoc?.querySelector(`[data-article-id='${uniqueArticleId}']`);
                 const buttonContainer = articleElement?.querySelector('.article-button-container');
@@ -511,30 +511,18 @@
 
              } catch(e) { console.error("Erro ao buscar prompt do dataset:", e)}
 
-
-             // Ação YouTube
-             if (action === 'youtube') {
-                const articleMatch = fullArticleText.match(/Art\.\s*\d+[º°]?[\w-]*\.?/i);
-                const queryBase = articleMatch ? articleMatch[0] : fullArticleText.substring(0, 50);
-                const searchQuery = `Videoaula ${queryBase} ${codeTitle.textContent}`;
-                const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
-                console.log("Abrindo YouTube:", youtubeUrl);
-                window.open(youtubeUrl, '_blank');
-                return;
-             }
-
-             // Ações Google AI
              if (!promptText) {
-                 console.error("Ação desconhecida ou prompt não encontrado para:", action, uniqueArticleId);
-                 // Fallback com texto curto se prompt falhar
-                 promptText = `Fale sobre: "${fullArticleText.substring(0, 200)}..."`;
+                 console.error("Prompt não definido para a ação:", action);
+                 // Fallback genérico se o prompt específico falhar
+                 promptText = `Informações sobre:\n\n"${fullArticleText}"`;
              }
 
-             const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
+             // Usa a URL base do Google Search com udm=50
+             const googleSearchBaseUrl = "https://www.google.com/search?udm=50&q=";
              const encodedPrompt = encodeURIComponent(promptText);
-             const finalUrl = googleAiBaseUrl + encodedPrompt;
+             const finalUrl = googleSearchBaseUrl + encodedPrompt;
 
-             console.log("Abrindo URL Google AI:", finalUrl);
+             console.log("Abrindo URL Google Search (IA):", finalUrl);
              window.open(finalUrl, '_blank');
         }
 
@@ -555,9 +543,12 @@
             const total = searchResults.length;
             const current = total > 0 ? currentSearchResultIndex + 1 : 0;
             searchResultCountEl.textContent = `${current}/${total}`;
-            searchPrevBtn.disabled = current <= 1;
-            searchNextBtn.disabled = current >= total;
+            // Habilita/desabilita botões baseado se há resultados
+            searchPrevBtn.disabled = total <= 1;
+            searchNextBtn.disabled = total <= 1;
 
+
+             // Atualiza destaque do item atual
             searchResults.forEach((mark, index) => {
                 mark.classList.toggle('current-highlight', index === currentSearchResultIndex);
             });
@@ -566,11 +557,11 @@
         function scrollToResult(index) {
             if (searchResults[index]) {
                 searchResults[index].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'nearest'
+                    behavior: 'smooth', // Rolagem suave
+                    block: 'center',    // Tenta centralizar verticalmente
+                    inline: 'nearest'   // Rola horizontalmente o mínimo necessário
                 });
-                updateSearchResultUI();
+                updateSearchResultUI(); // Atualiza contador e destaque
             }
         }
 
@@ -579,47 +570,51 @@
                  console.warn("Instância do Mark.js não está pronta para busca.");
                  return;
              }
-
+             // Usa unmark com um callback para garantir que a nova busca só comece depois de limpar
              highlightMarkInstance.unmark({
                  done: () => {
                      searchResults = [];
                      currentSearchResultIndex = -1;
+                     updateSearchResultUI(); // Reseta a UI imediatamente
+
                      if (term && term.length > 1) { // Mínimo 2 caracteres para buscar
                          highlightMarkInstance.mark(term, {
                              separateWordSearch: false, // Busca exata
                              className: 'search-highlight',
                              each: (element) => {
-                                 searchResults.push(element);
+                                 searchResults.push(element); // Adiciona ao array
                              },
                              done: () => {
                                  console.log(`Encontradas ${searchResults.length} ocorrências.`);
                                  if (searchResults.length > 0) {
-                                     currentSearchResultIndex = 0;
+                                     currentSearchResultIndex = 0; // Vai para o primeiro
                                      scrollToResult(currentSearchResultIndex);
-                                 } else {
-                                     updateSearchResultUI(); // Mostra 0/0
                                  }
+                                 // A UI já foi atualizada pelo updateSearchResultUI() no início do 'done' de unmark
                              },
                              noMatch: () => {
-                                 updateSearchResultUI(); // Garante 0/0 se não houver match
+                                 console.log("Nenhuma ocorrência encontrada.");
+                                 // UI já foi resetada
                              }
                          });
-                     } else {
-                         resetSearch(); // Limpa se termo for vazio/curto
                      }
+                     // Se termo for vazio/curto, a UI já foi resetada
                  }
              });
          }
 
+
          function goToNextResult() {
              if (searchResults.length === 0) return;
-             currentSearchResultIndex = (currentSearchResultIndex + 1) % searchResults.length; // Cicla
+             // Avança o índice, ciclando se chegar ao final
+             currentSearchResultIndex = (currentSearchResultIndex + 1) % searchResults.length;
              scrollToResult(currentSearchResultIndex);
          }
 
          function goToPreviousResult() {
              if (searchResults.length === 0) return;
-             currentSearchResultIndex = (currentSearchResultIndex - 1 + searchResults.length) % searchResults.length; // Cicla
+             // Retrocede o índice, ciclando se chegar ao início
+             currentSearchResultIndex = (currentSearchResultIndex - 1 + searchResults.length) % searchResults.length;
              scrollToResult(currentSearchResultIndex);
          }
 
@@ -630,14 +625,17 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch(event.target.value);
-            }, 300);
+            }, 300); // 300ms de atraso
         });
 
         // Event Listener para tecla Enter na busca
          searchInput.addEventListener('keydown', (event) => {
              if (event.key === 'Enter') {
                  event.preventDefault(); // Impede envio de formulário (se houver)
-                 goToNextResult();     // Pula para o próximo resultado
+                 // Se houver resultados, vai para o próximo, senão, não faz nada
+                 if (searchResults.length > 0) {
+                    goToNextResult();
+                 }
              }
          });
 
