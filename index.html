@@ -268,9 +268,9 @@
 
             codeContent.innerHTML = ''; // Limpa mensagem de carregamento
             const iframe = document.createElement('iframe');
-            // Adiciona o charset aqui para tentar corrigir a codificação
-            iframe.setAttribute('srcdoc', `<!DOCTYPE html><html lang="pt-br"><head><meta charset="ISO-8859-1"></head><body>Conteúdo sendo carregado...</body></html>`); // Placeholder com charset
-            iframe.src = url; // Define o src real - o navegador tentará usar o charset da página carregada se o srcdoc não resolver
+            // Remove a tentativa de definir charset via srcdoc
+            // iframe.setAttribute('srcdoc', `<!DOCTYPE html><html lang="pt-br"><head><meta charset="ISO-8859-1"></head><body>Conteúdo sendo carregado...</body></html>`);
+            iframe.src = url; // Define o src diretamente
             iframe.onload = () => {
                 console.log("Iframe carregado.");
                 // Adiciona um pequeno delay para garantir que o DOM interno esteja pronto
@@ -300,6 +300,7 @@
             if (element.tagName !== 'P') return false;
             const text = element.textContent.trim();
             // Verifica artigos, parágrafos únicos, alíneas e incisos
+            // Ajustado para ser menos sensível a espaços extras após "Art."
             return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
 
@@ -307,10 +308,8 @@
         function extractArticleText(startElement) {
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
-            // Pega o texto dos próximos elementos <p> até encontrar um novo artigo ou outro elemento não <p>
-            while (currentElement && currentElement.tagName === 'P' && !currentElement.textContent.trim().match(/^Art\.\s*\d+[º°]?[\w-]*\.?/)) {
-                 // Adiciona apenas se não for outro tipo de cabeçalho relevante (evita duplicar §, I, a) etc)
-                 // Ou refinar a lógica para incluir o que for necessário
+            // Pega o texto dos próximos elementos <p> até encontrar um novo elemento relevante ou outro tipo de elemento
+            while (currentElement && currentElement.tagName === 'P' && !isRelevantElement(currentElement)) {
                 text += "\n" + currentElement.textContent.trim();
                 currentElement = currentElement.nextElementSibling;
             }
@@ -322,10 +321,10 @@
          function addActionButtonsToIframe(iframe) {
              try {
                  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                 if (!iframeDoc || !iframeDoc.body) { // Verifica se o body está pronto
-                     console.warn("Documento do Iframe ainda não está pronto.");
-                     // Tenta novamente após um delay maior se necessário
-                     // setTimeout(() => addActionButtonsToIframe(iframe), 300);
+                 if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState === 'loading') { // Verifica se o body está pronto e não carregando
+                     console.warn("Documento do Iframe ainda não está completamente carregado. Tentando novamente...");
+                     // Tenta novamente após um delay maior
+                     setTimeout(() => addActionButtonsToIframe(iframe), 300);
                      return;
                  }
 
@@ -391,7 +390,7 @@
 
 
                  // Seleciona todos os parágrafos dentro do body do iframe
-                 const paragraphs = iframeDoc.querySelectorAll('body p');
+                 const paragraphs = iframeDoc.body.querySelectorAll('p'); // Busca dentro do body
                  let articleCounter = 0; // Contador para gerar IDs únicos
 
                  paragraphs.forEach(p => {
@@ -418,20 +417,28 @@
                          buttonContainer.classList.add('article-button-container');
 
                          // Cria os botões (Passando o ID único)
+                         // Definindo prompts específicos para cada botão
+                        const prompts = {
+                            annotate: `Explique de forma simples e resumida o seguinte texto jurídico:\n\n"%%TEXT%%"`,
+                            jurisprudence: `Encontre jurisprudência relevante e atualizada sobre o seguinte artigo/trecho da legislação:\n\n"%%TEXT%%"`,
+                            share: `Crie um post curto para redes sociais explicando o ponto principal do seguinte texto jurídico:\n\n"%%TEXT%%"`
+                        };
+
                          buttonContainer.innerHTML = `
-                             <button class="article-button" title="Anotar" onclick="window.parent.handleArticleAction('annotate', '${uniqueArticleId}')">
-                                 <ion-icon name="create-outline"></ion-icon>
+                             <button class="article-button" title="Resumir/Explicar" onclick="window.parent.handleArticleAction('annotate', '${uniqueArticleId}', \`${prompts.annotate}\`)">
+                                 <ion-icon name="information-circle-outline"></ion-icon> <!-- Ícone mudado -->
                              </button>
                              <button class="article-button" title="Copiar" onclick="window.parent.handleArticleAction('copy', '${uniqueArticleId}')">
                                  <ion-icon name="copy-outline"></ion-icon>
                              </button>
-                             <button class="article-button" title="Jurisprudência" onclick="window.parent.handleArticleAction('jurisprudence', '${uniqueArticleId}')">
+                             <button class="article-button" title="Buscar Jurisprudência" onclick="window.parent.handleArticleAction('jurisprudence', '${uniqueArticleId}', \`${prompts.jurisprudence}\`)">
                                 <ion-icon name="library-outline"></ion-icon>
                             </button>
-                             <button class="article-button" title="Compartilhar" onclick="window.parent.handleArticleAction('share', '${uniqueArticleId}')">
-                                <ion-icon name="share-social-outline"></ion-icon>
+                             <button class="article-button" title="Explicar para Redes Sociais" onclick="window.parent.handleArticleAction('share', '${uniqueArticleId}', \`${prompts.share}\`)">
+                                <ion-icon name="share-social-outline"></ion-icon> <!-- Ícone mantido, mas título mudado -->
                              </button>
                          `;
+
 
                          // Adiciona o container ao parágrafo do artigo
                          p.appendChild(buttonContainer);
@@ -446,42 +453,49 @@
          }
 
         // --- Funções para lidar com as ações dos botões do artigo ---
-        function handleArticleAction(action, uniqueArticleId) {
+        // Modificado para aceitar um template de prompt
+        function handleArticleAction(action, uniqueArticleId, promptTemplate = "") {
             const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
-            const shortArticleText = fullArticleText.substring(0, 200) + (fullArticleText.length > 200 ? '...' : ''); // Pega os primeiros 200 caracteres
 
-            let promptText = "";
-            const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
-
-            switch(action) {
-                case 'annotate':
-                    promptText = `Faça anotações ou um resumo sobre o seguinte trecho da legislação:\n\n"${shortArticleText}"`;
-                    break;
-                case 'copy':
-                    // Ação de cópia agora usa o texto completo armazenado
-                    navigator.clipboard.writeText(fullArticleText)
-                        .then(() => alert(`Texto completo do artigo copiado!`))
-                        .catch(err => {
-                            console.error('Erro ao copiar:', err);
-                            alert("Erro ao copiar o texto.");
-                        });
-                    return; // Não abre Google AI para cópia
-                case 'jurisprudence':
-                    promptText = `Encontre jurisprudência relevante sobre o seguinte artigo/trecho da legislação:\n\n"${shortArticleText}"`;
-                    break;
-                case 'share':
-                    promptText = `Prepare uma breve explicação sobre o seguinte trecho da legislação para compartilhar:\n\n"${shortArticleText}"`;
-                    break;
-                default:
-                    console.error("Ação desconhecida:", action);
-                    return;
+            // Ação de cópia
+            if (action === 'copy') {
+                navigator.clipboard.writeText(fullArticleText)
+                    .then(() => alert(`Texto completo do artigo copiado!`))
+                    .catch(err => {
+                        // Fallback para método antigo se o novo falhar (útil em alguns contextos)
+                        try {
+                            const textArea = document.createElement("textarea");
+                            textArea.value = fullArticleText;
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            alert(`Texto completo do artigo copiado! (Fallback)`);
+                        } catch (fallbackErr) {
+                             console.error('Erro ao copiar (Navigator e Fallback):', err, fallbackErr);
+                             alert("Erro ao copiar o texto.");
+                        }
+                    });
+                return; // Não abre Google AI para cópia
             }
 
+            // Para outras ações, prepara o prompt
+            const shortArticleText = fullArticleText.substring(0, 200) + (fullArticleText.length > 200 ? '...' : ''); // Pega os primeiros 200 caracteres
+            const promptText = promptTemplate.replace("%%TEXT%%", shortArticleText); // Insere o texto no template
+
+            if (!promptText) {
+                 console.error("Ação desconhecida ou sem prompt:", action);
+                 return;
+            }
+
+            const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
             // Codifica o prompt para a URL
             const encodedPrompt = encodeURIComponent(promptText);
             const finalUrl = googleAiBaseUrl + encodedPrompt;
 
             // Abre o Google AI em uma nova aba
+            console.log("Abrindo URL:", finalUrl); // Log para depuração
             window.open(finalUrl, '_blank');
         }
 
