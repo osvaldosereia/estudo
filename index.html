@@ -23,6 +23,7 @@
             bottom: 2rem;
             right: 2rem;
             z-index: 50;
+            display: none; /* Começa oculto */
         }
         .fab-button {
             width: 56px;
@@ -34,7 +35,8 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
         .fab-button svg {
             width: 28px;
@@ -48,7 +50,6 @@
             right: 0;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
             gap: 12px;
             /* Inicia invisível e escalado para baixo */
             visibility: hidden;
@@ -56,6 +57,12 @@
             transform: scale(0.9);
             transform-origin: bottom right;
             transition: all 0.3s ease;
+            /* Estilo "Box" para os sub-botões */
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e2e8f0;
         }
          /* Estilo do container quando aberto */
         .fab-container.open .fab-options {
@@ -63,9 +70,9 @@
             opacity: 1;
             transform: scale(1);
         }
-        /* Gira o ícone '+' para 'x' */
-        .fab-container.open .fab-button svg {
-            transform: rotate(45deg);
+        /* Gira o ícone (será controlado por JS) */
+        .fab-container .fab-button svg {
+            /* O JS controlará o SVG interno */
         }
 
         .fab-option {
@@ -116,19 +123,22 @@
              background-color: orange;
         }
 
-        /* Classe de destaque para o IntersectionObserver (agora ativa) */
-        .article-in-focus {
-             background-color: #fefce8 !important; /* Um amarelo muito claro */
-             /* Adiciona !important para garantir que sobreponha o BG original */
+        /* Classe de destaque para Seleção Manual (Azul claro) */
+        .manual-selection {
+             background-color: #e0f2fe !important; /* Azul claro */
+             outline: 1px solid #7dd3fc;
         }
-
+        /* Cursor de ponteiro no modo de seleção */
+        body.selection-mode-active [data-article-id] {
+            cursor: pointer !important;
+        }
 
     </style>
      <!-- Importa a fonte Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-     <!-- Ícones IonIcons (Mantido para ícone da busca, não afeta iframe) -->
+     <!-- Ícones IonIcons (Mantido para ícone da busca) -->
     <script type.module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
@@ -198,7 +208,7 @@
         </div>
 
         <!-- Botão Flutuante (FAB) - Oculto por padrão, aparece na codeView -->
-        <div id="fabContainer" class="fab-container hidden">
+        <div id="fabContainer" class="fab-container">
             <!-- Sub-botões (*** CORRIGIDO: de 'classs' para 'class' ***) -->
             <div class="fab-options">
                 <div class="fab-option" onclick="handleArticleAction('explain')">
@@ -219,16 +229,23 @@
                 </div>
             </div>
              <!-- Botão Principal '+' -->
-            <button class="fab-button" onclick="toggleFab()">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+            <button class="fab-button" id="fabButton" onclick="fabClickHandler()">
+                 <!-- O SVG aqui será trocado dinamicamente pelo JS -->
+                 <svg id="fabIconPlus" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                 <svg id="fabIconCheck" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="hidden">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                 <svg id="fabIconClose" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="hidden">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
-        <!-- Div de Mensagem (para "Nenhum artigo em foco") -->
-        <div id="messageBox" class="hidden fixed bottom-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-            <p>Nenhum artigo em foco para esta ação.</p>
+        <!-- Div de Mensagem (Toast) -->
+        <div id="messageBox" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <p>Clique nos parágrafos que deseja estudar</p>
         </div>
 
     </div>
@@ -244,34 +261,32 @@
         const searchNextBtn = document.getElementById('searchNext');
         const searchResultCountEl = document.getElementById('searchResultCount');
         const fabContainer = document.getElementById('fabContainer');
+        const fabButton = document.getElementById('fabButton');
+        const fabOptions = document.querySelector('.fab-options');
+        const fabIconPlus = document.getElementById('fabIconPlus');
+        const fabIconCheck = document.getElementById('fabIconCheck');
+        const fabIconClose = document.getElementById('fabIconClose');
         const messageBox = document.getElementById('messageBox');
 
         // --- Variáveis Globais de Estado ---
         const articleTextMap = new Map();
-        let currentFocusedArticleText = ""; // Armazena o texto do artigo em foco
-        let currentFocusedArticleId = null; // Armazena o ID do artigo em foco
+        let selectedElements = new Set(); // Armazena os IDs dos elementos selecionados
+        let fabState = 'idle'; // 'idle' (+), 'selecting' (✔), 'actions_open' (X)
+        const SELECTION_LIMIT = 10; // Limite de parágrafos
         
         let highlightMarkInstance;
         let searchResults = [];
         let currentSearchResultIndex = -1;
         
-        let intersectionObserver = null; // Instância do Observer
-
         // --- Navegação Principal ---
         function showCategories() {
             categorySelection.classList.remove('hidden');
             categorySelection.classList.add('flex');
             codeView.classList.add('hidden');
             codeView.classList.remove('flex');
-            fabContainer.classList.add('hidden'); // Esconde o FAB
-            codeContent.innerHTML = '<p class="p-4 text-gray-500">Carregando conteúdo...</p>';
+            fabContainer.style.display = 'none'; // Esconde o FAB
+            resetFabToIdle(); // Garante que o estado seja limpo
             resetSearch();
-            
-            // Desconecta o observer anterior
-            if (intersectionObserver) {
-                intersectionObserver.disconnect();
-                intersectionObserver = null;
-            }
         }
 
         async function loadCode(url, title, baseUrl) {
@@ -279,18 +294,13 @@
             categorySelection.classList.remove('flex');
             codeView.classList.remove('hidden');
             codeView.classList.add('flex');
-            fabContainer.classList.remove('hidden'); // Mostra o FAB
-            fabContainer.classList.remove('open'); // Garante que comece fechado
-
+            fabContainer.style.display = 'block'; // Mostra o FAB
+            
             codeTitle.textContent = title;
             searchInput.value = '';
             articleTextMap.clear();
-            currentFocusedArticleText = "";
-            currentFocusedArticleId = null;
+            resetFabToIdle(); // Reseta o estado do FAB
             resetSearch();
-            
-            // Desconecta observer antigo se existir
-            if (intersectionObserver) intersectionObserver.disconnect();
 
             codeContent.innerHTML = '';
             const iframe = document.createElement('iframe');
@@ -310,65 +320,16 @@
                 } catch (e) {
                      console.error("Erro ao inicializar Mark.js:", e);
                 }
-                 // Espera para garantir renderização e executa modificações
+                 
                 setTimeout(() => {
                     prepareIframeContent(iframe, dynamicBaseUrl); 
-                    // Agora, esta função SÓ injeta CSS e prepara os elementos
-                    prepareElementsForObserver(iframe); 
-                }, 300); // Tempo aumentado para garantir renderização
+                    prepareElementsForSelection(iframe); 
+                }, 300); 
             };
             iframe.onerror = () => {
                 codeContent.innerHTML = '<p class="p-4 text-red-500">Erro ao carregar o conteúdo.</p>';
             };
             codeContent.appendChild(iframe);
-        }
-
-        // --- Lógica do Intersection Observer ---
-        function setupIntersectionObserver(iframe) {
-            const iframeWindow = iframe.contentWindow;
-            const iframeDoc = iframe.contentDocument || iframeWindow.document;
-            
-            if (!iframeWindow || !iframeDoc) return;
-
-            // Opções: root é o viewport do iframe. O margin define uma "linha"
-            // no meio da tela (entre 40% do topo e 60% da base).
-            const options = {
-                root: iframeDoc, // Observa dentro do viewport do iframe
-                rootMargin: "-40% 0px -50% 0px", // Define a "zona de foco" (top, right, bottom, left)
-                threshold: 0 // Qualquer pixel que entrar na zona dispara
-            };
-
-            // Callback do observer
-            const observerCallback = (entries) => {
-                entries.forEach(entry => {
-                    const el = entry.target;
-                    const id = el.dataset.articleId;
-
-                    if (entry.isIntersecting) {
-                        // Elemento entrou na zona de foco
-                        console.log("Artigo em foco:", id);
-                        currentFocusedArticleId = id;
-                        currentFocusedArticleText = articleTextMap.get(id) || "";
-                        el.classList.add('article-in-focus');
-                    } else {
-                        // Elemento saiu da zona de foco
-                        el.classList.remove('article-in-focus');
-                        
-                        // Se o elemento que saiu era o que estava focado, limpa o foco
-                        if (currentFocusedArticleId === id) {
-                            currentFocusedArticleId = null;
-                            currentFocusedArticleText = "";
-                        }
-                    }
-                });
-            };
-
-            // Cria e inicia o observer
-            intersectionObserver = new IntersectionObserver(observerCallback, options);
-            const elementsToObserve = iframeDoc.querySelectorAll('[data-article-id]');
-            elementsToObserve.forEach(el => intersectionObserver.observe(el));
-            
-            console.log(`IntersectionObserver iniciado, monitorando ${elementsToObserve.length} elementos.`);
         }
 
         // --- Preparação do Iframe ---
@@ -383,7 +344,10 @@
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
             while (currentElement && ['P', 'DIV'].includes(currentElement.tagName) && !isRelevantElement(currentElement)) {
-                 text += "\n" + currentElement.textContent.trim();
+                 // Evita adicionar o texto de links substituídos que podem estar em <p> separados
+                 if (!currentElement.querySelector('span.link-replacement')) {
+                    text += "\n" + currentElement.textContent.trim();
+                 }
                  currentElement = currentElement.nextElementSibling;
             }
             text = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|Vide Lei.*\))/gi, '').trim();
@@ -418,17 +382,17 @@
             }
         }
         
-         // Prepara elementos para o Observer (Injeta CSS e mapeia texto)
-         function prepareElementsForObserver(iframe) {
+         // Prepara elementos para Seleção (Injeta CSS e mapeia texto)
+         function prepareElementsForSelection(iframe) {
              try {
                  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                  if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState !== 'complete' || !iframeDoc.head) {
-                     console.warn("Documento do Iframe (Observer) não está pronto. Tentando novamente...");
-                     setTimeout(() => prepareElementsForObserver(iframe), 300);
+                     console.warn("Documento do Iframe (Seleção) não está pronto. Tentando novamente...");
+                     setTimeout(() => prepareElementsForSelection(iframe), 300);
                      return;
                  }
 
-                 // 1. Injeta CSS para quebra de linha e ocultar imagens
+                 // 1. Injeta CSS
                  const styleId = 'vademecum-styles';
                  if (!iframeDoc.getElementById(styleId)) {
                     const style = iframeDoc.createElement('style');
@@ -446,13 +410,19 @@
 
                         /* Força a quebra de linha em TUDO para evitar estouro */
                         p, div, span, a, font {
-                            word-break: break-word !important; /* Prefere quebrar palavras */
-                            overflow-wrap: break-word !important; /* Garante a quebra */
+                            word-break: break-word !important; 
+                            overflow-wrap: break-word !important;
                         }
 
-                        /* Estilo de foco (agora ativo) */
-                        .article-in-focus {
-                             background-color: #fefce8 !important; /* Amarelo bem claro */
+                        /* Estilo de seleção manual (azul claro) */
+                        .manual-selection {
+                             background-color: #e0f2fe !important; /* Azul claro */
+                             outline: 1px solid #7dd3fc;
+                        }
+                        
+                        /* Cursor no modo de seleção */
+                        body.selection-mode-active [data-article-id] {
+                            cursor: pointer !important;
                         }
                         
                         /* Estilos de busca (Mark.js) */
@@ -485,78 +455,209 @@
                          if (fullText && fullText.length >= 5) {
                             articleTextMap.set(uniqueArticleId, fullText);
                          } else {
-                             // Não define o ID se não houver texto, para não ser pego pelo observer
                              delete el.dataset.articleId;
                          }
                      }
                  });
-                 console.log(`Elementos mapeados para observer: ${articleTextMap.size}`);
+                 console.log(`Elementos mapeados para seleção: ${articleTextMap.size}`);
                  
-                 // 3. Inicia o Observer agora que os elementos estão prontos
-                 setupIntersectionObserver(iframe);
+                 // 3. Adiciona o listener de clique no body do iframe
+                 iframeDoc.body.addEventListener('click', (event) => {
+                     iframeBodyClickHandler(event, iframeDoc);
+                 });
 
              } catch (e) {
-                 console.error("Erro ao preparar elementos para o observer: ", e);
+                 console.error("Erro ao preparar elementos para seleção: ", e);
              }
          }
 
-        // --- Ações do FAB ---
-        function toggleFab() {
-            fabContainer.classList.toggle('open');
-        }
+        // --- Lógica do FAB e Seleção Manual ---
         
+        function setFabIcon(iconName) { // 'plus', 'check', 'close'
+            fabIconPlus.classList.toggle('hidden', iconName !== 'plus');
+            fabIconCheck.classList.toggle('hidden', iconName !== 'check');
+            fabIconClose.classList.toggle('hidden', iconName !== 'close');
+        }
+
         function showMessage(msg) {
              messageBox.textContent = msg;
              messageBox.classList.remove('hidden');
              setTimeout(() => {
                  messageBox.classList.add('hidden');
-             }, 2000); // Mostra a mensagem por 2 segundos
+             }, 2000); 
         }
 
-        // Função que lida com o clique nos botões do FAB
+        // Manipulador de clique no body do iframe
+        function iframeBodyClickHandler(event, iframeDoc) {
+             if (fabState !== 'selecting') return; // Só funciona em modo de seleção
+
+             const targetElement = event.target.closest('[data-article-id]');
+             if (!targetElement) return;
+
+             event.preventDefault();
+             event.stopPropagation();
+
+             const articleId = targetElement.dataset.articleId;
+
+             if (selectedElements.has(articleId)) {
+                 // Desseleciona
+                 selectedElements.delete(articleId);
+                 targetElement.classList.remove('manual-selection');
+             } else {
+                 // Seleciona, se não atingiu o limite
+                 if (selectedElements.size < SELECTION_LIMIT) {
+                    selectedElements.add(articleId);
+                    targetElement.classList.add('manual-selection');
+                 } else {
+                    showMessage("Limite de 10 parágrafos atingido.");
+                 }
+             }
+        }
+        
+        // Encontra o elemento mais centralizado na viewport do iframe
+        function findInEvidenceElement() {
+             const iframe = codeContent.querySelector('iframe');
+             if (!iframe) return null;
+             
+             const iframeWindow = iframe.contentWindow;
+             const iframeDoc = iframe.contentDocument || iframeWindow.document;
+             
+             const viewportCenterY = iframeWindow.innerHeight / 2;
+             let closestElement = null;
+             let minDistance = Infinity;
+             
+             const elements = iframeDoc.querySelectorAll('[data-article-id]');
+             elements.forEach(el => {
+                 const rect = el.getBoundingClientRect();
+                 // Ignora elementos que não estão visíveis
+                 if (rect.height === 0 || rect.width === 0) return;
+                 
+                 // Calcula o centro do elemento
+                 const elementCenterY = rect.top + (rect.height / 2);
+                 // Calcula a distância do centro do elemento ao centro da viewport
+                 const distance = Math.abs(viewportCenterY - elementCenterY);
+
+                 if (distance < minDistance) {
+                     minDistance = distance;
+                     closestElement = el;
+                 }
+             });
+             
+             return closestElement;
+        }
+
+        // Função principal do FAB
+        function fabClickHandler() {
+            if (fabState === 'idle') {
+                // Estado 1: Iniciar Seleção
+                fabState = 'selecting';
+                setFabIcon('check'); // Muda ícone para ✔
+                
+                const inEvidenceElement = findInEvidenceElement();
+                if (inEvidenceElement) {
+                     const articleId = inEvidenceElement.dataset.articleId;
+                     selectedElements.add(articleId);
+                     inEvidenceElement.classList.add('manual-selection');
+                }
+                
+                // Mostra o toast "Clique nos parágrafos..."
+                showMessage("Clique nos parágrafos que deseja estudar");
+                
+                // Adiciona classe para mudar o cursor
+                const iframe = codeContent.querySelector('iframe');
+                if (iframe) (iframe.contentDocument || iframe.contentWindow.document).body.classList.add('selection-mode-active');
+            
+            } else if (fabState === 'selecting') {
+                // Estado 2: Confirmar Seleção
+                if (selectedElements.size === 0) {
+                     showMessage("Nenhum artigo selecionado.");
+                     resetFabToIdle(); // Volta ao estado inicial
+                     return;
+                }
+                
+                fabState = 'actions_open';
+                setFabIcon('close'); // Muda ícone para X
+                fabContainer.classList.add('open'); // Abre o menu E, G, S, V
+
+                // Remove classe do cursor
+                const iframe = codeContent.querySelector('iframe');
+                if (iframe) (iframe.contentDocument || iframe.contentWindow.document).body.classList.remove('selection-mode-active');
+
+            } else if (fabState === 'actions_open') {
+                // Estado 3: Fechar Menu
+                resetFabToIdle();
+            }
+        }
+        
+        // Limpa tudo e volta ao estado inicial
+        function resetFabToIdle() {
+            fabState = 'idle';
+            setFabIcon('plus'); // Muda ícone para +
+            fabContainer.classList.remove('open'); // Fecha o menu
+            
+            // Limpa seleções visuais
+            const iframe = codeContent.querySelector('iframe');
+            if (iframe) {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.body.classList.remove('selection-mode-active');
+                iframeDoc.querySelectorAll('.manual-selection').forEach(el => {
+                    el.classList.remove('manual-selection');
+                });
+            }
+            selectedElements.clear(); // Limpa o set de IDs
+        }
+
+
+        // Função que lida com o clique nos botões (E, G, S, V)
         function handleArticleAction(action) {
-             // Verifica se há um artigo em foco
-             if (!currentFocusedArticleText) {
-                console.warn("Ação chamada sem artigo em foco.");
-                showMessage("Nenhum artigo em foco. Role a tela.");
-                fabContainer.classList.remove('open'); // Fecha o menu
+             let combinedText = "";
+             selectedElements.forEach(id => {
+                 combinedText += (articleTextMap.get(id) || "") + "\n\n";
+             });
+             combinedText = combinedText.trim();
+
+             if (!combinedText) {
+                console.error("Ação chamada sem texto selecionado.");
+                showMessage("Nenhum artigo selecionado.");
+                resetFabToIdle();
                 return;
              }
              
-             const fullArticleText = currentFocusedArticleText;
-             fabContainer.classList.remove('open'); // Fecha o menu ao clicar
-
              // Ação YouTube
              if (action === 'youtube') {
-                const articleMatch = fullArticleText.match(/Art\.\s*\d+[º°]?[\w-]*\.?/i);
-                const queryBase = articleMatch ? articleMatch[0] : fullArticleText.substring(0, 50).trim();
+                const articleMatch = combinedText.match(/Art\.\s*\d+[º°]?[\w-]*\.?/i);
+                const queryBase = articleMatch ? articleMatch[0] : combinedText.substring(0, 50).trim();
                 const searchQuery = `Videoaula ${queryBase} ${codeTitle.textContent}`;
                 const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
                 console.log("Abrindo YouTube:", youtubeUrl);
                 window.open(youtubeUrl, '_blank');
-                return;
-             }
-
-             // Ações Google Search (IA)
-             let promptText = '';
              
-             if (action === 'explain') {
-                 promptText = `Explicação detalhada do artigo completo:\n\n"${fullArticleText}"`;
-             } else if (action === 'glossary') {
-                 promptText = `Glossário jurídico dos termos no artigo completo:\n\n"${fullArticleText}"`;
-             } else if (action === 'related') {
-                 promptText = `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${fullArticleText}"`;
              } else {
-                 console.error("Ação desconhecida:", action);
-                 return;
+                 // Ações Google Search (IA)
+                 let promptText = '';
+                 
+                 if (action === 'explain') {
+                     promptText = `Explicação detalhada do(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
+                 } else if (action === 'glossary') {
+                     promptText = `Glossário jurídico dos termos no(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
+                 } else if (action === 'related') {
+                     promptText = `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${combinedText}"`;
+                 } else {
+                     console.error("Ação desconhecida:", action);
+                     resetFabToIdle();
+                     return;
+                 }
+
+                 const googleSearchBaseUrl = "https://www.google.com/search?udm=50&q=";
+                 const encodedPrompt = encodeURIComponent(promptText);
+                 const finalUrl = googleSearchBaseUrl + encodedPrompt;
+
+                 console.log("Abrindo URL Google Search (IA):", finalUrl);
+                 window.open(finalUrl, '_blank');
              }
 
-             const googleSearchBaseUrl = "https://www.google.com/search?udm=50&q=";
-             const encodedPrompt = encodeURIComponent(promptText);
-             const finalUrl = googleSearchBaseUrl + encodedPrompt;
-
-             console.log("Abrindo URL Google Search (IA):", finalUrl);
-             window.open(finalUrl, '_blank');
+             // Reseta o estado após a ação
+             resetFabToIdle();
         }
 
 
