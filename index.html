@@ -247,26 +247,9 @@
         function extractArticleText(startElement) {
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
-            
-            // // Remove os textos dos links substituídos do final do texto principal, se houver
-            // const spanLinkMain = startElement.querySelector('span.link-replacement');
-            // if (spanLinkMain) {
-            //     text = text.replace(spanLinkMain.textContent.trim(), '').trim();
-            // }
 
             while (currentElement && ['P', 'DIV'].includes(currentElement.tagName) && !isRelevantElement(currentElement)) {
-                 // // Inclui o texto do span.link-replacement, se houver
-                 // const spanLink = currentElement.querySelector('span.link-replacement');
-                 // let elementText = (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
-                 
-                 // // Remove o texto do link se ele for o único conteúdo (para não duplicar)
-                 // if (spanLink && elementText === spanLink.textContent.trim()) {
-                 //     text += "\n" + currentElement.textContent.replace(spanLink.textContent.trim(), '').trim();
-                 // } else {
-                 //     text += "\n" + currentElement.textContent.trim();
-                 // }
                  text += "\n" + currentElement.textContent.trim();
-                 
                  currentElement = currentElement.nextElementSibling;
             }
              
@@ -286,16 +269,34 @@
                     console.warn("Documento do Iframe não acessível para preparar conteúdo.");
                     return;
                 }
+                
+                // URL Base para corrigir links relativos
+                const baseUrl = "https://www.planalto.gov.br/ccivil_03/"; 
 
                 // Encontra todos os links <a> dentro do corpo do iframe
                 const links = iframeDoc.body.querySelectorAll('a');
                 console.log(`Encontrados ${links.length} links para processar.`);
 
                 links.forEach(link => {
-                    // Define o target para _blank para não quebrar a navegação
-                    link.target = "_blank";
+                    // 1. Define o target para _blank para não quebrar a navegação
+                    link.target = "_blank"; 
+                    
+                    // 2. Corrige o href
+                    let currentHref = link.getAttribute('href'); 
+                    if (currentHref) {
+                        // Se NÃO for um link externo (http) E NÃO for um link âncora (#)
+                        if (!currentHref.startsWith('http') && !currentHref.startsWith('#')) {
+                            try {
+                                // Resolve a URL relativa (ex: ../LEIS/...) usando a URL base
+                                let absoluteUrl = new URL(currentHref, baseUrl);
+                                link.setAttribute('href', absoluteUrl.href);
+                            } catch (urlError) {
+                                console.warn("Não foi possível corrigir a URL relativa:", currentHref, urlError);
+                            }
+                        }
+                    }
                 });
-                 console.log(`Links ajustados para target="_blank".`);
+                 console.log(`Links ajustados para URL absoluta e target="_blank".`);
 
             } catch (e) {
                  console.error("Erro ao preparar conteúdo do iframe (ajustar links): ", e);
