@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"> <!-- Charset para a página principal -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeuVade</title>
+    <title>Vademecum Digital</title>
     <!-- Carrega Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -78,37 +78,28 @@
         .fab-option {
             display: flex;
             align-items: center;
+            /* Itens alinhados à direita */
+            justify-content: flex-end; 
             gap: 8px;
             cursor: pointer;
         }
         .fab-option-label {
             background-color: white;
             color: #333;
-            padding: 4px 10px;
+            padding: 8px 12px; /* Aumentado o padding para parecer mais um botão */
             border-radius: 6px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
             font-size: 14px;
             font-weight: 500;
             white-space: nowrap;
+            /* A etiqueta agora é sempre visível (removido hidden md:block) */
+            transition: background-color 0.2s;
         }
-        .fab-option-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #f8fafc; /* Branco/Cinza claro */
-            color: #374151; /* Cinza escuro */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            font-family: 'Arial', sans-serif;
-            font-size: 16px;
-            font-weight: bold;
-            border: 1px solid #e2e8f0;
+        .fab-option:hover .fab-option-label {
+            background-color: #f3f4f6; /* Cinza claro no hover */
         }
-        .fab-option-icon:hover {
-            background-color: #e2e8f0; /* Cinza mais escuro no hover */
-        }
+
+        /* --- CSS para o .fab-option-icon REMOVIDO --- */
 
 
         /* Estilo para highlight da busca */
@@ -158,16 +149,8 @@
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
                 <!-- Botão para carregar o Código Civil (baseUrl ADICIONADA) -->
-                <button onclick="loadCode('civil1.html', 'Código Civil', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                <button onclick="loadCode('codigo-civil.html', 'Código Civil', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
                      Código Civil
-                 </button>
-                 <!-- Botão para carregar o Código Civil (baseUrl ADICIONADA) -->
-                <button onclick="loadCode('processocivil.html', 'Processo Civil', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
-                     Processo Civil
-                 </button>
-                  <!-- Botão para carregar o Código Civil (baseUrl ADICIONADA) -->
-                <button onclick="loadCode('processopenal.html', 'Processo Penal', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
-                     Processo Penal
                  </button>
                  <!-- Placeholder para Constituição Federal -->
                  <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
@@ -217,23 +200,20 @@
 
         <!-- Botão Flutuante (FAB) - Oculto por padrão, aparece na codeView -->
         <div id="fabContainer" class="fab-container">
-            <!-- Sub-botões (*** CORRIGIDO: de 'classs' para 'class' ***) -->
+            <!-- Sub-botões -->
             <div class="fab-options">
+                <!-- *** CORRIGIDO: Removidos os <span> de ícone (E, G, S, V) *** -->
                 <div class="fab-option" onclick="handleArticleAction('explain')">
-                    <span class="fab-option-label">Explque de forma detalhada e didática o artigo do código. Garanta que o estudante de direito saia com um conhecimento completo.</span>
-                    <span class="fab-option-icon">E</span>
+                    <span class="fab-option-label">Explicação Detalhada</span>
                 </div>
                 <div class="fab-option" onclick="handleArticleAction('glossary')">
-                    <span class="fab-option-label">Analise todos o conteudo e crie um Glossário Jurídico didático e objetivo.</span>
-                    <span class="fab-option-icon">G</span>
+                    <span class="fab-option-label">Glossário Jurídico</span>
                 </div>
                 <div class="fab-option" onclick="handleArticleAction('related')">
-                    <span class="fab-option-label">Analise o conteúdo e atue como um pesquisador jurídico, traga Súmulas, Enunciados, Teses e Correlatos baseado em vademecums recentes.</span>
-                    <span class="fab-option-icon">S</span>
+                    <span class="fab-option-label">Súmulas e Correlatos</span>
                 </div>
                 <div class="fab-option" onclick="handleArticleAction('youtube')">
-                    <span class="fab-option-label">Voce é um especialista em videoaulas do youtube, traga 5 videos relacionados ao tema do conteudo a seguir:</span>
-                    <span class="fab-option-icon">V</span>
+                    <span class="fab-option-label">Buscar Videoaula</span>
                 </div>
             </div>
              <!-- Botão Principal '+' -->
@@ -343,6 +323,7 @@
         // --- Preparação do Iframe ---
 
         function isRelevantElement(element) {
+            if (!element || !element.tagName) return false;
             if (!['P', 'DIV'].includes(element.tagName)) return false; 
             const text = element.textContent.trim();
              return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
@@ -538,7 +519,7 @@
              elements.forEach(el => {
                  const rect = el.getBoundingClientRect();
                  // Ignora elementos que não estão visíveis
-                 if (rect.height === 0 || rect.width === 0) return;
+                 if (rect.height === 0 || rect.width === 0 || rect.top > iframeWindow.innerHeight || rect.bottom < 0) return;
                  
                  // Calcula o centro do elemento
                  const elementCenterY = rect.top + (rect.height / 2);
@@ -564,8 +545,10 @@
                 const inEvidenceElement = findInEvidenceElement();
                 if (inEvidenceElement) {
                      const articleId = inEvidenceElement.dataset.articleId;
-                     selectedElements.add(articleId);
-                     inEvidenceElement.classList.add('manual-selection');
+                     if(articleId) { // Garante que o elemento encontrado tenha um ID mapeado
+                        selectedElements.add(articleId);
+                        inEvidenceElement.classList.add('manual-selection');
+                     }
                 }
                 
                 // Mostra o toast "Clique nos parágrafos..."
@@ -605,10 +588,9 @@
             
             // Limpa seleções visuais
             const iframe = codeContent.querySelector('iframe');
-            if (iframe) {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iframeDoc.body.classList.remove('selection-mode-active');
-                iframeDoc.querySelectorAll('.manual-selection').forEach(el => {
+            if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+                iframe.contentDocument.body.classList.remove('selection-mode-active');
+                iframe.contentDocument.querySelectorAll('.manual-selection').forEach(el => {
                     el.classList.remove('manual-selection');
                 });
             }
@@ -619,9 +601,17 @@
         // Função que lida com o clique nos botões (E, G, S, V)
         function handleArticleAction(action) {
              let combinedText = "";
-             selectedElements.forEach(id => {
-                 combinedText += (articleTextMap.get(id) || "") + "\n\n";
-             });
+             // Garante que a ordem da seleção seja a ordem do documento
+             const iframe = codeContent.querySelector('iframe');
+             if (iframe && iframe.contentDocument) {
+                 iframe.contentDocument.querySelectorAll('.manual-selection[data-article-id]').forEach(el => {
+                     const id = el.dataset.articleId;
+                     if(selectedElements.has(id)) { // Confirma que está no set
+                         combinedText += (articleTextMap.get(id) || "") + "\n\n";
+                     }
+                 });
+             }
+             
              combinedText = combinedText.trim();
 
              if (!combinedText) {
@@ -645,11 +635,14 @@
                  let promptText = '';
                  
                  if (action === 'explain') {
-                     promptText = `Explicação detalhada do(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
+                     promptText = `Explicação aprofundada, objetiva e didática do conteúdo, contexto jurídico, fundamentos, exceções e aplicação prática dos artigos indicados, destacando conceitos-chave, exemplos e conexões legais relevantes
+:\n\n"${combinedText}"`;
                  } else if (action === 'glossary') {
-                     promptText = `Glossário jurídico dos termos no(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
+                     promptText = `Definições jurídicas e explicações breves dos principais termos técnicos e expressões legais presentes nos artigos indicados, com foco em clareza, precisão conceitual e contexto normativo essencial.
+:\n\n"${combinedText}"`;
                  } else if (action === 'related') {
-                     promptText = `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${combinedText}"`;
+                     promptText = `Buscar súmulas, enunciados, teses e artigos correlatos para os artigos indicados, apresentando : título/data, trecho relevante, e breve explicação do vínculo com o(s) artigo(s) em foco.
+:\n\n"${combinedText}"`;
                  } else {
                      console.error("Ação desconhecida:", action);
                      resetFabToIdle();
