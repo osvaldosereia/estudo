@@ -106,7 +106,9 @@
             border: 1px solid #ddd;
             pointer-events: none; /* Não interage até hover */
          }
-         .relative-article:hover .article-button-container {
+         /* Mostra ao passar o mouse ou ao focar (para acessibilidade/touch) */
+         .relative-article:hover .article-button-container,
+         .relative-article:focus-within .article-button-container {
              opacity: 1;
              pointer-events: auto; /* Permite clique nos botões */
          }
@@ -145,6 +147,16 @@
         }
         mark.current-highlight { /* Estilo para o resultado atual */
              background-color: orange;
+        }
+
+        /* Estilo para substituir links */
+        span.link-replacement {
+            color: #888; /* Cinza médio */
+            font-size: 0.9em; /* Ligeiramente menor */
+            word-break: break-all; /* Força a quebra de linha */
+            /* Remove sublinhado e outras decorações de link */
+            text-decoration: none;
+            cursor: default; /* Remove cursor de link */
         }
 
     </style>
@@ -220,7 +232,7 @@
             </div>
         </div>
 
-        <!-- Botão Flutuante (FAB) -->
+        <!-- Botão Flutuante (FAB) - Opcional, pode ser removido -->
         <div id="fabContainer" class="fab-container hidden">
             <div class="fab-options">
                  <button class="fab-option" onclick="alert('Função 1 (ex: Anotar)')" aria-label="Anotar">
@@ -285,7 +297,8 @@
             categorySelection.classList.remove('flex');
             codeView.classList.remove('hidden');
             codeView.classList.add('flex');
-            fabContainer.classList.remove('hidden');
+            // Mantém FAB escondido por enquanto, focando nos botões inline
+            // fabContainer.classList.remove('hidden');
             codeTitle.textContent = title;
             searchInput.value = '';
             articleTextMap.clear();
@@ -300,19 +313,22 @@
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     console.log("Charset detectado no iframe:", iframeDoc.characterSet || iframeDoc.charset || "Não especificado");
                     if (!(iframeDoc.characterSet || iframeDoc.charset || '').toUpperCase().includes('UTF-8')) {
-                         console.warn("A codificação do arquivo carregado não parece ser UTF-8...");
+                         console.warn("A codificação do arquivo carregado não parece ser UTF-8. Verifique o <meta charset='UTF-8'> dentro do arquivo HTML.");
                     }
-                    if (typeof Mark !== 'undefined') {
+                     // Inicializa Mark.js APÓS garantir que o body existe
+                     if (iframeDoc.body && typeof Mark !== 'undefined') {
                         highlightMarkInstance = new Mark(iframeDoc.body);
-                    } else {
-                         console.error("Mark.js não está carregado.");
-                    }
+                     } else if (typeof Mark === 'undefined') {
+                        console.error("Mark.js não está carregado.");
+                     }
                 } catch (e) {
                      console.error("Erro ao acessar documento do iframe ou inicializar Mark.js:", e);
                 }
+                 // Espera um pouco mais para garantir renderização e executa modificações/adição de botões
                 setTimeout(() => {
+                    prepareIframeContent(iframe);
                     addActionButtonsToIframe(iframe);
-                }, 100);
+                }, 150); // Aumentado ligeiramente o tempo
             };
             iframe.onerror = () => {
                 codeContent.innerHTML = '<p class="p-4 text-red-500">Erro ao carregar o conteúdo.</p>';
@@ -328,44 +344,83 @@
             fabMain.setAttribute('aria-label', isOpen ? 'Fechar opções' : 'Abrir opções');
         }
 
+        // Verifica se é um elemento relevante (Artigo, Parágrafo, Inciso, etc.)
         function isRelevantElement(element) {
             if (element.tagName !== 'P') return false;
             const text = element.textContent.trim();
-            return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
+             // Regex aprimorada para capturar mais padrões, incluindo alíneas e incisos romanos
+             return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
 
+        // Extrai o texto do elemento inicial e dos próximos <p> até encontrar outro elemento relevante
         function extractArticleText(startElement) {
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
             while (currentElement && currentElement.tagName === 'P' && !isRelevantElement(currentElement)) {
-                text += "\n" + currentElement.textContent.trim();
+                text += "\n" + currentElement.textContent.trim(); // Concatena com nova linha
                 currentElement = currentElement.nextElementSibling;
             }
             return text;
         }
 
+        // Função para modificar o conteúdo do iframe (substituir links)
+        function prepareIframeContent(iframe) {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!iframeDoc || !iframeDoc.body) {
+                    console.warn("Documento do Iframe não acessível para preparar conteúdo.");
+                    return;
+                }
+
+                // Encontra todos os links <a> dentro do corpo do iframe
+                const links = iframeDoc.body.querySelectorAll('a');
+                console.log(`Encontrados ${links.length} links para processar.`);
+
+                links.forEach(link => {
+                    // Cria um novo elemento <span>
+                    const span = iframeDoc.createElement('span');
+                    // Copia o texto do link para o span
+                    span.textContent = link.textContent;
+                    // Adiciona a classe CSS para estilização e quebra de linha
+                    span.className = 'link-replacement';
+                    // Substitui o link <a> pelo novo <span> no DOM
+                    link.parentNode.replaceChild(span, link);
+                });
+                 console.log(`Links substituídos por spans.`);
+
+            } catch (e) {
+                 console.error("Erro ao preparar conteúdo do iframe (substituir links): ", e);
+            }
+        }
+
+
+         // Adiciona os botões de ação aos elementos relevantes
          function addActionButtonsToIframe(iframe) {
              try {
                  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                 if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState !== 'complete') {
-                     console.warn("Documento do Iframe ainda não está completo. Tentando novamente...");
+                 // Adiciona verificação robusta
+                 if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState !== 'complete' || !iframeDoc.head) {
+                     console.warn("Documento do Iframe ainda não está pronto. Tentando novamente...");
                      setTimeout(() => addActionButtonsToIframe(iframe), 300);
                      return;
                  }
 
+                 // Injeta CSS se não existir
                  const styleId = 'article-button-styles';
                  if (!iframeDoc.getElementById(styleId)) {
                     const style = iframeDoc.createElement('style');
                     style.id = styleId;
                     style.textContent = `
-                        .relative-article { position: relative !important; padding-right: 30px !important; min-height: 25px; }
+                        .relative-article { position: relative !important; padding-right: 30px !important; min-height: 25px; outline: none; /* Remove outline padrão do foco */ }
                         .article-button-container { position: absolute; right: 2px; top: 1px; display: flex; flex-direction: column; gap: 2px; opacity: 0; transition: opacity 0.2s ease-in-out; z-index: 10; background-color: rgba(240, 240, 240, 0.9); padding: 3px; border-radius: 4px; border: 1px solid #ddd; pointer-events: none; }
-                        .relative-article:hover .article-button-container { opacity: 1; pointer-events: auto; }
+                        .relative-article:hover .article-button-container,
+                        .relative-article:focus-within .article-button-container { opacity: 1; pointer-events: auto; }
                         .article-button { background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; padding: 0; cursor: pointer; font-size: 0.65rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
                         .article-button:hover { background-color: #eee; border-color: #bbb; }
                         .article-button ion-icon { width: 14px; height: 14px; }
                         mark.search-highlight { background-color: yellow; font-weight: bold; padding: 0; margin: 0; }
-                        mark.current-highlight { background-color: orange; } /* Estilo para resultado atual */
+                        mark.current-highlight { background-color: orange; }
+                        span.link-replacement { color: #888; font-size: 0.9em; word-break: break-all; text-decoration: none; cursor: default; }
                     `;
                     iframeDoc.head.appendChild(style);
                  }
@@ -374,107 +429,122 @@
                  let articleCounter = 0;
 
                  paragraphs.forEach(p => {
+                      // Limpa botões antigos e classe
                      const oldContainer = p.querySelector('.article-button-container');
                      if(oldContainer) p.removeChild(oldContainer);
                      p.classList.remove('relative-article');
+                     p.removeAttribute('tabindex'); // Remove tabindex se houver
 
+                     // Verifica se é um elemento relevante
                      if (isRelevantElement(p)) {
                          articleCounter++;
                          const uniqueArticleId = `article-${articleCounter}`;
                          p.dataset.articleId = uniqueArticleId;
 
+                         // Extrai texto e armazena
                          const fullText = extractArticleText(p);
                          articleTextMap.set(uniqueArticleId, fullText);
 
+                         // Adiciona classe e tabindex para foco/touch
                          p.classList.add('relative-article');
+                         p.setAttribute('tabindex', '-1'); // Permite foco programático ou via JS, mas não via Tab
+
+                         // Cria container dos botões
                          const buttonContainer = iframeDoc.createElement('div');
                          buttonContainer.classList.add('article-button-container');
 
-                        // Prompts para Google AI (usando %%FULL_TEXT%%)
-                        const prompts = {
-                            explain: `Explique de forma detalhada o seguinte texto jurídico, abordando seu significado, alcance e possíveis interpretações:\n\n"%%FULL_TEXT%%"`,
-                            glossary: `Crie um glossário explicando os termos jurídicos encontrados no seguinte texto:\n\n"%%FULL_TEXT%%"`,
-                            related: `Busque Súmulas, Enunciados, Teses (Repercussão Geral, Recursos Repetitivos, etc.) e artigos correlatos referentes ao seguinte dispositivo legal ou tema:\n\n"%%FULL_TEXT%%"`
-                            // youtube não usa prompt template aqui
-                        };
+                         // Templates de Prompt (usando template literals para facilitar)
+                         const prompts = {
+                            explain: `Explique de forma detalhada o seguinte texto jurídico, abordando seu significado, alcance e possíveis interpretações:\n\n"${fullText}"`, // Usa fullText diretamente
+                            glossary: `Crie um glossário explicando os termos jurídicos encontrados no seguinte texto:\n\n"${fullText}"`, // Usa fullText diretamente
+                            related: `Busque Súmulas, Enunciados, Teses (Repercussão Geral, Recursos Repetitivos, etc.) e artigos correlatos referentes ao seguinte dispositivo legal ou tema:\n\n"${fullText}"` // Usa fullText diretamente
+                         };
 
-                         // Botões atualizados
+                         // Botões HTML (atenção aos escapes se usar aspas dentro do onclick)
                          buttonContainer.innerHTML = `
-                             <button class="article-button" title="Explicação Detalhada (Google AI)" onclick="window.parent.handleArticleAction('explain', '${uniqueArticleId}', \`${prompts.explain}\`)">
+                             <button class="article-button" title="Explicação Detalhada (Google AI)" onclick="window.parent.handleArticleAction('explain', '${uniqueArticleId}')">
                                  <ion-icon name="information-circle-outline"></ion-icon>
                              </button>
-                             <button class="article-button" title="Glossário Jurídico (Google AI)" onclick="window.parent.handleArticleAction('glossary', '${uniqueArticleId}', \`${prompts.glossary}\`)">
-                                 <ion-icon name="book-outline"></ion-icon> <!-- Ícone Glossário -->
+                             <button class="article-button" title="Glossário Jurídico (Google AI)" onclick="window.parent.handleArticleAction('glossary', '${uniqueArticleId}')">
+                                 <ion-icon name="book-outline"></ion-icon>
                              </button>
-                             <button class="article-button" title="Súmulas e Correlatos (Google AI)" onclick="window.parent.handleArticleAction('related', '${uniqueArticleId}', \`${prompts.related}\`)">
+                             <button class="article-button" title="Súmulas e Correlatos (Google AI)" onclick="window.parent.handleArticleAction('related', '${uniqueArticleId}')">
                                 <ion-icon name="library-outline"></ion-icon>
                             </button>
                              <button class="article-button" title="Buscar Videoaula (YouTube)" onclick="window.parent.handleArticleAction('youtube', '${uniqueArticleId}')">
-                                <ion-icon name="logo-youtube"></ion-icon> <!-- Ícone YouTube -->
+                                <ion-icon name="logo-youtube"></ion-icon>
                              </button>
                          `;
+                         // Adiciona dados dos prompts ao container (forma mais segura que inline JS complexo)
+                         buttonContainer.dataset.promptExplain = prompts.explain;
+                         buttonContainer.dataset.promptGlossary = prompts.glossary;
+                         buttonContainer.dataset.promptRelated = prompts.related;
+
+
                          p.appendChild(buttonContainer);
                      }
                  });
                  console.log(`Botões adicionados a ${articleCounter} elementos relevantes no iframe.`);
              } catch (e) {
                  console.error("Erro ao adicionar botões ao iframe: ", e);
+                 // Tenta novamente se for um erro de acesso inicial
+                 if (e.message.includes("Cannot read properties of null (reading 'body')")) {
+                      setTimeout(() => addActionButtonsToIframe(iframe), 500);
+                 }
              }
          }
 
-        function handleArticleAction(action, uniqueArticleId, promptTemplate = "") {
-            const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
+        // Modificado para buscar prompts do dataset do botão clicado ou seu container
+        function handleArticleAction(action, uniqueArticleId) {
+             const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
 
-            if (action === 'copy') { // Mantém a ação de copiar como estava
-                navigator.clipboard.writeText(fullArticleText)
-                    .then(() => alert(`Texto completo do artigo copiado!`))
-                    .catch(err => {
-                        try {
-                            const textArea = document.createElement("textarea");
-                            textArea.value = fullArticleText; document.body.appendChild(textArea);
-                            textArea.focus(); textArea.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(textArea);
-                            alert(`Texto completo do artigo copiado! (Fallback)`);
-                        } catch (fallbackErr) {
-                             console.error('Erro ao copiar:', err, fallbackErr);
-                             alert("Erro ao copiar o texto.");
-                        }
-                    });
-                return;
-            }
+             // Busca o container dos botões para pegar os prompts (se necessário)
+             let promptText = '';
+             try {
+                const iframeDoc = codeContent.querySelector('iframe')?.contentDocument;
+                const articleElement = iframeDoc?.querySelector(`[data-article-id='${uniqueArticleId}']`);
+                const buttonContainer = articleElement?.querySelector('.article-button-container');
 
-            if (action === 'youtube') {
-                // Tenta extrair o número do artigo ou usa os primeiros 50 caracteres
+                if (action === 'explain') promptText = buttonContainer?.dataset.promptExplain;
+                else if (action === 'glossary') promptText = buttonContainer?.dataset.promptGlossary;
+                else if (action === 'related') promptText = buttonContainer?.dataset.promptRelated;
+
+             } catch(e) { console.error("Erro ao buscar prompt do dataset:", e)}
+
+
+             // Ação YouTube
+             if (action === 'youtube') {
                 const articleMatch = fullArticleText.match(/Art\.\s*\d+[º°]?[\w-]*\.?/i);
                 const queryBase = articleMatch ? articleMatch[0] : fullArticleText.substring(0, 50);
-                const searchQuery = `Videoaula ${queryBase} ${codeTitle.textContent}`; // Adiciona o título do código para contexto
+                const searchQuery = `Videoaula ${queryBase} ${codeTitle.textContent}`;
                 const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
                 console.log("Abrindo YouTube:", youtubeUrl);
                 window.open(youtubeUrl, '_blank');
                 return;
-            }
+             }
 
-            // Para outras ações (Google AI)
-            const promptText = promptTemplate.replace("%%FULL_TEXT%%", fullArticleText); // Usa o texto completo
+             // Ações Google AI
+             if (!promptText) {
+                 console.error("Ação desconhecida ou prompt não encontrado para:", action, uniqueArticleId);
+                 // Fallback com texto curto se prompt falhar
+                 promptText = `Fale sobre: "${fullArticleText.substring(0, 200)}..."`;
+             }
 
-            if (!promptText) {
-                 console.error("Ação desconhecida ou sem prompt:", action);
-                 return;
-            }
+             const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
+             const encodedPrompt = encodeURIComponent(promptText);
+             const finalUrl = googleAiBaseUrl + encodedPrompt;
 
-            const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
-            const encodedPrompt = encodeURIComponent(promptText);
-            const finalUrl = googleAiBaseUrl + encodedPrompt;
-
-            console.log("Abrindo URL Google AI:", finalUrl);
-            window.open(finalUrl, '_blank');
+             console.log("Abrindo URL Google AI:", finalUrl);
+             window.open(finalUrl, '_blank');
         }
+
 
         // --- Funções de Busca ---
         function resetSearch() {
             if (highlightMarkInstance) {
-                highlightMarkInstance.unmark();
+                try {
+                    highlightMarkInstance.unmark();
+                } catch (e) { console.error("Erro ao desmarcar:", e);}
             }
             searchResults = [];
             currentSearchResultIndex = -1;
@@ -488,7 +558,6 @@
             searchPrevBtn.disabled = current <= 1;
             searchNextBtn.disabled = current >= total;
 
-            // Atualiza destaque da marca atual
             searchResults.forEach((mark, index) => {
                 mark.classList.toggle('current-highlight', index === currentSearchResultIndex);
             });
@@ -505,65 +574,96 @@
             }
         }
 
-        function performSearch(term) {
-             if (!highlightMarkInstance) { return; }
+         function performSearch(term) {
+             if (!highlightMarkInstance) {
+                 console.warn("Instância do Mark.js não está pronta para busca.");
+                 return;
+             }
 
              highlightMarkInstance.unmark({
                  done: () => {
-                     searchResults = []; // Limpa resultados anteriores
+                     searchResults = [];
                      currentSearchResultIndex = -1;
-                     if (term && term.length > 1) {
+                     if (term && term.length > 1) { // Mínimo 2 caracteres para buscar
                          highlightMarkInstance.mark(term, {
-                             separateWordSearch: false,
+                             separateWordSearch: false, // Busca exata
                              className: 'search-highlight',
                              each: (element) => {
-                                 searchResults.push(element); // Adiciona cada marca encontrada ao array
+                                 searchResults.push(element);
                              },
                              done: () => {
                                  console.log(`Encontradas ${searchResults.length} ocorrências.`);
                                  if (searchResults.length > 0) {
-                                     currentSearchResultIndex = 0; // Vai para o primeiro resultado
+                                     currentSearchResultIndex = 0;
                                      scrollToResult(currentSearchResultIndex);
                                  } else {
-                                     updateSearchResultUI(); // Atualiza contador para 0/0
+                                     updateSearchResultUI(); // Mostra 0/0
                                  }
+                             },
+                             noMatch: () => {
+                                 updateSearchResultUI(); // Garante 0/0 se não houver match
                              }
                          });
                      } else {
-                         resetSearch(); // Limpa se termo for vazio ou muito curto
+                         resetSearch(); // Limpa se termo for vazio/curto
                      }
                  }
              });
          }
 
          function goToNextResult() {
-             if (currentSearchResultIndex < searchResults.length - 1) {
-                 currentSearchResultIndex++;
-                 scrollToResult(currentSearchResultIndex);
-             }
+             if (searchResults.length === 0) return;
+             currentSearchResultIndex = (currentSearchResultIndex + 1) % searchResults.length; // Cicla
+             scrollToResult(currentSearchResultIndex);
          }
 
          function goToPreviousResult() {
-             if (currentSearchResultIndex > 0) {
-                 currentSearchResultIndex--;
-                 scrollToResult(currentSearchResultIndex);
-             }
+             if (searchResults.length === 0) return;
+             currentSearchResultIndex = (currentSearchResultIndex - 1 + searchResults.length) % searchResults.length; // Cicla
+             scrollToResult(currentSearchResultIndex);
          }
 
-        // Event Listener para o input de busca (com um pequeno debounce)
+
+        // Event Listener para o input de busca (com debounce)
         let searchTimeout;
         searchInput.addEventListener('input', (event) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch(event.target.value);
-            }, 300); // Espera 300ms após parar de digitar
+            }, 300);
         });
+
+        // Event Listener para tecla Enter na busca
+         searchInput.addEventListener('keydown', (event) => {
+             if (event.key === 'Enter') {
+                 event.preventDefault(); // Impede envio de formulário (se houver)
+                 goToNextResult();     // Pula para o próximo resultado
+             }
+         });
+
 
         document.addEventListener('DOMContentLoaded', showCategories);
 
     </script>
      <!-- Adiciona a biblioteca Mark.js para a busca -->
      <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
+
+     <!-- Script para registrar o Service Worker -->
+     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registrado com sucesso:', registration);
+                })
+                .catch(error => {
+                    console.error('Falha ao registrar o Service Worker:', error);
+                });
+            });
+        } else {
+            console.log('Service Worker não é suportado neste navegador.');
+        }
+     </script>
 
 </body>
 </html>
