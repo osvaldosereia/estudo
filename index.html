@@ -369,11 +369,13 @@
                 
                 // 2. Corrige Imagens (Brasão)
                 const images = iframeDoc.body.querySelectorAll('img');
-                const brasaoUrl = 'https://www.planalto.gov.br/ccivil_03/img/brastra.gif'; // URL absoluta correta
+                // *** CORRIGIDO: URL exata fornecida pelo usuário ***
+                const brasaoUrl = 'https://www.planalto.gov.br/ccivil_03/decreto/Brastra.gif'; 
                 let imagesFixed = 0;
                 images.forEach(img => {
                     const currentSrc = img.getAttribute('src');
-                    if (currentSrc && (currentSrc.includes('Brastra.gif') || currentSrc.includes('brastra.gif'))) {
+                    // Verifica se o src termina com Brastra.gif (mais seguro do que 'includes')
+                    if (currentSrc && currentSrc.toUpperCase().endsWith('BRASTRA.GIF')) {
                         img.setAttribute('src', brasaoUrl);
                         img.removeAttribute('alt'); // Remove o alt-text quebrado
                         img.style.width = '74px'; // Força o tamanho original
@@ -407,6 +409,7 @@
                     style.id = styleId;
                     style.textContent = `
                         /* --- REMOVIDA A REGRA QUE OCULTAVA IMAGENS --- */
+                        /* (A regra foi removida na versão anterior, mantendo assim) */
 
                         /* Garante que o padding seja aplicado ao container principal do HTML original se houver */
                         body div[align="center"] + p, 
