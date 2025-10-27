@@ -149,7 +149,7 @@
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
                 <!-- Botão para carregar o Código Civil (baseUrl ADICIONADA) -->
-                <button onclick="loadCode('civil1.html', 'Código Civil', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                <button onclick="loadCode('codigo-civil.html', 'Código Civil', 'https://www.planalto.gov.br/ccivil_03/leis/')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
                      Código Civil
                  </button>
                  <!-- Placeholder para Constituição Federal -->
@@ -202,7 +202,6 @@
         <div id="fabContainer" class="fab-container">
             <!-- Sub-botões -->
             <div class="fab-options">
-                <!-- *** CORRIGIDO: Removidos os <span> de ícone (E, G, S, V) *** -->
                 <div class="fab-option" onclick="handleArticleAction('explain')">
                     <span class="fab-option-label">Explicação Detalhada</span>
                 </div>
@@ -344,15 +343,17 @@
             return text;
         }
 
+        // Função para corrigir links e imagens no iframe
         function prepareIframeContent(iframe, baseUrl) {
             try {
                 const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                 if (!iframeDoc || !iframeDoc.body) return;
                 
                 const dynamicBaseUrl = baseUrl || "https://www.planalto.gov.br/ccivil_03/"; 
+                
+                // 1. Corrige Links
                 const links = iframeDoc.body.querySelectorAll('a');
                 console.log(`Corrigindo ${links.length} links...`);
-
                 links.forEach(link => {
                     link.target = "_blank"; 
                     let currentHref = link.getAttribute('href'); 
@@ -365,9 +366,27 @@
                         }
                     }
                 });
+                
+                // 2. Corrige Imagens (Brasão)
+                const images = iframeDoc.body.querySelectorAll('img');
+                const brasaoUrl = 'https://www.planalto.gov.br/ccivil_03/img/brastra.gif'; // URL absoluta correta
+                let imagesFixed = 0;
+                images.forEach(img => {
+                    const currentSrc = img.getAttribute('src');
+                    if (currentSrc && (currentSrc.includes('Brastra.gif') || currentSrc.includes('brastra.gif'))) {
+                        img.setAttribute('src', brasaoUrl);
+                        img.removeAttribute('alt'); // Remove o alt-text quebrado
+                        img.style.width = '74px'; // Força o tamanho original
+                        img.style.height = '82px';
+                        imagesFixed++;
+                    }
+                });
+                if (imagesFixed > 0) {
+                    console.log(`Corrigidas ${imagesFixed} imagens do brasão.`);
+                }
 
             } catch (e) {
-                 console.error("Erro ao preparar conteúdo do iframe (ajustar links): ", e);
+                 console.error("Erro ao preparar conteúdo do iframe (links/imagens): ", e);
             }
         }
         
@@ -387,8 +406,7 @@
                     const style = iframeDoc.createElement('style');
                     style.id = styleId;
                     style.textContent = `
-                        /* Oculta imagens quebradas (Ex: Brasão) */
-                        body img { display: none !important; }
+                        /* --- REMOVIDA A REGRA QUE OCULTAVA IMAGENS --- */
 
                         /* Garante que o padding seja aplicado ao container principal do HTML original se houver */
                         body div[align="center"] + p, 
@@ -635,14 +653,11 @@
                  let promptText = '';
                  
                  if (action === 'explain') {
-                     promptText = `Explicação aprofundada, objetiva e didática do conteúdo, contexto jurídico, fundamentos, exceções e aplicação prática dos artigos indicados, destacando conceitos-chave, exemplos e conexões legais relevantes
-:\n\n"${combinedText}"`;
+                     promptText = `Explicação detalhada do(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
                  } else if (action === 'glossary') {
-                     promptText = `Definições jurídicas e explicações breves dos principais termos técnicos e expressões legais presentes nos artigos indicados, com foco em clareza, precisão conceitual e contexto normativo essencial.
-:\n\n"${combinedText}"`;
+                     promptText = `Glossário jurídico dos termos no(s) seguinte(s) artigo(s):\n\n"${combinedText}"`;
                  } else if (action === 'related') {
-                     promptText = `Buscar súmulas, enunciados, teses e artigos correlatos para os artigos indicados, apresentando : título/data, trecho relevante, e breve explicação do vínculo com o(s) artigo(s) em foco.
-:\n\n"${combinedText}"`;
+                     promptText = `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${combinedText}"`;
                  } else {
                      console.error("Ação desconhecida:", action);
                      resetFabToIdle();
