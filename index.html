@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"> <!-- Charset para a página principal -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vademecum Digital</title>
     <!-- Carrega Tailwind CSS -->
@@ -114,7 +114,7 @@
              background-color: #f0f0f0; /* Cinza claro */
              color: #333; /* Cinza escuro */
              border: 1px solid #ccc;
-             border-radius: 4px;
+             border-radius: 4px; /* Voltando para quadrado pequeno */
              padding: 1px 3px; /* Pequeno */
              cursor: pointer;
              font-size: 0.65rem; /* Bem pequeno */
@@ -128,7 +128,7 @@
           .article-button:hover {
               background-color: #e0e0e0;
           }
-         .article-button svg {
+         .article-button ion-icon { /* Aplicando tamanho ao ícone */
              width: 12px; /* Ícone pequeno */
              height: 12px;
          }
@@ -138,7 +138,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-     <!-- Ícones Heroicons -->
+     <!-- Ícones IonIcons -->
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
@@ -238,6 +238,9 @@
         const iconPlus = fabMain.querySelector('.icon-plus');
         const iconClose = fabMain.querySelector('.icon-close');
 
+        // Mapa para armazenar o texto completo dos artigos identificados
+        const articleTextMap = new Map();
+
         // Função para mostrar a tela de categorias
         function showCategories() {
             categorySelection.classList.remove('hidden');
@@ -261,14 +264,19 @@
             fabContainer.classList.remove('hidden'); // Mostra FAB
             codeTitle.textContent = title;
             searchInput.value = ''; // Limpa busca
+            articleTextMap.clear(); // Limpa o mapa de textos ao carregar novo código
 
             codeContent.innerHTML = ''; // Limpa mensagem de carregamento
             const iframe = document.createElement('iframe');
-            iframe.src = url;
+            // Adiciona o charset aqui para tentar corrigir a codificação
+            iframe.setAttribute('srcdoc', `<!DOCTYPE html><html lang="pt-br"><head><meta charset="ISO-8859-1"></head><body>Conteúdo sendo carregado...</body></html>`); // Placeholder com charset
+            iframe.src = url; // Define o src real - o navegador tentará usar o charset da página carregada se o srcdoc não resolver
             iframe.onload = () => {
                 console.log("Iframe carregado.");
-                // Chama a função para adicionar botões após o carregamento do iframe
-                addActionButtonsToIframe(iframe);
+                // Adiciona um pequeno delay para garantir que o DOM interno esteja pronto
+                setTimeout(() => {
+                    addActionButtonsToIframe(iframe);
+                }, 100); // Espera 100ms
             };
             iframe.onerror = () => {
                 codeContent.innerHTML = '<p class="p-4 text-red-500">Erro ao carregar o conteúdo. Verifique se o arquivo está acessível.</p>';
@@ -287,100 +295,140 @@
 
         // --- Funções para adicionar botões DENTRO do iframe ---
 
-        // Função para verificar se um elemento é o início de um artigo
-        function isArticleElement(element) {
-            // Verifica se é um <p> e se o texto começa com "Art. " seguido de número ou letra, ou "§"
-            return element.tagName === 'P' && element.textContent.trim().match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(§\s*\d+[º°]?\.?)/);
+        // Função para verificar se um elemento é o início de um artigo ou parágrafo relevante
+        function isRelevantElement(element) {
+            if (element.tagName !== 'P') return false;
+            const text = element.textContent.trim();
+            // Verifica artigos, parágrafos únicos, alíneas e incisos
+            return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
+
+        // Função para extrair texto de um artigo (incluindo parágrafos subsequentes não-artigos)
+        function extractArticleText(startElement) {
+            let text = startElement.textContent.trim();
+            let currentElement = startElement.nextElementSibling;
+            // Pega o texto dos próximos elementos <p> até encontrar um novo artigo ou outro elemento não <p>
+            while (currentElement && currentElement.tagName === 'P' && !currentElement.textContent.trim().match(/^Art\.\s*\d+[º°]?[\w-]*\.?/)) {
+                 // Adiciona apenas se não for outro tipo de cabeçalho relevante (evita duplicar §, I, a) etc)
+                 // Ou refinar a lógica para incluir o que for necessário
+                text += "\n" + currentElement.textContent.trim();
+                currentElement = currentElement.nextElementSibling;
+            }
+            return text;
+        }
+
 
          // Função principal para adicionar botões DENTRO do iframe
          function addActionButtonsToIframe(iframe) {
              try {
                  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                 if (!iframeDoc) {
-                     throw new Error("Não foi possível acessar o documento do iframe.");
+                 if (!iframeDoc || !iframeDoc.body) { // Verifica se o body está pronto
+                     console.warn("Documento do Iframe ainda não está pronto.");
+                     // Tenta novamente após um delay maior se necessário
+                     // setTimeout(() => addActionButtonsToIframe(iframe), 300);
+                     return;
                  }
 
+
                  // Injeta os estilos CSS para os botões dentro do head do iframe
-                 const style = iframeDoc.createElement('style');
-                 style.textContent = `
-                    .relative-article {
-                        position: relative !important; /* Garante contexto de posicionamento */
-                    }
-                    .article-button-container {
-                        position: absolute;
-                        right: 5px;
-                        top: 0;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 2px;
-                        opacity: 0.1;
-                        transition: opacity 0.2s ease-in-out;
-                        z-index: 5;
-                        background-color: rgba(230, 230, 230, 0.8); /* Fundo um pouco mais visível */
-                        padding: 3px;
-                        border-radius: 4px;
-                    }
-                    .relative-article:hover .article-button-container {
-                        opacity: 1;
-                    }
-                    .article-button {
-                        background-color: #f0f0f0;
-                        color: #333;
-                        border: 1px solid #ccc;
-                        border-radius: 50%; /* Botões redondos */
-                        padding: 0; /* Remover padding */
-                        cursor: pointer;
-                        font-size: 0.65rem;
-                        line-height: 1;
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 20px;
-                        height: 20px;
-                        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-                    }
-                    .article-button:hover {
-                        background-color: #e0e0e0;
-                        border-color: #bbb;
-                    }
-                     .article-button svg, .article-button ion-icon {
-                         width: 12px;
-                         height: 12px;
-                     }
-                 `;
-                 iframeDoc.head.appendChild(style);
+                 const styleId = 'article-button-styles';
+                 if (!iframeDoc.getElementById(styleId)) { // Evita injetar múltiplos estilos
+                    const style = iframeDoc.createElement('style');
+                    style.id = styleId;
+                    style.textContent = `
+                        .relative-article {
+                            position: relative !important; /* Garante contexto de posicionamento */
+                            padding-right: 30px !important; /* Espaço para botões */
+                            min-height: 25px; /* Altura mínima para evitar sobreposição */
+                        }
+                        .article-button-container {
+                            position: absolute;
+                            right: 2px; /* Mais próximo da borda */
+                            top: 1px; /* Um pouco abaixo */
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                            opacity: 0; /* Começa invisível */
+                            transition: opacity 0.2s ease-in-out;
+                            z-index: 10; /* Acima do texto */
+                            background-color: rgba(240, 240, 240, 0.9); /* Fundo opaco */
+                            padding: 3px;
+                            border-radius: 4px;
+                            border: 1px solid #ddd;
+                            pointer-events: none; /* Não interage até hover */
+                        }
+                        .relative-article:hover .article-button-container {
+                            opacity: 1;
+                            pointer-events: auto; /* Permite clique nos botões */
+                        }
+                        .article-button {
+                            background-color: #fff;
+                            color: #333;
+                            border: 1px solid #ccc;
+                            border-radius: 4px; /* Voltando para quadrado pequeno */
+                            padding: 0;
+                            cursor: pointer;
+                            font-size: 0.65rem;
+                            line-height: 1;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            width: 20px;
+                            height: 20px;
+                            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                        }
+                        .article-button:hover {
+                            background-color: #eee;
+                            border-color: #bbb;
+                        }
+                        .article-button ion-icon {
+                            width: 14px; /* Ícone um pouco maior */
+                            height: 14px;
+                        }
+                    `;
+                    iframeDoc.head.appendChild(style);
+                 }
+
 
                  // Seleciona todos os parágrafos dentro do body do iframe
                  const paragraphs = iframeDoc.querySelectorAll('body p');
+                 let articleCounter = 0; // Contador para gerar IDs únicos
 
                  paragraphs.forEach(p => {
-                     if (isArticleElement(p)) {
-                         // Extrai um identificador (simplificado)
-                         const articleMatch = p.textContent.trim().match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(^§\s*\d+[º°]?\.?)/);
-                         const articleIdentifier = articleMatch ? articleMatch[0].replace(/[.:º°]$/, '') : 'Artigo'; // Limpa um pouco
+                    // Limpa containers antigos se a função for chamada múltiplas vezes (ex: em re-renders)
+                     const oldContainer = p.querySelector('.article-button-container');
+                     if(oldContainer) p.removeChild(oldContainer);
+                     p.classList.remove('relative-article'); // Limpa classe antiga
+
+                     if (isRelevantElement(p)) {
+                         articleCounter++;
+                         const uniqueArticleId = `article-${articleCounter}`; // ID Único
+                         p.dataset.articleId = uniqueArticleId; // Armazena ID no elemento
+
+                         // Extrai o texto completo do artigo e armazena no mapa
+                         const fullText = extractArticleText(p);
+                         articleTextMap.set(uniqueArticleId, fullText);
 
                          // Adiciona classe para posicionamento relativo
                          p.classList.add('relative-article');
-                         // Garante que o parágrafo tenha algum padding à direita para os botões não sobreporem o texto
-                         p.style.paddingRight = '30px';
+                         // p.style.paddingRight = '30px'; // Estilo agora no CSS injetado
 
                          // Cria o container de botões
                          const buttonContainer = iframeDoc.createElement('div');
                          buttonContainer.classList.add('article-button-container');
 
-                         // Cria os botões (Exemplos)
+                         // Cria os botões (Passando o ID único)
                          buttonContainer.innerHTML = `
-                             <button class="article-button" title="Anotar" onclick="window.parent.handleArticleAction('annotate', '${articleIdentifier}')">
+                             <button class="article-button" title="Anotar" onclick="window.parent.handleArticleAction('annotate', '${uniqueArticleId}')">
                                  <ion-icon name="create-outline"></ion-icon>
                              </button>
-                             <button class="article-button" title="Copiar" onclick="window.parent.handleArticleAction('copy', '${articleIdentifier}')">
+                             <button class="article-button" title="Copiar" onclick="window.parent.handleArticleAction('copy', '${uniqueArticleId}')">
                                  <ion-icon name="copy-outline"></ion-icon>
                              </button>
-                             <button class="article-button" title="Jurisprudência" onclick="window.parent.handleArticleAction('jurisprudence', '${articleIdentifier}')">
+                             <button class="article-button" title="Jurisprudência" onclick="window.parent.handleArticleAction('jurisprudence', '${uniqueArticleId}')">
                                 <ion-icon name="library-outline"></ion-icon>
                             </button>
-                             <button class="article-button" title="Compartilhar" onclick="window.parent.handleArticleAction('share', '${articleIdentifier}')">
+                             <button class="article-button" title="Compartilhar" onclick="window.parent.handleArticleAction('share', '${uniqueArticleId}')">
                                 <ion-icon name="share-social-outline"></ion-icon>
                              </button>
                          `;
@@ -390,36 +438,51 @@
                      }
                  });
 
-                 console.log("Botões adicionados aos artigos no iframe.");
+                 console.log(`Botões adicionados a ${articleCounter} elementos relevantes no iframe.`);
 
              } catch (e) {
                  console.error("Erro ao adicionar botões ao iframe: ", e);
-                 // Não mostrar alert aqui, apenas logar, pois o usuário já foi avisado antes se falhou
-                 // Pode ser um erro diferente de Same-Origin também
              }
          }
 
         // --- Funções para lidar com as ações dos botões do artigo ---
-        // Estas funções estão na janela principal (parent) e são chamadas pelo onclick dos botões no iframe
-        function handleArticleAction(action, articleIdentifier) {
-            alert(`Ação: ${action}\nArtigo: ${articleIdentifier}\n\n(Implementar lógica real aqui)`);
+        function handleArticleAction(action, uniqueArticleId) {
+            const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
+            const shortArticleText = fullArticleText.substring(0, 200) + (fullArticleText.length > 200 ? '...' : ''); // Pega os primeiros 200 caracteres
 
-            // Exemplo de como copiar o texto (requer mais lógica para pegar o texto correto)
-             if (action === 'copy') {
-                 try {
-                    const iframe = codeContent.querySelector('iframe');
-                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    // Encontrar o parágrafo novamente seria necessário, ou passar mais contexto
-                     console.warn("Lógica de cópia ainda não implementada para pegar o texto exato do artigo " + articleIdentifier);
-                      // Tentar copiar o identificador por enquanto
-                      navigator.clipboard.writeText(articleIdentifier)
-                        .then(() => alert(`Identificador "${articleIdentifier}" copiado para a área de transferência.`))
-                        .catch(err => console.error('Erro ao copiar:', err));
+            let promptText = "";
+            const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
 
-                 } catch(e) {
-                     console.error("Erro ao tentar copiar texto do iframe:", e);
-                 }
-             }
+            switch(action) {
+                case 'annotate':
+                    promptText = `Faça anotações ou um resumo sobre o seguinte trecho da legislação:\n\n"${shortArticleText}"`;
+                    break;
+                case 'copy':
+                    // Ação de cópia agora usa o texto completo armazenado
+                    navigator.clipboard.writeText(fullArticleText)
+                        .then(() => alert(`Texto completo do artigo copiado!`))
+                        .catch(err => {
+                            console.error('Erro ao copiar:', err);
+                            alert("Erro ao copiar o texto.");
+                        });
+                    return; // Não abre Google AI para cópia
+                case 'jurisprudence':
+                    promptText = `Encontre jurisprudência relevante sobre o seguinte artigo/trecho da legislação:\n\n"${shortArticleText}"`;
+                    break;
+                case 'share':
+                    promptText = `Prepare uma breve explicação sobre o seguinte trecho da legislação para compartilhar:\n\n"${shortArticleText}"`;
+                    break;
+                default:
+                    console.error("Ação desconhecida:", action);
+                    return;
+            }
+
+            // Codifica o prompt para a URL
+            const encodedPrompt = encodeURIComponent(promptText);
+            const finalUrl = googleAiBaseUrl + encodedPrompt;
+
+            // Abre o Google AI em uma nova aba
+            window.open(finalUrl, '_blank');
         }
 
 
