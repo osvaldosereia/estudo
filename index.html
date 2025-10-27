@@ -18,76 +18,7 @@
         body {
              font-family: 'Inter', sans-serif; /* Fonte padrão */
         }
-         /* Estilos para o botão flutuante e sub-botões */
-        .fab-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            flex-direction: column-reverse; /* Sub-botões aparecerão acima */
-            align-items: center;
-             z-index: 100; /* Garante que FAB fique sobre o iframe */
-        }
-
-        .fab-main {
-            background-color: #007AFF; /* Azul Apple */
-            color: white;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            z-index: 10; /* Garante que o botão principal fique sobre os sub-botões */
-        }
-
-         .fab-main.open {
-            transform: rotate(45deg); /* Gira o ícone '+' para 'x' */
-         }
-
-        .fab-options {
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            margin-bottom: 1rem; /* Espaço entre sub-botões e botão principal */
-            transition: all 0.3s ease;
-            max-height: 0; /* Começa escondido */
-            overflow: hidden; /* Esconde o conteúdo que ultrapassa */
-        }
-
-         .fab-container.open .fab-options {
-             max-height: 500px; /* Altura suficiente para mostrar os botões */
-         }
-
-        .fab-option {
-            background-color: #E5E5EA; /* Cinza claro Apple */
-            color: #007AFF; /* Azul Apple */
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-            margin-top: 0.75rem; /* Espaçamento entre sub-botões */
-            transition: all 0.3s ease;
-             transform: scale(0); /* Começa escondido */
-             opacity: 0;
-        }
-
-         /* Animação escalonada para os sub-botões */
-         .fab-container.open .fab-option {
-             transform: scale(1);
-             opacity: 1;
-         }
-         .fab-container.open .fab-option:nth-child(1) { transition-delay: 0.1s; }
-         .fab-container.open .fab-option:nth-child(2) { transition-delay: 0.15s; }
-         .fab-container.open .fab-option:nth-child(3) { transition-delay: 0.2s; }
-         .fab-container.open .fab-option:nth-child(4) { transition-delay: 0.25s; }
+         /* Estilos para o botão flutuante e sub-botões - REMOVIDOS */
 
          /* --- Estilos para os botões DENTRO do iframe --- */
          .article-button-container {
@@ -183,15 +114,15 @@
                 <button onclick="loadCode('DEL2848compilado.html', 'Código Penal')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
-                <!-- Adicionar mais botões para outros códigos aqui -->
-                 <button onclick="loadCode('civil1.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
-                    Código Civil
-                      </button>
+                <!-- Botão para carregar o Código Civil (Adicionado pelo usuário e corrigido) -->
+                <button onclick="loadCode('codigo-civil.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                     Código Civil
+                 </button>
                  <!-- Placeholder para Constituição Federal -->
-                <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
+                 <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
                     Constituição Federal (Em breve)
                 </div>
-            </div>
+            </div> <!-- Fechamento correto do div space-y-4 -->
         </div>
 
         <!-- Tela de Visualização do Código (Oculta Inicialmente) -->
@@ -233,11 +164,6 @@
             </div>
         </div>
 
-        <!-- Botão Flutuante (FAB) - Removido por enquanto para focar nos botões inline
-        <div id="fabContainer" class="fab-container hidden">
-             ... (código do FAB) ...
-        </div>
-        -->
     </div>
 
     <script>
@@ -249,10 +175,6 @@
         const searchPrevBtn = document.getElementById('searchPrev');
         const searchNextBtn = document.getElementById('searchNext');
         const searchResultCountEl = document.getElementById('searchResultCount');
-        // const fabContainer = document.getElementById('fabContainer'); // Removido
-        // const fabMain = document.getElementById('fabMain'); // Removido
-        // const iconPlus = fabMain.querySelector('.icon-plus'); // Removido
-        // const iconClose = fabMain.querySelector('.icon-close'); // Removido
 
         const articleTextMap = new Map();
         let highlightMarkInstance;
@@ -264,11 +186,6 @@
             categorySelection.classList.add('flex');
             codeView.classList.add('hidden');
             codeView.classList.remove('flex');
-            // fabContainer.classList.add('hidden'); // Removido
-            // fabContainer.classList.remove('open'); // Removido
-            // fabMain.classList.remove('open'); // Removido
-            // iconPlus.classList.remove('hidden'); // Removido
-            // iconClose.classList.add('hidden'); // Removido
             codeContent.innerHTML = '<p class="p-4 text-gray-500">Carregando conteúdo...</p>';
             resetSearch();
         }
@@ -315,31 +232,53 @@
             codeContent.appendChild(iframe);
         }
 
-        // function toggleFab() { ... } // Removido
 
         // Verifica se é um elemento relevante (Artigo, Parágrafo, Inciso, etc.)
         function isRelevantElement(element) {
-            if (element.tagName !== 'P') return false;
+            // Verifica se é um <p> ou <div> (para cobrir mais casos)
+            if (!['P', 'DIV'].includes(element.tagName)) return false; 
+            
             const text = element.textContent.trim();
+            
+            // Remove qualquer texto de link substituído antes de verificar
+            const cleanText = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|Vide Lei.*)/gi, '').trim();
+
              // Regex aprimorada para capturar mais padrões, incluindo alíneas e incisos romanos
-             return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
+             // Garante que o texto limpo comece com um desses padrões
+             return cleanText.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
 
         // Extrai o texto do elemento inicial e dos próximos <p> até encontrar outro elemento relevante
         function extractArticleText(startElement) {
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
-            while (currentElement && currentElement.tagName === 'P' && !isRelevantElement(currentElement)) {
-                // Inclui o texto do span.link-replacement, se houver
+            
+            // Remove os textos dos links substituídos do final do texto principal, se houver
+            const spanLinkMain = startElement.querySelector('span.link-replacement');
+            if (spanLinkMain) {
+                text = text.replace(spanLinkMain.textContent.trim(), '').trim();
+            }
+
+            while (currentElement && ['P', 'DIV'].includes(currentElement.tagName) && !isRelevantElement(currentElement)) {
+                 // Inclui o texto do span.link-replacement, se houver
                  const spanLink = currentElement.querySelector('span.link-replacement');
-                 text += "\n" + (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
+                 let elementText = (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
+                 
+                 // Remove o texto do link se ele for o único conteúdo (para não duplicar)
+                 if (spanLink && elementText === spanLink.textContent.trim()) {
+                     text += "\n" + currentElement.textContent.replace(spanLink.textContent.trim(), '').trim();
+                 } else {
+                     text += "\n" + currentElement.textContent.trim();
+                 }
+                 
                  currentElement = currentElement.nextElementSibling;
             }
-             // Remove os textos dos links substituídos do final do texto principal, se houver
-             const spanLinkMain = startElement.querySelector('span.link-replacement');
-             if (spanLinkMain) {
-                text = text.replace(spanLinkMain.textContent.trim(), '').trim();
-             }
+             
+            // Limpa o texto extraído de todos os "(Redação...)", "(Incluído...)", "(Vide...)"
+            text = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|\(Vide Lei.*\))/gi, '').trim();
+            // Remove espaços múltiplos
+            text = text.replace(/\s\s+/g, ' '); 
+
             return text;
         }
 
@@ -391,6 +330,25 @@
                     const style = iframeDoc.createElement('style');
                     style.id = styleId;
                     style.textContent = `
+                        /* --- Font and Style Reset --- */
+                        body { 
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; 
+                            font-size: 16px !important; 
+                            line-height: 1.6 !important; 
+                            color: #333 !important; 
+                            background-color: #fff !important;
+                            padding: 0.5rem 1rem !important; /* Adiciona um padding ao corpo do iframe */
+                        }
+                        /* Remove estilos de fonte antigos */
+                        p, div, span, font, .Artart, .texto1, .texto2, .texto3, .MsoNormal, .cabea {
+                             font-family: inherit !important;
+                             font-size: inherit !important;
+                             color: inherit !important;
+                             background-color: transparent !important;
+                             line-height: inherit !important;
+                        }
+                        /* --- Fim do Font Reset --- */
+
                         .relative-article { position: relative !important; padding-right: 30px !important; min-height: 25px; outline: none; /* Remove outline padrão do foco */ }
                         .article-button-container { position: absolute; right: 2px; top: 1px; display: flex; flex-direction: column; gap: 2px; opacity: 0; transition: opacity 0.2s ease-in-out; z-index: 10; background-color: rgba(240, 240, 240, 0.9); padding: 3px; border-radius: 4px; border: 1px solid #ddd; pointer-events: none; }
                         .relative-article:hover .article-button-container,
@@ -405,33 +363,34 @@
                     iframeDoc.head.appendChild(style);
                  }
 
-                 const paragraphs = iframeDoc.body.querySelectorAll('p');
+                 // Busca por P e DIVs
+                 const elements = iframeDoc.body.querySelectorAll('p, div'); 
                  let articleCounter = 0;
 
-                 paragraphs.forEach(p => {
+                 elements.forEach(el => {
                       // Limpa botões antigos e classe
-                     const oldContainer = p.querySelector('.article-button-container');
-                     if(oldContainer) p.removeChild(oldContainer);
-                     p.classList.remove('relative-article');
-                     p.removeAttribute('tabindex'); // Remove tabindex se houver
+                     const oldContainer = el.querySelector('.article-button-container');
+                     if(oldContainer) el.removeChild(oldContainer);
+                     el.classList.remove('relative-article');
+                     el.removeAttribute('tabindex'); // Remove tabindex se houver
 
                      // Verifica se é um elemento relevante
-                     if (isRelevantElement(p)) {
+                     if (isRelevantElement(el)) {
                          articleCounter++;
                          const uniqueArticleId = `article-${articleCounter}`;
-                         p.dataset.articleId = uniqueArticleId;
+                         el.dataset.articleId = uniqueArticleId;
 
                          // Extrai texto e armazena (agora dentro do if)
-                         const fullText = extractArticleText(p);
-                         if (!fullText) { // Pula se não conseguiu extrair texto
-                            console.warn("Texto vazio para elemento:", p);
+                         const fullText = extractArticleText(el);
+                         if (!fullText || fullText.length < 5) { // Pula se texto for muito curto ou vazio
+                            // console.warn("Texto muito curto para elemento:", el.textContent.trim());
                             return;
                          }
                          articleTextMap.set(uniqueArticleId, fullText);
 
                          // Adiciona classe e tabindex para foco/touch
-                         p.classList.add('relative-article');
-                         p.setAttribute('tabindex', '-1'); // Permite foco programático ou via JS, mas não via Tab
+                         el.classList.add('relative-article');
+                         el.setAttribute('tabindex', '-1'); // Permite foco programático ou via JS, mas não via Tab
 
                          // Cria container dos botões
                          const buttonContainer = iframeDoc.createElement('div');
@@ -465,7 +424,7 @@
                          buttonContainer.dataset.promptRelated = prompts.related;
 
 
-                         p.appendChild(buttonContainer);
+                         el.appendChild(buttonContainer);
                      }
                  });
                  console.log(`Botões adicionados a ${articleCounter} elementos relevantes no iframe.`);
