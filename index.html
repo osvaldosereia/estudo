@@ -51,13 +51,14 @@
              border-radius: 4px; /* Voltando para quadrado pequeno */
              padding: 0;
              cursor: pointer;
-             font-size: 0.65rem;
+             font-size: 12px; /* Tamanho para as letras */
+             font-weight: bold;
              line-height: 1;
              display: inline-flex;
              align-items: center;
              justify-content: center;
-             width: 20px;
-             height: 20px;
+             width: 22px; /* Um pouco mais largo para as letras */
+             height: 22px;
              box-shadow: 0 1px 2px rgba(0,0,0,0.1);
          }
           .article-button:hover {
@@ -65,8 +66,7 @@
               border-color: #bbb;
           }
          .article-button ion-icon {
-             width: 14px; /* Ícone um pouco maior */
-             height: 14px;
+             /* Removido, pois usaremos letras */
          }
 
         /* Estilo para highlight da busca */
@@ -83,10 +83,10 @@
         /* Estilo para substituir links */
         span.link-replacement {
             color: #888; /* Cinza médio */
-            /* font-size: 0.9em; REMOVIDO */
             word-break: break-all; /* Força a quebra de linha */
             text-decoration: none;
             cursor: default; /* Remove cursor de link */
+            /* Removemos as heranças forçadas de fonte e tamanho */
         }
 
     </style>
@@ -94,7 +94,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-     <!-- Ícones IonIcons -->
+     <!-- Ícones IonIcons (Mantido para ícone da busca, não afeta iframe) -->
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
@@ -114,7 +114,7 @@
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
                 <!-- Botão para carregar o Código Civil (Adicionado pelo usuário e corrigido) -->
-                <button onclick="loadCode('civil1.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                <button onclick="loadCode('codigo-civil.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
                      Código Civil
                  </button>
                  <!-- Placeholder para Constituição Federal -->
@@ -328,9 +328,22 @@
                  if (!iframeDoc.getElementById(styleId)) {
                     const style = iframeDoc.createElement('style');
                     style.id = styleId;
-                    // CSS MÍNIMO: Apenas botões, highlights e quebra de linha dos links.
+                    // CSS MÍNIMO: Apenas botões, highlights, quebra de linha dos links e oculta imagens.
                     style.textContent = `
                         /* --- CSS Mínimo Injetado --- */
+
+                        /* Oculta imagens quebradas (Ex: Brasão) */
+                        body img { 
+                            display: none !important; 
+                        }
+
+                        /* Garante que o padding seja aplicado ao container principal do HTML original se houver */
+                        body div[align="center"] + p, 
+                        body > p {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                        }
+
                         .relative-article { 
                             position: relative !important; 
                             padding-right: 30px !important; /* Espaço para os botões */
@@ -365,23 +378,22 @@
                             border-radius: 4px; 
                             padding: 0; 
                             cursor: pointer; 
-                            font-size: 0.65rem; 
+                            font-family: 'Arial', sans-serif; /* Fonte segura */
+                            font-size: 12px; /* Tamanho para as letras */
+                            font-weight: bold; 
                             line-height: 1; 
                             display: inline-flex; 
                             align-items: center; 
                             justify-content: center; 
-                            width: 20px; 
-                            height: 20px; 
+                            width: 22px; /* Um pouco mais largo para as letras */
+                            height: 22px; 
                             box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
                         }
                         .article-button:hover { 
                             background-color: #eee; 
                             border-color: #bbb; 
                         }
-                        .article-button ion-icon { 
-                            width: 14px; 
-                            height: 14px; 
-                        }
+                        
                         mark.search-highlight { 
                             background-color: yellow; 
                             font-weight: bold; 
@@ -445,19 +457,19 @@
                             related: `Buscar Súmulas, Enunciados, Teses e artigos correlatos para:\n\n"${fullText}"`
                          };
 
-                         // Botões HTML com ícones corretos e chamadas de função
+                         // Botões HTML com LETRAS como ícones
                          buttonContainer.innerHTML = `
                              <button class="article-button" title="Explicação Detalhada (IA)" onclick="window.parent.handleArticleAction('explain', '${uniqueArticleId}')">
-                                 <ion-icon name="information-circle-outline"></ion-icon> <!-- Ícone para Explicação -->
+                                 E
                              </button>
                              <button class="article-button" title="Glossário Jurídico (IA)" onclick="window.parent.handleArticleAction('glossary', '${uniqueArticleId}')">
-                                 <ion-icon name="book-outline"></ion-icon> <!-- Ícone para Glossário -->
+                                 G
                              </button>
                              <button class="article-button" title="Súmulas e Correlatos (IA)" onclick="window.parent.handleArticleAction('related', '${uniqueArticleId}')">
-                                <ion-icon name="library-outline"></ion-icon> <!-- Ícone para Súmulas/Jurisprudência -->
+                                S
                             </button>
                              <button class="article-button" title="Buscar Videoaula (YouTube)" onclick="window.parent.handleArticleAction('youtube', '${uniqueArticleId}')">
-                                <ion-icon name="logo-youtube"></ion-icon> <!-- Ícone para YouTube -->
+                                V
                              </button>
                          `;
                          // Adiciona dados dos prompts ao container
