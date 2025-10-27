@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vademecum Digital</title>
+    <!-- Carrega Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo para garantir que o iframe ocupe o espaço */
+        #codeContent iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: relative; /* Necessário para posicionamento absoluto dos botões */
+        }
+        /* Ajuste para o conteúdo do iframe não ter margens extras que escondam o início */
+        body {
+             font-family: 'Inter', sans-serif; /* Fonte padrão */
+        }
+         /* Estilos para o botão flutuante e sub-botões */
+        .fab-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column-reverse; /* Sub-botões aparecerão acima */
+            align-items: center;
+             z-index: 100; /* Garante que FAB fique sobre o iframe */
+        }
+
+        .fab-main {
+            background-color: #007AFF; /* Azul Apple */
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 10; /* Garante que o botão principal fique sobre os sub-botões */
+        }
+
+         .fab-main.open {
+            transform: rotate(45deg); /* Gira o ícone '+' para 'x' */
+         }
+
+        .fab-options {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            margin-bottom: 1rem; /* Espaço entre sub-botões e botão principal */
+            transition: all 0.3s ease;
+            max-height: 0; /* Começa escondido */
+            overflow: hidden; /* Esconde o conteúdo que ultrapassa */
+        }
+
+         .fab-container.open .fab-options {
+             max-height: 500px; /* Altura suficiente para mostrar os botões */
+         }
+
+        .fab-option {
+            background-color: #E5E5EA; /* Cinza claro Apple */
+            color: #007AFF; /* Azul Apple */
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            margin-top: 0.75rem; /* Espaçamento entre sub-botões */
+            transition: all 0.3s ease;
+             transform: scale(0); /* Começa escondido */
+             opacity: 0;
+        }
+
+         /* Animação escalonada para os sub-botões */
+         .fab-container.open .fab-option {
+             transform: scale(1);
+             opacity: 1;
+         }
+         .fab-container.open .fab-option:nth-child(1) { transition-delay: 0.1s; }
+         .fab-container.open .fab-option:nth-child(2) { transition-delay: 0.15s; }
+         .fab-container.open .fab-option:nth-child(3) { transition-delay: 0.2s; }
+         .fab-container.open .fab-option:nth-child(4) { transition-delay: 0.25s; }
+
+         /* --- Estilos para os botões DENTRO do iframe --- */
+        /* Estes estilos precisam ser injetados no iframe ou definidos aqui e referenciados */
+         .article-button-container {
+            position: absolute;
+            right: 5px; /* Posição à direita do parágrafo */
+            top: 0; /* Alinha com o topo do parágrafo */
+            display: flex;
+            flex-direction: column; /* Botões um abaixo do outro */
+            gap: 2px; /* Espaçamento pequeno */
+            opacity: 0.1; /* Começa quase invisível */
+            transition: opacity 0.2s ease-in-out;
+             z-index: 5; /* Abaixo do FAB principal */
+             background-color: rgba(255, 255, 255, 0.7); /* Fundo semi-transparente */
+             padding: 2px;
+             border-radius: 4px;
+         }
+         /* Mostra os botões quando o mouse passa sobre o parágrafo pai (que terá a classe 'relative-article') */
+         .relative-article:hover .article-button-container {
+             opacity: 1;
+         }
+
+         .article-button {
+             background-color: #f0f0f0; /* Cinza claro */
+             color: #333; /* Cinza escuro */
+             border: 1px solid #ccc;
+             border-radius: 4px;
+             padding: 1px 3px; /* Pequeno */
+             cursor: pointer;
+             font-size: 0.65rem; /* Bem pequeno */
+             line-height: 1;
+             display: inline-flex; /* Para alinhar ícone e texto se houver */
+             align-items: center;
+             justify-content: center;
+             width: 20px; /* Tamanho fixo pequeno */
+             height: 20px;
+         }
+          .article-button:hover {
+              background-color: #e0e0e0;
+          }
+         .article-button svg {
+             width: 12px; /* Ícone pequeno */
+             height: 12px;
+         }
+
+    </style>
+     <!-- Importa a fonte Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+     <!-- Ícones Heroicons -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+
+</head>
+<body class="bg-gray-100">
+
+    <!-- Container Principal -->
+    <div id="appContainer" class="max-w-4xl mx-auto h-screen flex flex-col">
+
+        <!-- Tela de Seleção de Código (Inicial) -->
+        <div id="categorySelection" class="p-6 flex-grow flex flex-col">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Vademecum Digital</h1>
+            <div class="space-y-4">
+                <!-- Botão para carregar o Código Penal -->
+                <button onclick="loadCode('DEL2848compilado.html', 'Código Penal')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                    Código Penal (Decreto-Lei nº 2.848/1940)
+                </button>
+                <!-- Adicionar mais botões para outros códigos aqui -->
+                 <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
+                    Código Civil (Em breve)
+                </div>
+                 <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
+                    Constituição Federal (Em breve)
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Visualização do Código (Oculta Inicialmente) -->
+        <div id="codeView" class="hidden flex-grow flex flex-col h-full bg-white shadow-lg rounded-b-lg overflow-hidden">
+             <!-- Cabeçalho da Visualização -->
+            <div class="flex items-center p-3 bg-gray-50 border-b border-gray-200 sticky top-0 z-20"> <!-- z-index aumentado -->
+                 <!-- Botão Voltar -->
+                <button onclick="showCategories()" class="p-2 mr-2 text-blue-600 hover:bg-gray-200 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                </button>
+                 <!-- Título do Código -->
+                <h2 id="codeTitle" class="text-lg font-semibold text-gray-800 flex-grow truncate mr-2">Código</h2>
+                 <!-- Campo de Busca -->
+                <div class="relative">
+                    <input type="search" id="searchInput" placeholder="Buscar no código..." class="pl-8 pr-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-40 md:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Conteúdo do Código (usando iframe) -->
+            <div id="codeContent" class="flex-grow overflow-auto p-1 bg-white relative"> <!-- Adicionado relative aqui -->
+                <!-- Iframe será inserido aqui pelo JavaScript -->
+                 <p class="p-4 text-gray-500">Carregando conteúdo...</p>
+            </div>
+        </div>
+
+        <!-- Botão Flutuante (FAB) -->
+        <div id="fabContainer" class="fab-container hidden"> <!-- Começa escondido, mostra na codeView -->
+            <div class="fab-options">
+                <!-- Sub-botões -->
+                 <button class="fab-option" onclick="alert('Função 1 (ex: Anotar)')" aria-label="Anotar">
+                      <ion-icon name="create-outline"></ion-icon>
+                 </button>
+                 <button class="fab-option" onclick="alert('Função 2 (ex: Copiar)')" aria-label="Copiar">
+                      <ion-icon name="copy-outline"></ion-icon>
+                 </button>
+                 <button class="fab-option" onclick="alert('Função 3 (ex: Jurisprudência)')" aria-label="Jurisprudência">
+                      <ion-icon name="library-outline"></ion-icon>
+                 </button>
+                 <button class="fab-option" onclick="alert('Função 4 (ex: Compartilhar)')" aria-label="Compartilhar">
+                      <ion-icon name="share-social-outline"></ion-icon>
+                 </button>
+            </div>
+             <!-- Botão Principal -->
+            <button id="fabMain" class="fab-main" onclick="toggleFab()" aria-label="Abrir opções">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 icon-plus">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 icon-close hidden"> <!-- Ícone X escondido -->
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const categorySelection = document.getElementById('categorySelection');
+        const codeView = document.getElementById('codeView');
+        const codeContent = document.getElementById('codeContent');
+        const codeTitle = document.getElementById('codeTitle');
+        const searchInput = document.getElementById('searchInput');
+        const fabContainer = document.getElementById('fabContainer');
+        const fabMain = document.getElementById('fabMain');
+        const iconPlus = fabMain.querySelector('.icon-plus');
+        const iconClose = fabMain.querySelector('.icon-close');
+
+        // Função para mostrar a tela de categorias
+        function showCategories() {
+            categorySelection.classList.remove('hidden');
+            categorySelection.classList.add('flex');
+            codeView.classList.add('hidden');
+            codeView.classList.remove('flex');
+            fabContainer.classList.add('hidden'); // Esconde FAB
+            fabContainer.classList.remove('open'); // Garante que FAB feche
+            fabMain.classList.remove('open');
+            iconPlus.classList.remove('hidden'); // Mostra '+'
+            iconClose.classList.add('hidden'); // Esconde 'X'
+            codeContent.innerHTML = '<p class="p-4 text-gray-500">Carregando conteúdo...</p>'; // Limpa conteúdo anterior
+        }
+
+        // Função para carregar e mostrar o conteúdo do código
+        async function loadCode(url, title) {
+            categorySelection.classList.add('hidden');
+            categorySelection.classList.remove('flex');
+            codeView.classList.remove('hidden');
+            codeView.classList.add('flex');
+            fabContainer.classList.remove('hidden'); // Mostra FAB
+            codeTitle.textContent = title;
+            searchInput.value = ''; // Limpa busca
+
+            codeContent.innerHTML = ''; // Limpa mensagem de carregamento
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.onload = () => {
+                console.log("Iframe carregado.");
+                // Chama a função para adicionar botões após o carregamento do iframe
+                addActionButtonsToIframe(iframe);
+            };
+            iframe.onerror = () => {
+                codeContent.innerHTML = '<p class="p-4 text-red-500">Erro ao carregar o conteúdo. Verifique se o arquivo está acessível.</p>';
+            };
+            codeContent.appendChild(iframe);
+        }
+
+         // Função para alternar o FAB
+        function toggleFab() {
+            const isOpen = fabContainer.classList.toggle('open');
+            fabMain.classList.toggle('open');
+            iconPlus.classList.toggle('hidden', isOpen);
+            iconClose.classList.toggle('hidden', !isOpen);
+            fabMain.setAttribute('aria-label', isOpen ? 'Fechar opções' : 'Abrir opções');
+        }
+
+        // --- Funções para adicionar botões DENTRO do iframe ---
+
+        // Função para verificar se um elemento é o início de um artigo
+        function isArticleElement(element) {
+            // Verifica se é um <p> e se o texto começa com "Art. " seguido de número ou letra, ou "§"
+            return element.tagName === 'P' && element.textContent.trim().match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(§\s*\d+[º°]?\.?)/);
+        }
+
+         // Função principal para adicionar botões DENTRO do iframe
+         function addActionButtonsToIframe(iframe) {
+             try {
+                 const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                 if (!iframeDoc) {
+                     throw new Error("Não foi possível acessar o documento do iframe.");
+                 }
+
+                 // Injeta os estilos CSS para os botões dentro do head do iframe
+                 const style = iframeDoc.createElement('style');
+                 style.textContent = `
+                    .relative-article {
+                        position: relative !important; /* Garante contexto de posicionamento */
+                    }
+                    .article-button-container {
+                        position: absolute;
+                        right: 5px;
+                        top: 0;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                        opacity: 0.1;
+                        transition: opacity 0.2s ease-in-out;
+                        z-index: 5;
+                        background-color: rgba(230, 230, 230, 0.8); /* Fundo um pouco mais visível */
+                        padding: 3px;
+                        border-radius: 4px;
+                    }
+                    .relative-article:hover .article-button-container {
+                        opacity: 1;
+                    }
+                    .article-button {
+                        background-color: #f0f0f0;
+                        color: #333;
+                        border: 1px solid #ccc;
+                        border-radius: 50%; /* Botões redondos */
+                        padding: 0; /* Remover padding */
+                        cursor: pointer;
+                        font-size: 0.65rem;
+                        line-height: 1;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 20px;
+                        height: 20px;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                    }
+                    .article-button:hover {
+                        background-color: #e0e0e0;
+                        border-color: #bbb;
+                    }
+                     .article-button svg, .article-button ion-icon {
+                         width: 12px;
+                         height: 12px;
+                     }
+                 `;
+                 iframeDoc.head.appendChild(style);
+
+                 // Seleciona todos os parágrafos dentro do body do iframe
+                 const paragraphs = iframeDoc.querySelectorAll('body p');
+
+                 paragraphs.forEach(p => {
+                     if (isArticleElement(p)) {
+                         // Extrai um identificador (simplificado)
+                         const articleMatch = p.textContent.trim().match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(^§\s*\d+[º°]?\.?)/);
+                         const articleIdentifier = articleMatch ? articleMatch[0].replace(/[.:º°]$/, '') : 'Artigo'; // Limpa um pouco
+
+                         // Adiciona classe para posicionamento relativo
+                         p.classList.add('relative-article');
+                         // Garante que o parágrafo tenha algum padding à direita para os botões não sobreporem o texto
+                         p.style.paddingRight = '30px';
+
+                         // Cria o container de botões
+                         const buttonContainer = iframeDoc.createElement('div');
+                         buttonContainer.classList.add('article-button-container');
+
+                         // Cria os botões (Exemplos)
+                         buttonContainer.innerHTML = `
+                             <button class="article-button" title="Anotar" onclick="window.parent.handleArticleAction('annotate', '${articleIdentifier}')">
+                                 <ion-icon name="create-outline"></ion-icon>
+                             </button>
+                             <button class="article-button" title="Copiar" onclick="window.parent.handleArticleAction('copy', '${articleIdentifier}')">
+                                 <ion-icon name="copy-outline"></ion-icon>
+                             </button>
+                             <button class="article-button" title="Jurisprudência" onclick="window.parent.handleArticleAction('jurisprudence', '${articleIdentifier}')">
+                                <ion-icon name="library-outline"></ion-icon>
+                            </button>
+                             <button class="article-button" title="Compartilhar" onclick="window.parent.handleArticleAction('share', '${articleIdentifier}')">
+                                <ion-icon name="share-social-outline"></ion-icon>
+                             </button>
+                         `;
+
+                         // Adiciona o container ao parágrafo do artigo
+                         p.appendChild(buttonContainer);
+                     }
+                 });
+
+                 console.log("Botões adicionados aos artigos no iframe.");
+
+             } catch (e) {
+                 console.error("Erro ao adicionar botões ao iframe: ", e);
+                 // Não mostrar alert aqui, apenas logar, pois o usuário já foi avisado antes se falhou
+                 // Pode ser um erro diferente de Same-Origin também
+             }
+         }
+
+        // --- Funções para lidar com as ações dos botões do artigo ---
+        // Estas funções estão na janela principal (parent) e são chamadas pelo onclick dos botões no iframe
+        function handleArticleAction(action, articleIdentifier) {
+            alert(`Ação: ${action}\nArtigo: ${articleIdentifier}\n\n(Implementar lógica real aqui)`);
+
+            // Exemplo de como copiar o texto (requer mais lógica para pegar o texto correto)
+             if (action === 'copy') {
+                 try {
+                    const iframe = codeContent.querySelector('iframe');
+                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    // Encontrar o parágrafo novamente seria necessário, ou passar mais contexto
+                     console.warn("Lógica de cópia ainda não implementada para pegar o texto exato do artigo " + articleIdentifier);
+                      // Tentar copiar o identificador por enquanto
+                      navigator.clipboard.writeText(articleIdentifier)
+                        .then(() => alert(`Identificador "${articleIdentifier}" copiado para a área de transferência.`))
+                        .catch(err => console.error('Erro ao copiar:', err));
+
+                 } catch(e) {
+                     console.error("Erro ao tentar copiar texto do iframe:", e);
+                 }
+             }
+        }
+
+
+        // Inicializa mostrando as categorias
+        document.addEventListener('DOMContentLoaded', showCategories);
+
+    </script>
+
+</body>
+</html>
+
