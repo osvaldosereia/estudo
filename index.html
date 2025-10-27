@@ -51,6 +51,7 @@
              border-radius: 4px; /* Voltando para quadrado pequeno */
              padding: 0;
              cursor: pointer;
+             font-family: 'Arial', sans-serif; /* Fonte segura para as letras */
              font-size: 12px; /* Tamanho para as letras */
              font-weight: bold;
              line-height: 1;
@@ -75,19 +76,14 @@
              font-weight: bold;
              padding: 0;
              margin: 0;
+             color: #000; /* Garante legibilidade do texto */
         }
         mark.current-highlight { /* Estilo para o resultado atual */
              background-color: orange;
         }
 
-        /* Estilo para substituir links */
-        span.link-replacement {
-            color: #888; /* Cinza médio */
-            word-break: break-all; /* Força a quebra de linha */
-            text-decoration: none;
-            cursor: default; /* Remove cursor de link */
-            /* Removemos as heranças forçadas de fonte e tamanho */
-        }
+        /* Estilo para substituir links (REMOVIDO) */
+        /* span.link-replacement ... */
 
     </style>
      <!-- Importa a fonte Inter -->
@@ -95,7 +91,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
      <!-- Ícones IonIcons (Mantido para ícone da busca, não afeta iframe) -->
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script type.module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
 
@@ -114,12 +110,8 @@
                     Código Penal (Decreto-Lei nº 2.848/1940)
                 </button>
                 <!-- Botão para carregar o Código Civil (Adicionado pelo usuário e corrigido) -->
-                <button onclick="loadCode('civil1.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
+                <button onclick="loadCode('codigo-civil.html', 'Código Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
                      Código Civil
-                 </button>
-                <!-- Botão para carregar o Proceso Civil (Adicionado pelo usuário e corrigido) -->
-                <button onclick="loadCode('processocivil.html', 'Processo Civil')" class="w-full bg-white p-4 rounded-lg shadow hover:shadow-md transition text-left text-lg font-medium text-gray-700">
-                     Processo Civil
                  </button>
                  <!-- Placeholder para Constituição Federal -->
                  <div class="w-full bg-gray-200 p-4 rounded-lg shadow text-left text-lg font-medium text-gray-500 opacity-50">
@@ -244,11 +236,11 @@
             const text = element.textContent.trim();
             
             // Remove qualquer texto de link substituído antes de verificar
-            const cleanText = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|Vide Lei.*)/gi, '').trim();
+            // const cleanText = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|Vide Lei.*)/gi, '').trim();
 
              // Regex aprimorada para capturar mais padrões, incluindo alíneas e incisos romanos
              // Garante que o texto limpo comece com um desses padrões
-             return cleanText.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
+             return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
 
         // Extrai o texto do elemento inicial e dos próximos <p> até encontrar outro elemento relevante
@@ -256,36 +248,37 @@
             let text = startElement.textContent.trim();
             let currentElement = startElement.nextElementSibling;
             
-            // Remove os textos dos links substituídos do final do texto principal, se houver
-            const spanLinkMain = startElement.querySelector('span.link-replacement');
-            if (spanLinkMain) {
-                text = text.replace(spanLinkMain.textContent.trim(), '').trim();
-            }
+            // // Remove os textos dos links substituídos do final do texto principal, se houver
+            // const spanLinkMain = startElement.querySelector('span.link-replacement');
+            // if (spanLinkMain) {
+            //     text = text.replace(spanLinkMain.textContent.trim(), '').trim();
+            // }
 
             while (currentElement && ['P', 'DIV'].includes(currentElement.tagName) && !isRelevantElement(currentElement)) {
-                 // Inclui o texto do span.link-replacement, se houver
-                 const spanLink = currentElement.querySelector('span.link-replacement');
-                 let elementText = (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
+                 // // Inclui o texto do span.link-replacement, se houver
+                 // const spanLink = currentElement.querySelector('span.link-replacement');
+                 // let elementText = (spanLink ? spanLink.textContent.trim() : currentElement.textContent.trim());
                  
-                 // Remove o texto do link se ele for o único conteúdo (para não duplicar)
-                 if (spanLink && elementText === spanLink.textContent.trim()) {
-                     text += "\n" + currentElement.textContent.replace(spanLink.textContent.trim(), '').trim();
-                 } else {
-                     text += "\n" + currentElement.textContent.trim();
-                 }
+                 // // Remove o texto do link se ele for o único conteúdo (para não duplicar)
+                 // if (spanLink && elementText === spanLink.textContent.trim()) {
+                 //     text += "\n" + currentElement.textContent.replace(spanLink.textContent.trim(), '').trim();
+                 // } else {
+                 //     text += "\n" + currentElement.textContent.trim();
+                 // }
+                 text += "\n" + currentElement.textContent.trim();
                  
                  currentElement = currentElement.nextElementSibling;
             }
              
             // Limpa o texto extraído de todos os "(Redação...)", "(Incluído...)", "(Vide...)"
-            text = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|\(Vide Lei.*\))/gi, '').trim();
+            text = text.replace(/(\(Redação dada pela Lei.*\)|\(Incluído pela Lei.*\)|Vide Lei.*\))/gi, '').trim();
             // Remove espaços múltiplos
             text = text.replace(/\s\s+/g, ' '); 
 
             return text;
         }
 
-        // Função para modificar o conteúdo do iframe (substituir links)
+        // Função para modificar o conteúdo do iframe (NÃO substitui links, apenas os ajusta)
         function prepareIframeContent(iframe) {
             try {
                 const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -299,19 +292,13 @@
                 console.log(`Encontrados ${links.length} links para processar.`);
 
                 links.forEach(link => {
-                    // Cria um novo elemento <span>
-                    const span = iframeDoc.createElement('span');
-                    // Copia o texto do link para o span
-                    span.textContent = link.textContent;
-                    // Adiciona a classe CSS para estilização e quebra de linha
-                    span.className = 'link-replacement';
-                    // Substitui o link <a> pelo novo <span> no DOM
-                    link.parentNode.replaceChild(span, link);
+                    // Define o target para _blank para não quebrar a navegação
+                    link.target = "_blank";
                 });
-                 console.log(`Links substituídos por spans.`);
+                 console.log(`Links ajustados para target="_blank".`);
 
             } catch (e) {
-                 console.error("Erro ao preparar conteúdo do iframe (substituir links): ", e);
+                 console.error("Erro ao preparar conteúdo do iframe (ajustar links): ", e);
             }
         }
 
@@ -346,6 +333,12 @@
                         body > p {
                             padding-left: 8px;
                             padding-right: 8px;
+                        }
+
+                        /* Força a quebra de linha nos links para não estourar o layout */
+                        a {
+                            word-break: break-all !important;
+                            /* Não muda a cor, mantém a original do arquivo */
                         }
 
                         .relative-article { 
@@ -408,15 +401,7 @@
                         mark.current-highlight { 
                             background-color: orange; 
                         }
-                        span.link-replacement { 
-                            color: #888; /* Cinza médio, como pedido */
-                            word-break: break-all; /* Força a quebra de linha - ESSENCIAL */
-                            text-decoration: none; 
-                            cursor: default; 
-                            /* Remove o !important da fonte e cor para herdar do HTML original */
-                            font-family: inherit; 
-                            font-size: inherit; 
-                        }
+                        /* span.link-replacement (REMOVIDO) */
                     `;
                     iframeDoc.head.appendChild(style);
                  }
