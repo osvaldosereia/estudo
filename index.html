@@ -133,6 +133,12 @@
              height: 12px;
          }
 
+        /* Estilo para highlight da busca */
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
     </style>
      <!-- Importa a fonte Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -240,6 +246,7 @@
 
         // Mapa para armazenar o texto completo dos artigos identificados
         const articleTextMap = new Map();
+        let highlightMarkInstance; // Instância do Mark.js para highlight
 
         // Função para mostrar a tela de categorias
         function showCategories() {
@@ -253,6 +260,9 @@
             iconPlus.classList.remove('hidden'); // Mostra '+'
             iconClose.classList.add('hidden'); // Esconde 'X'
             codeContent.innerHTML = '<p class="p-4 text-gray-500">Carregando conteúdo...</p>'; // Limpa conteúdo anterior
+            if (highlightMarkInstance) {
+                highlightMarkInstance = null; // Limpa instância da busca
+            }
         }
 
         // Função para carregar e mostrar o conteúdo do código
@@ -265,14 +275,36 @@
             codeTitle.textContent = title;
             searchInput.value = ''; // Limpa busca
             articleTextMap.clear(); // Limpa o mapa de textos ao carregar novo código
+            if (highlightMarkInstance) {
+                 highlightMarkInstance = null; // Limpa instância da busca ao trocar de código
+            }
 
             codeContent.innerHTML = ''; // Limpa mensagem de carregamento
             const iframe = document.createElement('iframe');
-            // Remove a tentativa de definir charset via srcdoc
-            // iframe.setAttribute('srcdoc', `<!DOCTYPE html><html lang="pt-br"><head><meta charset="ISO-8859-1"></head><body>Conteúdo sendo carregado...</body></html>`);
             iframe.src = url; // Define o src diretamente
             iframe.onload = () => {
                 console.log("Iframe carregado.");
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    // Log da codificação detectada pelo navegador para o iframe
+                    console.log("Charset detectado no iframe:", iframeDoc.characterSet || iframeDoc.charset || "Não especificado");
+                    // Recomenda UTF-8 se não for
+                    if (!(iframeDoc.characterSet || iframeDoc.charset || '').toUpperCase().includes('UTF-8')) {
+                         console.warn("A codificação do arquivo carregado não parece ser UTF-8. Recomenda-se salvar o arquivo de origem como UTF-8 para melhor compatibilidade com acentos.");
+                    }
+                     // Inicializa o Mark.js para busca no conteúdo do iframe
+                     // Certifique-se de que Mark.js está carregado (adicionarei o script no final)
+                     if (typeof Mark !== 'undefined') {
+                        highlightMarkInstance = new Mark(iframeDoc.body);
+                     } else {
+                         console.error("Mark.js não está carregado. A busca não funcionará.");
+                     }
+                } catch (e) {
+                     console.error("Erro ao acessar documento do iframe ou inicializar Mark.js:", e);
+                     // Pode ser erro de Same-Origin se testado localmente sem servidor
+                }
+
+
                 // Adiciona um pequeno delay para garantir que o DOM interno esteja pronto
                 setTimeout(() => {
                     addActionButtonsToIframe(iframe);
@@ -300,7 +332,6 @@
             if (element.tagName !== 'P') return false;
             const text = element.textContent.trim();
             // Verifica artigos, parágrafos únicos, alíneas e incisos
-            // Ajustado para ser menos sensível a espaços extras após "Art."
             return text.match(/^(Art\.\s*\d+[º°]?[\w-]*\.?)|(Parágrafo único)|(§\s*\d+[º°]?\.?)|(^[a-z]\))|(^[IVXLCDM]+\s*-)/i);
         }
 
@@ -321,8 +352,8 @@
          function addActionButtonsToIframe(iframe) {
              try {
                  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                 if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState === 'loading') { // Verifica se o body está pronto e não carregando
-                     console.warn("Documento do Iframe ainda não está completamente carregado. Tentando novamente...");
+                 if (!iframeDoc || !iframeDoc.body || iframeDoc.readyState !== 'complete') { // Verifica se o body está pronto e completo
+                     console.warn("Documento do Iframe ainda não está completo. Tentando novamente...");
                      // Tenta novamente após um delay maior
                      setTimeout(() => addActionButtonsToIframe(iframe), 300);
                      return;
@@ -384,6 +415,13 @@
                             width: 14px; /* Ícone um pouco maior */
                             height: 14px;
                         }
+                         /* Estilo injetado para highlight da busca no iframe */
+                        mark.search-highlight {
+                             background-color: yellow;
+                             font-weight: bold;
+                             padding: 0;
+                             margin: 0;
+                         }
                     `;
                     iframeDoc.head.appendChild(style);
                  }
@@ -394,7 +432,7 @@
                  let articleCounter = 0; // Contador para gerar IDs únicos
 
                  paragraphs.forEach(p => {
-                    // Limpa containers antigos se a função for chamada múltiplas vezes (ex: em re-renders)
+                    // Limpa containers antigos
                      const oldContainer = p.querySelector('.article-button-container');
                      if(oldContainer) p.removeChild(oldContainer);
                      p.classList.remove('relative-article'); // Limpa classe antiga
@@ -410,14 +448,12 @@
 
                          // Adiciona classe para posicionamento relativo
                          p.classList.add('relative-article');
-                         // p.style.paddingRight = '30px'; // Estilo agora no CSS injetado
 
                          // Cria o container de botões
                          const buttonContainer = iframeDoc.createElement('div');
                          buttonContainer.classList.add('article-button-container');
 
                          // Cria os botões (Passando o ID único)
-                         // Definindo prompts específicos para cada botão
                         const prompts = {
                             annotate: `Explique de forma simples e resumida o seguinte texto jurídico:\n\n"%%TEXT%%"`,
                             jurisprudence: `Encontre jurisprudência relevante e atualizada sobre o seguinte artigo/trecho da legislação:\n\n"%%TEXT%%"`,
@@ -426,7 +462,7 @@
 
                          buttonContainer.innerHTML = `
                              <button class="article-button" title="Resumir/Explicar" onclick="window.parent.handleArticleAction('annotate', '${uniqueArticleId}', \`${prompts.annotate}\`)">
-                                 <ion-icon name="information-circle-outline"></ion-icon> <!-- Ícone mudado -->
+                                 <ion-icon name="information-circle-outline"></ion-icon>
                              </button>
                              <button class="article-button" title="Copiar" onclick="window.parent.handleArticleAction('copy', '${uniqueArticleId}')">
                                  <ion-icon name="copy-outline"></ion-icon>
@@ -435,7 +471,7 @@
                                 <ion-icon name="library-outline"></ion-icon>
                             </button>
                              <button class="article-button" title="Explicar para Redes Sociais" onclick="window.parent.handleArticleAction('share', '${uniqueArticleId}', \`${prompts.share}\`)">
-                                <ion-icon name="share-social-outline"></ion-icon> <!-- Ícone mantido, mas título mudado -->
+                                <ion-icon name="share-social-outline"></ion-icon>
                              </button>
                          `;
 
@@ -453,7 +489,6 @@
          }
 
         // --- Funções para lidar com as ações dos botões do artigo ---
-        // Modificado para aceitar um template de prompt
         function handleArticleAction(action, uniqueArticleId, promptTemplate = "") {
             const fullArticleText = articleTextMap.get(uniqueArticleId) || 'Texto não encontrado';
 
@@ -462,7 +497,7 @@
                 navigator.clipboard.writeText(fullArticleText)
                     .then(() => alert(`Texto completo do artigo copiado!`))
                     .catch(err => {
-                        // Fallback para método antigo se o novo falhar (útil em alguns contextos)
+                        // Fallback para método antigo
                         try {
                             const textArea = document.createElement("textarea");
                             textArea.value = fullArticleText;
@@ -481,8 +516,8 @@
             }
 
             // Para outras ações, prepara o prompt
-            const shortArticleText = fullArticleText.substring(0, 200) + (fullArticleText.length > 200 ? '...' : ''); // Pega os primeiros 200 caracteres
-            const promptText = promptTemplate.replace("%%TEXT%%", shortArticleText); // Insere o texto no template
+            const shortArticleText = fullArticleText.substring(0, 200) + (fullArticleText.length > 200 ? '...' : '');
+            const promptText = promptTemplate.replace("%%TEXT%%", shortArticleText);
 
             if (!promptText) {
                  console.error("Ação desconhecida ou sem prompt:", action);
@@ -490,20 +525,56 @@
             }
 
             const googleAiBaseUrl = "https://google.com/?ai=1&ai_prompt=";
-            // Codifica o prompt para a URL
             const encodedPrompt = encodeURIComponent(promptText);
             const finalUrl = googleAiBaseUrl + encodedPrompt;
 
-            // Abre o Google AI em uma nova aba
-            console.log("Abrindo URL:", finalUrl); // Log para depuração
+            console.log("Abrindo URL:", finalUrl);
             window.open(finalUrl, '_blank');
         }
 
+        // --- Função de Busca ---
+        function performSearch(term) {
+             if (!highlightMarkInstance) {
+                 console.log("Instância de busca (Mark.js) não está pronta.");
+                 return;
+             }
+             // Remove highlights anteriores
+             highlightMarkInstance.unmark({
+                 done: function(){
+                     if (term && term.length > 1) { // Só busca com mais de 1 caractere
+                         // Aplica novo highlight
+                         highlightMarkInstance.mark(term, {
+                             separateWordSearch: false, // Busca a frase exata
+                             className: 'search-highlight',
+                             done: function(counter) {
+                                 console.log(`Encontradas ${counter} ocorrências.`);
+                                 // Rola para a primeira ocorrência se houver
+                                 const firstMark = document.querySelector('#codeContent iframe')
+                                                       .contentDocument
+                                                       .body
+                                                       .querySelector('mark.search-highlight');
+                                 if (firstMark) {
+                                     firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                 }
+                             }
+                         });
+                     }
+                 }
+             });
+         }
+
+
+        // Event Listener para o input de busca
+        searchInput.addEventListener('input', (event) => {
+            performSearch(event.target.value);
+        });
 
         // Inicializa mostrando as categorias
         document.addEventListener('DOMContentLoaded', showCategories);
 
     </script>
+     <!-- Adiciona a biblioteca Mark.js para a busca -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
 
 </body>
 </html>
