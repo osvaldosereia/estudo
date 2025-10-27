@@ -116,12 +116,10 @@
              background-color: orange;
         }
 
-        /* Classe de destaque para o IntersectionObserver (sutil) */
+        /* Classe de destaque para o IntersectionObserver (agora ativa) */
         .article-in-focus {
-            /* background-color: #fefce8; /* Um amarelo muito claro */
-            /* border-left: 3px solid #2563EB; /* Borda azul */
-            /* padding-left: 5px; */
-            /* Você pode descomentar acima se quiser um destaque visual */
+             background-color: #fefce8 !important; /* Um amarelo muito claro */
+             /* Adiciona !important para garantir que sobreponha o BG original */
         }
 
 
@@ -201,8 +199,8 @@
 
         <!-- Botão Flutuante (FAB) - Oculto por padrão, aparece na codeView -->
         <div id="fabContainer" class="fab-container hidden">
-            <!-- Sub-botões -->
-            <div classs="fab-options">
+            <!-- Sub-botões (*** CORRIGIDO: de 'classs' para 'class' ***) -->
+            <div class="fab-options">
                 <div class="fab-option" onclick="handleArticleAction('explain')">
                     <span class="fab-option-label">Explicação Detalhada</span>
                     <span class="fab-option-icon">E</span>
@@ -452,9 +450,9 @@
                             overflow-wrap: break-word !important; /* Garante a quebra */
                         }
 
-                        /* Estilo de foco (opcional) */
+                        /* Estilo de foco (agora ativo) */
                         .article-in-focus {
-                             /* background-color: #fefce8; */
+                             background-color: #fefce8 !important; /* Amarelo bem claro */
                         }
                         
                         /* Estilos de busca (Mark.js) */
