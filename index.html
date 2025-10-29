@@ -79,6 +79,21 @@
                             </label>
                         </div>
                     </div>
+                    <!-- NOVO CAMPO: Brinde -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Brinde?</label>
+                        <div class="mt-2 flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="brinde" value="Não" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Não</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="brinde" value="Sim" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Sim</span>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- FIM NOVO CAMPO: Brinde -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
                         <!-- AUMENTADO: h-auto, py-3, px-4, text-base -->
@@ -90,10 +105,32 @@
                 
                 <!-- Coluna 3: Campo Alterada e Botões -->
                 <div class="md:col-span-1 space-y-4">
-                    <div id="campo-alterada" class="hidden">
-                        <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                        <!-- AUMENTADO: py-3, px-4, text-base -->
-                        <input type="text" id="codigo-alterada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão">
+                    <div id="campo-alterada" class="hidden space-y-4">
+                        <div>
+                            <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
+                            <!-- AUMENTADO: py-3, px-4, text-base -->
+                            <input type="text" id="codigo-alterada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão">
+                        </div>
+
+                        <!-- NOVO CAMPO: Partes Alteradas -->
+                        <div id="campo-partes-alteradas">
+                            <label class="block text-sm font-medium text-gray-700">Partes Alteradas (Múltiplo)</label>
+                            <div class="mt-2 space-y-2">
+                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
+                                    <input type="checkbox" name="partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                                    <span class="ml-3 text-sm font-medium text-gray-700">Arroz</span>
+                                </label>
+                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
+                                    <input type="checkbox" name="partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                                    <span class="ml-3 text-sm font-medium text-gray-700">Alimento</span>
+                                </label>
+                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
+                                    <input type="checkbox" name="partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                                    <span class="ml-3 text-sm font-medium text-gray-700">Limpeza</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- FIM NOVO CAMPO -->
                     </div>
                     <div class="pt-6 flex flex-col">
                         <!-- AUMENTADO: py-3 -->
@@ -324,6 +361,10 @@
                     campoAlterada.classList.add('hidden');
                     codigoAlteradaInput.required = false;
                     codigoAlteradaInput.value = '';
+                    // NOVO: Reseta checkboxes
+                    document.querySelectorAll('input[name="partes_alteradas"]:checked').forEach(cb => {
+                        cb.checked = false;
+                    });
                 }
             }
 
@@ -364,9 +405,28 @@
                     card.dataset.id = entrega.id;
                     card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : ''}`;
                     
-                    let tipoInfo = entrega.tipo === 'Alterada' 
-                        ? `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${entrega.codigoAlterada}</span>`
-                        : `<span class="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Normal</span>`;
+                    let infoTags = []; // Use an array for cleaner logic
+
+                    if (entrega.tipo === 'Normal') {
+                        infoTags.push(`<span class="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Normal</span>`);
+                    } else {
+                        // É Alterada, mostrar tags amarelas
+                        if (entrega.codigoAlterada) {
+                            infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${entrega.codigoAlterada}</span>`);
+                        }
+                        if (entrega.partesAlteradas && entrega.partesAlteradas.length > 0) {
+                             infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${entrega.partesAlteradas.join(', ')}</span>`);
+                        }
+                        // Se for alterada mas não tiver info, bota um default
+                        if (!entrega.codigoAlterada && (!entrega.partesAlteradas || entrega.partesAlteradas.length === 0)) {
+                            infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>`);
+                        }
+                    }
+
+                    // NOVO: Adiciona info de Brinde
+                    if (entrega.brinde === 'Sim') {
+                        infoTags.push(`<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde</span>`);
+                    }
 
                     let statusInfo = '';
                     if (entrega.status === 'Entregue') {
@@ -413,7 +473,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 sm:ml-12 flex flex-wrap gap-2 items-center">
-                                ${tipoInfo}
+                                ${infoTags.join(' ')} <!-- Injeta as tags -->
                                 ${statusInfo}
                             </div>
                         </div>
@@ -450,6 +510,13 @@
                     return;
                 }
                 
+                // NOVO: Coleta Partes Alteradas
+                const partesAlteradasSelecionadas = 
+                    Array.from(formEntrega.querySelectorAll('input[name="partes_alteradas"]:checked'))
+                         .map(input => input.value);
+                // NOVO: Coleta Brinde
+                const brindeSelecionado = document.querySelector('input[name="brinde"]:checked').value;
+                
                 const novaEntrega = {
                     id: Date.now(), // ID único
                     codigoCliente: codigoClienteInput.value,
@@ -460,6 +527,8 @@
                     },
                     tipo: document.querySelector('input[name="tipo-cesta"]:checked').value,
                     codigoAlterada: codigoAlteradaInput.value,
+                    partesAlteradas: partesAlteradasSelecionadas, // NOVO CAMPO
+                    brinde: brindeSelecionado, // NOVO CAMPO
                     status: "Pendente",
                     formaPagamento: [],
                     horarioEntrega: null
@@ -650,12 +719,20 @@
                         whatsappTexto += `${index + 1}. *${e.codigoCliente}*\n`;
                         whatsappTexto += `   Cesta: ${e.cesta.nome} (${formatarMoeda(e.cesta.valor)})\n`;
                         
-                        // Bloco modificado para incluir OBS Cliente e OBS Cesta
+                        // Bloco modificado para incluir OBS Cliente, Brinde e Cesta
+                        if (e.brinde === 'Sim') {
+                            whatsappTexto += `   BRINDE: Sim\n`;
+                        }
                         if (e.observacao) {
                             whatsappTexto += `   OBS (Cliente): ${e.observacao}\n`;
                         }
                         if(e.tipo === 'Alterada') {
-                            whatsappTexto += `   OBS (Cesta): ${e.codigoAlterada}\n`;
+                            if (e.codigoAlterada) {
+                                whatsappTexto += `   OBS (Cesta): ${e.codigoAlterada}\n`;
+                            }
+                            if (e.partesAlteradas && e.partesAlteradas.length > 0) {
+                                whatsappTexto += `   Partes Alteradas: ${e.partesAlteradas.join(', ')}\n`;
+                            }
                         }
                     });
                 } else {
@@ -701,7 +778,13 @@
                          throw new Error('Estrutura de dados incompatível.');
                     }
 
-                    entregas = dadosCarregados;
+                    // NOVO: Mapeia os dados carregados para garantir que os novos campos existam
+                    entregas = dadosCarregados.map(e => ({
+                        ...e,
+                        brinde: e.brinde || 'Não', // Define 'Não' como padrão
+                        partesAlteradas: e.partesAlteradas || [] // Define array vazio como padrão
+                    }));
+                    
                     salvarLocalStorage(); // Salva os novos dados
                     renderizarEntregas(); // Renderiza na tela
 
@@ -782,5 +865,6 @@
     </script>
 </body>
 </html>
+
 
 
