@@ -44,6 +44,13 @@
                         <!-- AUMENTADO: py-3, px-4, text-base -->
                         <input type="text" id="codigo-cliente" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Rua Fictícia, 123">
                     </div>
+                    <!-- NOVO CAMPO DE OBSERVAÇÃO -->
+                    <div>
+                        <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
+                        <!-- AUMENTADO: py-3, px-4, text-base -->
+                        <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
+                    </div>
+                    <!-- FIM NOVO CAMPO -->
                     <div>
                         <label for="select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
                         <!-- AUMENTADO: py-3, px-4, text-base -->
@@ -218,6 +225,7 @@
             // --- Seletores de Elementos ---
             const formEntrega = document.getElementById('form-entrega');
             const codigoClienteInput = document.getElementById('codigo-cliente');
+            const obsClienteInput = document.getElementById('obs-cliente'); // NOVO SELETOR
             const selectCesta = document.getElementById('select-cesta');
             const displayValor = document.getElementById('display-valor');
             const campoAlterada = document.getElementById('campo-alterada');
@@ -369,6 +377,12 @@
                             </div>
                         `;
                     }
+
+                    // NOVO: Adiciona info da Observação
+                    let obsInfo = '';
+                    if (entrega.observacao) {
+                        obsInfo = `<p class="text-sm text-red-600 font-medium truncate" title="${entrega.observacao}">OBS: ${entrega.observacao}</p>`;
+                    }
                     
                     // Lógica para desabilitar botões de mover
                     const isPrimeiro = index === 0;
@@ -394,6 +408,7 @@
 
                                 <div class="truncate">
                                     <p class="text-base font-semibold text-gray-800 truncate" title="${entrega.codigoCliente}">${entrega.codigoCliente}</p>
+                                    ${obsInfo} <!-- INJETADO AQUI -->
                                     <p class="text-sm text-gray-600">${entrega.cesta.nome} - <span class="font-medium">${formatarMoeda(entrega.cesta.valor)}</span></p>
                                 </div>
                             </div>
@@ -438,6 +453,7 @@
                 const novaEntrega = {
                     id: Date.now(), // ID único
                     codigoCliente: codigoClienteInput.value,
+                    observacao: obsClienteInput.value, // NOVO CAMPO SALVO
                     cesta: {
                         nome: selectedOption.value,
                         valor: parseFloat(selectedOption.dataset.valor)
@@ -633,8 +649,13 @@
                     entregasPendentes.forEach((e, index) => {
                         whatsappTexto += `${index + 1}. *${e.codigoCliente}*\n`;
                         whatsappTexto += `   Cesta: ${e.cesta.nome} (${formatarMoeda(e.cesta.valor)})\n`;
+                        
+                        // Bloco modificado para incluir OBS Cliente e OBS Cesta
+                        if (e.observacao) {
+                            whatsappTexto += `   OBS (Cliente): ${e.observacao}\n`;
+                        }
                         if(e.tipo === 'Alterada') {
-                            whatsappTexto += `   OBS: ${e.codigoAlterada}\n`;
+                            whatsappTexto += `   OBS (Cesta): ${e.codigoAlterada}\n`;
                         }
                     });
                 } else {
@@ -761,4 +782,5 @@
     </script>
 </body>
 </html>
+
 
