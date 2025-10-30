@@ -1,4 +1,3 @@
-[
   {
     "nome": "010 Natalia",
     "celular": "5565984685473.0",
@@ -4037,4 +4036,4 @@
     "endereco": "Xr196",
     "complemento": "Chamar Na Porta 3"
   }
-]
+
