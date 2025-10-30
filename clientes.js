@@ -63,7 +63,7 @@ const CLIENTES_DB = [
     "nome": "1276 Jd Ikaray Vg",
     "celular": "5565992434046.0",
     "endereco": "1276",
-    "complemento": "⭐⭐⭐⭐ Rua Pedro José Ferreira, quadra 3, casa 5A"
+    "complemento": "Rua Pedro José Ferreira, quadra 3, casa 5A"
   },
   {
     "nome": "1326 CPA PRIMEIRO DE MARCO",
@@ -135,7 +135,7 @@ const CLIENTES_DB = [
     "nome": "163 Santa Laura",
     "celular": "5565981123604.0",
     "endereco": "163 Santa Laura",
-    "complemento": "⭐⭐⭐⭐ Rua 3 Lagoas qdr 47 casa 14 Santa Laura"
+    "complemento": "Rua 3 Lagoas qdr 47 casa 14 Santa Laura"
   },
   {
     "nome": "1655 CUIABA NOVO TERCEIRO",
@@ -219,7 +219,7 @@ const CLIENTES_DB = [
     "nome": "220 Jd Paulista",
     "celular": "5565984420925.0",
     "endereco": "220 Jd Paulista",
-    "complemento": "⭐⭐⭐⭐⭐ Rua natalino fontes 279 jardim paulista"
+    "complemento": "Rua natalino fontes 279 jardim paulista"
   },
   {
     "nome": "2228 COXIPO PQ ATALAIA",
@@ -273,7 +273,7 @@ const CLIENTES_DB = [
     "nome": "246ESTUDIO VG CRISTO REI",
     "celular": "5565993125235.0",
     "endereco": "246ESTUDIO",
-    "complemento": "Segue localização 📍\n\nO estúdio fica dentro da Academia Estação Funcional última sala .\n\nA entrada é pela lateral portão todo branco que é em frente à loja loira moda fitness que também fica dentro da academia . \n\nCaso portão esteja fechado ele é de correr só puxar para o lado ☺️\n\nPassa a catraca a última sala\nEm frente ao bebedouro ."
+    "complemento": "estúdio fica dentro da Academia Estação Funcional última sala .\n\nA entrada é pela lateral portão todo branco que é em frente à loja loira moda fitness que também fica dentro da academia . \n\nCaso portão esteja fechado ele é de correr só puxar para o lado ☺️\n\nPassa a catraca a última sala\nEm frente ao bebedouro ."
   },
   {
     "nome": "247 VG CRISTO REI",
@@ -459,7 +459,7 @@ const CLIENTES_DB = [
     "nome": "4444",
     "celular": "5565992146568.0",
     "endereco": "4444",
-    "complemento": "⭐ Rua deputado Oscar Soares quadra quadra 115 lote 12 bairro São Simão vg"
+    "complemento": "Rua deputado Oscar Soares quadra quadra 115 lote 12 bairro São Simão vg"
   },
   {
     "nome": "4538 VG SAO GONÇALO ",
@@ -489,7 +489,7 @@ const CLIENTES_DB = [
     "nome": "4797 COXIPO Pedra 90",
     "celular": "5565992474426.0",
     "endereco": "4797",
-    "complemento": "⭐⭐⭐ Rua 46 quadra 207 casa 06 pedra 90 IIEtapa"
+    "complemento": "Rua 46 quadra 207 casa 06 pedra 90 IIEtapa"
   },
   {
     "nome": "482 VG CRISTO REI",
