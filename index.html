@@ -148,26 +148,17 @@
                         <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
                     </div>
 
-                    <!-- CAMPO ANTIGO REMOVIDO
-                    <div>
-                        <label for="codigo-cliente" class="block text-sm font-medium text-gray-700">Código/Endereço Cliente</label>
-                        <input type="text" id="codigo-cliente" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Rua Fictícia, 123">
-                    </div>
-                    -->
-                    <!-- FIM MODIFICAÇÃO -->
-
+                    <!-- CAMPO ANTIGO REMOVIDO -->
+                    
                     <!-- NOVO CAMPO DE OBSERVAÇÃO -->
                     <div>
                         <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                        <!-- AUMENTADO: py-3, px-4, text-base -->
                         <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
                     </div>
                     <!-- FIM NOVO CAMPO -->
                     <div>
                         <label for="select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
-                        <!-- AUMENTADO: py-3, px-4, text-base -->
                         <select id="select-cesta" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                            <!-- MODIFICADO: Removido "Selecione..." -->
                             <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
                             <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
                             <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
@@ -212,7 +203,6 @@
                     <!-- FIM NOVO CAMPO: Brinde -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
-                        <!-- AUMENTADO: h-auto, py-3, px-4, text-base -->
                         <div id="display-valor" class="mt-1 p-2 h-auto flex items-center bg-gray-100 rounded-md border border-gray-300 text-gray-800 font-semibold py-3 px-4 text-base">
                             0.00
                         </div>
@@ -224,7 +214,6 @@
                     <div id="campo-alterada" class="hidden space-y-4">
                         <div>
                             <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                            <!-- AUMENTADO: py-3, px-4, text-base -->
                             <input type="text" id="codigo-alterada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão">
                         </div>
 
@@ -249,7 +238,6 @@
                         <!-- FIM NOVO CAMPO -->
                     </div>
                     <div class="pt-6 flex flex-col">
-                        <!-- AUMENTADO: py-3 -->
                         <button type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                             Lançar Entrega
@@ -264,9 +252,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold text-gray-700">Entregas na Rota</h2>
                 <div class="flex space-x-2 mt-4 sm:mt-0">
-                    <!-- AUMENTADO: py-3 -->
                     <button id="btn-exportar" class="rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
-                    <!-- AUMENTADO: py-3 -->
                     <button id="btn-carregar" class="rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700">Carregar Rota</button>
                 </div>
             </div>
@@ -283,7 +269,6 @@
     <div id="modal-pagamento" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
             <form id="form-pagamento">
-                <!-- ... (conteúdo do modal sem alteração) ... -->
                 <div class="p-6">
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Entrega e Pagamento</h3>
                     <p class="text-sm text-gray-600 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
@@ -311,9 +296,7 @@
                     </div>
                 </div>
                 <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-                    <!-- AUMENTADO: py-3 -->
                     <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
-                    <!-- AUMENTADO: py-3 -->
                     <button type="submit" id="btn-confirmar-pagamento" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Confirmar Entrega</button>
                 </div>
             </form>
@@ -327,7 +310,6 @@
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
                 
                 <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-                <!-- AUMENTADO: py-3 -->
                 <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -345,14 +327,10 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <!-- AUMENTADO: py-3 -->
                 <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
             </div>
         </div>
     </div>
-
-    <!-- Modal Carregar (Oculto por padrão) -->
-    <!-- REMOVIDO MODAL DE CARREGAR (AGORA É FEITO VIA INPUT DE ARQUIVO) -->
 
     <!-- Modal de Aviso (Oculto por padrão) -->
     <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
@@ -362,7 +340,6 @@
                 <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <!-- AUMENTADO: py-3 -->
                 <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
             </div>
         </div>
@@ -397,14 +374,12 @@
             const displayClienteEndereco = document.getElementById('display-cliente-endereco');
             const displayClienteComplemento = document.getElementById('display-cliente-complemento');
             const displayClienteCelular = document.getElementById('display-cliente-celular');
-            // const codigoClienteInput = document.getElementById('codigo-cliente'); // REMOVIDO
             
             const obsClienteInput = document.getElementById('obs-cliente'); // NOVO SELETOR
             const selectCesta = document.getElementById('select-cesta');
             const displayValor = document.getElementById('display-valor');
             const campoAlterada = document.getElementById('campo-alterada');
             const codigoAlteradaInput = document.getElementById('codigo-alterada');
-            //const btnGoogleMaps = document.getElementById('btn-google-maps'); // Removido
             const listaEntregasEl = document.getElementById('lista-entregas');
             const listaVaziaEl = document.getElementById('lista-vazia');
             
@@ -420,13 +395,9 @@
             const btnCarregar = document.getElementById('btn-carregar');
             
             const modalExportar = document.getElementById('modal-exportar');
-            // const exportJsonEl = document.getElementById('export-json'); // Removido
             const exportRelatorioEl = document.getElementById('export-relatorio');
             const exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
             const btnFecharExportar = document.getElementById('btn-fechar-exportar');
-
-            // Modal Carregar (Removido)
-            // ...
 
             // Modal de Aviso
             const modalAviso = document.getElementById('modal-aviso');
@@ -434,7 +405,6 @@
             const btnFecharAviso = document.getElementById('btn-fechar-aviso');
 
             // --- Estado da Aplicação ---
-            // let entregas = []; // Array principal de entregas (SUBSTITUÍDO)
             let todasAsRotas = {}; // NOVO: Objeto para guardar todas as rotas
             let rotaAtivaId = null; // NOVO: ID da rota sendo visualizada
             const MAX_ROTAS = 30; // Limite de rotas salvas
@@ -877,12 +847,22 @@
                     // NOVO: Trava botões se não estiver pendente
                     const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
 
-                    // NOVO: Lógica do WhatsApp
-                    const mensagemFormatada = `Olá! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado`;
+                    // --- Lógica de Botões de Ação ---
                     const telefoneLimpo = limparTelefone(entrega.cliente.celular);
-                    const whatsappUrl = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(mensagemFormatada)}`;
                     const semTelefone = !telefoneLimpo;
 
+                    // WhatsApp
+                    const mensagemFormatada = `Olá! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado`;
+                    const whatsappUrl = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(mensagemFormatada)}`;
+                    
+                    // Ligar (tel:)
+                    const telefoneParaLigacao = `+${telefoneLimpo}`; // tel:+55...
+                    const ligarUrl = `tel:${telefoneParaLigacao}`;
+
+                    // Kyte
+                    const nomeClienteCodificado = encodeURIComponent(entrega.cliente.nome);
+                    const kyteUrl = `kyte-app://customers?name=${nomeClienteCodificado}`;
+                    
 
                     card.innerHTML = `
                         <div class="flex-1 min-w-0">
@@ -911,14 +891,14 @@
                                 ${statusInfo}
                             </div>
                         </div>
-                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col sm:flex-row gap-2">
-                            <!-- AUMENTADO: py-3 -->
+                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col sm:flex-row flex-wrap gap-2">
+                            <!-- Botão Mapa -->
                             <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                                 <span class="sm:hidden ml-2">Abrir Mapa</span>
                             </button>
                             
-                            <!-- NOVO: Botão WhatsApp -->
+                            <!-- Botão WhatsApp -->
                             <a href="${semTelefone || isFinalizada ? '#' : whatsappUrl}" 
                                target="_blank" 
                                rel="noopener noreferrer"
@@ -931,7 +911,33 @@
                                 <span class="sm:hidden ml-2">WhatsApp</span>
                             </a>
 
-                            <!-- NOVO: Lógica de Botões de Ação (Entregar/Cancelar/Status) -->
+                            <!-- NOVO: Botão Ligar -->
+                            <a href="${semTelefone || isFinalizada ? '#' : ligarUrl}"
+                               class="btn-card-ligar w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-100 text-blue-700 border border-blue-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-200'}" 
+                               title="Ligar para Cliente" 
+                               ${isFinalizada || semTelefone ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C6.477 18 2 13.523 2 8V3z" />
+                                </svg>
+                                <span class="sm:hidden ml-2">Ligar</span>
+                            </a>
+
+                            <!-- NOVO: Botão Kyte -->
+                            <a href="${isFinalizada ? '#' : kyteUrl}"
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-purple-200'}" 
+                               title="Abrir no Kyte" 
+                               ${isFinalizada ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2.586l3 3a1 1 0 001.414-1.414L10.414 16H13a1 1 0 001-1v-1.586l1.293 1.293a1 1 0 001.414-1.414l-7-7z" />
+                                    <path d="M16 8a1 1 0 00-1-1h-1.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3V3a1 1 0 00-1-1H8a1 1 0 00-1 1v1.586L5.707 3.293a1 1 0 00-1.414 1.414L7.586 8H6a1 1 0 000 2h1.586l-3.293 3.293a1 1 0 101.414 1.414L9 11.414V13a1 1 0 001 1h.01a1 1 0 00.99-1v-1.586l3.293 3.293a1 1 0 001.414-1.414L12.414 10H14a1 1 0 001-1V8z" />
+                                </svg>
+                                <span class="sm:hidden ml-2">Kyte</span>
+                            </a>
+                            
+
+                            <!-- Lógica de Botões de Ação (Entregar/Cancelar/Status) -->
                             ${entrega.status === 'Pendente' ? `
                                 <button class="btn-cancelar-entrega w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">
                                     Cancelar
@@ -972,11 +978,6 @@
 
                 const selectedOption = selectCesta.options[selectCesta.selectedIndex];
                 
-                if (!selectedOption || !selectedOption.value) {
-                    // O seletor agora não tem "Selecione", então este check não é mais necessário
-                    // Mas o valor padrão precisa ser pego
-                }
-
                 // MODIFICADO: Busca o cliente selecionado no Cache
                 const nomeClienteSelecionado = inputCliente.value;
                 const clienteSelecionado = CLIENTES_CACHE[nomeClienteSelecionado.toLowerCase()];
@@ -988,7 +989,6 @@
                 } else {
                     // Cliente avulso (digitado)
                     clienteData = {
-                        // id: null, // REMOVIDO
                         nome: nomeClienteSelecionado,
                         celular: '',
                         endereco: nomeClienteSelecionado, // Usa o nome como endereço
@@ -1153,9 +1153,17 @@
                     return; // Para a execução
                 }
 
-                // NOVO: Ignora clique no botão WhatsApp (é um link <a>)
+                // NOVO: Ignora clique nos links de ação (<a>)
                 const btnWpp = e.target.closest('.btn-card-whatsapp');
                 if (btnWpp) {
+                    return;
+                }
+                const btnLigar = e.target.closest('.btn-card-ligar');
+                if (btnLigar) {
+                    return;
+                }
+                const btnKyte = e.target.closest('.btn-card-kyte');
+                if (btnKyte) {
                     return;
                 }
 
@@ -1224,9 +1232,6 @@
 
                 // Garante que o array 'entregas' está na ordem da tela antes de exportar
                 salvarLocalStorage(); 
-
-                // 1. Prepara JSON para backup/carga (Será usado no botão de download)
-                // ...
 
                 // 2. Prepara Relatório de Entregas Concluídas
                 const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
@@ -1311,12 +1316,10 @@
                     totalPorCesta[e.cesta.nome] = (totalPorCesta[e.cesta.nome] || 0) + valor;
 
                     // Total por Pagamento
-                    // Se não houver forma de pagamento (improvável, mas seguro)
                     if (e.formaPagamento.length === 0) {
                          totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valor;
                     } else {
                         // Se houver múltiplas formas, divide o valor igualmente entre elas
-                        // Ex: R$100, Pix+Dinheiro -> R$50 Pix, R$50 Dinheiro
                         const valorDividido = valor / e.formaPagamento.length;
                         e.formaPagamento.forEach(forma => {
                             totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido;
@@ -1390,9 +1393,6 @@
                 try {
                     const dadosCarregados = JSON.parse(jsonDados);
                     
-                    // Validação simples
-                    // O arquivo pode ser um objeto (nova Rota) ou um array (Rota antiga)
-                    
                     // Caso 1: É o formato NOVO (Objeto Rota)
                     if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
                         
@@ -1414,7 +1414,6 @@
                             ...e,
                             // Garante que o cliente é um objeto (compatibilidade com formato antigo)
                             cliente: typeof e.cliente === 'object' ? e.cliente : {
-                                // id: null, // REMOVIDO
                                 nome: e.codigoCliente || 'Cliente Antigo', // Tenta migrar do campo antigo
                                 celular: '',
                                 endereco: e.codigoCliente || 'Sem Endereço',
@@ -1452,7 +1451,6 @@
                             partesAlteradas: e.partesAlteradas || [],
                             // Garante que o cliente é um objeto
                             cliente: typeof e.cliente === 'object' ? e.cliente : {
-                                // id: null, // REMOVIDO
                                 nome: e.codigoCliente || 'Cliente Antigo',
                                 celular: '',
                                 endereco: e.codigoCliente || 'Sem Endereço',
@@ -1576,11 +1574,7 @@
             // Modal de Aviso
             btnFecharAviso.addEventListener('click', fecharAviso);
 
-            // Inicializa o SortableJS (Arrastar e Soltar)
-            // REMOVIDO
-
             // Carrega dados do LocalStorage ao iniciar
-            // carregarLocalStorage(); // SUBSTITUÍDO
             iniciarAplicativo(); // NOVO
             
             // NOVO: Define o valor padrão da cesta no início
