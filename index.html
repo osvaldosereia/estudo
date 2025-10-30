@@ -861,8 +861,8 @@
 
                     // Kyte - MODIFICADO
                     const clienteId = entrega.cliente.id; // Pega o ID do cliente
-                    const semKyteId = !clienteId; // Checa se o ID existe
-                    const kyteUrl = `https://web.kyteapp.com/customers/${clienteId}`; // Usa o novo link e o ID
+                    // const semKyteId = !clienteId; // Não vamos mais desabilitar por falta de ID
+                    const kyteUrl = `https://web.kyteapp.com/constumer/${clienteId || ''}`; // Usa o novo link e o ID (ou string vazia)
                     
 
                     card.innerHTML = `
@@ -924,13 +924,12 @@
                                 <span class="sm:hidden ml-2">Ligar</span>
                             </a>
 
-                            <!-- NOVO: Botão Kyte (MODIFICADO) -->
-                            <a href="${semKyteId || isFinalizada ? '#' : kyteUrl}"
+                            <!-- NOVO: Botão Kyte (MODIFICADO - Sempre Ativo) -->
+                            <a href="${kyteUrl}"
                                target="_blank" 
                                rel="noopener noreferrer"
-                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 ${isFinalizada || semKyteId ? 'cursor-not-allowed opacity-50' : 'hover:bg-purple-200'}" 
-                               title="Abrir no Kyte" 
-                               ${isFinalizada || semKyteId ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
+                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200" 
+                               title="Abrir no Kyte">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2.586l3 3a1 1 0 001.414-1.414L10.414 16H13a1 1 0 001-1v-1.586l1.293 1.293a1 1 0 001.414-1.414l-7-7z" />
                                     <path d="M16 8a1 1 0 00-1-1h-1.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3V3a1 1 0 00-1-1H8a1 1 0 00-1 1v1.586L5.707 3.293a1 1 0 00-1.414 1.414L7.586 8H6a1 1 0 000 2h1.586l-3.293 3.293a1 1 0 101.414 1.414L9 11.414V13a1 1 0 001 1h.01a1 1 0 00.99-1v-1.586l3.293 3.293a1 1 0 001.414-1.414L12.414 10H14a1 1 0 001-1V8z" />
