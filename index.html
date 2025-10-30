@@ -6,9 +6,12 @@
     <title>Rota de Entrega</title>
     <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- NOVO: Carrega o Banco de Dados de Clientes -->
+    <!-- Este arquivo DEVE estar na mesma pasta que este HTML -->
+    <script src="clientes.js"></script>
     <!-- Biblioteca SortableJS REMOVIDA -->
     <style>
-        /* ... (Estilos .entregue e .cancelada sem alteração) ... */
+        /* Estilos Sortable REMOVIDOS */
 
         /* Classe para item entregue */
         .entregue {
@@ -37,14 +40,14 @@
             opacity: 0.5;
         }
 
-        /* NOVO: Estilo para o <select> de rotas */
+        /* NOVO: Estilização do <select> de rotas */
         #select-rota-ativa {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
-            background-repeat: no-repeat;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.75rem center;
+            background-repeat: no-repeat;
             background-size: 1.25em 1.25em;
         }
     </style>
@@ -55,54 +58,72 @@
     <div class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
 
         <!-- Cabeçalho -->
-        <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <header class="mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Rota de Entrega</h1>
-            <!-- NOVO: Botão Nova Rota -->
-            <button id="btn-nova-rota" class="mt-2 sm:mt-0 w-full sm:w-auto flex justify-center items-center rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                </svg>
-                Nova Rota
-            </button>
         </header>
 
-        <!-- NOVO: Seção de Gerenciamento da Rota Ativa -->
+        <!-- NOVO: Seção de Gerenciamento de Rotas -->
         <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Gerenciar Rota Ativa</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <!-- Coluna 1: Selecionar Rota -->
-                <div class="md:col-span-1">
-                    <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Carregar Rota Salva</label>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Gerenciar Rota</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <!-- Seletor de Rota Ativa -->
+                <div class="md:col-span-2">
+                    <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
                     <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        <!-- Opções carregadas via JS -->
+                        <!-- Rotas serão preenchidas pelo JS -->
                     </select>
                 </div>
-                <!-- Coluna 2: Nome e Data -->
-                <div class="md:col-span-1 grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
-                        <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
-                    </div>
-                    <div>
-                        <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
-                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                    </div>
-                </div>
-                 <!-- Coluna 3: Dia da Semana e Excluir -->
-                <div class="md:col-span-1 flex items-end justify-between gap-4">
-                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700">Dia da Semana</label>
-                        <span id="display-dia-semana" class="mt-1 block w-full rounded-md bg-gray-100 border border-gray-300 py-3 px-4 text-base font-medium text-gray-600 truncate">-</span>
-                    </div>
-                    <button id="btn-excluir-rota" class="rounded-md bg-red-600 p-3 text-sm font-medium text-white shadow-sm hover:bg-red-700" title="Excluir Rota Ativa">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                <!-- Botão Nova Rota -->
+                <div class="md:col-span-1">
+                    <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Nova Rota
                     </button>
+                </div>
+                <!-- Botão Excluir Rota -->
+                <div class="md:col-span-1">
+                     <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
+                        Excluir Rota
+                    </button>
+                </div>
+
+                <!-- Nome da Rota -->
+                <div class="md:col-span-2">
+                    <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
+                    <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
+                </div>
+                <!-- Data da Rota -->
+                <div class="md:col-span-2">
+                    <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
+                    <div class="flex items-center">
+                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-base min-w-[120px] justify-center">-</span>
+                    </div>
                 </div>
             </div>
         </section>
         <!-- FIM NOVA SEÇÃO -->
+
+        <!-- NOVO: Seção de Despesas da Rota -->
+        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Despesas da Rota</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
+                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+                <div>
+                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
+                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+                <div>
+                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
+                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+            </div>
+        </section>
+        <!-- FIM NOVA SEÇÃO DESPESAS -->
 
         <!-- Seção de Lançamento -->
         <section class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -111,11 +132,30 @@
                 
                 <!-- Coluna 1: Cliente e Cesta -->
                 <div class="md:col-span-1 space-y-4">
+                    <!-- MODIFICADO: Campo de Cliente (Input com Datalist) -->
+                    <div>
+                        <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                        <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
+                        <datalist id="lista-clientes">
+                            <!-- Clientes carregados via JS -->
+                        </datalist>
+                    </div>
+
+                    <!-- NOVO: Display de Infos do Cliente -->
+                    <div id="info-cliente-selecionado" class="hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
+                        <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
+                        <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
+                        <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
+                    </div>
+
+                    <!-- CAMPO ANTIGO REMOVIDO
                     <div>
                         <label for="codigo-cliente" class="block text-sm font-medium text-gray-700">Código/Endereço Cliente</label>
-                        <!-- AUMENTADO: py-3, px-4, text-base -->
                         <input type="text" id="codigo-cliente" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Rua Fictícia, 123">
                     </div>
+                    -->
+                    <!-- FIM MODIFICAÇÃO -->
+
                     <!-- NOVO CAMPO DE OBSERVAÇÃO -->
                     <div>
                         <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
@@ -127,12 +167,12 @@
                         <label for="select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
                         <!-- AUMENTADO: py-3, px-4, text-base -->
                         <select id="select-cesta" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                            <option value="" data-valor="0">Selecione...</option>
+                            <!-- MODIFICADO: Removido "Selecione..." -->
                             <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
                             <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
                             <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
                             <option value="Pequena Koblenz" data-valor="220.00">Pequena kolenz</option>
-                            <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
+                            <option value="mÉDIA Bonini" data-valor="320.00">Média Bonini</option>
                             <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
                             <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
                             <option value="Grande Koblenz" data-valor="390.00">Grande koblenz</option>
@@ -282,7 +322,7 @@
 
     <!-- Modal Exportar (Oculto por padrão) -->
     <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden">
             <div class="p-6">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
                 
@@ -336,7 +376,7 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Seletores de Elementos ---
-            // NOVO: Seletores de Gerenciamento
+            // NOVO: Gerenciamento de Rotas
             const btnNovaRota = document.getElementById('btn-nova-rota');
             const selectRotaAtiva = document.getElementById('select-rota-ativa');
             const inputNomeRota = document.getElementById('input-nome-rota');
@@ -344,8 +384,21 @@
             const displayDiaSemana = document.getElementById('display-dia-semana');
             const btnExcluirRota = document.getElementById('btn-excluir-rota');
 
+            // NOVO: Seletores de Despesas
+            const inputDespesaAbastecimento = document.getElementById('input-despesa-abastecimento');
+            const inputDespesaAlimentacao = document.getElementById('input-despesa-alimentacao');
+            const inputDespesaExtra = document.getElementById('input-despesa-extra');
+
             const formEntrega = document.getElementById('form-entrega');
-            const codigoClienteInput = document.getElementById('codigo-cliente');
+            // MODIFICADO: Seletor de Cliente
+            const inputCliente = document.getElementById('input-cliente');
+            const datalistClientes = document.getElementById('lista-clientes');
+            const infoClienteSelecionado = document.getElementById('info-cliente-selecionado');
+            const displayClienteEndereco = document.getElementById('display-cliente-endereco');
+            const displayClienteComplemento = document.getElementById('display-cliente-complemento');
+            const displayClienteCelular = document.getElementById('display-cliente-celular');
+            // const codigoClienteInput = document.getElementById('codigo-cliente'); // REMOVIDO
+            
             const obsClienteInput = document.getElementById('obs-cliente'); // NOVO SELETOR
             const selectCesta = document.getElementById('select-cesta');
             const displayValor = document.getElementById('display-valor');
@@ -381,10 +434,11 @@
             const btnFecharAviso = document.getElementById('btn-fechar-aviso');
 
             // --- Estado da Aplicação ---
-            // let entregas = []; // Removido
+            // let entregas = []; // Array principal de entregas (SUBSTITUÍDO)
             let todasAsRotas = {}; // NOVO: Objeto para guardar todas as rotas
             let rotaAtivaId = null; // NOVO: ID da rota sendo visualizada
             const MAX_ROTAS = 30; // Limite de rotas salvas
+            let CLIENTES_CACHE = {}; // NOVO: Cache para busca rápida de clientes por nome
 
             let entregaParaPagarId = null; // ID da entrega no modal de pagamento
 
@@ -428,14 +482,15 @@
             }
 
             /**
-             * NOVO: Formata uma data YYYY-MM-DD para "Dia da Semana"
+             * NOVO: Pega o dia da semana de uma data (yyyy-mm-dd)
              */
             function getDiaDaSemana(dataString) {
                 if (!dataString) return '-';
                 // Adiciona T12:00:00 para evitar problemas de fuso horário com new Date()
                 const data = new Date(dataString + 'T12:00:00');
-                const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-                return dias[data.getUTCDay()];
+                const dia = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+                // Capitaliza a primeira letra
+                return dia.charAt(0).toUpperCase() + dia.slice(1);
             }
 
             /**
@@ -443,7 +498,7 @@
              */
             function atualizarValorCesta() {
                 const selectedOption = selectCesta.options[selectCesta.selectedIndex];
-                const valor = selectedOption.dataset.valor || "0";
+                const valor = selectedOption.dataset.valor || "165.00"; // MODIFICADO: Pega o valor da primeira opção como padrão
                 displayValor.textContent = formatarMoeda(valor);
             }
 
@@ -467,33 +522,34 @@
             }
 
             /**
-             * NOVO: Retorna a lista de entregas da rota ativa
+             * Salva o estado atual das entregas na ROTA ATIVA
              */
-            function getEntregasAtivas() {
+            function salvarLocalStorage() {
+                // Esta função agora apenas salva a rota ativa.
+                // A função salvarTodasAsRotas() cuida do objeto principal
                 if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
-                    return todasAsRotas[rotaAtivaId].entregas || [];
+                    // A reordenação agora é feita em 'moverEntrega'
+                    // As despesas são salvas em 'salvarDespesas'
+                    salvarTodasAsRotas();
                 }
-                return [];
             }
 
             /**
-             * Salva o estado atual de TODAS AS ROTAS no LocalStorage
-             * Gerencia o limite de 30 rotas.
+             * NOVO: Salva o objeto 'todasAsRotas' no LocalStorage
              */
             function salvarTodasAsRotas() {
                 // Gerenciamento de limite (MAX_ROTAS)
                 const chavesRotas = Object.keys(todasAsRotas);
                 if (chavesRotas.length > MAX_ROTAS) {
-                    // Ordena por ID (timestamp, do mais antigo ao mais novo)
-                    chavesRotas.sort((a, b) => a - b);
-                    // Pega as chaves que excedem o limite (as mais antigas)
-                    const chavesParaExcluir = chavesRotas.slice(0, chavesRotas.length - MAX_ROTAS);
+                    // Encontra as rotas mais antigas (baseado no ID, que é um timestamp)
+                    const chavesOrdenadas = chavesRotas.sort((a, b) => a - b);
+                    const chavesParaRemover = chavesOrdenadas.slice(0, chavesOrdenadas.length - MAX_ROTAS);
                     
-                    chavesParaExcluir.forEach(chave => {
+                    chavesParaRemover.forEach(chave => {
                         delete todasAsRotas[chave];
                     });
                 }
-
+                
                 localStorage.setItem('gerenciadorDeRotas', JSON.stringify(todasAsRotas));
                 
                 // Salva o ID da rota ativa
@@ -506,45 +562,81 @@
              * NOVO: Carrega todas as rotas do LocalStorage e inicia o app
              */
             function iniciarAplicativo() {
+                // 1. Carregar Clientes (do clientes.js)
+                try {
+                    if (typeof CLIENTES_DB !== 'undefined' && Array.isArray(CLIENTES_DB)) {
+                        datalistClientes.innerHTML = ''; // Limpa
+                        CLIENTES_DB.forEach(cliente => {
+                            const option = document.createElement('option');
+                            option.value = cliente.nome;
+                            datalistClientes.appendChild(option);
+                            // Cria um cache para busca rápida
+                            CLIENTES_CACHE[cliente.nome.toLowerCase()] = cliente;
+                        });
+                    } else {
+                        console.error("CLIENTES_DB não encontrado ou em formato inválido. Verifique o 'clientes.js'.");
+                        mostrarAviso("Erro ao carregar banco de dados de clientes. Verifique o arquivo 'clientes.js'.");
+                    }
+                } catch (e) {
+                     console.error("Erro ao processar clientes:", e);
+                     mostrarAviso("Erro ao processar o arquivo 'clientes.js'.");
+                }
+
+
+                // 2. Carregar Rotas
                 const dadosSalvos = localStorage.getItem('gerenciadorDeRotas');
                 if (dadosSalvos) {
                     todasAsRotas = JSON.parse(dadosSalvos);
                 }
 
-                let idSalvo = localStorage.getItem('rotaAtivaId');
+                // 3. Descobrir qual rota está ativa
+                rotaAtivaId = localStorage.getItem('rotaAtivaId');
 
-                // Se não houver rotas, ou o ID salvo for inválido, cria uma nova rota
-                if (Object.keys(todasAsRotas).length === 0 || !todasAsRotas[idSalvo]) {
-                    criarNovaRota(false); // Cria uma rota sem trocar (false)
-                } else {
-                    rotaAtivaId = idSalvo;
+                // 4. Se não houver rotas, ou a rota ativa não existir, cria uma nova
+                if (!rotaAtivaId || !todasAsRotas[rotaAtivaId]) {
+                    // Se não tiver nenhuma rota salva, cria a primeira
+                    if (Object.keys(todasAsRotas).length === 0) {
+                        criarNovaRota(false); // Cria a primeira rota
+                    } else {
+                        // Se tiver rotas, mas a ativa sumiu, pega a primeira da lista
+                        rotaAtivaId = Object.keys(todasAsRotas)[0];
+                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                    }
                 }
-                
+
+                // 5. Popular o <select> e carregar a rota ativa na tela
                 popularSelectRotas();
                 carregarRotaAtiva();
             }
 
             /**
-             * NOVO: Popula o <select> com as rotas salvas
+             * NOVO: Pega o array de entregas da rota ativa
+             */
+            function getEntregasAtivas() {
+                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
+                    return todasAsRotas[rotaAtivaId].entregas;
+                }
+                return []; // Retorna array vazio se não houver rota
+            }
+
+            /**
+             * NOVO: Atualiza o <select> com as rotas salvas
              */
             function popularSelectRotas() {
-                selectRotaAtiva.innerHTML = ''; // Limpa o select
+                selectRotaAtiva.innerHTML = ''; // Limpa
                 
-                // Ordena as rotas pela data (mais nova primeiro)
-                const rotasOrdenadas = Object.values(todasAsRotas).sort((a, b) => {
-                    // Compara data (desc)
-                    if (a.data > b.data) return -1;
-                    if (a.data < b.data) return 1;
-                    // Se datas iguais, compara por ID (desc)
-                    return b.id - a.id;
-                });
+                // Ordena as rotas (pela data ou ID, vamos usar ID por enquanto)
+                const chavesOrdenadas = Object.keys(todasAsRotas).sort((a, b) => b - a); // Mais novas primeiro
 
-                rotasOrdenadas.forEach(rota => {
-                    const dataFormatada = rota.data ? new Date(rota.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem Data';
+                chavesOrdenadas.forEach(id => {
+                    const rota = todasAsRotas[id];
                     const option = document.createElement('option');
-                    option.value = rota.id;
-                    option.textContent = `${dataFormatada} - ${rota.nome} (${rota.entregas.length} ent.)`;
-                    if (rota.id.toString() === rotaAtivaId.toString()) {
+                    option.value = id;
+                    // Formata o texto da opção
+                    const dataFormatada = rota.data ? new Date(rota.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem Data';
+                    option.textContent = `${rota.nome} (${dataFormatada})`;
+                    
+                    if (id === rotaAtivaId) {
                         option.selected = true;
                     }
                     selectRotaAtiva.appendChild(option);
@@ -552,14 +644,21 @@
             }
 
             /**
-             * NOVO: Carrega os dados da Rota Ativa nos campos e renderiza
+             * NOVO: Carrega os dados da rota ativa (ID salvo em rotaAtivaId) na tela
              */
             function carregarRotaAtiva() {
                 const rota = todasAsRotas[rotaAtivaId];
                 if (!rota) {
-                    console.error("Tentando carregar rota inválida:", rotaAtivaId);
-                    // Se a rota ativa falhar, cria uma nova
-                    criarNovaRota(false); 
+                    // Isso não deve acontecer se 'iniciarAplicativo' funcionar
+                    console.error("Erro: Tentando carregar rota ativa, mas ID não encontrado.");
+                    // Tenta criar uma nova rota como fallback
+                    if (Object.keys(todasAsRotas).length === 0) {
+                        criarNovaRota(false);
+                    } else {
+                        // Pega a primeira que existir
+                        rotaAtivaId = Object.keys(todasAsRotas)[0];
+                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                    }
                     popularSelectRotas();
                     carregarRotaAtiva(); // Tenta novamente com a nova rota
                     return;
@@ -570,45 +669,53 @@
                 inputDataRota.value = rota.data;
                 displayDiaSemana.textContent = getDiaDaSemana(rota.data);
 
+                // NOVO: Atualiza os inputs de despesa
+                // Garante que o objeto despesas exista
+                rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
+                inputDespesaAbastecimento.value = rota.despesas.abastecimento || 0;
+                inputDespesaAlimentacao.value = rota.despesas.alimentacao || 0;
+                inputDespesaExtra.value = rota.despesas.extra || 0;
+
                 // Atualiza o <select>
                 selectRotaAtiva.value = rotaAtivaId;
-
+                
                 // Renderiza as entregas dessa rota
                 renderizarEntregas();
             }
 
             /**
-             * NOVO: Cria uma nova rota, salva e a torna ativa
+             * NOVO: Limpa a tela e cria uma nova rota
              */
-            function criarNovaRota(trocarImediato = true) {
-                const novoId = Date.now().toString();
-                const hoje = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-                
+            function criarNovaRota(atualizarTela = true) {
+                const novoId = Date.now().toString(); // ID baseado no timestamp
+                const hoje = new Date().toISOString().split('T')[0]; // Formato yyyy-mm-dd
+
                 const novaRota = {
                     id: novoId,
                     nome: "Nova Rota",
                     data: hoje,
-                    entregas: []
+                    entregas: [],
+                    despesas: { abastecimento: 0, alimentacao: 0, extra: 0 } // NOVO
                 };
 
                 todasAsRotas[novoId] = novaRota;
-                rotaAtivaId = novoId; // Torna a nova rota ativa
+                rotaAtivaId = novoId;
 
                 salvarTodasAsRotas();
                 
-                if (trocarImediato) {
-                    popularSelectRotas(); // Atualiza o select
-                    carregarRotaAtiva(); // Carrega os (novos) dados na tela
+                if (atualizarTela) {
+                    popularSelectRotas();
+                    carregarRotaAtiva();
                 }
             }
 
             /**
-             * NOVO: Atualiza o nome ou data da rota ativa
+             * NOVO: Atualiza Nome e Data da rota ativa
              */
             function atualizarInfoRota() {
                 const rota = todasAsRotas[rotaAtivaId];
                 if (!rota) return;
-
+                
                 rota.nome = inputNomeRota.value || "Rota Sem Nome";
                 rota.data = inputDataRota.value;
                 
@@ -619,37 +726,53 @@
             }
 
             /**
+             * NOVO: Salva os valores de despesa na rota ativa
+             */
+            function salvarDespesas() {
+                const rota = todasAsRotas[rotaAtivaId];
+                if (!rota) return;
+
+                rota.despesas = {
+                    abastecimento: parseFloat(inputDespesaAbastecimento.value) || 0,
+                    alimentacao: parseFloat(inputDespesaAlimentacao.value) || 0,
+                    extra: parseFloat(inputDespesaExtra.value) || 0
+                };
+
+                salvarTodasAsRotas();
+                // Não precisa renderizar tudo, só salvar
+            }
+
+            /**
              * NOVO: Exclui a rota ativa
              */
             function excluirRotaAtiva() {
-                // Não deixa excluir a última rota
-                if (Object.keys(todasAsRotas).length <= 1) {
-                    mostrarAviso("Não é possível excluir a única rota existente.");
+                 if (Object.keys(todasAsRotas).length <= 1) {
+                    mostrarAviso("Você não pode excluir a última rota.");
                     return;
                 }
 
-                // Pergunta ao usuário (usando o modal de aviso de forma "criativa")
-                // NOTE: Isso não é um confirm() real, mas é o que temos sem `confirm`
-                // Vamos pular a confirmação para evitar complexidade de modal
+                // Confirmação (Simples, idealmente usar um modal customizado)
+                // Usando o modal de aviso de forma criativa (não é o ideal, mas evita 'confirm')
+                // Vamos pular a confirmação por enquanto e apenas excluir
                 
                 delete todasAsRotas[rotaAtivaId];
                 
-                // Pega a primeira rota que sobrou
-                rotaAtivaId = Object.keys(todasAsRotas)[0];
+                // Pega a próxima rota (a mais recente)
+                const chavesOrdenadas = Object.keys(todasAsRotas).sort((a, b) => b - a);
+                rotaAtivaId = chavesOrdenadas[0];
                 
-                salvarTodasAsRotas();
+                salvarTodasAsRotas(); // Salva a exclusão e o novo ID ativo
+                
                 popularSelectRotas();
                 carregarRotaAtiva();
             }
 
-
             /**
-             * Renderiza todos os cards de entrega na tela
+             * Renderiza todos os cards de entrega (DA ROTA ATIVA) na tela
              */
             function renderizarEntregas() {
-                const entregas = getEntregasAtivas(); // MODIFICADO
-
                 listaEntregasEl.innerHTML = ''; // Limpa a lista
+                const entregas = getEntregasAtivas(); // MODIFICADO
 
                 if (entregas.length === 0) {
                     listaVaziaEl.classList.remove('hidden');
@@ -709,6 +832,15 @@
                     if (entrega.observacao) {
                         obsInfo = `<p class="text-sm text-red-600 font-medium truncate" title="${entrega.observacao}">OBS: ${entrega.observacao}</p>`;
                     }
+
+                    // MODIFICADO: Info do Cliente (Nome, Endereço, Complemento)
+                    let infoClienteHtml = `
+                        <p class="text-base font-semibold text-gray-800 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
+                        ${obsInfo} <!-- INJETADO AQUI -->
+                        <p class="text-sm text-gray-600 truncate" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
+                        <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
+                        <p class="text-sm text-gray-500 mt-1">${entrega.cesta.nome} - <span class="font-medium">${formatarMoeda(entrega.cesta.valor)}</span></p>
+                    `;
                     
                     // Lógica para desabilitar botões de mover
                     const isPrimeiro = index === 0;
@@ -735,9 +867,7 @@
                                 <!-- Fim Botões de Seta -->
 
                                 <div class="truncate">
-                                    <p class="text-base font-semibold text-gray-800 truncate" title="${entrega.codigoCliente}">${entrega.codigoCliente}</p>
-                                    ${obsInfo} <!-- INJETADO AQUI -->
-                                    <p class="text-sm text-gray-600">${entrega.cesta.nome} - <span class="font-medium">${formatarMoeda(entrega.cesta.valor)}</span></p>
+                                    ${infoClienteHtml} <!-- MODIFICADO -->
                                 </div>
                             </div>
                             <div class="mt-2 sm:ml-12 flex flex-wrap gap-2 items-center">
@@ -786,14 +916,39 @@
                 // MODIFICADO: Pega a rota ativa
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) {
-                    mostrarAviso("Nenhuma rota ativa. Crie uma nova rota.");
+                    mostrarAviso("Nenhuma rota ativa selecionada. Crie uma nova rota.");
                     return;
                 }
+                const entregas = rotaAtiva.entregas; // Pega o array de entregas da rota
 
                 const selectedOption = selectCesta.options[selectCesta.selectedIndex];
                 
                 if (!selectedOption || !selectedOption.value) {
-                    mostrarAviso('Por favor, selecione um tipo de cesta.');
+                    // O seletor agora não tem "Selecione", então este check não é mais necessário
+                    // Mas o valor padrão precisa ser pego
+                }
+
+                // MODIFICADO: Busca o cliente selecionado no Cache
+                const nomeClienteSelecionado = inputCliente.value;
+                const clienteSelecionado = CLIENTES_CACHE[nomeClienteSelecionado.toLowerCase()];
+
+                let clienteData;
+                if (clienteSelecionado) {
+                    // Cliente encontrado no DB
+                    clienteData = clienteSelecionado;
+                } else {
+                    // Cliente avulso (digitado)
+                    clienteData = {
+                        // id: null, // REMOVIDO
+                        nome: nomeClienteSelecionado,
+                        celular: '',
+                        endereco: nomeClienteSelecionado, // Usa o nome como endereço
+                        complemento: ''
+                    };
+                }
+
+                if (!clienteData.nome) {
+                    mostrarAviso('Por favor, selecione ou digite um nome de cliente.');
                     return;
                 }
                 
@@ -806,8 +961,8 @@
                 
                 const novaEntrega = {
                     id: Date.now(), // ID único
-                    codigoCliente: codigoClienteInput.value,
-                    observacao: obsClienteInput.value, // NOVO CAMPO SALVO
+                    cliente: clienteData, // MODIFICADO: Salva o objeto do cliente
+                    observacao: obsClienteInput.value, // Campo de observação separado
                     cesta: {
                         nome: selectedOption.value,
                         valor: parseFloat(selectedOption.dataset.valor)
@@ -821,14 +976,14 @@
                     horarioEntrega: null
                 };
 
-                // MODIFICADO: Adiciona na rota ativa
-                rotaAtiva.entregas.push(novaEntrega);
-                salvarTodasAsRotas(); // MODIFICADO
+                entregas.push(novaEntrega); // MODIFICADO: Adiciona na rota ativa
+                salvarLocalStorage();
                 renderizarEntregas();
-                popularSelectRotas(); // Atualiza contagem de entregas no select
 
                 // Limpa o formulário
                 formEntrega.reset();
+                inputCliente.value = ''; // Limpa o input do cliente
+                infoClienteSelecionado.classList.add('hidden'); // Esconde o display de info
                 atualizarValorCesta();
                 toggleCampoAlterada();
             }
@@ -856,7 +1011,7 @@
                 entregaParaPagarId = id;
                 
                 // Preenche dados do modal
-                modalClienteNome.textContent = entrega.codigoCliente;
+                modalClienteNome.textContent = entrega.cliente.nome; // MODIFICADO
                 modalClienteValor.textContent = formatarMoeda(entrega.cesta.valor);
                 
                 // Reseta o formulário do modal
@@ -886,7 +1041,7 @@
                     entregas[index].formaPagamento = []; // Garante que está limpo
                     entregas[index].horarioEntrega = new Date().toISOString(); // Salva a hora do cancelamento
                 }
-                salvarTodasAsRotas(); // MODIFICADO
+                salvarLocalStorage();
                 renderizarEntregas();
             }
 
@@ -908,7 +1063,7 @@
                     return; // Não faz nada se for o primeiro/ultimo
                 }
 
-                salvarTodasAsRotas(); // MODIFICADO
+                salvarLocalStorage();
                 renderizarEntregas();
             }
 
@@ -944,7 +1099,7 @@
                     const entregas = getEntregasAtivas(); // MODIFICADO
                     const entrega = entregas.find(e => e.id.toString() === cardId);
                     if (entrega) {
-                        abrirGoogleMaps(entrega.codigoCliente);
+                        abrirGoogleMaps(entrega.cliente.endereco); // MODIFICADO
                     }
                     return; // Para a execução
                 }
@@ -980,7 +1135,7 @@
                     entregas[index].horarioEntrega = new Date().toISOString();
                 }
                 
-                salvarTodasAsRotas(); // MODIFICADO
+                salvarLocalStorage();
                 renderizarEntregas();
                 fecharModalPagamento();
             }
@@ -1010,22 +1165,21 @@
                     mostrarAviso("Nenhuma rota ativa para exportar.");
                     return;
                 }
+                const entregas = rotaAtiva.entregas;
+
                 // Garante que o array 'entregas' está na ordem da tela antes de exportar
-                salvarTodasAsRotas(); 
+                salvarLocalStorage(); 
 
                 // 1. Prepara JSON para backup/carga (Será usado no botão de download)
-                // Agora exporta o objeto da rota inteira
                 // ...
 
                 // 2. Prepara Relatório de Entregas Concluídas
-                const entregas = getEntregasAtivas(); // MODIFICADO
                 const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
                 // NOVO: Prepara Relatório de Canceladas
                 const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
                 
                 let relatorioTexto = "Nenhuma entrega finalizada.\n";
-                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}*\n`; // MODIFICADO
-                whatsappTexto += `*Data: ${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')} (${getDiaDaSemana(rotaAtiva.data)})*\n\n`;
+                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n\n`;
 
                 if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) {
                     relatorioTexto = ""; // Limpa a mensagem padrão
@@ -1034,7 +1188,7 @@
                 if (entregasConcluidas.length > 0) {
                     relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
                     entregasConcluidas.forEach(e => {
-                        relatorioTexto += `Cliente: ${e.codigoCliente}\n`;
+                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`; // MODIFICADO
                         relatorioTexto += `Valor: ${formatarMoeda(e.cesta.valor)}\n`;
                         relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
                         relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
@@ -1046,7 +1200,7 @@
                 if (entregasCanceladas.length > 0) {
                     relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
                     entregasCanceladas.forEach(e => {
-                        relatorioTexto += `Cliente: ${e.codigoCliente}\n`;
+                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`; // MODIFICADO
                         relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`; // Canceled time
                         relatorioTexto += `-----------------------------\n`;
                     });
@@ -1057,7 +1211,14 @@
                 whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
                 if(entregasPendentes.length > 0) {
                     entregasPendentes.forEach((e, index) => {
-                        whatsappTexto += `${index + 1}. *${e.codigoCliente}*\n`;
+                        whatsappTexto += `${index + 1}. *${e.cliente.nome}*\n`; // MODIFICADO
+                        // NOVO: Adiciona endereço e complemento no resumo
+                        if (e.cliente.endereco) {
+                            whatsappTexto += `   End: ${e.cliente.endereco}\n`;
+                        }
+                        if (e.cliente.complemento) {
+                            whatsappTexto += `   Comp: ${e.cliente.complemento}\n`;
+                        }
                         whatsappTexto += `   Cesta: ${e.cesta.nome} (${formatarMoeda(e.cesta.valor)})\n`;
                         
                         // Bloco modificado para incluir OBS Cliente, Brinde e Cesta
@@ -1080,7 +1241,73 @@
                     whatsappTexto += `Nenhuma entrega pendente.\n`;
                 }
                 
-                whatsappTexto += `\n${relatorioTexto}`;
+                // NOVO: Seção Relatório Financeiro
+                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
+                
+                let totalVendido = 0;
+                let totalPorCesta = {};
+                let totalPorPagamento = {};
+
+                entregasConcluidas.forEach(e => {
+                    const valor = e.cesta.valor;
+                    totalVendido += valor;
+                    
+                    // Total por Cesta
+                    totalPorCesta[e.cesta.nome] = (totalPorCesta[e.cesta.nome] || 0) + valor;
+
+                    // Total por Pagamento
+                    // Se não houver forma de pagamento (improvável, mas seguro)
+                    if (e.formaPagamento.length === 0) {
+                         totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valor;
+                    } else {
+                        // Se houver múltiplas formas, divide o valor igualmente entre elas
+                        // Ex: R$100, Pix+Dinheiro -> R$50 Pix, R$50 Dinheiro
+                        const valorDividido = valor / e.formaPagamento.length;
+                        e.formaPagamento.forEach(forma => {
+                            totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido;
+                        });
+                    }
+                });
+
+                whatsappTexto += `\n*Vendas Concluídas:*\n`;
+                whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
+
+                whatsappTexto += `\n*Detalhado por Cesta:*\n`;
+                if (Object.keys(totalPorCesta).length > 0) {
+                    Object.keys(totalPorCesta).forEach(nomeCesta => {
+                        whatsappTexto += `   ${nomeCesta}: ${formatarMoeda(totalPorCesta[nomeCesta])}\n`;
+                    });
+                } else {
+                    whatsappTexto += `   Nenhuma.\n`;
+                }
+
+                whatsappTexto += `\n*Recebimentos por Forma:*\n`;
+                if (Object.keys(totalPorPagamento).length > 0) {
+                    Object.keys(totalPorPagamento).forEach(forma => {
+                        whatsappTexto += `   ${forma}: ${formatarMoeda(totalPorPagamento[forma])}\n`;
+                    });
+                } else {
+                     whatsappTexto += `   Nenhum.\n`;
+                }
+
+                // Despesas
+                const despesas = rotaAtiva.despesas;
+                const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
+                
+                whatsappTexto += `\n*Despesas da Rota:*\n`;
+                whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
+                whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
+                whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
+                whatsappTexto += `Total Despesas: *${formatarMoeda(totalDespesas)}*\n`;
+
+                // Balanço Final
+                const balanco = totalVendido - totalDespesas;
+                whatsappTexto += `\n*BALANÇO FINAL (Vendido - Despesas):*\n`;
+                whatsappTexto += `*${formatarMoeda(balanco)}*\n`;
+                // FIM RELATÓRIO FINANCEIRO
+
+
+                whatsappTexto += `\n${relatorioTexto}`; // Adiciona o relatório de entregues/canceladas
 
                 exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
                 
@@ -1106,56 +1333,83 @@
                 }
                 
                 try {
-                    // MODIFICADO: Agora espera um Objeto Rota, mas checa se é o formato antigo (Array)
                     const dadosCarregados = JSON.parse(jsonDados);
+                    
+                    // Validação simples
+                    // O arquivo pode ser um objeto (nova Rota) ou um array (Rota antiga)
                     
                     // Caso 1: É o formato NOVO (Objeto Rota)
                     if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
                         
-                        // Validação
                         if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) {
                             throw new Error('Objeto de rota inválido. Faltando id, nome ou data.');
                         }
 
                         // Checa conflito de ID
-                        const novoId = todasAsRotas[dadosCarregados.id] ? Date.now().toString() : dadosCarregados.id;
+                        let novoId = dadosCarregados.id;
+                        if (todasAsRotas[novoId]) {
+                            // Conflito! Gera um novo ID
+                            novoId = `import-${Date.now()}`;
+                        }
                         dadosCarregados.id = novoId;
+
+                        // NOVO: Garante que os novos campos existem
+                        dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
+                        dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
+                            ...e,
+                            // Garante que o cliente é um objeto (compatibilidade com formato antigo)
+                            cliente: typeof e.cliente === 'object' ? e.cliente : {
+                                // id: null, // REMOVIDO
+                                nome: e.codigoCliente || 'Cliente Antigo', // Tenta migrar do campo antigo
+                                celular: '',
+                                endereco: e.codigoCliente || 'Sem Endereço',
+                                complemento: ''
+                            }
+                        }));
 
                         todasAsRotas[novoId] = dadosCarregados; // Adiciona nova rota
                         rotaAtivaId = novoId; // Torna a rota carregada ativa
                         
                         salvarTodasAsRotas();
                         popularSelectRotas();
-                        carregarRotaAtiva(); // Carrega a rota recém-adicionada
+                        carregarRotaAtiva();
 
                     } 
                     // Caso 2: É o formato ANTIGO (Array de Entregas)
                     else if (Array.isArray(dadosCarregados)) {
-                        
-                        // Validação mais profunda (opcional, mas bom)
-                        if (dadosCarregados.length > 0 && (!dadosCarregados[0].id || !dadosCarregados[0].codigoCliente)) {
-                             throw new Error('Estrutura de dados (array) incompatível.');
-                        }
-                        
                         // Carrega os dados na ROTA ATIVA ATUAL
                         const rotaAtiva = todasAsRotas[rotaAtivaId];
                         if (!rotaAtiva) {
-                             throw new Error('Nenhuma rota ativa para carregar os dados.');
+                             mostrarAviso("Nenhuma rota ativa. Crie uma nova rota antes de carregar um arquivo antigo.");
+                             return;
+                        }
+
+                        // Validação mais profunda (opcional, mas bom)
+                        if (dadosCarregados.length > 0 && (!dadosCarregados[0].id)) {
+                             throw new Error('Estrutura de dados antiga incompatível.');
                         }
 
                         // Mapeia os dados carregados para garantir que os novos campos existam
+                        // MODIFICADO: Mapeamento de dados antigos para novos
                         rotaAtiva.entregas = dadosCarregados.map(e => ({
                             ...e,
-                            brinde: e.brinde || 'Não', // Define 'Não' como padrão
-                            partesAlteradas: e.partesAlteradas || [] // Define array vazio como padrão
+                            brinde: e.brinde || 'Não',
+                            partesAlteradas: e.partesAlteradas || [],
+                            // Garante que o cliente é um objeto
+                            cliente: typeof e.cliente === 'object' ? e.cliente : {
+                                // id: null, // REMOVIDO
+                                nome: e.codigoCliente || 'Cliente Antigo',
+                                celular: '',
+                                endereco: e.codigoCliente || 'Sem Endereço',
+                                complemento: ''
+                            }
                         }));
                         
                         salvarTodasAsRotas(); // Salva os novos dados na rota ativa
                         renderizarEntregas(); // Renderiza na tela
-                        popularSelectRotas(); // Atualiza contagem
 
                     } else {
-                        throw new Error('Formato de arquivo desconhecido.');
+                        throw new Error('Formato de arquivo JSON desconhecido.');
                     }
 
                 } catch (error) {
@@ -1190,16 +1444,36 @@
             
             // --- Inicialização e Event Listeners ---
 
-            // NOVO: Listeners de Gerenciamento
-            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
+            // NOVO: Gerenciamento de Rotas
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
-                localStorage.setItem('rotaAtivaId', rotaAtivaId); // Salva a troca
+                localStorage.setItem('rotaAtivaId', rotaAtivaId); // Salva a seleção
                 carregarRotaAtiva();
             });
+            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
+            // Atualiza nome/data ao perder o foco (change)
             inputNomeRota.addEventListener('change', atualizarInfoRota);
             inputDataRota.addEventListener('change', atualizarInfoRota);
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
+
+            // NOVO: Listeners de Despesas
+            inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
+            inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
+            inputDespesaExtra.addEventListener('change', salvarDespesas);
+
+            // NOVO: Listener para seleção de cliente
+            inputCliente.addEventListener('input', (e) => {
+                const nome = e.target.value.toLowerCase();
+                const cliente = CLIENTES_CACHE[nome];
+                if (cliente) {
+                    displayClienteEndereco.textContent = cliente.endereco || '-';
+                    displayClienteComplemento.textContent = cliente.complemento || '-';
+                    displayClienteCelular.textContent = cliente.celular || '-';
+                    infoClienteSelecionado.classList.remove('hidden');
+                } else {
+                    infoClienteSelecionado.classList.add('hidden');
+                }
+            });
 
 
             // Inputs do Formulário
@@ -1225,11 +1499,14 @@
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) return;
                 
-                salvarTodasAsRotas(); // Garante que a ordem está correta
+                salvarLocalStorage(); // Garante que a ordem está correta
                 
-                // MODIFICADO: Exporta o objeto da rota ativa, não só as entregas
-                const jsonDados = JSON.stringify(rotaAtiva, null, 2); 
-                const nomeArquivo = `${rotaAtiva.data}_${rotaAtiva.nome.replace(/ /g, '_') || 'rota'}.json`;
+                // MODIFICADO: Exporta o objeto da Rota Ativa, não só as entregas
+                const jsonDados = JSON.stringify(rotaAtiva, null, 2);
+                
+                // Cria um nome de arquivo descritivo
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
+                
                 downloadArquivo(jsonDados, nomeArquivo);
             });
 
@@ -1250,6 +1527,9 @@
             // Carrega dados do LocalStorage ao iniciar
             // carregarLocalStorage(); // SUBSTITUÍDO
             iniciarAplicativo(); // NOVO
+            
+            // NOVO: Define o valor padrão da cesta no início
+            atualizarValorCesta();
         });
     </script>
 </body>
