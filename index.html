@@ -50,12 +50,35 @@
             background-repeat: no-repeat;
             background-size: 1.25em 1.25em;
         }
+
+        /* NOVO: Estilos Modo Entregador */
+        body.modo-entregador #main-content > header,
+        body.modo-entregador #main-content > section:not(#section-lista-entregas) {
+            display: none;
+        }
+        body {
+            /* Adiciona padding para não esconder o H1 embaixo da topbar */
+            padding-top: 80px; 
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <!-- Container Principal -->
-    <div class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+    <!-- NOVO: Top Bar Fixa -->
+    <div id="top-bar" class="fixed top-0 left-0 right-0 z-50 bg-gray-800 text-white shadow-lg p-4">
+        <div class="container mx-auto max-w-5xl flex justify-center items-center gap-4">
+            <button id="btn-modo-admin" class="px-6 py-2 rounded-md font-semibold text-sm bg-blue-500 text-white">
+                ADMIN
+            </button>
+            <button id="btn-modo-entregador" class="px-6 py-2 rounded-md font-semibold text-sm bg-gray-600 text-gray-200 hover:bg-gray-500">
+                ENTREGADOR
+            </button>
+        </div>
+    </div>
+    <!-- Fim Top Bar -->
+
+    <!-- Container Principal (Agora dentro de um Wrapper) -->
+    <div id="main-content" class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
 
         <!-- Cabeçalho -->
         <header class="mb-6">
@@ -247,8 +270,8 @@
             </form>
         </section>
 
-        <!-- Seção da Lista de Entregas -->
-        <section>
+        <!-- Seção da Lista de Entregas (ID Adicionado) -->
+        <section id="section-lista-entregas">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold text-gray-700">Entregas na Rota</h2>
                 <div class="flex space-x-2 mt-4 sm:mt-0">
@@ -353,6 +376,10 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Seletores de Elementos ---
+            // NOVO: Top Bar
+            const btnModoAdmin = document.getElementById('btn-modo-admin');
+            const btnModoEntregador = document.getElementById('btn-modo-entregador');
+
             // NOVO: Gerenciamento de Rotas
             const btnNovaRota = document.getElementById('btn-nova-rota');
             const selectRotaAtiva = document.getElementById('select-rota-ativa');
@@ -781,7 +808,8 @@
                 entregas.forEach((entrega, index) => {
                     const card = document.createElement('div');
                     card.dataset.id = entrega.id;
-                    card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : (entrega.status === 'Cancelada' ? 'cancelada' : '')}`;
+                    // MODIFICADO: Adicionado w-full e overflow-hidden
+                    card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : (entrega.status === 'Cancelada' ? 'cancelada' : '')} w-full overflow-hidden`;
                     
                     let infoTags = []; // Use an array for cleaner logic
 
@@ -805,11 +833,16 @@
                     if (entrega.brinde === 'Sim') {
                         infoTags.push(`<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde</span>`);
                     }
+                    
+                    // NOVO: Adiciona info da Observação como tag
+                    if (entrega.observacao) {
+                        infoTags.push(`<span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full" title="${entrega.observacao}">OBS: ${entrega.observacao}</span>`);
+                    }
 
                     let statusInfo = '';
                     if (entrega.status === 'Entregue') {
                         statusInfo = `
-                            <div class="text-xs text-green-700 mt-1 sm:ml-4">
+                            <div class="text-xs text-green-700 mt-1 sm:ml-4 bg-green-100 px-2 py-1 rounded">
                                 <span class="font-semibold">Pagamento:</span> ${entrega.formaPagamento.join(', ')}<br>
                                 <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}
                             </div>
@@ -817,23 +850,22 @@
                     // NOVO: Status para Cancelada
                     } else if (entrega.status === 'Cancelada') {
                         statusInfo = `
-                            <div class="text-xs text-red-700 mt-1 sm:ml-4">
+                            <div class="text-xs text-red-700 mt-1 sm:ml-4 bg-red-100 px-2 py-1 rounded">
                                 <span class="font-semibold">Status:</span> CANCELADA<br>
                                 <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}
                             </div>
                         `;
                     }
 
-                    // NOVO: Adiciona info da Observação
-                    let obsInfo = '';
-                    if (entrega.observacao) {
-                        obsInfo = `<p class="text-sm text-red-600 font-medium truncate" title="${entrega.observacao}">OBS: ${entrega.observacao}</p>`;
-                    }
+                    // NOVO: Pega ID do cliente
+                    const clienteId = (entrega.cliente.id || entrega.cliente.ID || entrega.cliente.Id || '').toString();
+                    let idInfo = clienteId ? `<p class="text-xs text-gray-400 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : '';
 
                     // MODIFICADO: Info do Cliente (Nome, Endereço, Complemento)
                     let infoClienteHtml = `
+                        ${idInfo} <!-- ID ADICIONADO AQUI -->
                         <p class="text-base font-semibold text-gray-800 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
-                        ${obsInfo} <!-- INJETADO AQUI -->
+                        <!-- OBS REMOVIDA DAQUI, MOVIDA PARA infoTags -->
                         <p class="text-sm text-gray-600 truncate" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
                         <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
                         <!-- NOVO: Mostrar Celular -->
@@ -859,14 +891,11 @@
                     const telefoneParaLigacao = `+${telefoneLimpo}`; // tel:+55...
                     const ligarUrl = `tel:${telefoneParaLigacao}`;
 
-                    // Kyte - MODIFICADO
-                    // Tenta encontrar o ID do cliente, mesmo com capitalização diferente (id, ID, Id)
-                    const clienteId = entrega.cliente.id || entrega.cliente.ID || entrega.cliente.Id; 
-                    const kyteUrl = `https://web.kyteapp.com/customers/${clienteId || ''}`; // Usa o novo link e o ID (ou string vazia)
+                    // Kyte - REMOVIDO
                     
 
                     card.innerHTML = `
-                        <div class="flex-1 min-w-0">
+                        <div class="flex-1 min-w-0 overflow-hidden"> <!-- MODIFICADO: Adicionado overflow-hidden -->
                             <div class="flex items-center">
                                 <!-- NOVO: Botões de Seta -->
                                 <div class="flex flex-col items-center justify-center mr-3">
@@ -888,23 +917,23 @@
                                 </div>
                             </div>
                             <div class="mt-2 sm:ml-12 flex flex-wrap gap-2 items-center">
-                                ${infoTags.join(' ')} <!-- Injeta as tags -->
+                                ${infoTags.join(' ')} <!-- Injeta as tags (agora com OBS) -->
                                 ${statusInfo}
                             </div>
                         </div>
-                        <!-- MODIFICADO: Layout de Botões (grid-cols-2 no mobile, flex-row no sm) -->
-                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap gap-2">
-                            <!-- Botão Mapa -->
-                            <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
+                        <!-- MODIFICADO: Layout de Botões (grid-cols-6 no mobile) -->
+                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 grid grid-cols-6 sm:flex sm:flex-row sm:flex-wrap gap-2">
+                            <!-- Botão Mapa (col-span-2) -->
+                            <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'} col-span-2" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                                 <span class="sm:hidden ml-2">Mapa</span>
                             </button>
                             
-                            <!-- Botão WhatsApp -->
+                            <!-- Botão WhatsApp (col-span-2) -->
                             <a href="${semTelefone || isFinalizada ? '#' : whatsappUrl}" 
                                target="_blank" 
                                rel="noopener noreferrer"
-                               class="btn-card-whatsapp w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-100 text-green-700 border border-green-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-green-200'}" 
+                               class="btn-card-whatsapp w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-100 text-green-700 border border-green-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-green-200'} col-span-2 flex justify-center items-center" 
                                title="Enviar WhatsApp" 
                                ${isFinalizada || semTelefone ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
@@ -913,9 +942,9 @@
                                 <span class="sm:hidden ml-2">Wpp</span>
                             </a>
 
-                            <!-- NOVO: Botão Ligar -->
+                            <!-- NOVO: Botão Ligar (col-span-2) -->
                             <a href="${semTelefone || isFinalizada ? '#' : ligarUrl}"
-                               class="btn-card-ligar w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-100 text-blue-700 border border-blue-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-200'}" 
+                               class="btn-card-ligar w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-100 text-blue-700 border border-blue-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-200'} col-span-2 flex justify-center items-center" 
                                title="Ligar para Cliente" 
                                ${isFinalizada || semTelefone ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
@@ -924,34 +953,23 @@
                                 <span class="sm:hidden ml-2">Ligar</span>
                             </a>
 
-                            <!-- NOVO: Botão Kyte (MODIFICADO - Sempre Ativo e mais robusto) -->
-                            <a href="${kyteUrl}"
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200" 
-                               title="Abrir no Kyte">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2.586l3 3a1 1 0 001.414-1.414L10.414 16H13a1 1 0 001-1v-1.586l1.293 1.293a1 1 0 001.414-1.414l-7-7z" />
-                                    <path d="M16 8a1 1 0 00-1-1h-1.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3V3a1 1 0 00-1-1H8a1 1 0 00-1 1v1.586L5.707 3.293a1 1 0 00-1.414 1.414L7.586 8H6a1 1 0 000 2h1.586l-3.293 3.293a1 1 0 101.414 1.414L9 11.414V13a1 1 0 001 1h.01a1 1 0 00.99-1v-1.586l3.293 3.293a1 1 0 001.414-1.414L12.414 10H14a1 1 0 001-1V8z" />
-                                </svg>
-                                <span class="sm:hidden ml-2">Kyte</span>
-                            </a>
+                            <!-- Botão Kyte REMOVIDO -->
                             
 
-                            <!-- Lógica de Botões de Ação (Entregar/Cancelar/Status) -->
+                            <!-- Lógica de Botões de Ação (col-span-3 ou col-span-6) -->
                             ${entrega.status === 'Pendente' ? `
-                                <button class="btn-cancelar-entrega w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">
+                                <button class="btn-cancelar-entrega w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-3" data-id="${entrega.id}">
                                     Cancelar
                                 </button>
-                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" data-id="${entrega.id}">
+                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 col-span-3" data-id="${entrega.id}">
                                     Marcar Entrega
                                 </button>
                             ` : (entrega.status === 'Entregue' ? `
-                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-600 text-white cursor-not-allowed" disabled>
+                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-600 text-white cursor-not-allowed col-span-6" disabled>
                                     Entregue
                                 </button>
                             ` : `
-                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-gray-500 text-white cursor-not-allowed" disabled>
+                                <button class="btn-entregue w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-gray-500 text-white cursor-not-allowed col-span-6" disabled>
                                     Cancelada
                                 </button>
                             `)}
@@ -1501,6 +1519,25 @@
             
             // --- Inicialização e Event Listeners ---
 
+            // NOVO: Listeners Top Bar
+            btnModoAdmin.addEventListener('click', () => {
+                document.body.classList.remove('modo-entregador');
+                // Atualiza estilo do botão
+                btnModoAdmin.classList.add('bg-blue-500', 'text-white');
+                btnModoAdmin.classList.remove('bg-gray-600', 'text-gray-200', 'hover:bg-gray-500');
+                btnModoEntregador.classList.add('bg-gray-600', 'text-gray-200', 'hover:bg-gray-500');
+                btnModoEntregador.classList.remove('bg-blue-500', 'text-white');
+            });
+            btnModoEntregador.addEventListener('click', () => {
+                document.body.classList.add('modo-entregador');
+                // Atualiza estilo do botão
+                btnModoEntregador.classList.add('bg-blue-500', 'text-white');
+                btnModoEntregador.classList.remove('bg-gray-600', 'text-gray-200', 'hover:bg-gray-500');
+                btnModoAdmin.classList.add('bg-gray-600', 'text-gray-200', 'hover:bg-gray-500');
+                btnModoAdmin.classList.remove('bg-blue-500', 'text-white');
+            });
+
+
             // NOVO: Gerenciamento de Rotas
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
@@ -1587,5 +1624,6 @@
     </script>
 </body>
 </html>
+
 
 
