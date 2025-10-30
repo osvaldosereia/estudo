@@ -11,6 +11,12 @@ const CLIENTES_DB = [
     "endereco": "1002",
     "complemento": "Rua: Alameda Júlio Mulher, 575, bairro: Alameda - VG"
   },
+     {
+    "nome": "1036",
+    "celular": "659",
+    "endereco": "1036 final do cpa",
+    "complemento": "RUA O Q8 CASA 85 LOTE 3 RESID BURITI"
+  },
   {
     "nome": "1008 ",
     "celular": "56592921006",
