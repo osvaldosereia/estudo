@@ -2651,6 +2651,12 @@ const CLIENTES_DB = [
     "endereco": "D191",
     "complemento": "Endereço rua Santa Cruz quadra 2 casa 16 serra dourada Várzea Grande ponto de referência bar do Sidney (manquinho)"
   },
+      {
+    "nome": "CS PATRICIA COXIPO",
+    "celular": "65996963371",
+    "endereco": "CS PATRICIA",
+    "complemento": "Rua R, Q37, casa 87, Nova esperança Cuiabá"
+  },
   {
     "nome": "D326 CUIABA CAMPO VELHO",
     "celular": "65992504503",
