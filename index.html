@@ -859,9 +859,10 @@
                     const telefoneParaLigacao = `+${telefoneLimpo}`; // tel:+55...
                     const ligarUrl = `tel:${telefoneParaLigacao}`;
 
-                    // Kyte
-                    const nomeClienteCodificado = encodeURIComponent(entrega.cliente.nome);
-                    const kyteUrl = `kyte-app://customers?name=${nomeClienteCodificado}`;
+                    // Kyte - MODIFICADO
+                    const clienteId = entrega.cliente.id; // Pega o ID do cliente
+                    const semKyteId = !clienteId; // Checa se o ID existe
+                    const kyteUrl = `https://web.kyteapp.com/constumer/${clienteId}`; // Usa o novo link e o ID
                     
 
                     card.innerHTML = `
@@ -891,11 +892,12 @@
                                 ${statusInfo}
                             </div>
                         </div>
-                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col sm:flex-row flex-wrap gap-2">
+                        <!-- MODIFICADO: Layout de Botões (grid-cols-2 no mobile, flex-row no sm) -->
+                        <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap gap-2">
                             <!-- Botão Mapa -->
                             <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
-                                <span class="sm:hidden ml-2">Abrir Mapa</span>
+                                <span class="sm:hidden ml-2">Mapa</span>
                             </button>
                             
                             <!-- Botão WhatsApp -->
@@ -908,7 +910,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M18 10c0-4.418-3.582-8-8-8S2 5.582 2 10c0 1.758.57 3.395 1.524 4.766L2.04 18.42a.5.5 0 00.58.58l3.656-1.484A7.94 7.94 0 0010 18c4.418 0 8-3.582 8-8zM6.666 9.345c-.2-.48-.389-.738-.567-.738-.178 0-.356.0c-.533.015-.71.24-.888.48-.178.24-.71.694-.71 1.688 0 .994.71 1.94 1.156 2.498.444.558 1.423 1.39 3.445 2.34.502.24.8.389.978.389.178 0 .356-.015.533-.165.178-.15.71-.694.888-1.39.178-.694.178-1.284.105-1.39-.073-.105-.163-.165-.34-.315-.178-.15-.356-.24-.534-.24-.178 0-.444.09-.533.165s-.356.48-.533.738c-.178.255-.267.27-.444.12-.178-.15-1.067-.54-2.03-1.284-.76-.588-1.267-1.306-1.122-1.688.144-.382.444-.664.533-.738.09-.075.178-.165.267-.255.09-.09.134-.165.178-.27.045-.105.015-.24-.045-.315-.06-.075-.533-1.284-.71-1.782z" clip-rule="evenodd" />
                                 </svg>
-                                <span class="sm:hidden ml-2">WhatsApp</span>
+                                <span class="sm:hidden ml-2">Wpp</span>
                             </a>
 
                             <!-- NOVO: Botão Ligar -->
@@ -922,13 +924,13 @@
                                 <span class="sm:hidden ml-2">Ligar</span>
                             </a>
 
-                            <!-- NOVO: Botão Kyte -->
-                            <a href="${isFinalizada ? '#' : kyteUrl}"
+                            <!-- NOVO: Botão Kyte (MODIFICADO) -->
+                            <a href="${semKyteId || isFinalizada ? '#' : kyteUrl}"
                                target="_blank" 
                                rel="noopener noreferrer"
-                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-purple-200'}" 
+                               class="btn-card-kyte w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-purple-100 text-purple-700 border border-purple-300 ${isFinalizada || semKyteId ? 'cursor-not-allowed opacity-50' : 'hover:bg-purple-200'}" 
                                title="Abrir no Kyte" 
-                               ${isFinalizada ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
+                               ${isFinalizada || semKyteId ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2.586l3 3a1 1 0 001.414-1.414L10.414 16H13a1 1 0 001-1v-1.586l1.293 1.293a1 1 0 001.414-1.414l-7-7z" />
                                     <path d="M16 8a1 1 0 00-1-1h-1.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3V3a1 1 0 00-1-1H8a1 1 0 00-1 1v1.586L5.707 3.293a1 1 0 00-1.414 1.414L7.586 8H6a1 1 0 000 2h1.586l-3.293 3.293a1 1 0 101.414 1.414L9 11.414V13a1 1 0 001 1h.01a1 1 0 00.99-1v-1.586l3.293 3.293a1 1 0 001.414-1.414L12.414 10H14a1 1 0 001-1V8z" />
@@ -989,6 +991,7 @@
                 } else {
                     // Cliente avulso (digitado)
                     clienteData = {
+                        // id: null, // ID será undefined, o que é esperado
                         nome: nomeClienteSelecionado,
                         celular: '',
                         endereco: nomeClienteSelecionado, // Usa o nome como endereço
@@ -1418,6 +1421,7 @@
                                 celular: '',
                                 endereco: e.codigoCliente || 'Sem Endereço',
                                 complemento: ''
+                                // id será undefined, o que é ok
                             }
                         }));
 
@@ -1455,6 +1459,7 @@
                                 celular: '',
                                 endereco: e.codigoCliente || 'Sem Endereço',
                                 complemento: ''
+                                // id será undefined
                             }
                         }));
                         
