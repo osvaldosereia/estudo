@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Biblioteca SortableJS REMOVIDA -->
     <style>
-        /* Estilos Sortable REMOVIDOS */
+        /* ... (Estilos .entregue e .cancelada sem alteração) ... */
 
         /* Classe para item entregue */
         .entregue {
@@ -36,6 +36,17 @@
             cursor: not-allowed;
             opacity: 0.5;
         }
+
+        /* NOVO: Estilo para o <select> de rotas */
+        #select-rota-ativa {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25em 1.25em;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -44,9 +55,54 @@
     <div class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
 
         <!-- Cabeçalho -->
-        <header class="mb-6">
+        <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <h1 class="text-3xl font-bold text-gray-800">Rota de Entrega</h1>
+            <!-- NOVO: Botão Nova Rota -->
+            <button id="btn-nova-rota" class="mt-2 sm:mt-0 w-full sm:w-auto flex justify-center items-center rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Nova Rota
+            </button>
         </header>
+
+        <!-- NOVO: Seção de Gerenciamento da Rota Ativa -->
+        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Gerenciar Rota Ativa</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <!-- Coluna 1: Selecionar Rota -->
+                <div class="md:col-span-1">
+                    <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Carregar Rota Salva</label>
+                    <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        <!-- Opções carregadas via JS -->
+                    </select>
+                </div>
+                <!-- Coluna 2: Nome e Data -->
+                <div class="md:col-span-1 grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
+                        <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
+                    </div>
+                    <div>
+                        <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
+                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    </div>
+                </div>
+                 <!-- Coluna 3: Dia da Semana e Excluir -->
+                <div class="md:col-span-1 flex items-end justify-between gap-4">
+                     <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700">Dia da Semana</label>
+                        <span id="display-dia-semana" class="mt-1 block w-full rounded-md bg-gray-100 border border-gray-300 py-3 px-4 text-base font-medium text-gray-600 truncate">-</span>
+                    </div>
+                    <button id="btn-excluir-rota" class="rounded-md bg-red-600 p-3 text-sm font-medium text-white shadow-sm hover:bg-red-700" title="Excluir Rota Ativa">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- FIM NOVA SEÇÃO -->
 
         <!-- Seção de Lançamento -->
         <section class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -76,7 +132,7 @@
                             <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
                             <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
                             <option value="Pequena Koblenz" data-valor="220.00">Pequena kolenz</option>
-                            <option value="mÉDIA Bonini" data-valor="320.00">Média Bonini</option>
+                            <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
                             <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
                             <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
                             <option value="Grande Koblenz" data-valor="390.00">Grande koblenz</option>
@@ -280,6 +336,14 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Seletores de Elementos ---
+            // NOVO: Seletores de Gerenciamento
+            const btnNovaRota = document.getElementById('btn-nova-rota');
+            const selectRotaAtiva = document.getElementById('select-rota-ativa');
+            const inputNomeRota = document.getElementById('input-nome-rota');
+            const inputDataRota = document.getElementById('input-data-rota');
+            const displayDiaSemana = document.getElementById('display-dia-semana');
+            const btnExcluirRota = document.getElementById('btn-excluir-rota');
+
             const formEntrega = document.getElementById('form-entrega');
             const codigoClienteInput = document.getElementById('codigo-cliente');
             const obsClienteInput = document.getElementById('obs-cliente'); // NOVO SELETOR
@@ -317,8 +381,11 @@
             const btnFecharAviso = document.getElementById('btn-fechar-aviso');
 
             // --- Estado da Aplicação ---
-            let entregas = []; // Array principal de entregas
-            // let sortable = null; // Instância do SortableJS REMOVIDA
+            // let entregas = []; // Removido
+            let todasAsRotas = {}; // NOVO: Objeto para guardar todas as rotas
+            let rotaAtivaId = null; // NOVO: ID da rota sendo visualizada
+            const MAX_ROTAS = 30; // Limite de rotas salvas
+
             let entregaParaPagarId = null; // ID da entrega no modal de pagamento
 
             // --- Funções ---
@@ -361,6 +428,17 @@
             }
 
             /**
+             * NOVO: Formata uma data YYYY-MM-DD para "Dia da Semana"
+             */
+            function getDiaDaSemana(dataString) {
+                if (!dataString) return '-';
+                // Adiciona T12:00:00 para evitar problemas de fuso horário com new Date()
+                const data = new Date(dataString + 'T12:00:00');
+                const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                return dias[data.getUTCDay()];
+            }
+
+            /**
              * Atualiza o display de valor quando a cesta é selecionada
              */
             function atualizarValorCesta() {
@@ -389,28 +467,188 @@
             }
 
             /**
-             * Salva o estado atual das entregas no LocalStorage
+             * NOVO: Retorna a lista de entregas da rota ativa
              */
-            function salvarLocalStorage() {
-                // A reordenação agora é feita em 'moverEntrega'
-                localStorage.setItem('rotaEntregas', JSON.stringify(entregas));
+            function getEntregasAtivas() {
+                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
+                    return todasAsRotas[rotaAtivaId].entregas || [];
+                }
+                return [];
             }
 
             /**
-             * Carrega o estado das entregas do LocalStorage
+             * Salva o estado atual de TODAS AS ROTAS no LocalStorage
+             * Gerencia o limite de 30 rotas.
              */
-            function carregarLocalStorage() {
-                const dadosSalvos = localStorage.getItem('rotaEntregas');
-                if (dadosSalvos) {
-                    entregas = JSON.parse(dadosSalvos);
+            function salvarTodasAsRotas() {
+                // Gerenciamento de limite (MAX_ROTAS)
+                const chavesRotas = Object.keys(todasAsRotas);
+                if (chavesRotas.length > MAX_ROTAS) {
+                    // Ordena por ID (timestamp, do mais antigo ao mais novo)
+                    chavesRotas.sort((a, b) => a - b);
+                    // Pega as chaves que excedem o limite (as mais antigas)
+                    const chavesParaExcluir = chavesRotas.slice(0, chavesRotas.length - MAX_ROTAS);
+                    
+                    chavesParaExcluir.forEach(chave => {
+                        delete todasAsRotas[chave];
+                    });
                 }
+
+                localStorage.setItem('gerenciadorDeRotas', JSON.stringify(todasAsRotas));
+                
+                // Salva o ID da rota ativa
+                if (rotaAtivaId) {
+                    localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                }
+            }
+
+            /**
+             * NOVO: Carrega todas as rotas do LocalStorage e inicia o app
+             */
+            function iniciarAplicativo() {
+                const dadosSalvos = localStorage.getItem('gerenciadorDeRotas');
+                if (dadosSalvos) {
+                    todasAsRotas = JSON.parse(dadosSalvos);
+                }
+
+                let idSalvo = localStorage.getItem('rotaAtivaId');
+
+                // Se não houver rotas, ou o ID salvo for inválido, cria uma nova rota
+                if (Object.keys(todasAsRotas).length === 0 || !todasAsRotas[idSalvo]) {
+                    criarNovaRota(false); // Cria uma rota sem trocar (false)
+                } else {
+                    rotaAtivaId = idSalvo;
+                }
+                
+                popularSelectRotas();
+                carregarRotaAtiva();
+            }
+
+            /**
+             * NOVO: Popula o <select> com as rotas salvas
+             */
+            function popularSelectRotas() {
+                selectRotaAtiva.innerHTML = ''; // Limpa o select
+                
+                // Ordena as rotas pela data (mais nova primeiro)
+                const rotasOrdenadas = Object.values(todasAsRotas).sort((a, b) => {
+                    // Compara data (desc)
+                    if (a.data > b.data) return -1;
+                    if (a.data < b.data) return 1;
+                    // Se datas iguais, compara por ID (desc)
+                    return b.id - a.id;
+                });
+
+                rotasOrdenadas.forEach(rota => {
+                    const dataFormatada = rota.data ? new Date(rota.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem Data';
+                    const option = document.createElement('option');
+                    option.value = rota.id;
+                    option.textContent = `${dataFormatada} - ${rota.nome} (${rota.entregas.length} ent.)`;
+                    if (rota.id.toString() === rotaAtivaId.toString()) {
+                        option.selected = true;
+                    }
+                    selectRotaAtiva.appendChild(option);
+                });
+            }
+
+            /**
+             * NOVO: Carrega os dados da Rota Ativa nos campos e renderiza
+             */
+            function carregarRotaAtiva() {
+                const rota = todasAsRotas[rotaAtivaId];
+                if (!rota) {
+                    console.error("Tentando carregar rota inválida:", rotaAtivaId);
+                    // Se a rota ativa falhar, cria uma nova
+                    criarNovaRota(false); 
+                    popularSelectRotas();
+                    carregarRotaAtiva(); // Tenta novamente com a nova rota
+                    return;
+                }
+
+                // Atualiza os inputs de gerenciamento
+                inputNomeRota.value = rota.nome;
+                inputDataRota.value = rota.data;
+                displayDiaSemana.textContent = getDiaDaSemana(rota.data);
+
+                // Atualiza o <select>
+                selectRotaAtiva.value = rotaAtivaId;
+
+                // Renderiza as entregas dessa rota
                 renderizarEntregas();
             }
+
+            /**
+             * NOVO: Cria uma nova rota, salva e a torna ativa
+             */
+            function criarNovaRota(trocarImediato = true) {
+                const novoId = Date.now().toString();
+                const hoje = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                
+                const novaRota = {
+                    id: novoId,
+                    nome: "Nova Rota",
+                    data: hoje,
+                    entregas: []
+                };
+
+                todasAsRotas[novoId] = novaRota;
+                rotaAtivaId = novoId; // Torna a nova rota ativa
+
+                salvarTodasAsRotas();
+                
+                if (trocarImediato) {
+                    popularSelectRotas(); // Atualiza o select
+                    carregarRotaAtiva(); // Carrega os (novos) dados na tela
+                }
+            }
+
+            /**
+             * NOVO: Atualiza o nome ou data da rota ativa
+             */
+            function atualizarInfoRota() {
+                const rota = todasAsRotas[rotaAtivaId];
+                if (!rota) return;
+
+                rota.nome = inputNomeRota.value || "Rota Sem Nome";
+                rota.data = inputDataRota.value;
+                
+                displayDiaSemana.textContent = getDiaDaSemana(rota.data);
+
+                salvarTodasAsRotas();
+                popularSelectRotas(); // Atualiza o texto no select
+            }
+
+            /**
+             * NOVO: Exclui a rota ativa
+             */
+            function excluirRotaAtiva() {
+                // Não deixa excluir a última rota
+                if (Object.keys(todasAsRotas).length <= 1) {
+                    mostrarAviso("Não é possível excluir a única rota existente.");
+                    return;
+                }
+
+                // Pergunta ao usuário (usando o modal de aviso de forma "criativa")
+                // NOTE: Isso não é um confirm() real, mas é o que temos sem `confirm`
+                // Vamos pular a confirmação para evitar complexidade de modal
+                
+                delete todasAsRotas[rotaAtivaId];
+                
+                // Pega a primeira rota que sobrou
+                rotaAtivaId = Object.keys(todasAsRotas)[0];
+                
+                salvarTodasAsRotas();
+                popularSelectRotas();
+                carregarRotaAtiva();
+            }
+
 
             /**
              * Renderiza todos os cards de entrega na tela
              */
             function renderizarEntregas() {
+                const entregas = getEntregasAtivas(); // MODIFICADO
+
                 listaEntregasEl.innerHTML = ''; // Limpa a lista
 
                 if (entregas.length === 0) {
@@ -545,6 +783,13 @@
             function adicionarEntrega(e) {
                 e.preventDefault();
                 
+                // MODIFICADO: Pega a rota ativa
+                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                if (!rotaAtiva) {
+                    mostrarAviso("Nenhuma rota ativa. Crie uma nova rota.");
+                    return;
+                }
+
                 const selectedOption = selectCesta.options[selectCesta.selectedIndex];
                 
                 if (!selectedOption || !selectedOption.value) {
@@ -576,9 +821,11 @@
                     horarioEntrega: null
                 };
 
-                entregas.push(novaEntrega);
-                salvarLocalStorage();
+                // MODIFICADO: Adiciona na rota ativa
+                rotaAtiva.entregas.push(novaEntrega);
+                salvarTodasAsRotas(); // MODIFICADO
                 renderizarEntregas();
+                popularSelectRotas(); // Atualiza contagem de entregas no select
 
                 // Limpa o formulário
                 formEntrega.reset();
@@ -602,6 +849,7 @@
              * Abre o modal de pagamento para a entrega clicada
              */
             function abrirModalPagamento(id) {
+                const entregas = getEntregasAtivas(); // MODIFICADO
                 const entrega = entregas.find(e => e.id.toString() === id);
                 if (!entrega) return;
 
@@ -631,13 +879,14 @@
              * NOVO: Marca uma entrega como Cancelada
              */
             function cancelarEntrega(id) {
+                const entregas = getEntregasAtivas(); // MODIFICADO
                 const index = entregas.findIndex(e => e.id.toString() === id);
                 if (index !== -1) {
                     entregas[index].status = "Cancelada";
                     entregas[index].formaPagamento = []; // Garante que está limpo
                     entregas[index].horarioEntrega = new Date().toISOString(); // Salva a hora do cancelamento
                 }
-                salvarLocalStorage();
+                salvarTodasAsRotas(); // MODIFICADO
                 renderizarEntregas();
             }
 
@@ -645,6 +894,7 @@
              * NOVO: Move uma entrega para cima ou para baixo na lista
              */
             function moverEntrega(id, direcao) {
+                const entregas = getEntregasAtivas(); // MODIFICADO
                 const index = entregas.findIndex(e => e.id.toString() === id);
                 if (index === -1) return;
 
@@ -658,7 +908,7 @@
                     return; // Não faz nada se for o primeiro/ultimo
                 }
 
-                salvarLocalStorage();
+                salvarTodasAsRotas(); // MODIFICADO
                 renderizarEntregas();
             }
 
@@ -691,6 +941,7 @@
                 const btnMaps = e.target.closest('.btn-card-maps');
                 if (btnMaps) {
                     const cardId = btnMaps.closest('[data-id]').dataset.id;
+                    const entregas = getEntregasAtivas(); // MODIFICADO
                     const entrega = entregas.find(e => e.id.toString() === cardId);
                     if (entrega) {
                         abrirGoogleMaps(entrega.codigoCliente);
@@ -721,6 +972,7 @@
                 }
                 
                 // Encontra a entrega e atualiza
+                const entregas = getEntregasAtivas(); // MODIFICADO
                 const index = entregas.findIndex(e => e.id.toString() === entregaParaPagarId);
                 if (index !== -1) {
                     entregas[index].status = "Entregue";
@@ -728,7 +980,7 @@
                     entregas[index].horarioEntrega = new Date().toISOString();
                 }
                 
-                salvarLocalStorage();
+                salvarTodasAsRotas(); // MODIFICADO
                 renderizarEntregas();
                 fecharModalPagamento();
             }
@@ -752,19 +1004,28 @@
              * Prepara e exibe o modal de exportação
              */
             function exportarDados() {
+                // MODIFICADO: Pega a rota ativa
+                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                if (!rotaAtiva) {
+                    mostrarAviso("Nenhuma rota ativa para exportar.");
+                    return;
+                }
                 // Garante que o array 'entregas' está na ordem da tela antes de exportar
-                salvarLocalStorage(); 
+                salvarTodasAsRotas(); 
 
                 // 1. Prepara JSON para backup/carga (Será usado no botão de download)
+                // Agora exporta o objeto da rota inteira
                 // ...
 
                 // 2. Prepara Relatório de Entregas Concluídas
+                const entregas = getEntregasAtivas(); // MODIFICADO
                 const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
                 // NOVO: Prepara Relatório de Canceladas
                 const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
                 
                 let relatorioTexto = "Nenhuma entrega finalizada.\n";
-                let whatsappTexto = `*Resumo da Rota*\n\n`;
+                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}*\n`; // MODIFICADO
+                whatsappTexto += `*Data: ${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')} (${getDiaDaSemana(rotaAtiva.data)})*\n\n`;
 
                 if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) {
                     relatorioTexto = ""; // Limpa a mensagem padrão
@@ -845,28 +1106,57 @@
                 }
                 
                 try {
+                    // MODIFICADO: Agora espera um Objeto Rota, mas checa se é o formato antigo (Array)
                     const dadosCarregados = JSON.parse(jsonDados);
                     
-                    // Validação simples (verifica se é um array)
-                    if (!Array.isArray(dadosCarregados)) {
-                        throw new Error('Formato inválido. Esperava um array.');
-                    }
-                    
-                    // Validação mais profunda (opcional, mas bom)
-                    // Verifica se o primeiro item tem as chaves esperadas
-                    if (dadosCarregados.length > 0 && (!dadosCarregados[0].id || !dadosCarregados[0].codigoCliente)) {
-                         throw new Error('Estrutura de dados incompatível.');
-                    }
+                    // Caso 1: É o formato NOVO (Objeto Rota)
+                    if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
+                        
+                        // Validação
+                        if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) {
+                            throw new Error('Objeto de rota inválido. Faltando id, nome ou data.');
+                        }
 
-                    // NOVO: Mapeia os dados carregados para garantir que os novos campos existam
-                    entregas = dadosCarregados.map(e => ({
-                        ...e,
-                        brinde: e.brinde || 'Não', // Define 'Não' como padrão
-                        partesAlteradas: e.partesAlteradas || [] // Define array vazio como padrão
-                    }));
-                    
-                    salvarLocalStorage(); // Salva os novos dados
-                    renderizarEntregas(); // Renderiza na tela
+                        // Checa conflito de ID
+                        const novoId = todasAsRotas[dadosCarregados.id] ? Date.now().toString() : dadosCarregados.id;
+                        dadosCarregados.id = novoId;
+
+                        todasAsRotas[novoId] = dadosCarregados; // Adiciona nova rota
+                        rotaAtivaId = novoId; // Torna a rota carregada ativa
+                        
+                        salvarTodasAsRotas();
+                        popularSelectRotas();
+                        carregarRotaAtiva(); // Carrega a rota recém-adicionada
+
+                    } 
+                    // Caso 2: É o formato ANTIGO (Array de Entregas)
+                    else if (Array.isArray(dadosCarregados)) {
+                        
+                        // Validação mais profunda (opcional, mas bom)
+                        if (dadosCarregados.length > 0 && (!dadosCarregados[0].id || !dadosCarregados[0].codigoCliente)) {
+                             throw new Error('Estrutura de dados (array) incompatível.');
+                        }
+                        
+                        // Carrega os dados na ROTA ATIVA ATUAL
+                        const rotaAtiva = todasAsRotas[rotaAtivaId];
+                        if (!rotaAtiva) {
+                             throw new Error('Nenhuma rota ativa para carregar os dados.');
+                        }
+
+                        // Mapeia os dados carregados para garantir que os novos campos existam
+                        rotaAtiva.entregas = dadosCarregados.map(e => ({
+                            ...e,
+                            brinde: e.brinde || 'Não', // Define 'Não' como padrão
+                            partesAlteradas: e.partesAlteradas || [] // Define array vazio como padrão
+                        }));
+                        
+                        salvarTodasAsRotas(); // Salva os novos dados na rota ativa
+                        renderizarEntregas(); // Renderiza na tela
+                        popularSelectRotas(); // Atualiza contagem
+
+                    } else {
+                        throw new Error('Formato de arquivo desconhecido.');
+                    }
 
                 } catch (error) {
                     console.error("Erro ao carregar JSON:", error);
@@ -900,6 +1190,18 @@
             
             // --- Inicialização e Event Listeners ---
 
+            // NOVO: Listeners de Gerenciamento
+            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
+            selectRotaAtiva.addEventListener('change', (e) => {
+                rotaAtivaId = e.target.value;
+                localStorage.setItem('rotaAtivaId', rotaAtivaId); // Salva a troca
+                carregarRotaAtiva();
+            });
+            inputNomeRota.addEventListener('change', atualizarInfoRota);
+            inputDataRota.addEventListener('change', atualizarInfoRota);
+            btnExcluirRota.addEventListener('click', excluirRotaAtiva);
+
+
             // Inputs do Formulário
             selectCesta.addEventListener('change', atualizarValorCesta);
             document.querySelectorAll('input[name="tipo-cesta"]').forEach(radio => {
@@ -920,9 +1222,15 @@
 
             // Listener para o novo botão de download
             document.getElementById('btn-baixar-json').addEventListener('click', () => {
-                salvarLocalStorage(); // Garante que a ordem está correta
-                const jsonDados = JSON.stringify(entregas, null, 2);
-                downloadArquivo(jsonDados, 'rota_entregas.json');
+                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                if (!rotaAtiva) return;
+                
+                salvarTodasAsRotas(); // Garante que a ordem está correta
+                
+                // MODIFICADO: Exporta o objeto da rota ativa, não só as entregas
+                const jsonDados = JSON.stringify(rotaAtiva, null, 2); 
+                const nomeArquivo = `${rotaAtiva.data}_${rotaAtiva.nome.replace(/ /g, '_') || 'rota'}.json`;
+                downloadArquivo(jsonDados, nomeArquivo);
             });
 
             // Listener para o botão Carregar (agora trigga o input)
@@ -940,12 +1248,10 @@
             // REMOVIDO
 
             // Carrega dados do LocalStorage ao iniciar
-            carregarLocalStorage();
+            // carregarLocalStorage(); // SUBSTITUÍDO
+            iniciarAplicativo(); // NOVO
         });
     </script>
 </body>
 </html>
-
-
-
 
