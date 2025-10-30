@@ -482,6 +482,33 @@
             }
 
             /**
+             * NOVO: Limpa um número de telefone para formato de API (55DDDNUMERO)
+             */
+            function limparTelefone(telefone) {
+                if (!telefone) return '';
+                // Remove tudo que não for dígito
+                const limpo = telefone.replace(/\D/g, '');
+                
+                // Caso 1: Já está no formato 55DDDXXXX (12 ou 13 dígitos)
+                if (limpo.startsWith('55') && (limpo.length === 12 || limpo.length === 13)) {
+                    return limpo;
+                }
+                
+                // Caso 2: Formato DDD + 9XXXX (11 dígitos)
+                if (limpo.length === 11) {
+                    return '55' + limpo;
+                }
+                
+                // Caso 3: Formato DDD + 8XXXX (10 dígitos, celular antigo ou fixo)
+                if (limpo.length === 10) {
+                    return '55' + limpo;
+                }
+                
+                // Se não se encaixa, retorna vazio
+                return '';
+            }
+
+            /**
              * NOVO: Pega o dia da semana de uma data (yyyy-mm-dd)
              */
             function getDiaDaSemana(dataString) {
@@ -839,6 +866,8 @@
                         ${obsInfo} <!-- INJETADO AQUI -->
                         <p class="text-sm text-gray-600 truncate" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
                         <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
+                        <!-- NOVO: Mostrar Celular -->
+                        <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
                         <p class="text-sm text-gray-500 mt-1">${entrega.cesta.nome} - <span class="font-medium">${formatarMoeda(entrega.cesta.valor)}</span></p>
                     `;
                     
@@ -847,6 +876,13 @@
                     const isUltimo = index === entregas.length - 1;
                     // NOVO: Trava botões se não estiver pendente
                     const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
+
+                    // NOVO: Lógica do WhatsApp
+                    const mensagemFormatada = `Olá! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado`;
+                    const telefoneLimpo = limparTelefone(entrega.cliente.celular);
+                    const whatsappUrl = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(mensagemFormatada)}`;
+                    const semTelefone = !telefoneLimpo;
+
 
                     card.innerHTML = `
                         <div class="flex-1 min-w-0">
@@ -882,6 +918,19 @@
                                 <span class="sm:hidden ml-2">Abrir Mapa</span>
                             </button>
                             
+                            <!-- NOVO: Botão WhatsApp -->
+                            <a href="${semTelefone || isFinalizada ? '#' : whatsappUrl}" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="btn-card-whatsapp w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-100 text-green-700 border border-green-300 ${isFinalizada || semTelefone ? 'cursor-not-allowed opacity-50' : 'hover:bg-green-200'}" 
+                               title="Enviar WhatsApp" 
+                               ${isFinalizada || semTelefone ? 'aria-disabled="true" onclick="event.preventDefault()"' : ''}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10c0-4.418-3.582-8-8-8S2 5.582 2 10c0 1.758.57 3.395 1.524 4.766L2.04 18.42a.5.5 0 00.58.58l3.656-1.484A7.94 7.94 0 0010 18c4.418 0 8-3.582 8-8zM6.666 9.345c-.2-.48-.389-.738-.567-.738-.178 0-.356.0c-.533.015-.71.24-.888.48-.178.24-.71.694-.71 1.688 0 .994.71 1.94 1.156 2.498.444.558 1.423 1.39 3.445 2.34.502.24.8.389.978.389.178 0 .356-.015.533-.165.178-.15.71-.694.888-1.39.178-.694.178-1.284.105-1.39-.073-.105-.163-.165-.34-.315-.178-.15-.356-.24-.534-.24-.178 0-.444.09-.533.165s-.356.48-.533.738c-.178.255-.267.27-.444.12-.178-.15-1.067-.54-2.03-1.284-.76-.588-1.267-1.306-1.122-1.688.144-.382.444-.664.533-.738.09-.075.178-.165.267-.255.09-.09.134-.165.178-.27.045-.105.015-.24-.045-.315-.06-.075-.533-1.284-.71-1.782z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="sm:hidden ml-2">WhatsApp</span>
+                            </a>
+
                             <!-- NOVO: Lógica de Botões de Ação (Entregar/Cancelar/Status) -->
                             ${entrega.status === 'Pendente' ? `
                                 <button class="btn-cancelar-entrega w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">
@@ -1102,6 +1151,12 @@
                         abrirGoogleMaps(entrega.cliente.endereco); // MODIFICADO
                     }
                     return; // Para a execução
+                }
+
+                // NOVO: Ignora clique no botão WhatsApp (é um link <a>)
+                const btnWpp = e.target.closest('.btn-card-whatsapp');
+                if (btnWpp) {
+                    return;
                 }
 
                 // Checa clique no Botão ENTREGUE
