@@ -860,8 +860,8 @@
                     const ligarUrl = `tel:${telefoneParaLigacao}`;
 
                     // Kyte - MODIFICADO
-                    const clienteId = entrega.cliente.id; // Pega o ID do cliente
-                    // const semKyteId = !clienteId; // Não vamos mais desabilitar por falta de ID
+                    // Tenta encontrar o ID do cliente, mesmo com capitalização diferente (id, ID, Id)
+                    const clienteId = entrega.cliente.id || entrega.cliente.ID || entrega.cliente.Id; 
                     const kyteUrl = `https://web.kyteapp.com/customers/${clienteId || ''}`; // Usa o novo link e o ID (ou string vazia)
                     
 
@@ -924,7 +924,7 @@
                                 <span class="sm:hidden ml-2">Ligar</span>
                             </a>
 
-                            <!-- NOVO: Botão Kyte (MODIFICADO - Sempre Ativo) -->
+                            <!-- NOVO: Botão Kyte (MODIFICADO - Sempre Ativo e mais robusto) -->
                             <a href="${kyteUrl}"
                                target="_blank" 
                                rel="noopener noreferrer"
@@ -1587,4 +1587,5 @@
     </script>
 </body>
 </html>
+
 
