@@ -13,7 +13,7 @@ const CLIENTES_DB = [
   },
      {
     "nome": "1036",
-    "celular": "659",
+    "celular": "65992966197",
     "endereco": "1036 final do cpa",
     "complemento": "RUA O Q8 CASA 85 LOTE 3 RESID BURITI"
   },
