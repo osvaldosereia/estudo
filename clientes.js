@@ -1,4 +1,5 @@
-  {
+const CLIENTES_DB = [
+{
     "nome": "010 Natalia",
     "celular": "5565984685473.0",
     "endereco": "010 Natalia",
@@ -4037,3 +4038,4 @@
     "complemento": "Chamar Na Porta 3"
   }
 
+];
