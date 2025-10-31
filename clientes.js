@@ -14,6 +14,13 @@ const CLIENTES_DB = [
     "complemento": "RUA 6, Q5 C23"
   },
      {
+    "id": "12482445315026-AbC9O",
+    "nome": "AC CLEONICE COXIPO",
+    "celular": "65993037381",
+    "endereco": "AC CLEONICE",
+    "complemento": "RUA 28 Q12 C4 SETOR D1 SANTA TERESINHA"
+  },
+     {
     "id": "17472445675026-AbC9O",
     "nome": "COX0551 TUIUIU",
     "celular": "65992758930",
