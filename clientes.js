@@ -13,6 +13,13 @@ const CLIENTES_DB = [
     "endereco": "XR184",
     "complemento": "RUA 6, Q5 C23"
   },
+      {
+    "id": "17472445312483-AbC9O",
+    "nome": "4242 sogra vg",
+    "celular": "65999624560",
+    "endereco": "4242 sogra vg",
+    "complemento": "RUA PORTUGAL, CASA 84, COND RITA MONTEIRO, VG"
+  },
      {
     "id": "19472445315026-AbC9O",
     "nome": "CS PATRICIA PEDRA 90",
