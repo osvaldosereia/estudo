@@ -223,6 +223,13 @@ const CLIENTES_DB = [
     "endereco": "1771",
     "complemento": "Rua santos Dumont 4710 área b qdra 7 costa verde várzea grande 78128470"
   },
+    {
+    "id": "1745587073831-AbC9O",
+    "nome": "VG4827 JACARANDA",
+    "celular": "65996479486",
+    "endereco": "VG4827",
+    "complemento": "RUA 14, QUADRA 16, CASAQ 14"
+  },
   {
     "id": "1744369521495-AbC9O",
     "nome": "1784 VG JD DOS ESTADOS",
