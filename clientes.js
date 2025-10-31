@@ -13,6 +13,13 @@ const CLIENTES_DB = [
     "endereco": "XR184",
     "complemento": "RUA 6, Q5 C23"
   },
+    {
+    "id": "17472445315966-AbC9O",
+    "nome": "AC DEIVID JD FORTALEZA COXIPO",
+    "celular": "65992351240",
+    "endereco": "AC DEIVID",
+    "complemento": "RUA F12, Q23, C17"
+  },
      {
     "id": "12482445315026-AbC9O",
     "nome": "AC CLEONICE COXIPO",
