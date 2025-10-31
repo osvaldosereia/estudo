@@ -14,6 +14,13 @@ const CLIENTES_DB = [
     "complemento": "RUA 6, Q5 C23"
   },
      {
+    "id": "19472445315026-AbC9O",
+    "nome": "CS PATRICIA PEDRA 90",
+    "celular": "65996963371",
+    "endereco": "CS PATRICIA",
+    "complemento": "SALAO DA MARI, AV 2, QUASE NA ESQUINA."
+  },
+     {
     "id": "17474045315026-AbC9O",
     "nome": "XR327 VG JD DOS ESTADOS",
     "celular": "65998145858",
