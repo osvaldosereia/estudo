@@ -1416,7 +1416,13 @@
                 // Encontra a entrega e atualiza
                 const entregas = getEntregasAtivas(); // MODIFICADO
                 const index = entregas.findIndex(e => e.id.toString() === entregaParaPagarId);
+                
+                // NOVO: Armazena o objeto da entrega antes de fechar o modal
+                let entregaParaAgradecer = null;
+
                 if (index !== -1) {
+                    entregaParaAgradecer = entregas[index]; // Salva o objeto
+
                     entregas[index].status = "Entregue";
                     entregas[index].formaPagamento = formasPagamentoSelecionadas;
                     entregas[index].horarioEntrega = new Date().toISOString();
@@ -1424,7 +1430,22 @@
                 
                 salvarLocalStorage();
                 renderizarEntregas();
-                fecharModalPagamento();
+                fecharModalPagamento(); // Limpa 'entregaParaPagarId'
+
+                // NOVO: Ação de Pós-Venda (Abrir WhatsApp)
+                if (entregaParaAgradecer) {
+                    const telefoneLimpo = limparTelefone(entregaParaAgradecer.cliente.celular);
+                    
+                    // Se tiver um telefone, abre o WhatsApp
+                    if (telefoneLimpo) {
+                        const msgAgradecer = "Obrigado pela compra. Esperamos voce no proximo mês";
+                        const urlAgradecer = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgAgradecer)}`;
+                        
+                        // Abre em uma nova aba
+                        window.open(urlAgradecer, '_blank', 'noopener,noreferrer');
+                    }
+                    // Se não tiver telefone, apenas conclui a entrega (sem erro)
+                }
             }
 
             /**
@@ -1946,6 +1967,7 @@
     </script>
 </body>
 </html>
+
 
 
 
