@@ -40,7 +40,9 @@
             opacity: 0.5;
         }
 
-        /* NOVO: Estilização do <select> de rotas */
+        /* NOVO: Estilização do <select> de rotas (REMOVIDO) */
+        /* Removido 'appearance: none' para restaurar o dropdown nativo do navegador */
+        /*
         #select-rota-ativa {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -50,6 +52,7 @@
             background-repeat: no-repeat;
             background-size: 1.25em 1.25em;
         }
+        */
 
         /* NOVO: Estilos Modo Entregador */
         /* Oculta tudo que não for a lista ou as despesas */
@@ -187,7 +190,8 @@
                     <!-- NOVO CAMPO DE OBSERVAÇÃO -->
                     <div>
                         <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                        <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
+                        <!-- MODIFICADO: De INPUT para TEXTAREA -->
+                        <textarea id="obs-cliente" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco"></textarea>
                     </div>
                     <!-- FIM NOVO CAMPO -->
                     <div>
@@ -908,9 +912,22 @@
                         infoTags.push(`<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full" title="Brinde${brindeTexto}">Brinde${brindeTexto}</span>`);
                     }
                     
-                    // NOVO: Adiciona info da Observação como tag
+                    // NOVO: Adiciona info da Observação como tag (REMOVIDO DAQUI)
+                    /*
                     if (entrega.observacao) {
                         infoTags.push(`<span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full" title="${entrega.observacao}">OBS: ${entrega.observacao}</span>`);
+                    }
+                    */
+
+                    // NOVO: Bloco de texto para Observação (textarea)
+                    let obsInfo = '';
+                    if (entrega.observacao) {
+                        obsInfo = `
+                            <div class="mt-2 text-sm text-red-700 bg-red-50 p-2 rounded-md border border-red-200">
+                                <strong class="block text-xs font-bold uppercase text-red-900">Observação:</strong>
+                                <pre class="whitespace-pre-wrap font-sans text-sm">${entrega.observacao}</pre>
+                            </div>
+                        `;
                     }
 
                     // NOVO: Bloco de texto para Cesta Alterada (textarea)
@@ -956,7 +973,12 @@
                         <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
                         <!-- NOVO: Mostrar Celular -->
                         <p class="text-sm text-gray-500 truncate" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
-                        <p class="text-sm text-gray-500 mt-1">${entrega.cesta.nome} - <span class="font-medium">${formatarMoeda(entrega.cesta.valor)}</span></p>
+                        
+                        <!-- MODIFICADO: Destaque da Cesta e Valor -->
+                        <div class="mt-2 p-2 bg-gray-50 rounded-md border border-gray-200">
+                            <span class="block text-base font-semibold text-gray-800">${entrega.cesta.nome}</span>
+                            <span class="block text-lg font-bold text-blue-600">${formatarMoeda(entrega.cesta.valor)}</span>
+                        </div>
                     `;
                     
                     // Lógica para desabilitar botões de mover
@@ -976,15 +998,15 @@
                     card.innerHTML = `
                         <div class="flex-1 min-w-0 overflow-hidden"> <!-- MODIFICADO: Adicionado overflow-hidden -->
                             <div class="flex items-center">
-                                <!-- NOVO: Botões de Seta -->
+                                <!-- NOVO: Botões de Seta (Maiores) -->
                                 <div class="flex flex-col items-center justify-center mr-3">
-                                    <button class="btn-mover-cima text-gray-400 ${isPrimeiro || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${isPrimeiro || isFinalizada ? 'disabled' : ''}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <button class="btn-mover-cima text-gray-400 p-2 ${isPrimeiro || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${isPrimeiro || isFinalizada ? 'disabled' : ''}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
                                         </svg>
                                     </button>
-                                    <button class="btn-mover-baixo text-gray-400 ${isUltimo || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${isUltimo || isFinalizada ? 'disabled' : ''}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <button class="btn-mover-baixo text-gray-400 p-2 ${isUltimo || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${isUltimo || isFinalizada ? 'disabled' : ''}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
@@ -1001,6 +1023,7 @@
                                     ${infoTags.join(' ')} <!-- Tags: Brinde, OBS, Partes Alteradas, etc -->
                                 </div>
                                 ${alteradaInfo} <!-- Bloco de Texto da Cesta Alterada -->
+                                ${obsInfo} <!-- NOVO: Bloco de Texto da Observação -->
                                 ${statusInfo} <!-- Bloco de Status (Entregue/Cancelada) -->
                             </div>
                         </div>
@@ -1420,6 +1443,37 @@
             }
 
             /**
+             * NOVO: Tenta compartilhar o arquivo (navigator.share) ou baixa (fallback).
+             */
+            async function compartilharOuBaixarArquivo(jsonDados, nomeArquivo) {
+                const file = new File([jsonDados], nomeArquivo, { type: 'application/json' });
+
+                // Verifica se a API de compartilhamento (Web Share API) existe
+                // E se ela suporta o compartilhamento de arquivos
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        // Estamos no celular (ou S.O. compatível)
+                        await navigator.share({
+                            title: nomeArquivo,
+                            files: [file]
+                        });
+                        // Compartilhamento foi sucesso (ou o usuário cancelou)
+                    } catch (error) {
+                        // Se o usuário cancelar, o navegador pode lançar um "AbortError".
+                        if (error.name !== 'AbortError') {
+                            console.error('Erro ao compartilhar:', error);
+                            // Se o compartilhamento falhar, cai no fallback (download)
+                            downloadArquivo(jsonDados, nomeArquivo);
+                        }
+                    }
+                } else {
+                    // Estamos no Desktop
+                    // A API não existe, então usamos o método de download padrão.
+                    downloadArquivo(jsonDados, nomeArquivo);
+                }
+            }
+
+            /**
              * NOVO: Exporta um único card como JSON
              */
             function exportarCardComoJson(id) {
@@ -1429,7 +1483,8 @@
 
                 const jsonDados = JSON.stringify(entrega, null, 2);
                 const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}_${entrega.id}.json`;
-                downloadArquivo(jsonDados, nomeArquivo); // Usa a função de download existente
+                // MODIFICADO: Chama a nova função híbrida
+                compartilharOuBaixarArquivo(jsonDados, nomeArquivo);
             }
             
             /**
@@ -1861,7 +1916,8 @@
                 // Cria um nome de arquivo descritivo
                 const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
                 
-                downloadArquivo(jsonDados, nomeArquivo);
+                // MODIFICADO: Chama a nova função híbrida
+                compartilharOuBaixarArquivo(jsonDados, nomeArquivo);
             });
 
             // Listener para o botão Carregar (agora trigga o input)
@@ -1890,4 +1946,6 @@
     </script>
 </body>
 </html>
+
+
 
