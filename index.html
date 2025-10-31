@@ -6,6 +6,10 @@
     <title>Rota de Entrega</title>
     <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- NOVO: Carrega Fonte Padrão (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- NOVO: Carrega o Banco de Dados de Clientes -->
     <!-- Este arquivo DEVE estar na mesma pasta que este HTML -->
     <script src="clientes.js"></script>
@@ -14,8 +18,7 @@
         /* Classe para item entregue */
         .entregue {
             background-color: #f0fdf4 !important; /* green-50 */
-            border-left-width: 4px;
-            border-left-color: #22c55e; /* green-500 */
+            border-left-color: #22c55e !important; /* green-500 */
         }
         .entregue .btn-entregue {
             background-color: #22c55e; /* green-500 */
@@ -25,8 +28,7 @@
         /* Classe para item cancelado */
         .cancelada {
             background-color: #f3f4f6 !important; /* gray-100 */
-            border-left-width: 4px;
-            border-left-color: #6b7280; /* gray-500 */
+            border-left-color: #6b7280 !important; /* gray-500 */
             opacity: 0.7;
         }
         .cancelada .btn-entregue,
@@ -45,22 +47,18 @@
         /* Classe para item montado */
         .montado {
             background-color: #f0f9ff !important; /* blue-50 */
-            border-left-width: 4px;
-            border-left-color: #3b82f6; /* blue-500 */
+            border-left-color: #3b82f6 !important; /* blue-500 */
         }
         
-        /* NOVO: Cores de Fundo por Rota (Padrão) */
-        .rota-CUIABÁ { background-color: #eff6ff; border-color: #93c5fd; }
-        .rota-VG { background-color: #f0fdf4; border-color: #86efac; }
-        .rota-CPA { background-color: #fefce8; border-color: #fde047; }
-        .rota-COXIPÓ { background-color: #f5f3ff; border-color: #c4b5fd; }
-        .rota-N\/A { background-color: #fafafa; border-color: #e5e5e5; }
+        /* NOVO: Cores de Fundo por Rota (Padrão) - Mais Contraste */
+        /* Usando tons 100 para BG e 600 para borda */
+        .rota-CUIABÁ { background-color: #e0f2fe; border-left-color: #0284c7; } /* sky-100, sky-600 */
+        .rota-VG { background-color: #dcfce7; border-left-color: #16a34a; } /* green-100, green-600 */
+        .rota-CPA { background-color: #fef9c3; border-left-color: #ca8a04; } /* yellow-100, yellow-600 */
+        .rota-COXIPÓ { background-color: #eef2ff; border-left-color: #4f46e5; } /* indigo-100, indigo-600 */
+        .rota-N\/A { background-color: #f4f4f5; border-left-color: #71717a; } /* zinc-100, zinc-500 */
 
-
-        /* NOVO: Garante que Status sobrescreva a cor de fundo da rota */
-        .entregue, .cancelada, .montado {
-            background-color: revert !important; /* Reseta para o BG do status */
-        }
+        /* REMOVIDO: Regra de 'revert' não é mais necessária */
         
         /* Barra superior fixa */
         #top-bar {
@@ -72,7 +70,10 @@
         }
         /* Adiciona padding ao body para a top-bar não cobrir o conteúdo */
         body {
+            /* NOVO: Define fonte padrão e fundo com mais contraste */
+            font-family: 'Inter', sans-serif;
             padding-top: 80px; 
+            background-color: #e5e7eb; /* gray-200 */
         }
 
         /* Lógica de visibilidade para Modos */
@@ -106,7 +107,7 @@
         /* Botão de modo ativo */
         .btn-modo-ativo {
             background-color: #ffffff;
-            color: #1d4ed8;
+            color: #1d4ed8 !important; /* Força a cor do texto */
         }
         
         /* Estilo para Textarea (para detalhes e obs) */
@@ -155,13 +156,13 @@
         
         /* NOVO: Estilo para botão de filtro de rota ativo */
         .btn-filtro-ativo {
-            background-color: #1d4ed8;
-            color: #ffffff;
+            background-color: #1d4ed8 !important; /* Força a cor de fundo */
+            color: #ffffff !important; /* Força a cor do texto */
             border-color: #1d4ed8;
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="antialiased"> <!-- MODIFICADO: Removido bg-gray-100 -->
     
     <!-- Barra Superior Fixa (Admin/Entregador) -->
     <nav id="top-bar" class="bg-blue-700 p-4 shadow-lg w-full">
@@ -188,12 +189,14 @@
 
         <!-- Seção de Gerenciamento de Rotas (ADMIN) -->
         <section class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Gerenciar Rota</h2>
+            <!-- MODIFICADO: Contraste de texto -->
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Gerenciar Rota</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <!-- Seletor de Rota Ativa -->
                 <div class="md:col-span-2">
                     <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
-                    <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                         <!-- Rotas serão preenchidas pelo JS -->
                     </select>
                 </div>
@@ -206,7 +209,7 @@
                 </div>
                 <!-- Botão Excluir Rota -->
                 <div class="md:col-span-1">
-                     <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
+                     <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-400 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
                         Excluir Rota
                     </button>
@@ -215,14 +218,17 @@
                 <!-- Nome da Rota -->
                 <div class="md:col-span-2">
                     <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
-                    <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
                 </div>
                 <!-- Data da Rota -->
                 <div class="md:col-span-2">
                     <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
                     <div class="flex items-center">
-                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-base min-w-[120px] justify-center">-</span>
+                        <!-- MODIFICADO: Borda mais escura -->
+                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        <!-- MODIFICADO: Borda mais escura e contraste de texto -->
+                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-400 bg-gray-100 text-gray-700 text-base min-w-[120px] justify-center">-</span>
                     </div>
                 </div>
             </div>
@@ -231,19 +237,23 @@
 
         <!-- Seção de Despesas da Rota (ENTREGADOR) -->
         <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-8 entregador-view">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Despesas da Rota</h2>
+            <!-- MODIFICADO: Contraste de texto -->
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
                 </div>
                 <div>
                     <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
                 </div>
                 <div>
                     <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
                 </div>
             </div>
         </section>
@@ -251,19 +261,21 @@
 
         <!-- Seção de Lançamento (ADMIN) -->
         <section class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view">
-            <h2 id="form-entrega-title" class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Lançar Nova Entrega</h2>
+            <!-- MODIFICADO: Contraste de texto -->
+            <h2 id="form-entrega-title" class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Lançar Nova Entrega</h2>
             
-            <!-- MODIFICADO: Formulário agora é de 1 coluna para agrupar seções -->
             <form id="form-entrega" class="space-y-6">
                 
                 <!-- Seção 1: Dados do Cliente -->
                 <fieldset>
+                    <!-- MODIFICADO: Contraste de texto -->
                     <legend class="text-lg font-medium text-gray-900 mb-2">1. Dados do Cliente</legend>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Campo de Cliente (Input com Datalist) -->
                         <div>
                             <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
+                            <!-- MODIFICADO: Borda mais escura -->
+                            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
                             <datalist id="lista-clientes">
                                 <!-- Clientes carregados via JS -->
                             </datalist>
@@ -272,13 +284,15 @@
                         <!-- Campo de Observação (Textarea) -->
                         <div>
                             <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                            <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco, entregar para Fulano..."></textarea>
+                            <!-- MODIFICADO: Borda mais escura -->
+                            <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco, entregar para Fulano..."></textarea>
                         </div>
                         
                         <!-- NOVO: Seletor de Rota do Pedido (Movido para cá) -->
                         <div class="md:col-span-2">
                             <label for="input-rota-entrega" class="block text-sm font-medium text-gray-700">Rota do Pedido</label>
-                            <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                            <!-- MODIFICADO: Borda mais escura -->
+                            <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                                 <option value="CUIABÁ">CUIABÁ</option>
                                 <option value="VG">VG</option>
                                 <option value="CPA">CPA</option>
@@ -287,7 +301,8 @@
                         </div>
                         
                         <!-- Display de Infos do Cliente (ocupa 2 colunas) -->
-                        <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
+                        <!-- MODIFICADO: Contraste de texto -->
+                        <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-700 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
                             <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
                             <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
                             <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
@@ -296,7 +311,9 @@
                 </fieldset>
                 
                 <!-- Seção 2: Adicionar Cestas ao Pedido (Sub-Formulário) -->
-                <fieldset id="form-add-cesta" class="border border-gray-300 rounded-lg p-4">
+                <!-- MODIFICADO: Borda mais escura -->
+                <fieldset id="form-add-cesta" class="border border-gray-400 rounded-lg p-4">
+                    <!-- MODIFICADO: Contraste de texto -->
                     <legend class="text-lg font-medium text-gray-900 mb-4 px-2">2. Adicionar Cesta ao Pedido</legend>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -304,7 +321,8 @@
                         <div class="md:col-span-1 space-y-4">
                             <div>
                                 <label for="sub-select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
-                                <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <!-- MODIFICADO: Borda mais escura -->
+                                <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                                     <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
                                     <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
                                     <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
@@ -317,9 +335,9 @@
                             </div>
                             <div>
                                 <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <!-- MODIFICADO: Borda mais escura -->
+                                <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                             </div>
-                            <!-- REMOVIDO: Seletor de Rota de Entrega (Movido para Seção 1) -->
                         </div>
 
                         <!-- Coluna 2: Tipo e Brinde -->
@@ -328,11 +346,13 @@
                                 <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
                                 <div class="mt-2 flex space-x-4">
                                     <label class="flex items-center">
-                                        <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <!-- MODIFICADO: Borda mais escura -->
+                                        <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                         <span class="ml-2 text-sm text-gray-700">Normal</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input type="radio" name="sub-tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <!-- MODIFICADO: Borda mais escura -->
+                                        <input type="radio" name="sub-tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                         <span class="ml-2 text-sm text-gray-700">Alterada</span>
                                     </label>
                                 </div>
@@ -341,18 +361,21 @@
                                 <label class="block text-sm font-medium text-gray-700">Brinde?</label>
                                 <div class="mt-2 flex space-x-4">
                                     <label class="flex items-center">
-                                        <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <!-- MODIFICADO: Borda mais escura -->
+                                        <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                         <span class="ml-2 text-sm text-gray-700">Não</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input type="radio" name="sub-brinde" value="Sim" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <!-- MODIFICADO: Borda mais escura -->
+                                        <input type="radio" name="sub-brinde" value="Sim" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                         <span class="ml-2 text-sm text-gray-700">Sim</span>
                                     </label>
                                 </div>
                             </div>
                             <div id="sub-campo-brinde-descricao" class="hidden">
                                 <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Qual o brinde?</label>
-                                <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
+                                <!-- MODIFICADO: Borda mais escura -->
+                                <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
                             </div>
                         </div>
 
@@ -361,22 +384,24 @@
                             <div id="sub-campo-alterada" class="hidden space-y-4">
                                 <div>
                                     <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                    <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão&#10;Trocar óleo por..."></textarea>
+                                    <!-- MODIFICADO: Borda mais escura -->
+                                    <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão&#10;Trocar óleo por..."></textarea>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Partes Alteradas (Múltiplo)</label>
                                     <div class="mt-2 space-y-2">
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">Arroz</span>
+                                        <!-- MODIFICADO: Borda mais escura e contraste de texto -->
+                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
                                         </label>
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">Alimento</span>
+                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Alimento</span>
                                         </label>
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">Limpeza</span>
+                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
                                         </label>
                                     </div>
                                 </div>
@@ -394,26 +419,30 @@
                 </fieldset>
                 
                 <!-- Seção 3: Resumo do Pedido -->
-                <fieldset class="border border-gray-300 rounded-lg p-4">
+                <!-- MODIFICADO: Borda mais escura -->
+                <fieldset class="border border-gray-400 rounded-lg p-4">
+                    <!-- MODIFICADO: Contraste de texto -->
                     <legend class="text-lg font-medium text-gray-900 mb-4 px-2">3. Resumo do Pedido</legend>
                     
                     <!-- Lista de Cestas Adicionadas -->
                     <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
                         <!-- Cestas adicionadas aparecerão aqui -->
-                        <p id="lista-cestas-vazia" class="text-center text-gray-500 py-2">Nenhuma cesta adicionada ao pedido.</p>
+                        <p id="lista-cestas-vazia" class="text-center text-gray-700 py-2">Nenhuma cesta adicionada ao pedido.</p>
                     </div>
 
                     <!-- Valor Total e Botões de Ação -->
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t">
                         <div class="text-right">
                             <label class="block text-sm font-medium text-gray-700">Valor Total do Pedido</label>
+                            <!-- MODIFICADO: Contraste de texto -->
                             <div id="display-valor" class="mt-1 text-2xl font-bold text-gray-900">
                                 R$ 0,00
                             </div>
                         </div>
                         
                         <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                            <button type="button" id="btn-cancelar-edicao" class="hidden w-full flex justify-center items-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                            <!-- MODIFICADO: Borda mais escura -->
+                            <button type="button" id="btn-cancelar-edicao" class="hidden w-full flex justify-center items-center rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
                                 Cancelar Edição
                             </button>
                             <button id="btn-submit-form" type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
@@ -431,37 +460,37 @@
         <!-- Seção da Lista de Entregas (TODOS OS MODOS) -->
         <section>
             <!-- NOVO: Resumo da Rota -->
-            <!-- MODIFICADO: Adicionado 'montador-view' -->
+            <!-- MODIFICADO: Adicionado 'montador-view', Contraste de texto -->
             <section id="resumo-rota" class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view montador-view">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Resumo da Rota</h2>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Resumo da Rota</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
-                        <span class="block text-sm font-medium text-gray-500">TOTAL DE PEDIDOS</span>
+                        <span class="block text-sm font-medium text-gray-700">TOTAL DE PEDIDOS</span>
                         <span id="summary-total-pedidos" class="block text-3xl font-bold text-blue-600">0</span>
                     </div>
                     <div>
-                        <span class="block text-sm font-medium text-gray-500">TOTAL DE CESTAS</span>
+                        <span class="block text-sm font-medium text-gray-700">TOTAL DE CESTAS</span>
                         <span id="summary-total-cestas" class="block text-3xl font-bold text-blue-600">0</span>
                     </div>
                     <div class="col-span-2 md:col-span-4 mt-4">
-                        <span class="block text-sm font-medium text-gray-500">CESTAS POR TIPO</span>
-                        <p id="summary-cestas-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                        <span class="block text-sm font-medium text-gray-700">CESTAS POR TIPO</span>
+                        <p id="summary-cestas-breakdown" class="text-sm text-gray-900 font-medium">-</p>
                     </div>
                     <div class="col-span-2 md:col-span-4 mt-2">
-                        <span class="block text-sm font-medium text-gray-500">CESTAS POR ROTA</span>
-                        <p id="summary-rotas-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                        <span class="block text-sm font-medium text-gray-700">CESTAS POR ROTA</span>
+                        <p id="summary-rotas-breakdown" class="text-sm text-gray-900 font-medium">-</p>
                     </div>
-                    <!-- NOVO: Pedidos por Rota -->
                     <div class="col-span-2 md:col-span-4 mt-2">
-                        <span class="block text-sm font-medium text-gray-500">PEDIDOS POR ROTA</span>
-                        <p id="summary-pedidos-rota-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                        <span class="block text-sm font-medium text-gray-700">PEDIDOS POR ROTA</span>
+                        <p id="summary-pedidos-rota-breakdown" class="text-sm text-gray-900 font-medium">-</p>
                     </div>
                 </div>
             </section>
             <!-- FIM RESUMO -->
             
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-700">Entregas na Rota</h2>
+                <!-- MODIFICADO: Contraste de texto -->
+                <h2 class="text-2xl font-semibold text-gray-900">Entregas na Rota</h2>
                 <div class="flex space-x-2 mt-4 sm:mt-0">
                     <button id="btn-importar-card" class="admin-view rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200">Importar Card</button>
                     <button id="btn-exportar" class="admin-view rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
@@ -470,9 +499,9 @@
             </div>
             
             <!-- NOVO: Filtros de Rota -->
-            <!-- MODIFICADO: Removidas classes de view para aparecer em todas as abas -->
             <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4">
-                <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm">
+                <!-- MODIFICADO: Borda mais escura -->
+                <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm">
                     TODAS
                 </button>
                 <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-CUIABÁ">
@@ -493,7 +522,7 @@
             <div id="lista-entregas" class="space-y-3 min-h-[100px]">
                 <!-- Cards serão injetados aqui pelo JavaScript -->
             </div>
-            <p id="lista-vazia" class="text-center text-gray-500 py-6">Nenhuma entrega na rota.</p>
+            <p id="lista-vazia" class="text-center text-gray-700 py-6">Nenhuma entrega na rota.</p>
         </section>
     </div>
 
@@ -502,33 +531,36 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
             <form id="form-pagamento">
                 <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Entrega e Pagamento</h3>
-                    <p class="text-sm text-gray-600 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
-                    <p class="text-sm text-gray-600 mb-4">Valor: <strong id="modal-cliente-valor"></strong></p>
+                    <!-- MODIFICADO: Contraste de texto -->
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Confirmar Entrega e Pagamento</h3>
+                    <p class="text-sm text-gray-700 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
+                    <p class="text-sm text-gray-700 mb-4">Valor: <strong id="modal-cliente-valor"></strong></p>
                     
                     <label class="block text-sm font-medium text-gray-700 mb-2">Forma(s) de Pagamento (Selecione ao menos uma):</label>
                     <div id="modal-error-pagamento" class="text-red-600 text-sm mb-2 hidden">É obrigatório selecionar ao menos uma forma de pagamento.</div>
                     <div class="space-y-2">
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                            <input type="checkbox" name="forma_pagamento" value="Dinheiro" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Dinheiro</span>
+                        <!-- MODIFICADO: Borda e texto -->
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="forma_pagamento" value="Dinheiro" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-900">Dinheiro</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                            <input type="checkbox" name="forma_pagamento" value="Pix" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Pix</span>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="forma_pagamento" value="Pix" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-900">Pix</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                            <input type="checkbox" name="forma_pagamento" value="Cartão" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Cartão</span>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="forma_pagamento" value="Cartão" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-900">Cartão</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                            <input type="checkbox" name="forma_pagamento" value="Fiado" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Fiado</span>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="forma_pagamento" value="Fiado" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-900">Fiado</span>
                         </label>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-                    <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
+                    <!-- MODIFICADO: Borda mais escura -->
+                    <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
                     <button type="submit" id="btn-confirmar-pagamento" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Confirmar Entrega</button>
                 </div>
             </form>
@@ -539,7 +571,8 @@
     <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
+                <!-- MODIFICADO: Contraste de texto -->
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Exportar Rota</h3>
                 
                 <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
                 <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
@@ -549,8 +582,10 @@
                     Baixar/Compartilhar Arquivo da Rota (.json)
                 </button>
 
-                <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
-                <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md bg-gray-50">
+                <!-- MODIFICADO: Contraste de texto -->
+                <h4 class="text-lg font-semibold text-gray-900 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
+                <!-- MODIFICADO: Borda mais escura -->
+                <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-400 rounded-md bg-gray-50">
                     <pre class="text-xs text-gray-700">Nenhuma entrega concluída.</pre>
                 </div>
 
@@ -559,7 +594,8 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+                <!-- MODIFICADO: Borda mais escura -->
+                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
             </div>
         </div>
     </div>
@@ -568,8 +604,9 @@
     <div id="modal-whatsapp" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Ação WhatsApp</h3>
-                <p class="text-sm text-gray-600 mb-6">Para: <strong id="modal-whatsapp-cliente">Nome do Cliente</strong></p>
+                <!-- MODIFICADO: Contraste de texto -->
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Ação WhatsApp</h3>
+                <p class="text-sm text-gray-700 mb-6">Para: <strong id="modal-whatsapp-cliente" class="text-gray-900">Nome do Cliente</strong></p>
                 <div class="space-y-3">
                     <a id="btn-whatsapp-avisar" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
                         Avisar Cliente (Chegando)
@@ -589,7 +626,8 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-whatsapp" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+                <!-- MODIFICADO: Borda mais escura -->
+                <button type="button" id="btn-fechar-whatsapp" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
             </div>
         </div>
     </div>
@@ -598,8 +636,9 @@
     <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção</h3>
-                <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
+                <!-- MODIFICADO: Contraste de texto -->
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Atenção</h3>
+                <p id="modal-aviso-texto" class="text-gray-700 mb-6">Mensagem de aviso.</p>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
                 <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
@@ -624,7 +663,7 @@
             const bodyEl = document.body;
             const btnModoAdmin = document.getElementById('btn-modo-admin');
             const btnModoEntregador = document.getElementById('btn-modo-entregador');
-            const btnModoMontador = document.getElementById('btn-modo-montador'); // NOVO
+            const btnModoMontador = document.getElementById('btn-modo-montador');
 
             // Gerenciamento de Rotas
             const btnNovaRota = document.getElementById('btn-nova-rota');
@@ -653,7 +692,7 @@
             const displayClienteCelular = document.getElementById('display-cliente-celular');
             const obsClienteInput = document.getElementById('obs-cliente');
             const displayValor = document.getElementById('display-valor');
-            const inputRotaEntrega = document.getElementById('input-rota-entrega'); // NOVO (Movido)
+            const inputRotaEntrega = document.getElementById('input-rota-entrega');
 
             // NOVO: Sub-Formulário de Adicionar Cesta
             const formAddCesta = document.getElementById('form-add-cesta');
@@ -712,7 +751,6 @@
             const summaryPedidosRotaBreakdown = document.getElementById('summary-pedidos-rota-breakdown');
             
             // NOVO: Seletores de Filtro
-            // CORRIGIDO: Removida a declaração duplicada
             const filtrosRotaContainer = document.getElementById('filtros-rota');
 
 
@@ -726,10 +764,8 @@
             let whatsAppEntregaId = null;
             let editingEntregaId = null;
             
-            // NOVO: Estado temporário para o "carrinho" de cestas do formulário
             let cestasDoPedidoAtual = [];
             
-            // NOVO: Estado do filtro de rota
             let filtroRotaAtiva = 'TODOS';
 
             // --- Funções ---
@@ -784,7 +820,6 @@
             /**
              * Atualiza o display de valor quando a cesta ou quantidade é selecionada
              */
-            // MODIFICADO: Esta função agora atualiza o VALOR TOTAL de todo o pedido
             function atualizarValorCesta() {
                 let valorTotal = 0;
                 cestasDoPedidoAtual.forEach(cesta => {
@@ -796,7 +831,6 @@
             /**
              * Mostra/oculta o campo de "cesta alterada"
              */
-            // MODIFICADO: Renomeado para 'toggleSubCampoAlterada'
             function toggleSubCampoAlterada() {
                 const tipo = document.querySelector('input[name="sub-tipo-cesta"]:checked').value;
                 if (tipo === 'Alterada') {
@@ -813,7 +847,6 @@
             /**
              * Mostra/oculta o campo de "descrição do brinde"
              */
-            // MODIFICADO: Renomeado para 'toggleSubCampoBrinde'
             function toggleSubCampoBrinde() {
                 const tipo = document.querySelector('input[name="sub-brinde"]:checked').value;
                 if (tipo === 'Sim') {
@@ -973,7 +1006,7 @@
                 selectRotaAtiva.value = rotaAtivaId;
                 
                 renderizarEntregas();
-                renderizarResumo(); // NOVO: Renderiza o resumo
+                renderizarResumo();
             }
 
             /**
@@ -1082,9 +1115,8 @@
                 listaEntregasEl.innerHTML = '';
                 const entregas = getEntregasAtivas();
 
-                // NOVO: Filtrar e Ordenar
                 const entregasFiltradas = entregas.filter(e => {
-                    const rotaPedido = e.rotaEntrega || 'N/A'; // Garante que 'N/A' seja usado se indefinido
+                    const rotaPedido = e.rotaEntrega || 'N/A';
                     if (filtroRotaAtiva === 'TODOS') return true;
                     return rotaPedido === filtroRotaAtiva;
                 });
@@ -1094,7 +1126,6 @@
                     const rotaB = b.rotaEntrega || 'N/A';
                     return rotaA.localeCompare(rotaB);
                 });
-                // FIM FILTRO/ORDEM
 
                 if (entregasOrdenadas.length === 0) {
                     listaVaziaEl.classList.remove('hidden');
@@ -1112,15 +1143,13 @@
                     if (entrega.status === 'Cancelada') statusClass = 'cancelada';
                     if (entrega.status === 'Montado') statusClass = 'montado';
                     
-                    // NOVO: Adiciona a classe da rota e a classe do status
-                    // A classe do status (se existir) vai sobrescrever o BG da rota via CSS !important
-                    const rotaClass = `rota-${(entrega.rotaEntrega || 'CUIABÁ').replace('/', '\\/')}`; // Padrão CUIABÁ e escapa N/A
+                    // MODIFICADO: Classe de rota e borda padrão
+                    const rotaClass = `rota-${(entrega.rotaEntrega || 'N/A').replace('/', '\\/')}`; // Padrão N/A e escapa
                     
-                    card.className = `p-4 rounded-lg shadow-sm border-2 flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all w-full overflow-hidden ${rotaClass} ${statusClass}`;
+                    card.className = `p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
                     let infoTags = [];
                     
-                    // NOVO: Bloco de Observação (pré-formatado)
                     let obsInfo = '';
                     if (entrega.observacao) {
                         obsInfo = `
@@ -1131,7 +1160,6 @@
                         `;
                     }
                     
-                    // NOVO: Bloco de Detalhes da Cesta (Itera sobre as cestas)
                     let detalhesInfo = '';
                     const cestasParaRenderizar = migrarFormatoCestas(entrega);
                     
@@ -1144,7 +1172,6 @@
                                 </div>
                             `;
                         }
-                        // Adiciona tags de partes alteradas
                         if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) {
                              infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${cesta.nome}: ${cesta.partesAlteradas.join(', ')}</span>`);
                         }
@@ -1176,17 +1203,16 @@
                     }
                     
                     const clienteId = entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || null;
-                    let idInfo = clienteId ? `<p class="text-xs text-gray-400 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : '';
+                    let idInfo = clienteId ? `<p class="text-xs text-gray-500 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : ''; // MODIFICADO: Contraste
 
-                    // Info do Cliente
+                    // MODIFICADO: Contraste de texto (text-gray-900, text-gray-700)
                     let infoClienteHtml = `
                         ${idInfo}
-                        <p class="text-lg font-semibold text-gray-800 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
-                        <p class="text-sm text-gray-600 truncate montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
-                        <p class="text-sm text-gray-500 truncate montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
-                        <p class="text-sm text-gray-500 truncate montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
+                        <p class="text-lg font-semibold text-gray-900 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
+                        <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
+                        <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
+                        <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
                         
-                        <!-- Loop de Cestas -->
                         <div class="mt-2 space-y-2">
                     `;
                     
@@ -1197,16 +1223,16 @@
                         valorTotalEntrega += valorCestaTotal;
                         
                         infoClienteHtml += `
-                            <div class="p-2 bg-gray-50 rounded-md border border-gray-200">
+                            <!-- MODIFICADO: Borda e Contraste de Texto -->
+                            <div class="p-2 bg-gray-50 rounded-md border border-gray-300">
                                 ${cesta.quantidade > 1 ? `
-                                    <span class="block text-base font-semibold text-gray-800">${cesta.quantidade}x ${cesta.nome}</span>
+                                    <span class="block text-base font-semibold text-gray-900">${cesta.quantidade}x ${cesta.nome}</span>
                                     <span class="block text-lg font-bold text-blue-600 montador-hidden">${formatarMoeda(valorCestaTotal)}</span>
-                                    <span class="block text-sm text-gray-500 montador-hidden">( ${formatarMoeda(cesta.valor)} cada )</span>
+                                    <span class="block text-sm text-gray-700 montador-hidden">( ${formatarMoeda(cesta.valor)} cada )</span>
                                 ` : `
-                                    <span class="block text-base font-semibold text-gray-800">${cesta.nome}</span>
+                                    <span class="block text-base font-semibold text-gray-900">${cesta.nome}</span>
                                     <span class="block text-lg font-bold text-blue-600 montador-hidden">${formatarMoeda(valorCestaTotal)}</span>
                                 `}
-                                <!-- Detalhes da cesta individual (brinde, tipo) -->
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${cesta.brinde === 'Sim' ? `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">${cesta.brindeDescricao || 'Brinde'}</span>` : ''}
                                     ${cesta.tipo === 'Alterada' ? `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>` : ''}
@@ -1217,7 +1243,6 @@
 
                     infoClienteHtml += `</div>`;
                     
-                    // Mostra Valor Total se houver mais de 1 cesta
                     if (cestasParaRenderizar.length > 1) {
                          infoClienteHtml += `
                             <div class="mt-2 text-right montador-hidden">
@@ -1236,12 +1261,12 @@
                             <div class="flex items-center">
                                 <!-- Botões de Seta (Admin) -->
                                 <div class="flex-col items-center justify-center mr-3 admin-view">
-                                    <button class="btn-mover-cima btn-mover-container text-gray-400 ${isPrimeiro || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${isPrimeiro || isFinalizada ? 'disabled' : ''}>
+                                    <button class="btn-mover-cima btn-mover-container text-gray-500 ${isPrimeiro || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${isPrimeiro || isFinalizada ? 'disabled' : ''}>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
                                         </svg>
                                     </button>
-                                    <button class="btn-mover-baixo btn-mover-container text-gray-400 ${isUltimo || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${isUltimo || isFinalizada ? 'disabled' : ''}>
+                                    <button class="btn-mover-baixo btn-mover-container text-gray-500 ${isUltimo || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${isUltimo || isFinalizada ? 'disabled' : ''}>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                         </svg>
@@ -1268,11 +1293,11 @@
                         
                         <!-- Coluna de Botões -->
                         <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 w-full sm:w-auto">
-                            <!-- Layout de botões (Mobile/Desktop) -->
                             <div class="grid grid-cols-4 sm:grid-cols-2 gap-2">
                                 
                                 <!-- Botões Linha 1 (Mobile) / Coluna 1 (Desktop) -->
-                                <button class="btn-card-maps montador-hidden w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'} col-span-1 flex justify-center items-center" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
+                                <!-- MODIFICADO: Borda mais escura -->
+                                <button class="btn-card-maps montador-hidden w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'} col-span-1 flex justify-center items-center" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                                 </button>
                                 
@@ -1298,11 +1323,11 @@
                                         Cancelar
                                     </button>
                                     <!-- Botão Marcar Entrega (Entregador) -->
-                                    <button class="btn-entregue entregador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
+                                    <button class="btn-entregue entregador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
                                         Marcar Entrega
                                     </button>
                                     <!-- Botão Marcar Montado (Montador) -->
-                                    <button class="btn-montado montador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-300 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
+                                    <button class="btn-montado montador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-400 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
                                         Marcar como Montado
                                     </button>
                                 ` : (entrega.status === 'Montado' ? `
@@ -1313,7 +1338,7 @@
                                         Cancelar
                                     </button>
                                     <!-- Botão Marcar Entrega (Entregador) -->
-                                    <button class="btn-entregue entregador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
+                                    <button class="btn-entregue entregador-view w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-4" data-id="${entrega.id}">
                                         Marcar Entrega
                                     </button>
                                     <!-- Botão Status Montado (Montador) -->
@@ -1345,24 +1370,21 @@
                 const totalPedidos = entregas.length;
                 let totalCestas = 0;
                 let cestasBreakdown = {};
-                let rotasBreakdown = {}; // NOVO: Contagem de cestas por rota
-                let pedidosRotaBreakdown = {}; // NOVO: Contagem de pedidos por rota
+                let rotasBreakdown = {};
+                let pedidosRotaBreakdown = {};
 
                 entregas.forEach(entrega => {
                     const rotaPedido = entrega.rotaEntrega || 'N/A';
                     
-                    // Contagem de Pedidos por Rota (ignora cancelados)
                     if (entrega.status !== 'Cancelada') {
                         pedidosRotaBreakdown[rotaPedido] = (pedidosRotaBreakdown[rotaPedido] || 0) + 1;
                     }
                     
-                    // Ignora canceladas no restante do resumo
                     if (entrega.status === 'Cancelada') return;
                     
                     const cestas = migrarFormatoCestas(entrega);
                     
                     cestas.forEach(cesta => {
-                        // A rota da cesta agora é a rota do pedido
                         const rota = rotaPedido;
                         
                         totalCestas += cesta.quantidade;
@@ -1426,18 +1448,16 @@
                     return;
                 }
                 
-                // NOVO: Valida se há cestas no pedido
                 if (cestasDoPedidoAtual.length === 0) {
                     mostrarAviso('Você deve adicionar ao menos uma cesta ao pedido.');
                     return;
                 }
 
-                // Pacote de dados do formulário
                 const dadosDoForm = {
                     cliente: clienteData,
                     observacao: obsClienteInput.value,
-                    rotaEntrega: inputRotaEntrega.value, // NOVO
-                    cestas: [...cestasDoPedidoAtual] // MODIFICADO: Cria uma CÓPIA do array
+                    rotaEntrega: inputRotaEntrega.value,
+                    cestas: [...cestasDoPedidoAtual] // Cria uma CÓPIA
                 };
 
                 // --- 2. Decidir se é EDIÇÃO ou NOVA ENTREGA ---
@@ -1450,7 +1470,6 @@
                             ...entregaOriginal,
                             ...dadosDoForm
                         };
-                        // NOVO: Limpa campos antigos que podem ter vindo da migração
                         delete entregas[index].cesta;
                         delete entregas[index].quantidade;
                         delete entregas[index].tipo;
@@ -1475,22 +1494,19 @@
                         horarioMontagem: null
                     };
                     entregas.push(novaEntrega);
-                    // Limpa o formulário principal
                     formEntrega.reset();
                     inputCliente.value = '';
                     infoClienteSelecionado.classList.add('hidden');
-                    inputRotaEntrega.value = 'CUIABÁ'; // NOVO
-                    // Limpa o estado do "carrinho"
+                    inputRotaEntrega.value = 'CUIABÁ';
                     cestasDoPedidoAtual = [];
                     renderCestasNoPedido();
                     atualizarValorCesta();
-                    // Reseta o sub-formulário
                     resetarSubFormCesta();
                 }
                 
                 salvarLocalStorage();
                 renderizarEntregas();
-                renderizarResumo(); // NOVO
+                renderizarResumo();
             }
 
             /**
@@ -1515,7 +1531,6 @@
 
                 entregaParaPagarId = id;
                 
-                // NOVO: Calcula valor total a partir do array de cestas
                 const cestas = migrarFormatoCestas(entrega);
                 const valorTotal = cestas.reduce((total, cesta) => {
                     return total + (cesta.valor * cesta.quantidade);
@@ -1551,7 +1566,7 @@
                 }
                 salvarLocalStorage();
                 renderizarEntregas();
-                renderizarResumo(); // NOVO
+                renderizarResumo();
             }
             
             /**
@@ -1561,7 +1576,6 @@
                 const entregas = getEntregasAtivas();
                 const index = entregas.findIndex(e => e.id.toString() === id);
                 if (index !== -1) {
-                    // Só pode marcar como montado se estiver Pendente
                     if (entregas[index].status === 'Pendente') {
                         entregas[index].status = "Montado";
                         entregas[index].horarioMontagem = new Date().toISOString();
@@ -1569,7 +1583,7 @@
                 }
                 salvarLocalStorage();
                 renderizarEntregas();
-                renderizarResumo(); // NOVO
+                renderizarResumo();
             }
 
             /**
@@ -1590,42 +1604,36 @@
 
                 salvarLocalStorage();
                 renderizarEntregas();
-                // Não precisa renderizar resumo, a ordem não muda os totais
             }
 
             /**
              * Lida com o clique nos cards (delegação de evento)
              */
             function handleCardClick(e) {
-                // Botão MOVER CIMA
                 const btnCima = e.target.closest('.btn-mover-cima');
                 if (btnCima) {
                     moverEntrega(btnCima.dataset.id, 'cima');
                     return; 
                 }
 
-                // Botão MOVER BAIXO
                 const btnBaixo = e.target.closest('.btn-mover-baixo');
                 if (btnBaixo) {
                     moverEntrega(btnBaixo.dataset.id, 'baixo');
                     return;
                 }
 
-                // Botão CANCELAR
                 const btnCancelar = e.target.closest('.btn-cancelar-entrega');
                 if (btnCancelar) {
                     cancelarEntrega(btnCancelar.dataset.id);
                     return; 
                 }
 
-                // Botão EDITAR
                 const btnEdit = e.target.closest('.btn-editar-entrega');
                 if (btnEdit && !btnEdit.disabled) {
                     entrarModoEdicao(btnEdit.dataset.id);
                     return; 
                 }
 
-                // Botão MAPA
                 const btnMaps = e.target.closest('.btn-card-maps');
                 if (btnMaps) {
                     const cardId = btnMaps.closest('[data-id]').dataset.id;
@@ -1636,14 +1644,12 @@
                     return;
                 }
                 
-                // Botão WHATSAPP
                 const btnWhatsApp = e.target.closest('.btn-card-whatsapp');
                 if (btnWhatsApp) {
                     abrirModalWhatsApp(btnWhatsApp.dataset.id);
                     return;
                 }
                 
-                // Botão LIGAR
                 const btnLigar = e.target.closest('.btn-card-ligar');
                 if (btnLigar) {
                     const cardId = btnLigar.closest('[data-id]').dataset.id;
@@ -1657,7 +1663,6 @@
                     return;
                 }
                 
-                // Botão EXPORTAR CARD JSON
                 const btnJson = e.target.closest('.btn-card-json');
                 if (btnJson) {
                     const cardId = btnJson.closest('[data-id]').dataset.id;
@@ -1670,13 +1675,11 @@
                     return;
                 }
 
-                // Botão ENTREGUE
                 const target = e.target.closest('.btn-entregue');
                 if (target && !target.disabled) {
                     abrirModalPagamento(target.dataset.id);
                 }
                 
-                // NOVO: Botão MONTADO
                 const btnMontado = e.target.closest('.btn-montado');
                 if (btnMontado && !btnMontado.disabled) {
                     montarEntrega(btnMontado.dataset.id);
@@ -1692,26 +1695,19 @@
 
                 editingEntregaId = id;
 
-                // 1. Preenche dados do cliente e observação
                 inputCliente.value = entrega.cliente.nome;
                 inputCliente.dispatchEvent(new Event('input', { bubbles: true }));
                 obsClienteInput.value = entrega.observacao || '';
-                inputRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ'; // NOVO
+                inputRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ';
 
-                // 2. NOVO: Preenche o "carrinho" (cestasDoPedidoAtual)
-                // Garante que o formato esteja atualizado
                 cestasDoPedidoAtual = migrarFormatoCestas(entrega);
                 
-                // 3. Renderiza a lista de cestas no formulário
                 renderCestasNoPedido();
                 
-                // 4. Atualiza o valor total
                 atualizarValorCesta();
                 
-                // 5. Reseta o sub-formulário para estar pronto para adicionar mais
                 resetarSubFormCesta();
 
-                // 6. Muda UI do formulário para "Modo Edição"
                 formEntregaTitle.textContent = 'Editar Entrega';
                 btnSubmitFormText.textContent = 'Atualizar Entrega';
                 btnCancelarEdicao.classList.remove('hidden');
@@ -1726,18 +1722,15 @@
                 editingEntregaId = null;
                 formEntrega.reset();
 
-                // Limpezas manuais
                 inputCliente.value = '';
                 infoClienteSelecionado.classList.add('hidden');
-                inputRotaEntrega.value = 'CUIABÁ'; // NOVO
+                inputRotaEntrega.value = 'CUIABÁ';
                 
-                // NOVO: Limpa o carrinho de cestas
                 cestasDoPedidoAtual = [];
                 renderCestasNoPedido();
                 atualizarValorCesta();
                 resetarSubFormCesta();
 
-                // Reseta UI do formulário para "Modo Lançamento"
                 formEntregaTitle.textContent = 'Lançar Nova Entrega';
                 btnSubmitFormText.textContent = 'Lançar Entrega';
                 btnCancelarEdicao.classList.add('hidden');
@@ -1770,7 +1763,7 @@
                 
                 salvarLocalStorage();
                 renderizarEntregas();
-                renderizarResumo(); // NOVO
+                renderizarResumo();
                 fecharModalPagamento();
             }
 
@@ -1778,19 +1771,17 @@
              * Gera texto completo do pedido para compartilhar
              */
             function gerarTextoPedidoCompleto(entrega) {
-                // NOVO: Calcula valor total e lista de cestas
                 const cestas = migrarFormatoCestas(entrega);
                 const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
 
                 let texto = `*PEDIDO COMPARTILHADO*\n\n`;
                 texto += `*ID Cliente:* ${entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || 'N/A'}\n`;
                 texto += `*Cliente:* ${entrega.cliente.nome}\n`;
-                texto += `*Rota do Pedido:* ${entrega.rotaEntrega || 'N/A'}\n`; // NOVO
+                texto += `*Rota do Pedido:* ${entrega.rotaEntrega || 'N/A'}\n`;
                 texto += `*Celular:* ${entrega.cliente.celular || 'N/A'}\n`;
                 texto += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n`;
                 texto += `*Complemento:* ${entrega.cliente.complemento || 'N/A'}\n\n`;
                 
-                // NOVO: Loop de Cestas
                 texto += `*Cestas no Pedido:*\n`;
                 cestas.forEach((cesta, index) => {
                     texto += `  *Item ${index + 1}: ${cesta.quantidade}x ${cesta.nome}*\n`;
@@ -1861,7 +1852,7 @@
                 toggleWhatsAppButton(btnAgradecer, semTelefone);
 
                 // 4. Compartilhar Pedido (Admin)
-                const numeroAdmin = "65984491018"; // Número fixo
+                const numeroAdmin = "65984491018";
                 const msgCompartilhar = gerarTextoPedidoCompleto(entrega);
                 const urlCompartilhar = `https://api.whatsapp.com/send?phone=${numeroAdmin}&text=${encodeURIComponent(msgCompartilhar)}`;
                 const btnCompartilhar = document.getElementById('btn-whatsapp-compartilhar');
@@ -1933,7 +1924,6 @@
 
                 salvarLocalStorage(); 
 
-                // Prepara Relatório de Entregas Concluídas
                 const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
                 const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
                 
@@ -1968,7 +1958,6 @@
                     });
                 }
                 
-                // Prepara Texto para WhatsApp
                 const entregasPendentes = entregas.filter(e => e.status === 'Pendente' || e.status === 'Montado');
                 whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
                 if(entregasPendentes.length > 0) {
@@ -1978,7 +1967,7 @@
                         
                         const statusTexto = e.status === 'Montado' ? ' (MONTADO)' : '';
 
-                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* [${e.rotaEntrega || 'N/A'}]${statusTexto}\n`; // NOVO: Adiciona Rota
+                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* [${e.rotaEntrega || 'N/A'}]${statusTexto}\n`;
                         if (e.cliente.endereco) {
                             whatsappTexto += `   End: ${e.cliente.endereco}\n`;
                         }
@@ -1999,7 +1988,6 @@
                     whatsappTexto += `Nenhuma entrega pendente.\n`;
                 }
                 
-                // Relatório Financeiro
                 whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
                 
                 let totalVendido = 0;
@@ -2047,7 +2035,6 @@
                      whatsappTexto += `   Nenhum.\n`;
                 }
 
-                // Despesas
                 const despesas = rotaAtiva.despesas;
                 const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
                 
@@ -2087,7 +2074,6 @@
                 try {
                     const dadosCarregados = JSON.parse(jsonDados);
                     
-                    // Caso 1: É o formato NOVO (Objeto Rota)
                     if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
                         
                         if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) {
@@ -2102,19 +2088,16 @@
 
                         dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
                         
-                        // NOVO: Migração de dados no carregamento
                         dadosCarregados.entregas = dadosCarregados.entregas.map(e => {
                             const entregaMigrada = { ...e };
-                            // NOVO: Migra a Rota principal
                             if (!entregaMigrada.rotaEntrega) {
                                 entregaMigrada.rotaEntrega = entregaMigrada.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
                             }
                             
                             const cestas = migrarFormatoCestas(entregaMigrada);
-                            entregaMigrada.cestas = cestas; // Cestas agora não têm rotaEntrega
+                            entregaMigrada.cestas = cestas;
                             entregaMigrada.horarioMontagem = entregaMigrada.horarioMontagem || null;
                             
-                            // Limpa campos antigos
                             delete entregaMigrada.cesta;
                             delete entregaMigrada.quantidade;
                             delete entregaMigrada.tipo;
@@ -2131,10 +2114,9 @@
                         
                         salvarTodasAsRotas();
                         popularSelectRotas();
-                        carregarRotaAtiva(); // Já chama renderizarEntregas e renderizarResumo
+                        carregarRotaAtiva();
 
                     } 
-                    // Caso 2: É o formato ANTIGO (Array de Entregas)
                     else if (Array.isArray(dadosCarregados)) {
                         const rotaAtiva = todasAsRotas[rotaAtivaId];
                         if (!rotaAtiva) {
@@ -2146,20 +2128,17 @@
                              throw new Error('Estrutura de dados antiga incompatível.');
                         }
 
-                        // NOVO: Migração de dados no carregamento
                         rotaAtiva.entregas = dadosCarregados.map(e => {
                             const entregaMigrada = { ...e };
                             
-                            // NOVO: Migra a Rota principal
                             if (!entregaMigrada.rotaEntrega) {
                                 entregaMigrada.rotaEntrega = entregaMigrada.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
                             }
                             
                             const cestas = migrarFormatoCestas(entregaMigrada);
-                            entregaMigrada.cestas = cestas; // Cestas agora não têm rotaEntrega
+                            entregaMigrada.cestas = cestas;
                             entregaMigrada.horarioMontagem = entregaMigrada.horarioMontagem || null;
                             
-                            // Limpa campos antigos
                             delete entregaMigrada.cesta;
                             delete entregaMigrada.quantidade;
                             delete entregaMigrada.tipo;
@@ -2173,7 +2152,7 @@
                         
                         salvarTodasAsRotas();
                         renderizarEntregas();
-                        renderizarResumo(); // NOVO
+                        renderizarResumo();
 
                     } else {
                         throw new Error('Formato de arquivo JSON desconhecido.');
@@ -2219,7 +2198,6 @@
                         throw new Error("Arquivo do card é inválido.");
                     }
                     
-                    // NOVO: Migra o card carregado
                     if (!novaEntrega.rotaEntrega) {
                         novaEntrega.rotaEntrega = novaEntrega.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
                     }
@@ -2249,7 +2227,7 @@
                     rotaAtiva.entregas.push(novaEntrega);
                     salvarLocalStorage();
                     renderizarEntregas();
-                    renderizarResumo(); // NOVO
+                    renderizarResumo();
                     mostrarAviso("Card importado com sucesso!");
 
                 } catch (error) {
@@ -2283,11 +2261,9 @@
             
             /**
              * Converte o formato antigo (entrega.cesta) para o novo (entrega.cestas)
-             * Retorna o array de cestas. Se já estiver no formato novo, apenas retorna.
              */
             function migrarFormatoCestas(entrega) {
                 if (entrega.cestas && Array.isArray(entrega.cestas)) {
-                    // NOVO: Se já for formato novo, apenas limpa a rota de dentro da cesta
                     return entrega.cestas.map(c => {
                         const cestaLimpa = { ...c };
                         delete cestaLimpa.rotaEntrega;
@@ -2295,7 +2271,6 @@
                     });
                 }
                 
-                // Formato antigo, precisa converter
                 if (entrega.cesta) {
                     return [{
                         nome: entrega.cesta.nome,
@@ -2306,11 +2281,9 @@
                         brindeDescricao: entrega.brindeDescricao || '',
                         codigoAlterada: entrega.codigoAlterada || '',
                         partesAlteradas: entrega.partesAlteradas || []
-                        // REMOVIDO: rotaEntrega não é mais por cesta
                     }];
                 }
                 
-                // Caso estranho, não tem nem um nem outro
                 return [];
             }
             
@@ -2327,7 +2300,6 @@
                     nome: selectedOption.value,
                     valor: parseFloat(selectedOption.dataset.valor),
                     quantidade: parseInt(subInputQuantidade.value) || 1,
-                    // rotaEntrega: subSelectRotaEntrega.value, // REMOVIDO
                     tipo: document.querySelector('input[name="sub-tipo-cesta"]:checked').value,
                     brinde: document.querySelector('input[name="sub-brinde"]:checked').value,
                     brindeDescricao: subInputBrindeDescricao.value || '',
@@ -2349,7 +2321,6 @@
             function resetarSubFormCesta() {
                 subSelectCesta.selectedIndex = 0;
                 subInputQuantidade.value = 1;
-                // subSelectRotaEntrega.selectedIndex = 0; // REMOVIDO
                 document.querySelector('input[name="sub-tipo-cesta"][value="Normal"]').checked = true;
                 document.querySelector('input[name="sub-brinde"][value="Não"]').checked = true;
                 subInputBrindeDescricao.value = '';
@@ -2378,17 +2349,18 @@
                 
                 cestasDoPedidoAtual.forEach((cesta, index) => {
                     const item = document.createElement('div');
-                    item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md border';
+                    // MODIFICADO: Borda mais escura
+                    item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-300';
                     
                     const valorTotalItem = cesta.valor * cesta.quantidade;
                     let detalhes = `${cesta.tipo}`;
                     if (cesta.brinde === 'Sim') detalhes += `, ${cesta.brindeDescricao || 'Brinde'}`;
-                    // detalhes += `, ${cesta.rotaEntrega}`; // REMOVIDO
                     
+                    // MODIFICADO: Contraste de texto
                     item.innerHTML = `
                         <div>
-                            <p class="font-semibold">${cesta.quantidade}x ${cesta.nome}</p>
-                            <p class="text-sm text-gray-600">${detalhes} - ${formatarMoeda(valorTotalItem)}</p>
+                            <p class="font-semibold text-gray-900">${cesta.quantidade}x ${cesta.nome}</p>
+                            <p class="text-sm text-gray-700">${detalhes} - ${formatarMoeda(valorTotalItem)}</p>
                         </div>
                         <button type="button" data-index="${index}" class="btn-remover-cesta text-red-500 hover:text-red-700 p-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -2416,7 +2388,9 @@
                 atualizarValorCesta();
             }
             
-            // NOVO: Atualiza os botões de filtro e renderiza a lista
+            /**
+             * Atualiza os botões de filtro e renderiza a lista
+             */
             function atualizarFiltroRota(e) {
                 const filtroBtn = e.target.closest('.btn-filtro-rota');
                 if (!filtroBtn) return;
@@ -2424,10 +2398,8 @@
                 const novoFiltro = filtroBtn.dataset.filtro;
                 if (novoFiltro === filtroRotaAtiva) return;
                 
-                // Atualiza estado
                 filtroRotaAtiva = novoFiltro;
                 
-                // Atualiza DOM (classes ativas)
                 document.querySelectorAll('.btn-filtro-rota').forEach(btn => {
                     btn.classList.remove('btn-filtro-ativo');
                     if (btn.dataset.filtro === novoFiltro) {
@@ -2435,7 +2407,6 @@
                     }
                 });
                 
-                // Re-renderiza a lista de entregas com o filtro aplicado
                 renderizarEntregas();
             }
             
@@ -2481,7 +2452,6 @@
             // Listeners do Sub-Formulário
             btnAddCesta.addEventListener('click', adicionarCestaAoPedido);
             
-            // NOVO: Listeners RE-ADICIONADOS para campos dinâmicos
             document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(radio => {
                 radio.addEventListener('change', toggleSubCampoAlterada);
             });
@@ -2497,7 +2467,6 @@
             // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
             
-            // NOVO: Listener para Filtros de Rota (MODIFICADO: Corrigido)
             filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
             // Modal de Pagamento
@@ -2514,7 +2483,6 @@
             btnExportar.addEventListener('click', exportarDados);
             btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
 
-            // Listener para o botão de download
             btnBaixarJson.addEventListener('click', () => {
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) return;
@@ -2548,6 +2516,4 @@
     </script>
 </body>
 </html>
-
-
 
