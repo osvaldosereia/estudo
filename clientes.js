@@ -7,11 +7,18 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
     {
-    "id": "17474045315026-AbC9O",
+    "id": "17472445315026-AbC9O",
     "nome": "XR184 JD PRESIDENTE",
     "celular": "65993102350",
     "endereco": "XR184",
     "complemento": "RUA 6, Q5 C23"
+  },
+     {
+    "id": "17474045315026-AbC9O",
+    "nome": "XR327 VG JD DOS ESTADOS",
+    "celular": "65998145858",
+    "endereco": "XR327",
+    "complemento": "RUA CEREJEIRA, Q2 CASA 11 - JD DOS ESTADOS"
   },
     {
     "id": "17474045312026-AbC9O",
