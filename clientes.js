@@ -13,6 +13,13 @@ const CLIENTES_DB = [
     "endereco": "XR184",
     "complemento": "RUA 6, Q5 C23"
   },
+    {
+    "id": "17474045312026-AbC9O",
+    "nome": "XR348 TRES BARRAS",
+    "celular": "65996147392",
+    "endereco": "XR348",
+    "complemento": "RUA 31 Q25 C153 LOTE 18 - TRES BARRAS"
+  },
   {
     "id": "1747405315026-AbC9O",
     "nome": "1002 VG ALAMEDA",
