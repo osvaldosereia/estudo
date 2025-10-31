@@ -489,7 +489,7 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Constantes ---
-            const CHAVE_PIX_PADRAO = "seu-email@provedor.com"; // <-- MUDE AQUI SUA CHAVE PIX
+            const CHAVE_PIX_PADRAO = "65984422103 - Pix Celular - Lucas Ataide de Oliveira"; // <-- MUDE AQUI SUA CHAVE PIX
 
             // --- Seletores de Elementos ---
             // NOVO: Modos Admin/Entregador
@@ -1567,7 +1567,7 @@
                 toggleWhatsAppButton(btnAgradecer, semTelefone);
 
                 // 4. Compartilhar Pedido (Admin)
-                const numeroAdmin = "65984491018"; // Número fixo
+                const numeroAdmin = "65996884599"; // Número fixo
                 const msgCompartilhar = gerarTextoPedidoCompleto(entrega);
                 const urlCompartilhar = `https://api.whatsapp.com/send?phone=${numeroAdmin}&text=${encodeURIComponent(msgCompartilhar)}`;
                 const btnCompartilhar = document.getElementById('btn-whatsapp-compartilhar');
@@ -1577,7 +1577,7 @@
                 // 5. Compartilhar PIX
                 const quantidadePix = entrega.quantidade || 1;
                 const valorTotalPix = entrega.cesta.valor * quantidadePix;
-                const msgPix = `Olá ${entrega.cliente.nome}! O valor da sua cesta é ${formatarMoeda(valorTotalPix)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
+                const msgPix = `Olá! O valor da sua cesta é ${formatarMoeda(valorTotalPix)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
                 const urlPix = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgPix)}`;
                 const btnPix = document.getElementById('btn-whatsapp-pix');
                 btnPix.href = semTelefone ? '#' : urlPix;
