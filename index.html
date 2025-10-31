@@ -434,7 +434,7 @@
 
             // --- Constantes ---
             // NOVO: Chave Pix Padrão
-            const CHAVE_PIX_PADRAO = "seu-email@provedor.com (12) 99999-9999";
+            const CHAVE_PIX_PADRAO = "65984422103 - Pix Celular - Lucas Ataide de Oliveira Rodrigues - Por favor, evie o comprovante no celular da empresa 65984491018";
 
             // --- Seletores de Elementos ---
             // NOVO: Top Bar
@@ -1299,7 +1299,7 @@
                 toggleWhatsAppButton(btnCompartilhar, false); 
 
                 // 5. Compartilhar PIX
-                const msgPix = `Olá ${entrega.cliente.nome}! O valor da sua cesta é ${formatarMoeda(entrega.cesta.valor)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
+                const msgPix = `Olá, o valor da sua cesta é ${formatarMoeda(entrega.cesta.valor)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
                 const urlPix = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgPix)}`;
                 const btnPix = document.getElementById('btn-whatsapp-pix');
                 btnPix.href = semTelefone ? '#' : urlPix;
