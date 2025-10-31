@@ -13,6 +13,13 @@ const CLIENTES_DB = [
     "endereco": "XR184",
     "complemento": "RUA 6, Q5 C23"
   },
+     {
+    "id": "17472445675026-AbC9O",
+    "nome": "COX0551 TUIUIU",
+    "celular": "65992758930",
+    "endereco": "COX0551",
+    "complemento": "COND TUIUIU, CASA 106"
+  },
       {
     "id": "17472445312483-AbC9O",
     "nome": "4242 sogra vg",
