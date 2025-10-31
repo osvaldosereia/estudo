@@ -13,7 +13,7 @@
     <style>
         /* Classe para item entregue */
         .entregue {
-            background-color: #f0fdf4; /* green-50 */
+            background-color: #f0fdf4 !important; /* green-50 */
             border-left-width: 4px;
             border-left-color: #22c55e; /* green-500 */
         }
@@ -24,7 +24,7 @@
 
         /* Classe para item cancelado */
         .cancelada {
-            background-color: #f3f4f6; /* gray-100 */
+            background-color: #f3f4f6 !important; /* gray-100 */
             border-left-width: 4px;
             border-left-color: #6b7280; /* gray-500 */
             opacity: 0.7;
@@ -42,11 +42,24 @@
             opacity: 0.5;
         }
         
-        /* NOVO: Classe para item montado */
+        /* Classe para item montado */
         .montado {
-            background-color: #f0f9ff; /* blue-50 */
+            background-color: #f0f9ff !important; /* blue-50 */
             border-left-width: 4px;
             border-left-color: #3b82f6; /* blue-500 */
+        }
+        
+        /* NOVO: Cores de Fundo por Rota (Padrão) */
+        .rota-CUIABÁ { background-color: #eff6ff; border-color: #93c5fd; }
+        .rota-VG { background-color: #f0fdf4; border-color: #86efac; }
+        .rota-CPA { background-color: #fefce8; border-color: #fde047; }
+        .rota-COXIPÓ { background-color: #f5f3ff; border-color: #c4b5fd; }
+        .rota-N\/A { background-color: #fafafa; border-color: #e5e5e5; }
+
+
+        /* NOVO: Garante que Status sobrescreva a cor de fundo da rota */
+        .entregue, .cancelada, .montado {
+            background-color: revert !important; /* Reseta para o BG do status */
         }
         
         /* Barra superior fixa */
@@ -140,6 +153,12 @@
             }
         }
         
+        /* NOVO: Estilo para botão de filtro de rota ativo */
+        .btn-filtro-ativo {
+            background-color: #1d4ed8;
+            color: #ffffff;
+            border-color: #1d4ed8;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -256,6 +275,17 @@
                             <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco, entregar para Fulano..."></textarea>
                         </div>
                         
+                        <!-- NOVO: Seletor de Rota do Pedido (Movido para cá) -->
+                        <div class="md:col-span-2">
+                            <label for="input-rota-entrega" class="block text-sm font-medium text-gray-700">Rota do Pedido</label>
+                            <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <option value="CUIABÁ">CUIABÁ</option>
+                                <option value="VG">VG</option>
+                                <option value="CPA">CPA</option>
+                                <option value="COXIPÓ">COXIPÓ</option>
+                            </select>
+                        </div>
+                        
                         <!-- Display de Infos do Cliente (ocupa 2 colunas) -->
                         <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
                             <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
@@ -289,6 +319,7 @@
                                 <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
                                 <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                             </div>
+                            <!-- REMOVIDO: Seletor de Rota de Entrega (Movido para Seção 1) -->
                         </div>
 
                         <!-- Coluna 2: Tipo e Brinde -->
@@ -399,6 +430,35 @@
 
         <!-- Seção da Lista de Entregas (TODOS OS MODOS) -->
         <section>
+            <!-- NOVO: Resumo da Rota -->
+            <section id="resumo-rota" class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Resumo da Rota</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <span class="block text-sm font-medium text-gray-500">TOTAL DE PEDIDOS</span>
+                        <span id="summary-total-pedidos" class="block text-3xl font-bold text-blue-600">0</span>
+                    </div>
+                    <div>
+                        <span class="block text-sm font-medium text-gray-500">TOTAL DE CESTAS</span>
+                        <span id="summary-total-cestas" class="block text-3xl font-bold text-blue-600">0</span>
+                    </div>
+                    <div class="col-span-2 md:col-span-4 mt-4">
+                        <span class="block text-sm font-medium text-gray-500">CESTAS POR TIPO</span>
+                        <p id="summary-cestas-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                    </div>
+                    <div class="col-span-2 md:col-span-4 mt-2">
+                        <span class="block text-sm font-medium text-gray-500">CESTAS POR ROTA</span>
+                        <p id="summary-rotas-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                    </div>
+                    <!-- NOVO: Pedidos por Rota -->
+                    <div class="col-span-2 md:col-span-4 mt-2">
+                        <span class="block text-sm font-medium text-gray-500">PEDIDOS POR ROTA</span>
+                        <p id="summary-pedidos-rota-breakdown" class="text-sm text-gray-800 font-medium">-</p>
+                    </div>
+                </div>
+            </section>
+            <!-- FIM RESUMO -->
+            
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold text-gray-700">Entregas na Rota</h2>
                 <div class="flex space-x-2 mt-4 sm:mt-0">
@@ -406,6 +466,25 @@
                     <button id="btn-exportar" class="admin-view rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
                     <button id="btn-carregar" class="admin-view rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700">Carregar Rota</button>
                 </div>
+            </div>
+            
+            <!-- NOVO: Filtros de Rota -->
+            <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4 admin-view">
+                <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm">
+                    TODAS
+                </button>
+                <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-CUIABÁ">
+                    CUIABÁ
+                </button>
+                <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-VG">
+                    VG
+                </button>
+                <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-CPA">
+                    CPA
+                </button>
+                <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-COXIPÓ">
+                    COXIPÓ
+                </button>
             </div>
             
             <!-- Lista de Cards de Entrega -->
@@ -572,12 +651,14 @@
             const displayClienteCelular = document.getElementById('display-cliente-celular');
             const obsClienteInput = document.getElementById('obs-cliente');
             const displayValor = document.getElementById('display-valor');
+            const inputRotaEntrega = document.getElementById('input-rota-entrega'); // NOVO (Movido)
 
             // NOVO: Sub-Formulário de Adicionar Cesta
             const formAddCesta = document.getElementById('form-add-cesta');
             const btnAddCesta = document.getElementById('btn-add-cesta');
             const subSelectCesta = document.getElementById('sub-select-cesta');
             const subInputQuantidade = document.getElementById('sub-input-quantidade');
+            // const subSelectRotaEntrega = document.getElementById('sub-select-rota-entrega'); // REMOVIDO
             const subCampoBrindeDescricao = document.getElementById('sub-campo-brinde-descricao');
             const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao');
             const subCampoAlterada = document.getElementById('sub-campo-alterada');
@@ -589,6 +670,7 @@
             
             const listaEntregasEl = document.getElementById('lista-entregas');
             const listaVaziaEl = document.getElementById('lista-vazia');
+            const filtrosRotaContainer = document.getElementById('filtros-rota'); // NOVO
             
             // Modais
             const modalPagamento = document.getElementById('modal-pagamento');
@@ -621,6 +703,16 @@
             // Inputs de Arquivo
             const inputCarregarArquivo = document.getElementById('input-carregar-arquivo');
             const inputCarregarCard = document.getElementById('input-carregar-card');
+            
+            // NOVO: Seletores do Resumo
+            const summaryTotalPedidos = document.getElementById('summary-total-pedidos');
+            const summaryTotalCestas = document.getElementById('summary-total-cestas');
+            const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
+            const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
+            const summaryPedidosRotaBreakdown = document.getElementById('summary-pedidos-rota-breakdown'); // NOVO
+            
+            // NOVO: Seletores de Filtro
+            const filtrosRotaContainer = document.getElementById('filtros-rota');
 
 
             // --- Estado da Aplicação ---
@@ -635,6 +727,9 @@
             
             // NOVO: Estado temporário para o "carrinho" de cestas do formulário
             let cestasDoPedidoAtual = [];
+            
+            // NOVO: Estado do filtro de rota
+            let filtroRotaAtiva = 'TODAS';
 
             // --- Funções ---
 
@@ -877,6 +972,7 @@
                 selectRotaAtiva.value = rotaAtivaId;
                 
                 renderizarEntregas();
+                renderizarResumo(); // NOVO: Renderiza o resumo
             }
 
             /**
@@ -985,14 +1081,27 @@
                 listaEntregasEl.innerHTML = '';
                 const entregas = getEntregasAtivas();
 
-                if (entregas.length === 0) {
+                // NOVO: Filtrar e Ordenar
+                const entregasFiltradas = entregas.filter(e => {
+                    if (filtroRotaAtiva === 'TODOS') return true;
+                    return (e.rotaEntrega || 'N/A') === filtroRotaAtiva;
+                });
+                
+                const entregasOrdenadas = entregasFiltradas.sort((a, b) => {
+                    const rotaA = a.rotaEntrega || 'N/A';
+                    const rotaB = b.rotaEntrega || 'N/A';
+                    return rotaA.localeCompare(rotaB);
+                });
+                // FIM FILTRO/ORDEM
+
+                if (entregasOrdenadas.length === 0) {
                     listaVaziaEl.classList.remove('hidden');
                     return;
                 }
                 
                 listaVaziaEl.classList.add('hidden');
 
-                entregas.forEach((entrega, index) => {
+                entregasOrdenadas.forEach((entrega, index) => {
                     const card = document.createElement('div');
                     card.dataset.id = entrega.id;
                     
@@ -1001,7 +1110,11 @@
                     if (entrega.status === 'Cancelada') statusClass = 'cancelada';
                     if (entrega.status === 'Montado') statusClass = 'montado';
                     
-                    card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all w-full overflow-hidden ${statusClass}`;
+                    // NOVO: Adiciona a classe da rota e a classe do status
+                    // A classe do status (se existir) vai sobrescrever o BG da rota via CSS !important
+                    const rotaClass = `rota-${entrega.rotaEntrega || 'CUIABÁ'}`; // Padrão CUIABÁ
+                    
+                    card.className = `p-4 rounded-lg shadow-sm border-2 flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
                     let infoTags = [];
                     
@@ -1095,6 +1208,7 @@
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${cesta.brinde === 'Sim' ? `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">${cesta.brindeDescricao || 'Brinde'}</span>` : ''}
                                     ${cesta.tipo === 'Alterada' ? `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>` : ''}
+                                    <!-- REMOVIDO: Tag de Rota (agora é a cor do card) -->
                                 </div>
                             </div>
                         `;
@@ -1113,7 +1227,7 @@
                     }
                     
                     const isPrimeiro = index === 0;
-                    const isUltimo = index === entregas.length - 1;
+                    const isUltimo = index === entregasOrdenadas.length - 1;
                     const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
 
                     card.innerHTML = `
@@ -1220,6 +1334,62 @@
                     listaEntregasEl.appendChild(card);
                 });
             }
+            
+            /**
+             * NOVO: Renderiza o painel de resumo da rota
+             */
+            function renderizarResumo() {
+                const entregas = getEntregasAtivas();
+                
+                const totalPedidos = entregas.length;
+                let totalCestas = 0;
+                let cestasBreakdown = {};
+                let rotasBreakdown = {}; // NOVO: Contagem de cestas por rota
+                let pedidosRotaBreakdown = {}; // NOVO: Contagem de pedidos por rota
+
+                entregas.forEach(entrega => {
+                    const rotaPedido = entrega.rotaEntrega || 'N/A';
+                    
+                    // Contagem de Pedidos por Rota (ignora cancelados)
+                    if (entrega.status !== 'Cancelada') {
+                        pedidosRotaBreakdown[rotaPedido] = (pedidosRotaBreakdown[rotaPedido] || 0) + 1;
+                    }
+                    
+                    // Ignora canceladas no restante do resumo
+                    if (entrega.status === 'Cancelada') return;
+                    
+                    const cestas = migrarFormatoCestas(entrega);
+                    
+                    cestas.forEach(cesta => {
+                        // A rota da cesta agora é a rota do pedido
+                        const rota = rotaPedido;
+                        
+                        totalCestas += cesta.quantidade;
+                        cestasBreakdown[cesta.nome] = (cestasBreakdown[cesta.nome] || 0) + cesta.quantidade;
+                        rotasBreakdown[rota] = (rotasBreakdown[rota] || 0) + cesta.quantidade;
+                    });
+                });
+
+                // Atualiza DOM
+                summaryTotalPedidos.textContent = totalPedidos;
+                summaryTotalCestas.textContent = totalCestas;
+
+                const cestasTexto = Object.entries(cestasBreakdown)
+                    .map(([nome, qtd]) => `${nome}: ${qtd}`)
+                    .join(' | ') || 'Nenhuma cesta na rota';
+                summaryCestasBreakdown.textContent = cestasTexto;
+                
+                const rotasCestasTexto = Object.entries(rotasBreakdown)
+                    .map(([rota, qtd]) => `${rota}: ${qtd}`)
+                    .join(' | ') || 'Nenhuma rota definida';
+                summaryRotasBreakdown.textContent = rotasCestasTexto;
+                
+                const rotasPedidosTexto = Object.entries(pedidosRotaBreakdown)
+                    .map(([rota, qtd]) => `${rota}: ${qtd}`)
+                    .join(' | ') || 'Nenhuma rota definida';
+                summaryPedidosRotaBreakdown.textContent = rotasPedidosTexto;
+            }
+
 
             /**
              * Lida com o submit do formulário de nova entrega ou edição
@@ -1265,7 +1435,8 @@
                 const dadosDoForm = {
                     cliente: clienteData,
                     observacao: obsClienteInput.value,
-                    cestas: cestasDoPedidoAtual // NOVO: Salva o array de cestas
+                    rotaEntrega: inputRotaEntrega.value, // NOVO
+                    cestas: cestasDoPedidoAtual
                 };
 
                 // --- 2. Decidir se é EDIÇÃO ou NOVA ENTREGA ---
@@ -1307,6 +1478,7 @@
                     formEntrega.reset();
                     inputCliente.value = '';
                     infoClienteSelecionado.classList.add('hidden');
+                    inputRotaEntrega.value = 'CUIABÁ'; // NOVO
                     // Limpa o estado do "carrinho"
                     cestasDoPedidoAtual = [];
                     renderCestasNoPedido();
@@ -1317,6 +1489,7 @@
                 
                 salvarLocalStorage();
                 renderizarEntregas();
+                renderizarResumo(); // NOVO
             }
 
             /**
@@ -1377,6 +1550,7 @@
                 }
                 salvarLocalStorage();
                 renderizarEntregas();
+                renderizarResumo(); // NOVO
             }
             
             /**
@@ -1394,6 +1568,7 @@
                 }
                 salvarLocalStorage();
                 renderizarEntregas();
+                renderizarResumo(); // NOVO
             }
 
             /**
@@ -1414,6 +1589,7 @@
 
                 salvarLocalStorage();
                 renderizarEntregas();
+                // Não precisa renderizar resumo, a ordem não muda os totais
             }
 
             /**
@@ -1519,6 +1695,7 @@
                 inputCliente.value = entrega.cliente.nome;
                 inputCliente.dispatchEvent(new Event('input', { bubbles: true }));
                 obsClienteInput.value = entrega.observacao || '';
+                inputRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ'; // NOVO
 
                 // 2. NOVO: Preenche o "carrinho" (cestasDoPedidoAtual)
                 // Garante que o formato esteja atualizado
@@ -1551,6 +1728,7 @@
                 // Limpezas manuais
                 inputCliente.value = '';
                 infoClienteSelecionado.classList.add('hidden');
+                inputRotaEntrega.value = 'CUIABÁ'; // NOVO
                 
                 // NOVO: Limpa o carrinho de cestas
                 cestasDoPedidoAtual = [];
@@ -1591,6 +1769,7 @@
                 
                 salvarLocalStorage();
                 renderizarEntregas();
+                renderizarResumo(); // NOVO
                 fecharModalPagamento();
             }
 
@@ -1605,6 +1784,7 @@
                 let texto = `*PEDIDO COMPARTILHADO*\n\n`;
                 texto += `*ID Cliente:* ${entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || 'N/A'}\n`;
                 texto += `*Cliente:* ${entrega.cliente.nome}\n`;
+                texto += `*Rota do Pedido:* ${entrega.rotaEntrega || 'N/A'}\n`; // NOVO
                 texto += `*Celular:* ${entrega.cliente.celular || 'N/A'}\n`;
                 texto += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n`;
                 texto += `*Complemento:* ${entrega.cliente.complemento || 'N/A'}\n\n`;
@@ -1797,7 +1977,7 @@
                         
                         const statusTexto = e.status === 'Montado' ? ' (MONTADO)' : '';
 
-                        whatsappTexto += `${index + 1}. *${e.cliente.nome}*${statusTexto}\n`;
+                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* [${e.rotaEntrega || 'N/A'}]${statusTexto}\n`; // NOVO: Adiciona Rota
                         if (e.cliente.endereco) {
                             whatsappTexto += `   End: ${e.cliente.endereco}\n`;
                         }
@@ -1924,8 +2104,13 @@
                         // NOVO: Migração de dados no carregamento
                         dadosCarregados.entregas = dadosCarregados.entregas.map(e => {
                             const entregaMigrada = { ...e };
+                            // NOVO: Migra a Rota principal
+                            if (!entregaMigrada.rotaEntrega) {
+                                entregaMigrada.rotaEntrega = entregaMigrada.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
+                            }
+                            
                             const cestas = migrarFormatoCestas(entregaMigrada);
-                            entregaMigrada.cestas = cestas;
+                            entregaMigrada.cestas = cestas; // Cestas agora não têm rotaEntrega
                             entregaMigrada.horarioMontagem = entregaMigrada.horarioMontagem || null;
                             
                             // Limpa campos antigos
@@ -1945,7 +2130,7 @@
                         
                         salvarTodasAsRotas();
                         popularSelectRotas();
-                        carregarRotaAtiva();
+                        carregarRotaAtiva(); // Já chama renderizarEntregas e renderizarResumo
 
                     } 
                     // Caso 2: É o formato ANTIGO (Array de Entregas)
@@ -1963,8 +2148,14 @@
                         // NOVO: Migração de dados no carregamento
                         rotaAtiva.entregas = dadosCarregados.map(e => {
                             const entregaMigrada = { ...e };
+                            
+                            // NOVO: Migra a Rota principal
+                            if (!entregaMigrada.rotaEntrega) {
+                                entregaMigrada.rotaEntrega = entregaMigrada.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
+                            }
+                            
                             const cestas = migrarFormatoCestas(entregaMigrada);
-                            entregaMigrada.cestas = cestas;
+                            entregaMigrada.cestas = cestas; // Cestas agora não têm rotaEntrega
                             entregaMigrada.horarioMontagem = entregaMigrada.horarioMontagem || null;
                             
                             // Limpa campos antigos
@@ -1981,6 +2172,7 @@
                         
                         salvarTodasAsRotas();
                         renderizarEntregas();
+                        renderizarResumo(); // NOVO
 
                     } else {
                         throw new Error('Formato de arquivo JSON desconhecido.');
@@ -2027,6 +2219,9 @@
                     }
                     
                     // NOVO: Migra o card carregado
+                    if (!novaEntrega.rotaEntrega) {
+                        novaEntrega.rotaEntrega = novaEntrega.cestas?.[0]?.rotaEntrega || 'CUIABÁ';
+                    }
                     const cestas = migrarFormatoCestas(novaEntrega);
                     novaEntrega.cestas = cestas;
                     delete novaEntrega.cesta;
@@ -2053,6 +2248,7 @@
                     rotaAtiva.entregas.push(novaEntrega);
                     salvarLocalStorage();
                     renderizarEntregas();
+                    renderizarResumo(); // NOVO
                     mostrarAviso("Card importado com sucesso!");
 
                 } catch (error) {
@@ -2090,7 +2286,12 @@
              */
             function migrarFormatoCestas(entrega) {
                 if (entrega.cestas && Array.isArray(entrega.cestas)) {
-                    return entrega.cestas; // Já está no formato novo
+                    // NOVO: Se já for formato novo, apenas limpa a rota de dentro da cesta
+                    return entrega.cestas.map(c => {
+                        const cestaLimpa = { ...c };
+                        delete cestaLimpa.rotaEntrega;
+                        return cestaLimpa;
+                    });
                 }
                 
                 // Formato antigo, precisa converter
@@ -2104,6 +2305,7 @@
                         brindeDescricao: entrega.brindeDescricao || '',
                         codigoAlterada: entrega.codigoAlterada || '',
                         partesAlteradas: entrega.partesAlteradas || []
+                        // REMOVIDO: rotaEntrega não é mais por cesta
                     }];
                 }
                 
@@ -2124,6 +2326,7 @@
                     nome: selectedOption.value,
                     valor: parseFloat(selectedOption.dataset.valor),
                     quantidade: parseInt(subInputQuantidade.value) || 1,
+                    // rotaEntrega: subSelectRotaEntrega.value, // REMOVIDO
                     tipo: document.querySelector('input[name="sub-tipo-cesta"]:checked').value,
                     brinde: document.querySelector('input[name="sub-brinde"]:checked').value,
                     brindeDescricao: subInputBrindeDescricao.value || '',
@@ -2145,6 +2348,7 @@
             function resetarSubFormCesta() {
                 subSelectCesta.selectedIndex = 0;
                 subInputQuantidade.value = 1;
+                // subSelectRotaEntrega.selectedIndex = 0; // REMOVIDO
                 document.querySelector('input[name="sub-tipo-cesta"][value="Normal"]').checked = true;
                 document.querySelector('input[name="sub-brinde"][value="Não"]').checked = true;
                 subInputBrindeDescricao.value = '';
@@ -2178,6 +2382,7 @@
                     const valorTotalItem = cesta.valor * cesta.quantidade;
                     let detalhes = `${cesta.tipo}`;
                     if (cesta.brinde === 'Sim') detalhes += `, ${cesta.brindeDescricao || 'Brinde'}`;
+                    // detalhes += `, ${cesta.rotaEntrega}`; // REMOVIDO
                     
                     item.innerHTML = `
                         <div>
@@ -2208,6 +2413,29 @@
                 
                 renderCestasNoPedido();
                 atualizarValorCesta();
+            }
+            
+            // NOVO: Atualiza os botões de filtro e renderiza a lista
+            function atualizarFiltroRota(e) {
+                const filtroBtn = e.target.closest('.btn-filtro-rota');
+                if (!filtroBtn) return;
+                
+                const novoFiltro = filtroBtn.dataset.filtro;
+                if (novoFiltro === filtroRotaAtiva) return;
+                
+                // Atualiza estado
+                filtroRotaAtiva = novoFiltro;
+                
+                // Atualiza DOM (classes ativas)
+                document.querySelectorAll('.btn-filtro-rota').forEach(btn => {
+                    btn.classList.remove('btn-filtro-ativo');
+                    if (btn.dataset.filtro === novoFiltro) {
+                        btn.classList.add('btn-filtro-ativo');
+                    }
+                });
+                
+                // Re-renderiza a lista de entregas com o filtro aplicado
+                renderizarEntregas();
             }
             
             // --- Inicialização e Event Listeners ---
@@ -2264,6 +2492,9 @@
 
             // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
+            
+            // NOVO: Listener para Filtros de Rota
+            filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
             // Modal de Pagamento
             btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
@@ -2287,7 +2518,7 @@
                 salvarLocalStorage();
                 
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0.9]/gi, '_')}_${rotaAtiva.data}.json`;
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
                 
                 compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
             });
