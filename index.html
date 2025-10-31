@@ -388,6 +388,11 @@
                     <a id="btn-whatsapp-avisar" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
                         Avisar Cliente (Chegando)
                     </a>
+                    <!-- NOVO BOTAO -->
+                    <a id="btn-whatsapp-chegou" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-yellow-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-yellow-600">
+                        Avisar (Cheguei na Porta)
+                    </a>
+                    <!-- FIM NOVO BOTAO -->
                     <a id="btn-whatsapp-agradecer" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-600">
                         Agradecer (Pós-Venda)
                     </a>
@@ -1271,14 +1276,21 @@
                 btnAvisar.href = semTelefone ? '#' : urlAvisar;
                 toggleWhatsAppButton(btnAvisar, semTelefone);
 
-                // 2. Agradecer Cliente
+                // 2. NOVO: Avisar (Chegou na Porta)
+                const msgChegou = "Olá! Cheguei com a sua Cesta Básica e já estou aqui na porta aguardando. Obrigado!";
+                const urlChegou = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgChegou)}`;
+                const btnChegou = document.getElementById('btn-whatsapp-chegou');
+                btnChegou.href = semTelefone ? '#' : urlChegou;
+                toggleWhatsAppButton(btnChegou, semTelefone);
+
+                // 3. Agradecer Cliente
                 const msgAgradecer = "Obrigado pela compra. Esperamos voce no proximo mês";
                 const urlAgradecer = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgAgradecer)}`;
                 const btnAgradecer = document.getElementById('btn-whatsapp-agradecer');
                 btnAgradecer.href = semTelefone ? '#' : urlAgradecer;
                 toggleWhatsAppButton(btnAgradecer, semTelefone);
 
-                // 3. Compartilhar Pedido (Admin)
+                // 4. Compartilhar Pedido (Admin)
                 const numeroAdmin = "65984491018"; // Número fixo
                 const msgCompartilhar = gerarTextoPedidoCompleto(entrega);
                 const urlCompartilhar = `https://api.whatsapp.com/send?phone=55${numeroAdmin}&text=${encodeURIComponent(msgCompartilhar)}`;
@@ -1286,7 +1298,7 @@
                 btnCompartilhar.href = urlCompartilhar; // Sempre habilitado
                 toggleWhatsAppButton(btnCompartilhar, false); 
 
-                // 4. Compartilhar PIX
+                // 5. Compartilhar PIX
                 const msgPix = `Olá ${entrega.cliente.nome}! O valor da sua cesta é ${formatarMoeda(entrega.cesta.valor)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
                 const urlPix = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgPix)}`;
                 const btnPix = document.getElementById('btn-whatsapp-pix');
@@ -1954,6 +1966,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
