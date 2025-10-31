@@ -244,12 +244,23 @@
                         <input type="text" id="input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
                     </div>
                     <!-- FIM NOVO CAMPO: Brinde -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
-                        <div id="display-valor" class="mt-1 p-2 h-auto flex items-center bg-gray-100 rounded-md border border-gray-300 text-gray-800 font-semibold py-3 px-4 text-base">
-                            0.00
+                    
+                    <!-- MODIFICADO: Grid para Quantidade e Valor -->
+                    <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <!-- NOVO CAMPO QUANTIDADE -->
+                            <label for="input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
+                            <input type="number" id="input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Valor Total (R$)</label>
+                            <div id="display-valor" class="mt-1 p-2 h-auto flex items-center bg-gray-100 rounded-md border border-gray-300 text-gray-800 font-semibold py-3 px-4 text-base">
+                                0.00
+                            </div>
                         </div>
                     </div>
+                    <!-- FIM MODIFICADO -->
+
                 </div>
                 
                 <!-- Coluna 3: Campo Alterada e Botões -->
@@ -434,7 +445,7 @@
 
             // --- Constantes ---
             // NOVO: Chave Pix Padrão
-            const CHAVE_PIX_PADRAO = "65984422103 - Pix Celular - Lucas Ataide de Oliveira Rodrigues - Por favor, evie o comprovante no celular da empresa 65984491018";
+            const CHAVE_PIX_PADRAO = "seu-email@provedor.com (12) 99999-9999";
 
             // --- Seletores de Elementos ---
             // NOVO: Top Bar
@@ -465,6 +476,7 @@
             
             const obsClienteInput = document.getElementById('obs-cliente'); // NOVO SELETOR
             const selectCesta = document.getElementById('select-cesta');
+            const inputQuantidade = document.getElementById('input-quantidade'); // NOVO SELETOR
             const displayValor = document.getElementById('display-valor');
             const campoAlterada = document.getElementById('campo-alterada');
             const codigoAlteradaInput = document.getElementById('codigo-alterada'); // Agora é um TEXTAREA
@@ -588,8 +600,16 @@
              */
             function atualizarValorCesta() {
                 const selectedOption = selectCesta.options[selectCesta.selectedIndex];
-                const valor = selectedOption.dataset.valor || "165.00"; // MODIFICADO: Pega o valor da primeira opção como padrão
-                displayValor.textContent = formatarMoeda(valor);
+                const valorUnitario = parseFloat(selectedOption.dataset.valor || "165.00");
+                let quantidade = parseInt(inputQuantidade.value) || 1; // Pega a quantidade, padrão 1
+                
+                if (quantidade < 1) {
+                    inputQuantidade.value = 1; // Corrige se for inválido
+                    quantidade = 1;
+                }
+
+                const valorTotal = valorUnitario * quantidade;
+                displayValor.textContent = formatarMoeda(valorTotal);
             }
 
             /**
@@ -981,8 +1001,15 @@
                         
                         <!-- MODIFICADO: Destaque da Cesta e Valor -->
                         <div class="mt-2 p-2 bg-gray-50 rounded-md border border-gray-200">
-                            <span class="block text-base font-semibold text-gray-800">${entrega.cesta.nome}</span>
-                            <span class="block text-lg font-bold text-blue-600">${formatarMoeda(entrega.cesta.valor)}</span>
+                            <!-- MODIFICADO: Lógica de Quantidade -->
+                            ${(entrega.quantidade || 1) > 1 ? `
+                                <span class="block text-base font-semibold text-gray-800">${entrega.quantidade}x ${entrega.cesta.nome}</span>
+                                <span class="block text-lg font-bold text-blue-600">${formatarMoeda(entrega.cesta.valor * entrega.quantidade)}</span>
+                                <span class="block text-sm text-gray-500">( ${formatarMoeda(entrega.cesta.valor)} cada )</span>
+                            ` : `
+                                <span class="block text-base font-semibold text-gray-800">${entrega.cesta.nome}</span>
+                                <span class="block text-lg font-bold text-blue-600">${formatarMoeda(entrega.cesta.valor)}</span>
+                            `}
                         </div>
                     `;
                     
@@ -1144,6 +1171,7 @@
                 // NOVO: Coleta Brinde
                 const brindeSelecionado = document.querySelector('input[name="brinde"]:checked').value;
                 const brindeDescricao = document.getElementById('input-brinde-descricao').value;
+                const quantidade = parseInt(inputQuantidade.value) || 1; // NOVO
                 
                 const novaEntrega = {
                     id: Date.now(), // ID único
@@ -1151,8 +1179,9 @@
                     observacao: obsClienteInput.value, // Campo de observação separado
                     cesta: {
                         nome: selectedOption.value,
-                        valor: parseFloat(selectedOption.dataset.valor)
+                        valor: parseFloat(selectedOption.dataset.valor) // Salva o valor UNITÁRIO
                     },
+                    quantidade: quantidade, // NOVO CAMPO
                     tipo: document.querySelector('input[name="tipo-cesta"]:checked').value,
                     codigoAlterada: codigoAlteradaInput.value, // Conteúdo da Textarea
                     partesAlteradas: partesAlteradasSelecionadas, // NOVO CAMPO
@@ -1171,6 +1200,7 @@
                 formEntrega.reset();
                 inputCliente.value = ''; // Limpa o input do cliente
                 infoClienteSelecionado.classList.add('hidden'); // Esconde o display de info
+                inputQuantidade.value = 1; // NOVO: Reseta a quantidade
                 atualizarValorCesta();
                 toggleCampoAlterada();
                 toggleCampoBrinde(); // NOVO: Reseta o campo brinde
@@ -1198,9 +1228,13 @@
 
                 entregaParaPagarId = id;
                 
+                // NOVO: Calcula valor total
+                const quantidade = entrega.quantidade || 1;
+                const valorTotal = entrega.cesta.valor * quantidade;
+
                 // Preenche dados do modal
                 modalClienteNome.textContent = entrega.cliente.nome; // MODIFICADO
-                modalClienteValor.textContent = formatarMoeda(entrega.cesta.valor);
+                modalClienteValor.textContent = formatarMoeda(valorTotal); // MODIFICADO
                 
                 // Reseta o formulário do modal
                 formPagamento.reset();
@@ -1222,6 +1256,10 @@
              * NOVO: Gera texto completo do pedido para compartilhar
              */
             function gerarTextoPedidoCompleto(entrega) {
+                const quantidade = entrega.quantidade || 1;
+                const valorUnitario = entrega.cesta.valor;
+                const valorTotal = valorUnitario * quantidade;
+
                 let texto = `*PEDIDO COMPARTILHADO*\n\n`;
                 texto += `*ID Cliente:* ${entrega.cliente.id || entrega.cliente.ID || entrega.cliente.Id || 'N/A'}\n`;
                 texto += `*Nome:* ${entrega.cliente.nome}\n`;
@@ -1229,7 +1267,9 @@
                 texto += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n`;
                 texto += `*Complemento:* ${entrega.cliente.complemento || 'N/A'}\n\n`;
                 texto += `*Cesta:* ${entrega.cesta.nome}\n`;
-                texto += `*Valor:* ${formatarMoeda(entrega.cesta.valor)}\n`;
+                texto += `*Quantidade:* ${quantidade}\n`; // NOVO
+                texto += `*Valor Unitário:* ${formatarMoeda(valorUnitario)}\n`; // NOVO
+                texto += `*Valor Total:* ${formatarMoeda(valorTotal)}\n`; // MODIFICADO
                 texto += `*Brinde:* ${entrega.brinde} ${entrega.brindeDescricao || ''}\n`;
                 texto += `*Tipo:* ${entrega.tipo}\n`;
                 if (entrega.tipo === 'Alterada') {
@@ -1299,7 +1339,10 @@
                 toggleWhatsAppButton(btnCompartilhar, false); 
 
                 // 5. Compartilhar PIX
-                const msgPix = `Olá, o valor da sua cesta é ${formatarMoeda(entrega.cesta.valor)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
+                // NOVO: Calcula valor total para PIX
+                const quantidadePix = entrega.quantidade || 1;
+                const valorTotalPix = entrega.cesta.valor * quantidadePix;
+                const msgPix = `Olá ${entrega.cliente.nome}! O valor da sua cesta é ${formatarMoeda(valorTotalPix)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`; // MODIFICADO
                 const urlPix = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgPix)}`;
                 const btnPix = document.getElementById('btn-whatsapp-pix');
                 btnPix.href = semTelefone ? '#' : urlPix;
@@ -1537,8 +1580,13 @@
                 if (entregasConcluidas.length > 0) {
                     relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
                     entregasConcluidas.forEach(e => {
+                        // NOVO: Calcula valor total
+                        const quantidade = e.quantidade || 1;
+                        const valorTotal = e.cesta.valor * quantidade;
+                        const valorUnitarioTexto = quantidade > 1 ? ` (${quantidade}x ${formatarMoeda(e.cesta.valor)})` : '';
+
                         relatorioTexto += `Cliente: ${e.cliente.nome}\n`; // MODIFICADO
-                        relatorioTexto += `Valor: ${formatarMoeda(e.cesta.valor)}\n`;
+                        relatorioTexto += `Valor: ${formatarMoeda(valorTotal)}${valorUnitarioTexto}\n`; // MODIFICADO
                         relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
                         relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
                         relatorioTexto += `-----------------------------\n`;
@@ -1560,6 +1608,11 @@
                 whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
                 if(entregasPendentes.length > 0) {
                     entregasPendentes.forEach((e, index) => {
+                        // NOVO: Calcula valor total
+                        const quantidadePendente = e.quantidade || 1;
+                        const valorTotalPendente = e.cesta.valor * quantidadePendente;
+                        const valorUnitarioPendente = quantidadePendente > 1 ? ` (${formatarMoeda(e.cesta.valor)} cada)` : '';
+
                         whatsappTexto += `${index + 1}. *${e.cliente.nome}*\n`; // MODIFICADO
                         // NOVO: Adiciona endereço e complemento no resumo
                         if (e.cliente.endereco) {
@@ -1568,7 +1621,7 @@
                         if (e.cliente.complemento) {
                             whatsappTexto += `   Comp: ${e.cliente.complemento}\n`;
                         }
-                        whatsappTexto += `   Cesta: ${e.cesta.nome} (${formatarMoeda(e.cesta.valor)})\n`;
+                        whatsappTexto += `   Cesta: ${quantidadePendente}x ${e.cesta.nome} (${formatarMoeda(valorTotalPendente)})${valorUnitarioPendente}\n`; // MODIFICADO
                         
                         // Bloco modificado para incluir OBS Cliente, Brinde e Cesta
                         if (e.brinde === 'Sim') {
@@ -1598,11 +1651,11 @@
                 let totalPorPagamento = {};
 
                 entregasConcluidas.forEach(e => {
-                    const valor = e.cesta.valor;
+                    const valor = e.cesta.valor * (e.quantidade || 1); // MODIFICADO: Usa valor total
                     totalVendido += valor;
                     
                     // Total por Cesta
-                    totalPorCesta[e.cesta.nome] = (totalPorCesta[e.cesta.nome] || 0) + valor;
+                    totalPorCesta[e.cesta.nome] = (totalPorCesta[e.cesta.nome] || 0) + valor; // MODIFICADO: Usa valor total
 
                     // Total por Pagamento
                     if (e.formaPagamento.length === 0) {
@@ -1701,6 +1754,7 @@
                         dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
                         dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
                             ...e,
+                            quantidade: e.quantidade || 1, // NOVO: Garante Qtd
                             // Garante que o cliente é um objeto (compatibilidade com formato antigo)
                             cliente: typeof e.cliente === 'object' ? e.cliente : {
                                 nome: e.codigoCliente || 'Cliente Antigo', // Tenta migrar do campo antigo
@@ -1737,6 +1791,7 @@
                         // MODIFICADO: Mapeamento de dados antigos para novos
                         rotaAtiva.entregas = dadosCarregados.map(e => ({
                             ...e,
+                            quantidade: e.quantidade || 1, // NOVO: Garante Qtd
                             brinde: e.brinde || 'Não',
                             brindeDescricao: e.brindeDescricao || '',
                             partesAlteradas: e.partesAlteradas || [],
@@ -1819,6 +1874,9 @@
                         throw new Error("Arquivo do card é inválido. Faltando id, cliente ou cesta.");
                     }
 
+                    // NOVO: Garante que a quantidade existe
+                    novaEntrega.quantidade = novaEntrega.quantidade || 1;
+
                     const rotaAtiva = todasAsRotas[rotaAtivaId];
                     if (!rotaAtiva) {
                         mostrarAviso("Nenhuma rota ativa para adicionar o card.");
@@ -1900,6 +1958,8 @@
 
             // Inputs do Formulário
             selectCesta.addEventListener('change', atualizarValorCesta);
+            inputQuantidade.addEventListener('change', atualizarValorCesta); // NOVO
+            inputQuantidade.addEventListener('input', atualizarValorCesta); // NOVO (para setas do input number)
             document.querySelectorAll('input[name="tipo-cesta"]').forEach(radio => {
                 radio.addEventListener('change', toggleCampoAlterada);
             });
@@ -1966,6 +2026,7 @@
     </script>
 </body>
 </html>
+
 
 
 
