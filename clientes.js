@@ -6,6 +6,13 @@ const CLIENTES_DB = [
     "endereco": "010 Natalia",
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
+    {
+    "id": "17474045315026-AbC9O",
+    "nome": "XR184 JD PRESIDENTE",
+    "celular": "65993102350",
+    "endereco": "XR184",
+    "complemento": "RUA 6, Q5 C23"
+  },
   {
     "id": "1747405315026-AbC9O",
     "nome": "1002 VG ALAMEDA",
