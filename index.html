@@ -393,15 +393,15 @@
                                         <!-- MODIFICADO: Borda mais escura e contraste de texto -->
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                             <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
+                                            <span class="ml-3 text-sm font-medium text-gray-900">ARROZ ALTERADO</span>
                                         </label>
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                             <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900"> ALTERADO ALIMENTO</span>
+                                            <span class="ml-3 text-sm font-medium text-gray-900">ALIMENTO ALTERADO</span>
                                         </label>
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                             <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
+                                            <span class="ml-3 text-sm font-medium text-gray-900">LIMPEZA ALTERADO</span>
                                         </label>
                                     </div>
                                 </div>
@@ -504,16 +504,16 @@
                 <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm">
                     TODAS
                 </button>
-                <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-CUIABÁ">
+                <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ">
                     CUIABÁ
                 </button>
-                <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-VG">
+                <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG">
                     VG
                 </button>
-                <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-CPA">
+                <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA">
                     CPA
                 </button>
-                <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm rota-COXIPÓ">
+                <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ">
                     COXIPÓ
                 </button>
             </div>
@@ -1173,7 +1173,8 @@
                             `;
                         }
                         if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) {
-                             infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${cesta.nome}: ${cesta.partesAlteradas.join(', ')}</span>`);
+                             // MODIFICADO: Removido o nome da cesta para evitar repetição
+                             infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Partes: ${cesta.partesAlteradas.join(', ')}</span>`);
                         }
                     });
 
@@ -1453,11 +1454,14 @@
                     return;
                 }
 
+                // CORREÇÃO: Cria uma CÓPIA da lista de cestas
+                const cestasParaSalvar = cestasDoPedidoAtual.map(c => ({...c}));
+                
                 const dadosDoForm = {
                     cliente: clienteData,
                     observacao: obsClienteInput.value,
                     rotaEntrega: inputRotaEntrega.value,
-                    cestas: [...cestasDoPedidoAtual] // Cria uma CÓPIA
+                    cestas: cestasParaSalvar
                 };
 
                 // --- 2. Decidir se é EDIÇÃO ou NOVA ENTREGA ---
@@ -1470,6 +1474,7 @@
                             ...entregaOriginal,
                             ...dadosDoForm
                         };
+                        // Limpa campos antigos legados
                         delete entregas[index].cesta;
                         delete entregas[index].quantidade;
                         delete entregas[index].tipo;
@@ -1494,10 +1499,12 @@
                         horarioMontagem: null
                     };
                     entregas.push(novaEntrega);
+                    // Limpa o formulário principal
                     formEntrega.reset();
                     inputCliente.value = '';
                     infoClienteSelecionado.classList.add('hidden');
                     inputRotaEntrega.value = 'CUIABÁ';
+                    // Limpa o estado do "carrinho"
                     cestasDoPedidoAtual = [];
                     renderCestasNoPedido();
                     atualizarValorCesta();
@@ -1695,23 +1702,31 @@
 
                 editingEntregaId = id;
 
+                // 1. Preenche dados do cliente e observação
                 inputCliente.value = entrega.cliente.nome;
                 inputCliente.dispatchEvent(new Event('input', { bubbles: true }));
                 obsClienteInput.value = entrega.observacao || '';
                 inputRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ';
 
-                cestasDoPedidoAtual = migrarFormatoCestas(entrega);
+                // 2. NOVO: Preenche o "carrinho" (cestasDoPedidoAtual)
+                // Garante que o formato esteja atualizado e cria uma CÓPIA
+                cestasDoPedidoAtual = migrarFormatoCestas(entrega).map(c => ({...c}));
                 
+                // 3. Renderiza a lista de cestas no formulário
                 renderCestasNoPedido();
                 
+                // 4. Atualiza o valor total
                 atualizarValorCesta();
                 
+                // 5. Reseta o sub-form
                 resetarSubFormCesta();
 
+                // 6. Muda UI do formulário para "Modo Edição"
                 formEntregaTitle.textContent = 'Editar Entrega';
                 btnSubmitFormText.textContent = 'Atualizar Entrega';
                 btnCancelarEdicao.classList.remove('hidden');
 
+                // 7. Rola a tela para o formulário
                 formEntrega.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
@@ -1722,15 +1737,18 @@
                 editingEntregaId = null;
                 formEntrega.reset();
 
+                // Limpezas manuais
                 inputCliente.value = '';
                 infoClienteSelecionado.classList.add('hidden');
                 inputRotaEntrega.value = 'CUIABÁ';
                 
+                // NOVO: Limpa o carrinho de cestas
                 cestasDoPedidoAtual = [];
                 renderCestasNoPedido();
                 atualizarValorCesta();
                 resetarSubFormCesta();
 
+                // Reseta UI do formulário para "Modo Lançamento"
                 formEntregaTitle.textContent = 'Lançar Nova Entrega';
                 btnSubmitFormText.textContent = 'Lançar Entrega';
                 btnCancelarEdicao.classList.add('hidden');
@@ -2264,6 +2282,7 @@
              */
             function migrarFormatoCestas(entrega) {
                 if (entrega.cestas && Array.isArray(entrega.cestas)) {
+                    // NOVO: Se já for formato novo, apenas limpa a rota de dentro da cesta (legado)
                     return entrega.cestas.map(c => {
                         const cestaLimpa = { ...c };
                         delete cestaLimpa.rotaEntrega;
@@ -2271,6 +2290,7 @@
                     });
                 }
                 
+                // Formato antigo, precisa converter
                 if (entrega.cesta) {
                     return [{
                         nome: entrega.cesta.nome,
@@ -2467,6 +2487,7 @@
             // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
             
+            // Listener para Filtros de Rota
             filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
             // Modal de Pagamento
