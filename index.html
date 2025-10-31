@@ -431,7 +431,8 @@
         <!-- Seção da Lista de Entregas (TODOS OS MODOS) -->
         <section>
             <!-- NOVO: Resumo da Rota -->
-            <section id="resumo-rota" class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view">
+            <!-- MODIFICADO: Adicionado 'montador-view' -->
+            <section id="resumo-rota" class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view montador-view">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Resumo da Rota</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
@@ -469,7 +470,8 @@
             </div>
             
             <!-- NOVO: Filtros de Rota -->
-            <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4 admin-view">
+            <!-- MODIFICADO: Adicionado 'montador-view' -->
+            <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4 admin-view montador-view">
                 <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border bg-white shadow-sm">
                     TODAS
                 </button>
@@ -658,7 +660,6 @@
             const btnAddCesta = document.getElementById('btn-add-cesta');
             const subSelectCesta = document.getElementById('sub-select-cesta');
             const subInputQuantidade = document.getElementById('sub-input-quantidade');
-            // const subSelectRotaEntrega = document.getElementById('sub-select-rota-entrega'); // REMOVIDO
             const subCampoBrindeDescricao = document.getElementById('sub-campo-brinde-descricao');
             const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao');
             const subCampoAlterada = document.getElementById('sub-campo-alterada');
@@ -670,7 +671,6 @@
             
             const listaEntregasEl = document.getElementById('lista-entregas');
             const listaVaziaEl = document.getElementById('lista-vazia');
-            const filtrosRotaContainer = document.getElementById('filtros-rota'); // NOVO
             
             // Modais
             const modalPagamento = document.getElementById('modal-pagamento');
@@ -709,9 +709,10 @@
             const summaryTotalCestas = document.getElementById('summary-total-cestas');
             const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
             const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
-            const summaryPedidosRotaBreakdown = document.getElementById('summary-pedidos-rota-breakdown'); // NOVO
+            const summaryPedidosRotaBreakdown = document.getElementById('summary-pedidos-rota-breakdown');
             
             // NOVO: Seletores de Filtro
+            // CORRIGIDO: Removida a declaração duplicada
             const filtrosRotaContainer = document.getElementById('filtros-rota');
 
 
@@ -729,7 +730,7 @@
             let cestasDoPedidoAtual = [];
             
             // NOVO: Estado do filtro de rota
-            let filtroRotaAtiva = 'TODAS';
+            let filtroRotaAtiva = 'TODOS';
 
             // --- Funções ---
 
@@ -1083,8 +1084,9 @@
 
                 // NOVO: Filtrar e Ordenar
                 const entregasFiltradas = entregas.filter(e => {
+                    const rotaPedido = e.rotaEntrega || 'N/A'; // Garante que 'N/A' seja usado se indefinido
                     if (filtroRotaAtiva === 'TODOS') return true;
-                    return (e.rotaEntrega || 'N/A') === filtroRotaAtiva;
+                    return rotaPedido === filtroRotaAtiva;
                 });
                 
                 const entregasOrdenadas = entregasFiltradas.sort((a, b) => {
@@ -1112,7 +1114,7 @@
                     
                     // NOVO: Adiciona a classe da rota e a classe do status
                     // A classe do status (se existir) vai sobrescrever o BG da rota via CSS !important
-                    const rotaClass = `rota-${entrega.rotaEntrega || 'CUIABÁ'}`; // Padrão CUIABÁ
+                    const rotaClass = `rota-${(entrega.rotaEntrega || 'CUIABÁ').replace('/', '\\/')}`; // Padrão CUIABÁ e escapa N/A
                     
                     card.className = `p-4 rounded-lg shadow-sm border-2 flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
@@ -1208,7 +1210,6 @@
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${cesta.brinde === 'Sim' ? `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">${cesta.brindeDescricao || 'Brinde'}</span>` : ''}
                                     ${cesta.tipo === 'Alterada' ? `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>` : ''}
-                                    <!-- REMOVIDO: Tag de Rota (agora é a cor do card) -->
                                 </div>
                             </div>
                         `;
@@ -1436,7 +1437,7 @@
                     cliente: clienteData,
                     observacao: obsClienteInput.value,
                     rotaEntrega: inputRotaEntrega.value, // NOVO
-                    cestas: cestasDoPedidoAtual
+                    cestas: [...cestasDoPedidoAtual] // MODIFICADO: Cria uma CÓPIA do array
                 };
 
                 // --- 2. Decidir se é EDIÇÃO ou NOVA ENTREGA ---
@@ -2479,12 +2480,15 @@
             // Inputs do Formulário
             // Listeners do Sub-Formulário
             btnAddCesta.addEventListener('click', adicionarCestaAoPedido);
+            
+            // NOVO: Listeners RE-ADICIONADOS para campos dinâmicos
             document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(radio => {
                 radio.addEventListener('change', toggleSubCampoAlterada);
             });
             document.querySelectorAll('input[name="sub-brinde"]').forEach(radio => {
                 radio.addEventListener('change', toggleSubCampoBrinde);
             });
+            
             // Listener para remover item do "carrinho"
             listaCestasNoPedidoEl.addEventListener('click', handleRemoverCesta);
             
@@ -2493,7 +2497,7 @@
             // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
             
-            // NOVO: Listener para Filtros de Rota
+            // NOVO: Listener para Filtros de Rota (MODIFICADO: Corrigido)
             filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
             // Modal de Pagamento
@@ -2544,5 +2548,4 @@
     </script>
 </body>
 </html>
-
 
