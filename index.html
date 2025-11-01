@@ -210,8 +210,8 @@
             </div>
         </header>
 
-        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para Admin/Montador e em grid -->
-        <div class="admin-view montador-view grid grid-cols-3 gap-2 mb-4">
+        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para Todos e em grid -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
             <button class="btn-importar-card rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200 flex items-center justify-center text-center h-full">Importar Card</button>
             <button class="btn-exportar rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700 flex items-center justify-center text-center h-full">Exportar Rota</button>
             <button class="btn-carregar rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700 flex items-center justify-center text-center h-full">Carregar Rota</button>
@@ -276,13 +276,8 @@
         </div>
         <p id="lista-vazia" class="text-center text-gray-700 py-10">Nenhuma entrega na rota.</p>
 
-        <!-- Botões de Ação (Entregador) - NOVO LOCAL -->
-        <div class="entregador-view grid grid-cols-3 gap-2 mb-4 mt-8">
-            <button class="btn-importar-card rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200 flex items-center justify-center text-center h-full">Importar Card</button>
-            <button class="btn-exportar rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700 flex items-center justify-center text-center h-full">Exportar Rota</button>
-            <button class="btn-carregar rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700 flex items-center justify-center text-center h-full">Carregar Rota</button>
-        </div>
-
+        <!-- Botões de Ação (Entregador) - REMOVIDO (Movido para o topo, visível para todos) -->
+        
         <!-- Seção de Despesas (Entregador) - MOVIDA PARA CÁ -->
         <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
             <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
@@ -685,7 +680,7 @@
             const modalClienteValor = document.getElementById('modal-cliente-valor');
             const modalErrorPagamento = document.getElementById('modal-error-pagamento');
 
-            /* MODIFICADO: Seletores de Botão por CLASSE */
+            <!-- MODIFICADO: Seletores de Botão por CLASSE */
             const btnsExportar = document.querySelectorAll('.btn-exportar');
             const btnsCarregar = document.querySelectorAll('.btn-carregar');
             const btnsImportarCard = document.querySelectorAll('.btn-importar-card');
@@ -1020,6 +1015,7 @@
                     
                     card.className = `bg-white p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
+                    // MODIFICADO: Definição de obsInfo movida para ANTES de infoClienteHtml
                     let obsInfo = '';
                     if (entrega.observacao) {
                         obsInfo = `
@@ -1030,20 +1026,7 @@
                         `;
                     }
                     
-                    let detalhesInfo = '';
-                    const cestasParaRenderizar = migrarFormatoCestas(entrega);
-                    
-                    cestasParaRenderizar.forEach(cesta => {
-                        if (cesta.tipo === 'Alterada' && cesta.codigoAlterada) {
-                             detalhesInfo += `
-                                <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                                    <span class="text-xs font-bold text-yellow-700">DETALHES (${cesta.nome}):</span>
-                                    <p class="pre-wrap-texto text-yellow-700">${cesta.codigoAlterada}</p>
-                                </div>
-                            `;
-                        }
-                    });
-
+                    // REMOVIDO: Bloco 'detalhesInfo' daqui. Ele será movido para dentro do loop de cestas.
 
                     let statusInfo = '';
                     if (entrega.status === 'Entregue') {
@@ -1054,16 +1037,20 @@
                          statusInfo = `<div class="text-xs text-blue-700 mt-2"><span class="font-semibold">Status:</span> MONTADO | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioMontagem)}</div>`;
                     }
                     
-                    const clienteId = entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || null;
-                    let idInfo = clienteId ? `<p class="text-xs text-gray-500 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : '';
+                    // MODIFICADO: idInfo removido
+                    const clienteId = null; // entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || null;
+                    let idInfo = ''; // clienteId ? `<p class="text-xs text-gray-500 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : '';
 
                     let infoClienteHtml = `
                         <div class="flex-1 min-w-0">
                             ${idInfo}
-                            <p class="text-xl font-semibold text-gray-900 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
-                            <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
-                            <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
-                            <p class="text-sm text-gray-700 truncate montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
+                            <!-- MODIFICADO: 'truncate' removido, 'break-words' adicionado -->
+                            <p class="text-xl font-semibold text-gray-900 break-words" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
+                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
+                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
+                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
+                            <!-- MODIFICADO: obsInfo movido para cá -->
+                            ${obsInfo}
                         </div>
                         <div class="flex flex-col items-center justify-center admin-view ml-2">
                             <button class="btn-mover-cima p-2 text-gray-500 ${index === 0 || isFinalizada ? 'opacity-25' : 'hover:text-blue-600'}" data-id="${entrega.id}" ${index === 0 || isFinalizada ? 'disabled' : ''}>
@@ -1090,6 +1077,17 @@
                         if (cesta.codigoFinal) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Final: ${cesta.codigoFinal}</span>`;
                         if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Partes: ${cesta.partesAlteradas.join(', ')}</span>`;
                         
+                        // MODIFICADO: Detalhes (codigoAlterada) movido para dentro do box da cesta
+                        let detalhesCestaHtml = '';
+                        if (cesta.tipo === 'Alterada' && cesta.codigoAlterada) {
+                             detalhesCestaHtml = `
+                                <div class="mt-2 pt-2 border-t border-gray-200">
+                                    <span class="text-xs font-bold text-yellow-700">DETALHES:</span>
+                                    <p class="pre-wrap-texto text-yellow-700">${cesta.codigoAlterada}</p>
+                                </div>
+                            `;
+                        }
+
                         infoCestasHtml += `
                             <div class="p-2 bg-gray-50 rounded-md border border-gray-300">
                                 <div class="flex justify-between items-center">
@@ -1099,6 +1097,8 @@
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${tagsCesta}
                                 </div>
+                                <!-- MODIFICADO: Bloco de detalhes injetado aqui -->
+                                ${detalhesCestaHtml}
                             </div>
                         `;
                     });
@@ -1167,8 +1167,7 @@
 
                         <!-- Blocos de Info (Obs, Detalhes, Status) -->
                         <div class="mt-2 space-y-2 overflow-hidden">
-                            ${obsInfo}
-                            ${detalhesInfo}
+                            <!-- MODIFICADO: obsInfo e detalhesInfo removidos daqui -->
                             ${statusInfo}
                         </div>
                         
@@ -2039,5 +2038,6 @@
     </script>
 </body>
 </html>
+
 
 
