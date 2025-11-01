@@ -165,25 +165,16 @@
     <!-- =================================================================== -->
     <main class="container mx-auto max-w-5xl p-4 mt-24 sm:mt-20">
         
-        <!-- Cabeçalho da Rota (Admin) - Fixo/Colapsável -->
-        <header id="page-rota-header" class="admin-view sticky top-0 z-30 bg-gray-100 shadow-sm pt-4 pb-2 px-4 -mt-4 -mx-4 mb-4">
+        <!-- MODIFICADO: Header do Admin não é mais sticky -->
+        <header id="page-rota-header" class="admin-view bg-gray-100 pt-4 pb-2 px-4 -mt-4 -mx-4 mb-4">
             <div class="container mx-auto max-w-5xl">
-                <!-- Cabeçalho Visível (Botão de Toggle) -->
+                <!-- MODIFICADO: Botão de toggle removido -->
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-2xl font-semibold text-gray-900">Gerenciar Rota</h2>
-                    <button id="btn-toggle-admin-header" class="text-gray-500 hover:text-blue-600 p-2">
-                        <svg id="icon-toggle-open" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <svg id="icon-toggle-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
                 
-                <!-- Conteúdo Colapsável -->
-                <div id="admin-header-content" class="space-y-4">
+                <!-- MODIFICADO: Conteúdo não é mais colapsável, ID removido -->
+                <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div class="md:col-span-2">
                             <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
@@ -215,14 +206,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex space-x-2 pt-2">
-                        <button id="btn-importar-card" class="rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200">Importar Card</button>
-                        <button id="btn-exportar" class="rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
-                        <button id="btn-carregar" class="rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700">Carregar Rota</button>
-                    </div>
+                    <!-- MODIFICADO: Botões de Importar/Exportar movidos para fora do header -->
                 </div>
             </div>
         </header>
+
+        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para todos -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button id="btn-importar-card" class="rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200">Importar Card</button>
+            <button id="btn-exportar" class="rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
+            <button id="btn-carregar" class="rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700">Carregar Rota</button>
+        </div>
 
         <!-- Seção de Despesas (Entregador) -->
         <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
@@ -246,45 +240,51 @@
         <!-- Painel de Resumo (Montador) -->
         <section id="secao-resumo" class="montador-view bg-white p-4 rounded-lg shadow-md mb-4 space-y-2">
             <h2 class="text-xl font-semibold text-gray-900 mb-2 border-b pb-2">Resumo da Montagem</h2>
-            <div class="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                    <span class="block font-medium text-gray-600">Total Pedidos:</span>
-                    <span id="summary-total-pedidos" class="text-lg font-bold text-gray-900">0</span>
+            <!-- MODIFICADO: Layout de colunas para Desktop -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <!-- Coluna 1: Totais -->
+                <div class="space-y-2">
+                    <div>
+                        <span class="block font-medium text-gray-600">Total Pedidos (Não Cancelados):</span>
+                        <span id="summary-total-pedidos" class="text-lg font-bold text-gray-900">0</span>
+                    </div>
+                    <div>
+                        <span class="block font-medium text-gray-600">Total Cestas (Não Canceladas):</span>
+                        <span id="summary-total-cestas" class="text-lg font-bold text-gray-900">0</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="block font-medium text-gray-600">Total Cestas:</span>
-                    <span id="summary-total-cestas" class="text-lg font-bold text-gray-900">0</span>
+                <!-- Coluna 2: Breakdowns -->
+                <div class="space-y-2">
+                    <div>
+                        <span class="block font-medium text-gray-600">Cestas por Tipo:</span>
+                        <!-- MODIFICADO: text-sm e ID -->
+                        <span id="summary-cestas-breakdown" class="text-sm text-gray-700 leading-relaxed">...</span>
+                    </div>
+                    <div>
+                        <span class="block font-medium text-gray-600">Cestas por Rota:</span>
+                        <!-- MODIFICADO: text-sm e ID -->
+                        <span id="summary-rotas-breakdown" class="text-sm text-gray-700 leading-relaxed">...</span>
+                    </div>
                 </div>
-                <div class="col-span-2">
-                    <span class="block font-medium text-gray-600">Cestas por Tipo:</span>
-                    <span id="summary-cestas-breakdown" class="text-xs text-gray-700">...</span>
-                </div>
-                <div class="col-span-2">
-                    <span class="block font-medium text-gray-600">Cestas por Rota:</span>
-                    <span id="summary-rotas-breakdown" class="text-xs text-gray-700">...</span>
-                </div>
-                <div class="col-span-2">
-                    <span class="block font-medium text-gray-600">Pedidos por Rota (Não Cancelados):</span>
-                    <span id="summary-pedidos-rota-breakdown" class="text-xs text-gray-700">...</span>
-                </div>
+                <!-- REMOVIDO: Pedidos por Rota -->
             </div>
         </section>
 
-        <!-- Filtros de Rota (Todos os Modos) -->
-        <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4">
-            <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm">
+        <!-- MODIFICADO: Filtros de Rota agora são STICKY e roláveis no mobile -->
+        <div id="filtros-rota" class="sticky top-24 sm:top-20 z-20 bg-gray-100 py-2 flex flex-nowrap overflow-x-auto gap-2 mb-4">
+            <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm flex-shrink-0">
                 TODAS
             </button>
-            <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ">
+            <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ flex-shrink-0">
                 CUIABÁ
             </button>
-            <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG">
+            <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG flex-shrink-0">
                 VG
             </button>
-            <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA">
+            <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA flex-shrink-0">
                 CPA
             </button>
-            <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ">
+            <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ flex-shrink-0">
                 COXIPÓ
             </button>
         </div>
@@ -415,6 +415,11 @@
                             </div>
                             <div class="md:col-span-1 space-y-4">
                                 <div id="sub-campo-alterada" class="hidden space-y-4">
+                                    <!-- NOVO: Campo Código Final -->
+                                    <div>
+                                        <label for="sub-codigo-final" class="block text-sm font-medium text-gray-700">Código Final (Opcional)</label>
+                                        <input type="text" id="sub-codigo-final" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: 1020-A">
+                                    </div>
                                     <div>
                                         <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
                                         <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão..."></textarea>
@@ -610,11 +615,12 @@
             const btnTopEntregador = document.getElementById('btn-top-entregador');
             const btnTopMontador = document.getElementById('btn-top-montador');
             
-            // Página Rota (Header Admin)
+            <!-- MODIFICADO: Seletores do Header Admin removidos (agora não é colapsável)
             const btnToggleAdminHeader = document.getElementById('btn-toggle-admin-header');
             const iconToggleOpen = document.getElementById('icon-toggle-open');
             const iconToggleClose = document.getElementById('icon-toggle-close');
             const adminHeaderContent = document.getElementById('admin-header-content');
+            -->
             
             // Gerenciamento de Rotas (Dentro do Header)
             const btnNovaRota = document.getElementById('btn-nova-rota');
@@ -658,6 +664,7 @@
             const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao');
             const subCampoAlterada = document.getElementById('sub-campo-alterada');
             const subCodigoAlterada = document.getElementById('sub-codigo-alterada');
+            const subCodigoFinal = document.getElementById('sub-codigo-final'); // NOVO SELETOR
 
             // Lista de Cestas no Pedido (Formulário)
             const listaCestasNoPedidoEl = document.getElementById('lista-cestas-no-pedido');
@@ -717,7 +724,7 @@
             let cestasDoPedidoAtual = []; // "Carrinho" do formulário
             let filtroRotaAtiva = 'TODOS';
             let modoAtual = 'admin'; // 'admin', 'entregador', 'montador'
-            let adminHeaderAberto = true;
+            // REMOVIDO: let adminHeaderAberto = true;
 
             // --- Funções ---
 
@@ -763,22 +770,8 @@
                 }
             }
             
-            /**
-             * Define o estado (aberto/fechado) do header de admin
-             */
-            function setAdminHeaderState(aberto) {
-                adminHeaderAberto = aberto;
-                if (adminHeaderAberto) {
-                    adminHeaderContent.classList.remove('hidden');
-                    iconToggleOpen.classList.remove('hidden');
-                    iconToggleClose.classList.add('hidden');
-                } else {
-                    adminHeaderContent.classList.add('hidden');
-                    iconToggleOpen.classList.add('hidden');
-                    iconToggleClose.classList.remove('hidden');
-                }
-            }
-
+            <!-- MODIFICADO: Função 'setAdminHeaderState' removida -->
+            
             function mostrarAviso(mensagem) {
                 modalAvisoTexto.textContent = mensagem;
                 modalAviso.classList.remove('hidden');
@@ -876,8 +869,9 @@
                 toggleSubCampoAlterada();
                 toggleSubCampoBrinde();
                 
-                // Garante que o header de admin comece aberto
+                <!-- MODIFICADO: Header de admin não precisa mais ser setado
                 setAdminHeaderState(true);
+                -->
             }
 
             function getEntregasAtivas() {
@@ -1087,8 +1081,11 @@
                         valorTotalEntrega += valorCestaTotal;
                         
                         let tagsCesta = '';
-                        if (cesta.brinde === 'Sim') tagsCesta += `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">${cesta.brindeDescricao || 'Brinde'}</span>`;
-                        if (cesta.tipo === 'Alterada') tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>`;
+                        // MODIFICADO: Lógica da tag Brinde
+                        if (cesta.brinde === 'Sim') tagsCesta += `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde: ${cesta.brindeDescricao || 'Sim'}</span>`;
+                        // MODIFICADO: Lógica da tag Alterada
+                        if (cesta.tipo === 'Alterada') tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Cesta: Alterada</span>`;
+                        if (cesta.codigoFinal) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Final: ${cesta.codigoFinal}</span>`;
                         if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Partes: ${cesta.partesAlteradas.join(', ')}</span>`;
                         
                         infoCestasHtml += `
@@ -1117,40 +1114,44 @@
                     let botoesAcaoHtml = '';
                     if (entrega.status === 'Pendente') {
                         botoesAcaoHtml = `
-                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center" data-id="${entrega.id}" title="Editar Pedido">
+                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
                                 Editar
                             </button>
-                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">
+                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
                                 Cancelar
                             </button>
-                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50" data-id="${entrega.id}">
+                            <!-- MODIFICADO: col-span-2 para Entregador -->
+                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar Entrega
                             </button>
-                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-400 hover:bg-gray-50" data-id="${entrega.id}">
+                            <!-- MODIFICADO: col-span-2 para Montador -->
+                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar como Montado
                             </button>
                         `;
                     } else if (entrega.status === 'Montado') {
                          botoesAcaoHtml = `
-                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center" data-id="${entrega.id}" title="Editar Pedido">
+                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
                                 Editar
                             </button>
-                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">
+                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
                                 Cancelar
                             </button>
-                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50" data-id="${entrega.id}">
+                            <!-- MODIFICADO: col-span-2 para Entregador -->
+                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar Entrega
                             </button>
-                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-600 text-white cursor-not-allowed" data-id="${entrega.id}" disabled>
+                            <!-- MODIFICADO: col-span-2 para Montador -->
+                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-600 text-white cursor-not-allowed col-span-2" data-id="${entrega.id}" disabled>
                                 Montado
                             </button>
                          `;
                     } else if (entrega.status === 'Entregue') {
-                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-600 text-white cursor-not-allowed" disabled>Entregue</button>`;
+                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-600 text-white cursor-not-allowed col-span-2" disabled>Entregue</button>`;
                     } else {
-                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-gray-500 text-white cursor-not-allowed" disabled>Cancelada</button>`;
+                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-gray-500 text-white cursor-not-allowed col-span-2" disabled>Cancelada</button>`;
                     }
 
                     card.innerHTML = `
@@ -1210,11 +1211,11 @@
                 let pedidosRotaBreakdown = {};
 
                 entregas.forEach(entrega => {
-                    const rotaPedido = entrega.rotaEntrega || 'N/A';
-                    if (entrega.status !== 'Cancelada') {
-                        pedidosRotaBreakdown[rotaPedido] = (pedidosRotaBreakdown[rotaPedido] || 0) + 1;
-                    }
+                    // MODIFICADO: Pedidos cancelados são ignorados do resumo
                     if (entrega.status === 'Cancelada') return;
+
+                    const rotaPedido = entrega.rotaEntrega || 'N/A';
+                    pedidosRotaBreakdown[rotaPedido] = (pedidosRotaBreakdown[rotaPedido] || 0) + 1;
                     
                     const cestas = migrarFormatoCestas(entrega);
                     cestas.forEach(cesta => {
@@ -1224,11 +1225,12 @@
                     });
                 });
 
-                summaryTotalPedidos.textContent = totalPedidos;
+                summaryTotalPedidos.textContent = entregas.filter(e => e.status !== 'Cancelada').length; // MODIFICADO
                 summaryTotalCestas.textContent = totalCestas;
-                summaryCestasBreakdown.textContent = Object.entries(cestasBreakdown).map(([n, q]) => `${n}: ${q}`).join(' | ') || 'N/A';
-                summaryRotasBreakdown.textContent = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: ${q}`).join(' | ') || 'N/A';
-                summaryPedidosRotaBreakdown.textContent = Object.entries(pedidosRotaBreakdown).map(([r, q]) => `${r}: ${q}`).join(' | ') || 'N/A';
+                // MODIFICADO: Formato de lista (com <br>)
+                summaryCestasBreakdown.innerHTML = Object.entries(cestasBreakdown).map(([n, q]) => `${n}: <strong>${q}</strong>`).join('<br>') || 'N/A';
+                summaryRotasBreakdown.innerHTML = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: <strong>${q}</strong>`).join('<br>') || 'N/A';
+                // REMOVIDO: summaryPedidosRotaBreakdown.textContent = Object.entries(pedidosRotaBreakdown).map(([r, q]) => `${r}: ${q}`).join(' | ') || 'N/A';
             }
             
             // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
@@ -1257,6 +1259,7 @@
                     brinde: document.querySelector('input[name="sub-brinde"]:checked').value,
                     brindeDescricao: subInputBrindeDescricao.value || '',
                     codigoAlterada: subCodigoAlterada.value || '',
+                    codigoFinal: subCodigoFinal.value || '', // NOVO
                     partesAlteradas: partesAlteradas
                 };
                 
@@ -1273,6 +1276,7 @@
                 document.querySelector('input[name="sub-brinde"][value="Não"]').checked = true;
                 subInputBrindeDescricao.value = '';
                 subCodigoAlterada.value = '';
+                subCodigoFinal.value = ''; // NOVO
                 document.querySelectorAll('input[name="sub-partes_alteradas"]:checked').forEach(cb => cb.checked = false);
                 toggleSubCampoAlterada();
                 toggleSubCampoBrinde();
@@ -1373,6 +1377,7 @@
                         delete entregas[index].tipo; delete entregas[index].brinde;
                         delete entregas[index].brindeDescricao; delete entregas[index].codigoAlterada;
                         delete entregas[index].partesAlteradas;
+                        delete entregas[index].codigoFinal; // Limpa o legado (embora seja novo, é melhor limpar se existir solto)
                         
                         mostrarAviso("Entrega atualizada com sucesso!");
                     } else {
@@ -1844,6 +1849,7 @@
                         delete entregaMigrada.tipo; delete entregaMigrada.brinde;
                         delete entregaMigrada.brindeDescricao; delete entregaMigrada.codigoAlterada;
                         delete entregaMigrada.partesAlteradas;
+                        delete entregaMigrada.codigoFinal;
                         return entregaMigrada;
                     });
 
@@ -1941,78 +1947,10 @@
             });
             btnFecharFormModal.addEventListener('click', sairModoEdicao);
 
-            // Página Rota (Admin Header)
+            <!-- MODIFICADO: Listener do Header Admin removido
             btnToggleAdminHeader.addEventListener('click', () => setAdminHeaderState(!adminHeaderAberto));
+            -->
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
                 localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                carregarRotaAtiva();
-            });
-            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
-            inputNomeRota.addEventListener('change', atualizarInfoRota);
-            inputDataRota.addEventListener('change', atualizarInfoRota);
-            btnExcluirRota.addEventListener('click', excluirRotaAtiva);
-            
-            // Página Rota (Lista e Filtros)
-            listaEntregasEl.addEventListener('click', handleCardClick);
-            filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
-
-            // Página Modo (Agora na Top Bar)
-            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
-            
-            // Seção Despesas (Listeners)
-            inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
-            inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
-            inputDespesaExtra.addEventListener('change', salvarDespesas);
-
-            // Página Formulário (Dentro do Modal)
-            formEntrega.addEventListener('submit', adicionarOuAtualizarEntrega);
-            inputCliente.addEventListener('input', (e) => {
-                const cliente = CLIENTES_CACHE[e.target.value.toLowerCase()];
-                if (cliente) {
-                    displayClienteEndereco.textContent = cliente.endereco || '-';
-                    displayClienteComplemento.textContent = cliente.complemento || '-';
-                    displayClienteCelular.textContent = cliente.celular || '-';
-                    infoClienteSelecionado.classList.remove('hidden');
-                } else {
-                    infoClienteSelecionado.classList.add('hidden');
-                }
-            });
-            
-            // Página Formulário (Sub-form Cestas)
-            btnAddCesta.addEventListener('click', adicionarCestaAoPedido);
-            document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(r => r.addEventListener('change', toggleSubCampoAlterada));
-            document.querySelectorAll('input[name="sub-brinde"]').forEach(r => r.addEventListener('change', toggleSubCampoBrinde));
-            listaCestasNoPedidoEl.addEventListener('click', handleRemoverCesta);
-            
-            // Modais
-            btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
-            formPagamento.addEventListener('submit', salvarPagamento);
-            btnFecharWhatsApp.addEventListener('click', () => modalWhatsApp.classList.add('hidden'));
-            btnExportar.addEventListener('click', exportarDados);
-            btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
-            btnBaixarJson.addEventListener('click', () => {
-                const rotaAtiva = todasAsRotas[rotaAtivaId];
-                if (!rotaAtiva) return;
-                salvarLocalStorage();
-                const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-Nenhum]/gi, '_')}_${rotaAtiva.data}.json`;
-                compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
-            });
-            btnFecharAviso.addEventListener('click', fecharAviso);
-
-            // Importação/Exportação de Arquivos
-            btnCarregar.addEventListener('click', () => inputCarregarArquivo.click());
-            inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
-            btnImportarCard.addEventListener('click', () => inputCarregarCard.click());
-            inputCarregarCard.addEventListener('change', handleCardImportado);
-            
-            // Inicialização
-            iniciarAplicativo();
-        });
-    </script>
-</body>
-</html>
 
