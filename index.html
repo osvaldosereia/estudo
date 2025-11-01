@@ -53,12 +53,8 @@
         /* NOVO: Cores de Fundo por Rota (Padrão) - Mais Contraste */
         /* Usando tons 100 para BG e 600 para borda */
         .rota-CUIABÁ { background-color: #e0f2fe; border-left-color: #0284c7; } /* sky-100, sky-600 */
-        .rota-VG { background-color: #dcfce7; border-left-color: #16a34a; } /* green-100, green-600 */
-        .rota-CPA { background-color: #fef9c3; border-left-color: #ca8a04; } /* yellow-100, yellow-600 */
-        .rota-COXIPÓ { background-color: #eef2ff; border-left-color: #4f46e5; } /* indigo-100, indigo-600 */
-        .rota-N\/A { background-color: #f4f4f5; border-left-color: #71717a; } /* zinc-100, zinc-500 */
-
-        /* REMOVIDO: Regra de 'revert' não é mais necessária */
+            border-left-color: #3b82f6; /* blue-500 */
+        }
         
         /* Barra superior fixa */
         #top-bar {
@@ -68,12 +64,16 @@
             right: 0;
             z-index: 40; /* Abaixo dos modais (z-50) */
         }
-        /* Adiciona padding ao body para a top-bar não cobrir o conteúdo */
+        
+        /* MODIFICADO: Padding responsivo para a top-bar */
+        /* 112px no mobile (flex-col), 80px no desktop (flex-row) */
         body {
-            /* NOVO: Define fonte padrão e fundo com mais contraste */
-            font-family: 'Inter', sans-serif;
-            padding-top: 80px; 
-            background-color: #e5e7eb; /* gray-200 */
+            padding-top: 112px; 
+        }
+        @media (min-width: 640px) {
+            body {
+                padding-top: 80px; 
+            }
         }
 
         /* Lógica de visibilidade para Modos */
@@ -161,22 +161,22 @@
             border-color: #1d4ed8;
         }
     </style>
-</head>
-<body class="antialiased"> <!-- MODIFICADO: Removido bg-gray-100 -->
+<body class="bg-gray-100 font-sans antialiased">
     
     <!-- Barra Superior Fixa (Admin/Entregador) -->
     <nav id="top-bar" class="bg-blue-700 p-4 shadow-lg w-full">
-        <div class="container mx-auto max-w-5xl flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-white">Gestor de Rotas</h1>
-            <div class="flex bg-blue-900 rounded-lg p-1">
-                <button id="btn-modo-admin" class="btn-modo-ativo text-white font-semibold py-2 px-4 rounded-md text-sm">
+        <!-- MODIFICADO: Layout da top-bar agora é responsivo (coluna no mobile, linha no desktop) -->
+        <div class="container mx-auto max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+            <h1 class="text-xl sm:text-2xl font-bold text-white flex-shrink-0">Gestor de Rotas</h1>
+            <!-- MODIFICADO: w-full no mobile, botões menores -->
+            <div class="flex bg-blue-900 rounded-lg p-1 w-full sm:w-auto flex-shrink-0">
+                <button id="btn-modo-admin" class="btn-modo-ativo text-white font-semibold py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto">
                     ADMIN
                 </button>
-                <button id="btn-modo-entregador" class="text-blue-300 font-semibold py-2 px-4 rounded-md text-sm hover:bg-blue-800">
+                <button id="btn-modo-entregador" class="text-blue-300 font-semibold py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-blue-800">
                     ENTREGADOR
                 </button>
-                <!-- NOVO: Botão Montador -->
-                <button id="btn-modo-montador" class="text-blue-300 font-semibold py-2 px-4 rounded-md text-sm hover:bg-blue-800">
+                <button id="btn-modo-montador" class="text-blue-300 font-semibold py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-blue-800">
                     MONTADOR
                 </button>
             </div>
@@ -225,10 +225,9 @@
                 <div class="md:col-span-2">
                     <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
                     <div class="flex items-center">
-                        <!-- MODIFICADO: Borda mais escura -->
-                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        <!-- MODIFICADO: Borda mais escura e contraste de texto -->
-                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-400 bg-gray-100 text-gray-700 text-base min-w-[120px] justify-center">-</span>
+                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        <!-- MODIFICADO: min-w e text-size responsivos para evitar overflow -->
+                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm sm:text-base min-w-[100px] sm:min-w-[120px] justify-center">-</span>
                     </div>
                 </div>
             </div>
@@ -392,16 +391,16 @@
                                     <div class="mt-2 space-y-2">
                                         <!-- MODIFICADO: Borda mais escura e contraste de texto -->
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Arroz ALTERADO" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">ARROZ</span>
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
                                         </label>
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Alimento ALTERADO" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">ALIMENTO</span>
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Alimento</span>
                                         </label>
                                         <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Limpeza ALTERADO" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">LIMPEZA</span>
+                                            <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
                                         </label>
                                     </div>
                                 </div>
@@ -458,39 +457,10 @@
         <!-- FIM SEÇÃO LANÇAMENTO (ADMIN) -->
 
         <!-- Seção da Lista de Entregas (TODOS OS MODOS) -->
-        <section>
-            <!-- NOVO: Resumo da Rota -->
-            <!-- MODIFICADO: Adicionado 'montador-view', Contraste de texto -->
-            <section id="resumo-rota" class="bg-white p-6 rounded-lg shadow-md mb-8 admin-view montador-view">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Resumo da Rota</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                        <span class="block text-sm font-medium text-gray-700">TOTAL DE PEDIDOS</span>
-                        <span id="summary-total-pedidos" class="block text-3xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div>
-                        <span class="block text-sm font-medium text-gray-700">TOTAL DE CESTAS</span>
-                        <span id="summary-total-cestas" class="block text-3xl font-bold text-blue-600">0</span>
-                    </div>
-                    <div class="col-span-2 md:col-span-4 mt-4">
-                        <span class="block text-sm font-medium text-gray-700">CESTAS POR TIPO</span>
-                        <p id="summary-cestas-breakdown" class="text-sm text-gray-900 font-medium">-</p>
-                    </div>
-                    <div class="col-span-2 md:col-span-4 mt-2">
-                        <span class="block text-sm font-medium text-gray-700">CESTAS POR ROTA</span>
-                        <p id="summary-rotas-breakdown" class="text-sm text-gray-900 font-medium">-</p>
-                    </div>
-                    <div class="col-span-2 md:col-span-4 mt-2">
-                        <span class="block text-sm font-medium text-gray-700">PEDIDOS POR ROTA</span>
-                        <p id="summary-pedidos-rota-breakdown" class="text-sm text-gray-900 font-medium">-</p>
-                    </div>
-                </div>
-            </section>
-            <!-- FIM RESUMO -->
-            
+        <!-- MODIFICADO: Adicionado bg-white e padding para criar um "bloco" uniforme -->
+        <section class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                <!-- MODIFICADO: Contraste de texto -->
-                <h2 class="text-2xl font-semibold text-gray-900">Entregas na Rota</h2>
+                <h2 class="text-2xl font-semibold text-gray-700">Entregas na Rota</h2>
                 <div class="flex space-x-2 mt-4 sm:mt-0">
                     <button id="btn-importar-card" class="admin-view rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200">Importar Card</button>
                     <button id="btn-exportar" class="admin-view rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
@@ -1281,7 +1251,8 @@
                             </div>
                             
                             <!-- Blocos de Info (Obs, Detalhes, Tags, Status) -->
-                            <div class="mt-2 sm:ml-12 space-y-2">
+                            <!-- MODIFICADO: Adicionado overflow-hidden para segurança contra estouro de texto -->
+                            <div class="mt-2 sm:ml-12 space-y-2 overflow-hidden">
                                 ${obsInfo}
                                 ${detalhesInfo}
                                 
@@ -2537,4 +2508,5 @@
     </script>
 </body>
 </html>
+
 
