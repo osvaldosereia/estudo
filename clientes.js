@@ -1,2189 +1,4714 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rota de Entrega</title>
-    <!-- Carrega o Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NOVO: Carrega o Banco de Dados de Clientes -->
-    <!-- Este arquivo DEVE estar na mesma pasta que este HTML -->
-    <script src="clientes.js"></script>
-    <style>
-        /* Estilos Globais */
-        body {
-            /* Garante que o scroll seja suave */
-            scroll-behavior: smooth;
-        }
-
-        /* Hack para esconder a barra de scroll horizontal dos filtros */
-        #filtros-rota::-webkit-scrollbar {
-            display: none;
-        }
-        #filtros-rota {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        
-        /* Classe para item entregue */
-        .entregue {
-            background-color: #f0fdf4; /* green-50 */
-            border-left-color: #22c55e; /* green-500 */
-        }
-        .entregue .btn-entregue {
-            background-color: #22c55e; /* green-500 */
-            color: white;
-        }
-
-        /* Classe para item montado */
-        .montado {
-            background-color: #f0f9ff; /* blue-50 */
-            border-left-color: #2563eb; /* blue-600 */
-        }
-
-        /* Classe para item cancelado */
-        .cancelada {
-            background-color: #f3f4f6; /* gray-100 */
-            border-left-color: #6b7280; /* gray-500 */
-            opacity: 0.7;
-        }
-        
-        /* Classes de Rota (Cor da Borda) */
-        .rota-CUIABÁ { border-left-color: #2563eb; /* blue-600 */ }
-        .rota-VG { border-left-color: #db2777; /* pink-600 */ }
-        .rota-CPA { border-left-color: #16a34a; /* green-600 */ }
-        .rota-COXIPÓ { border-left-color: #f97316; /* orange-500 */ }
-
-        /* Classes de Visibilidade por Modo */
-        .admin-view, .entregador-view, .montador-view {
-            display: none; /* Oculto por padrão */
-        }
-
-        /* Modo ADMIN (Padrão) */
-        .modo-admin .admin-view {
-            display: block; /* ou flex, grid, etc. */
-        }
-        /* CORREÇÃO: Visibilidade no mobile */
-        .modo-admin .btn-top-admin {
-            display: inline-flex;
-        }
-        .modo-admin #btn-abrir-form-modal {
-            display: flex; /* Garante que o FAB apareça */
-        }
-
-        /* Modo ENTREGADOR */
-        .modo-entregador .entregador-view {
-            display: block; /* ou flex, grid, etc. */
-        }
-        .modo-entregador .btn-top-entregador {
-            display: inline-flex;
-        }
-        .modo-entregador #btn-abrir-form-modal {
-            display: none; /* Entregador não lança pedido */
-        }
-
-        /* Modo MONTADOR */
-        .modo-montador .montador-view {
-            display: block; /* ou flex, grid, etc. */
-        }
-        .modo-montador .btn-top-montador {
-            display: inline-flex;
-        }
-        .modo-montador #btn-abrir-form-modal {
-            display: none;
-        }
-
-        /* Estilo para botão de filtro de rota ativo */
-        .btn-filtro-ativo {
-            background-color: #1d4ed8 !important;
-            color: #ffffff !important;
-            border-color: #1d4ed8;
-        }
-        
-        /* Estilos de Texto e Textarea */
-        textarea { min-height: 100px; white-space: pre-wrap; }
-        .pre-wrap-texto {
-            white-space: pre-wrap;
-            word-break: break-word;
-            font-family: inherit;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
-        }
-
-        /* Lógica de visibilidade para Modo Montador */
-        .montador-hidden {
-            display: block;
-        }
-        .modo-montador .montador-hidden {
-            display: none;
-        }
-    </style>
-</head>
-<!-- CORREÇÃO: Adicionado 'modo-admin' como padrão para o FAB aparecer -->
-<body class="bg-gray-100 antialiased modo-admin">
-    
-    <!-- =================================================================== -->
-    <!-- BARRA SUPERIOR FIXA (NAV) -->
-    <!-- =================================================================== -->
-    <nav class="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
-        <div class="container mx-auto max-w-5xl p-4">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                <!-- Título -->
-                <div class="flex justify-between items-center">
-                    <!-- MODIFICADO: Título -->
-                    <h1 class="text-2xl font-bold text-gray-900">ROTA</h1>
-                    <!-- Botões de Modo (Visíveis no Mobile, escondidos no SM+) -->
-                    <div class="sm:hidden flex-shrink-0">
-                        <button id="btn-top-admin" class="btn-top-nav text-xs font-medium py-2 px-3 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
-                        <button id="btn-top-entregador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-green-100 text-green-700">ENTREGADOR</button>
-                        <button id="btn-top-montador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-purple-100 text-purple-700">MONTADOR</button>
-                    </div>
-                </div>
-                <!-- Botões de Modo (Visíveis no SM+, escondidos no Mobile) -->
-                <div class="hidden sm:flex sm:space-x-2 mt-2 sm:mt-0">
-                    <button id="btn-modo-admin" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
-                    <button id="btn-modo-entregador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">ENTREGADOR</button>
-                    <button id="btn-modo-montador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">MONTADOR</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- =================================================================== -->
-    <!-- PÁGINA PRINCIPAL (ÚNICA) -->
-    <!-- =================================================================== -->
-    <main class="container mx-auto max-w-5xl p-4 mt-24 sm:mt-20">
-        
-        <!-- MODIFICADO: Header do Admin não é mais sticky -->
-        <header id="page-rota-header" class="admin-view bg-gray-100 pt-4 pb-2 px-4 -mt-4 -mx-4 mb-4">
-            <div class="container mx-auto max-w-5xl">
-                <!-- MODIFICADO: Botão de toggle removido -->
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-2xl font-semibold text-gray-900">Gerenciar Rota</h2>
-                </div>
-                
-                <!-- MODIFICADO: Conteúdo não é mais colapsável, ID removido -->
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                        <div class="md:col-span-2">
-                            <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
-                            <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                <!-- Rotas serão preenchidas pelo JS -->
-                            </select>
-                        </div>
-                        <div class="md:col-span-1">
-                            <label for="btn-nova-rota" class="block text-sm font-medium text-gray-700">&nbsp;</label>
-                            <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Nova Rota
-                            </button>
-                        </div>
-                        <div class="md:col-span-1">
-                            <label for="btn-excluir-rota" class="block text-sm font-medium text-gray-700">&nbsp;</label>
-                             <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                                Excluir Rota
-                            </button>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
-                            <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
-                            <div class="flex items-center">
-                                <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm sm:text-base min-w-[100px] sm:min-w-[120px] justify-center">-</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- MODIFICADO: Botões de Importar/Exportar movidos para fora do header -->
-                </div>
-            </div>
-        </header>
-
-        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para Todos e em grid -->
-        <div class="grid grid-cols-3 gap-2 mb-4">
-            <button class="btn-importar-card rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200 flex items-center justify-center text-center h-full">Importar Card</button>
-            <button class="btn-exportar rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700 flex items-center justify-center text-center h-full">Exportar Rota</button>
-            <button class="btn-carregar rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700 flex items-center justify-center text-center h-full">Carregar Rota</button>
-        </div>
-
-        <!-- Seção de Despesas (Entregador) - MOVIDA PARA O FIM -->
-        <!-- <section id="secao-despesas" ... > ... </section> -->
-
-        <!-- Painel de Resumo (Montador) -->
-        <section id="secao-resumo" class="montador-view bg-white p-4 rounded-lg shadow-md mb-4 space-y-2">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2 border-b pb-2">Resumo da Montagem</h2>
-            <!-- MODIFICADO: Layout de colunas para Desktop -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <!-- Coluna 1: Totais -->
-                <div class="space-y-2">
-                    <div>
-                        <span class="block font-medium text-gray-600">Total Pedidos (Não Cancelados):</span>
-                        <span id="summary-total-pedidos" class="text-lg font-bold text-gray-900">0</span>
-                    </div>
-                    <div>
-                        <span class="block font-medium text-gray-600">Total Cestas (Não Canceladas):</span>
-                        <span id="summary-total-cestas" class="text-lg font-bold text-gray-900">0</span>
-                    </div>
-                </div>
-                <!-- Coluna 2: Breakdowns -->
-                <div class="space-y-2">
-                    <div>
-                        <span class="block font-medium text-gray-600">Cestas por Tipo:</span>
-                        <!-- MODIFICADO: text-sm e ID -->
-                        <span id="summary-cestas-breakdown" class="text-sm text-gray-700 leading-relaxed">...</span>
-                    </div>
-                    <div>
-                        <span class="block font-medium text-gray-600">Cestas por Rota:</span>
-                        <!-- MODIFICADO: text-sm e ID -->
-                        <span id="summary-rotas-breakdown" class="text-sm text-gray-700 leading-relaxed">...</span>
-                    </div>
-                </div>
-                <!-- REMOVIDO: Pedidos por Rota -->
-            </div>
-        </section>
-
-        <!-- MODIFICADO: Filtros de Rota agora são STICKY e roláveis no mobile -->
-        <div id="filtros-rota" class="sticky top-24 sm:top-20 z-20 bg-gray-100 py-2 flex flex-nowrap overflow-x-auto gap-2 mb-4">
-            <!-- REMOVIDO: Botão "TODAS" -->
-            <button data-filtro="CUIABÁ" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ flex-shrink-0">
-                CUIABÁ
-            </button>
-            <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG flex-shrink-0">
-                VG
-            </button>
-            <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA flex-shrink-0">
-                CPA
-            </button>
-            <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ flex-shrink-0">
-                COXIPÓ
-            </button>
-        </div>
-        
-        <!-- Lista de Cards de Entrega -->
-        <div id="lista-entregas" class="space-y-4">
-            <!-- Cards serão injetados aqui pelo JavaScript -->
-        </div>
-        <p id="lista-vazia" class="text-center text-gray-700 py-10">Nenhuma entrega na rota.</p>
-
-        <!-- Botões de Ação (Entregador) - REMOVIDO (Movido para o topo, visível para todos) -->
-        
-        <!-- Seção de Despesas (Entregador) - MOVIDA PARA CÁ -->
-        <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
-            <div class="grid grid-cols-1 gap-4 items-end">
-                <div>
-                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-            </div>
-        </section>
-
-        <!-- Espaçador para o FAB não cobrir o último card -->
-        <div class="h-24"></div> 
-    </main>
-
-    <!-- =================================================================== -->
-    <!-- BOTÃO FLUTUANTE (FAB) PARA ABRIR MODAL -->
-    <!-- =================================================================== -->
-    <!-- MODIFICADO: Removido 'admin-view' para ser controlado por JS, adicionado 'flex' -->
-    <button id="btn-abrir-form-modal" class="fixed z-30 bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
-    </button>
-
-    <!-- =================================================================== -->
-    <!-- MODAL DE FORMULÁRIO (Lançar/Editar) -->
-    <!-- =================================================================== -->
-    <div id="modal-form-entrega" class="fixed inset-0 z-50 hidden flex items-start justify-center bg-black bg-opacity-50 overflow-y-auto pt-10">
-        <div class="bg-gray-100 rounded-lg shadow-xl w-full max-w-4xl m-4">
-            <!-- Cabeçalho do Modal -->
-            <div class="flex justify-between items-center p-4 border-b border-gray-300">
-                <h3 id="modal-form-title" class="text-xl font-semibold text-gray-800">Lançar Nova Entrega</h3>
-                <button id="btn-fechar-form-modal" class="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Formulário Principal (Dentro do Modal) -->
-            <form id="form-entrega">
-                <div class="p-4 space-y-4">
-                    
-                    <!-- Seção 1: Cliente e Rota -->
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">1. Cliente e Rota</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                                <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
-                                <datalist id="lista-clientes">
-                                    <!-- Clientes carregados via JS -->
-                                </datalist>
-                            </div>
-                            <div>
-                                <label for="select-rota-entrega" class="block text-sm font-medium text-gray-700">Rota da Entrega</label>
-                                <select id="select-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                    <option value="CUIABÁ">CUIABÁ</option>
-                                    <option value="VG">VG</option>
-                                    <option value="CPA">CPA</option>
-                                    <option value="COXIPÓ">COXIPÓ</option>
-                                </select>
-                            </div>
-                            <div id="info-cliente-selecionado" class="md:col-span-2 hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
-                                <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
-                                <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
-                                <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Geral do Pedido)</label>
-                                <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco. Entregar após as 14h..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Seção 2: Cestas (Carrinho) -->
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">2. Cestas no Pedido</h4>
-                        
-                        <!-- Lista de Cestas Adicionadas -->
-                        <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
-                            <!-- Cestas adicionadas pelo JS aparecerão aqui -->
-                        </div>
-                        <p id="lista-cestas-vazia" class="text-center text-gray-500 py-4">Nenhuma cesta adicionada ao pedido.</p>
-                        
-                        <!-- Sub-Formulário para adicionar Cesta -->
-                        <div class="bg-gray-50 p-3 rounded-md border border-gray-300">
-                            <h5 class="text-md font-semibold text-gray-700 mb-3">Adicionar Cesta ao Pedido</h5>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="sub-select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
-                                    <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                        <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
-                                        <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
-                                        <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
-                                        <option value="Pequena Koblenz" data-valor="220.00">Pequena kolenz</option>
-                                        <option value="mÉDIA Bonini" data-valor="320.00">Média Bonini</option>
-                                        <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
-                                        <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
-                                        <option value="Grande Koblenz" data-valor="390.00">Grande koblenz</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                    <input type="number" id="sub-input-quantidade" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
-                                    <div class="flex space-x-4">
-                                        <label class="flex items-center">
-                                            <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">Normal</span>
-                                        </label>
-                                        <label class="flex items-center">
-                                            <input type="radio" name="sub-tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">Alterada</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-medium text-gray-700">Brinde?</label>
-                                    <div class="flex space-x-4">
-                                        <label class="flex items-center">
-                                            <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">Não</span>
-                                        </label>
-                                        <label class="flex items-center">
-                                            <input type="radio" name="sub-brinde" value="Sim" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">Sim</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <!-- MODIFICADO: Campo Brinde (Checkboxes) -->
-                                <div id="sub-campo-brinde" class="hidden md:col-span-2 space-y-2">
-                                    <label class="block text-sm font-medium text-gray-700">Opções de Brinde (Múltiplo)</label>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
-                                            <input type="checkbox" name="sub-brinde-opcoes" value="OVO" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">OVO</span>
-                                        </label>
-                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
-                                            <input type="checkbox" name="sub-brinde-opcoes" value="AMACIANTE" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">AMACIANTE</span>
-                                        </label>
-                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
-                                            <input type="checkbox" name="sub-brinde-opcoes" value="CAFÉ 250g" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-700">CAFÉ 250g</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="md:col-span-1 space-y-4">
-                                <div id="sub-campo-alterada" class="hidden space-y-4 mt-4">
-                                    <!-- NOVO: Campo Código Final -->
-                                    <div>
-                                        <label for="sub-codigo-final" class="block text-sm font-medium text-gray-700">Código Final (Opcional)</label>
-                                        <input type="text" id="sub-codigo-final" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: 1020-A">
-                                    </div>
-                                    <div>
-                                        <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                        <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão"></textarea>
-                                    </div>
-                                    <div id="sub-campo-partes-alteradas">
-                                        <label class="block text-sm font-medium text-gray-700">Partes Alteradas (Múltiplo)</label>
-                                        <div class="mt-2 grid grid-cols-2 gap-2">
-                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                                <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-700">Arroz</span>
-                                            </label>
-                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                                <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-700">Alimento</span>
-                                            </label>
-                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                                <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-700">Limpeza</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" id="btn-adicionar-cesta" class="w-full mt-4 flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
-                                Adicionar Cesta ao Pedido
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rodapé do Modal (Ações) -->
-                <div class="bg-gray-200 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="text-left">
-                        <span class="text-sm text-gray-600">Valor Total do Pedido</span>
-                        <div id="display-valor-total" class="text-2xl font-bold text-gray-900">
-                            R$ 0,00
-                        </div>
-                    </div>
-                    <button type="submit" id="btn-submit-form" class="w-full sm:w-auto flex justify-center items-center rounded-md border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700">
-                        <span id="btn-submit-form-text">Lançar Entrega</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- =================================================================== -->
-    <!-- MODAL DE PAGAMENTO (Entregador) -->
-    <!-- =================================================================== -->
-    <div id="modal-pagamento" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
-            <form id="form-pagamento">
-                <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Entrega e Pagamento</h3>
-                    <p class="text-sm text-gray-600 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
-                    <p class="text-sm text-gray-600 mb-4">Valor Total: <strong id="modal-cliente-valor"></strong></p>
-                    
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Forma(s) de Pagamento (Selecione ao menos uma):</label>
-                    <div id="modal-error-pagamento" class="text-red-600 text-sm mb-2 hidden">É obrigatório selecionar ao menos uma forma de pagamento.</div>
-                    <div class="space-y-2">
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="forma_pagamento" value="Dinheiro" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Dinheiro</span>
-                        </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="forma_pagamento" value="Pix" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Pix</span>
-                        </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="forma_pagamento" value="Cartão" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Cartão</span>
-                        </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="forma_pagamento" value="Fiado" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Fiado</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-                    <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
-                    <button type="submit" id="btn-confirmar-pagamento" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Confirmar Entrega</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- MODAL DE AÇÕES DO WHATSAPP (Entregador) -->
-    <!-- =================================================================== -->
-    <div id="modal-whatsapp" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Ação WhatsApp</h3>
-                <p class="text-sm text-gray-600 mb-4">Escolha uma ação para o cliente: <strong id="modal-wpp-cliente-nome"></strong></p>
-                <div class="space-y-3">
-                    <button data-acao="avisar-chegando" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
-                        Avisar (Estou Chegando)
-                    </button>
-                    <button data-acao="avisar-na-porta" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                        Avisar (Cheguei na Porta)
-                    </button>
-                    <button data-acao="agradecer" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18H10a2 2 0 002-2v-6.333a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 008.943 6H8a2 2 0 00-2 2v2.333zM10 15a1 1 0 100-2 1 1 0 000 2zm4-2a1 1 0 100-2 1 1 0 000 2z" /></svg>
-                        Agradecer (Pós-Venda)
-                    </button>
-                    <button data-acao="enviar-pix" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2H8a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
-                        Enviar Chave Pix
-                    </button>
-                    <button data-acao="compartilhar-admin" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 1 1 0 000-2zM2 8a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
-                        Compartilhar Pedido (Admin)
-                    </button>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-whatsapp" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- MODAL DE EXPORTAR (Admin / Entregador) -->
-    <!-- =================================================================== -->
-    <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
-                
-                <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Baixar/Compartilhar Arquivo da Rota (.json)
-                </button>
-
-                <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
-                <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md bg-gray-50">
-                    <pre class="text-xs text-gray-700">Nenhuma entrega concluída.</pre>
-                </div>
-
-                <!-- MODIFICADO: Seleção de Rotas para Resumo WPP -->
-                <div id="export-whatsapp-seletor" class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecione as rotas para o Resumo WhatsApp:</label>
-                    <div id="export-wpp-error" class="text-red-600 text-sm mb-2 hidden">Selecione ao menos uma rota.</div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="export-rota-wpp" value="CUIABÁ" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">CUIABÁ</span>
-                        </label>
-                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="export-rota-wpp" value="VG" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">VG</span>
-                        </label>
-                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="export-rota-wpp" value="CPA" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">CPA</span>
-                        </label>
-                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                            <input type="checkbox" name="export-rota-wpp" value="COXIPÓ" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-700">COXIPÓ</span>
-                        </label>
-                    </div>
-                </div>
-                <div id="export-whatsapp-link" class="mt-4">
-                    <!-- Link do WhatsApp será gerado aqui -->
-                    <button type="button" id="btn-gerar-resumo-wpp" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
-                        Gerar Resumo WhatsApp
-                    </button>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- MODAL DE AVISO (Global) -->
-    <!-- =================================================================== -->
-    <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
-            <div class="p-6">
-                <h3 id="modal-aviso-titulo" class="text-xl font-semibold text-gray-800 mb-4">Atenção</h3>
-                <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Inputs de Arquivo (Ocultos) -->
-    <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
-    <input type="file" id="input-carregar-card" class="hidden" accept=".json,application/json">
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // --- Constantes ---
-            const MAX_ROTAS = 30; // Limite de rotas salvas
-            const ADMIN_WHATSAPP_NUMBER = "65984491018"; // Número para compartilhar pedido
-            const CHAVE_PIX_PADRAO = "65984491018 - PIX CELULAR"; // Chave Pix Padrão
-
-            // --- Seletores de Elementos ---
-            
-            // Navegação (Top Bar e Modos)
-            const body = document.body;
-            const btnModoAdmin = document.getElementById('btn-modo-admin');
-            const btnModoEntregador = document.getElementById('btn-modo-entregador');
-            const btnModoMontador = document.getElementById('btn-modo-montador');
-            const btnTopAdmin = document.getElementById('btn-top-admin');
-            const btnTopEntregador = document.getElementById('btn-top-entregador');
-            const btnTopMontador = document.getElementById('btn-top-montador');
-            
-            // Gerenciamento de Rotas (Admin Header)
-            const btnNovaRota = document.getElementById('btn-nova-rota');
-            const selectRotaAtiva = document.getElementById('select-rota-ativa');
-            const inputNomeRota = document.getElementById('input-nome-rota');
-            const inputDataRota = document.getElementById('input-data-rota');
-            const displayDiaSemana = document.getElementById('display-dia-semana');
-            const btnExcluirRota = document.getElementById('btn-excluir-rota');
-            
-            // Despesas (Entregador)
-            const inputDespesaAbastecimento = document.getElementById('input-despesa-abastecimento');
-            const inputDespesaAlimentacao = document.getElementById('input-despesa-alimentacao');
-            const inputDespesaExtra = document.getElementById('input-despesa-extra');
-
-            // Resumo (Montador)
-            const summaryTotalPedidos = document.getElementById('summary-total-pedidos');
-            const summaryTotalCestas = document.getElementById('summary-total-cestas');
-            const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
-            const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
-
-            // Filtros de Rota
-            const filtrosRotaEl = document.getElementById('filtros-rota');
-
-            // Lista de Entregas
-            const listaEntregasEl = document.getElementById('lista-entregas');
-            const listaVaziaEl = document.getElementById('lista-vazia');
-
-            // Modal Formulário (Lançar/Editar)
-            const btnAbrirFormModal = document.getElementById('btn-abrir-form-modal');
-            const modalFormEntrega = document.getElementById('modal-form-entrega');
-            const btnFecharFormModal = document.getElementById('btn-fechar-form-modal');
-            const modalFormTitle = document.getElementById('modal-form-title');
-            const formEntrega = document.getElementById('form-entrega');
-            const btnSubmitForm = document.getElementById('btn-submit-form');
-            const btnSubmitFormText = document.getElementById('btn-submit-form-text');
-            const displayValorTotal = document.getElementById('display-valor-total');
-            
-            // Modal Form -> Cliente
-            const inputCliente = document.getElementById('input-cliente');
-            const datalistClientes = document.getElementById('lista-clientes');
-            const infoClienteSelecionado = document.getElementById('info-cliente-selecionado');
-            const displayClienteEndereco = document.getElementById('display-cliente-endereco');
-            const displayClienteComplemento = document.getElementById('display-cliente-complemento');
-            const displayClienteCelular = document.getElementById('display-cliente-celular');
-            const obsClienteInput = document.getElementById('obs-cliente');
-            const selectRotaEntrega = document.getElementById('select-rota-entrega');
-
-            // Modal Form -> Sub-Formulário (Adicionar Cesta)
-            const btnAdicionarCesta = document.getElementById('btn-adicionar-cesta');
-            const subSelectCesta = document.getElementById('sub-select-cesta');
-            const subInputQuantidade = document.getElementById('sub-input-quantidade');
-            const subCampoBrinde = document.getElementById('sub-campo-brinde');
-            // const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao'); // REMOVIDO
-            const subCampoAlterada = document.getElementById('sub-campo-alterada');
-            const subCodigoAlterada = document.getElementById('sub-codigo-alterada');
-            const subCodigoFinal = document.getElementById('sub-codigo-final');
-
-            // Modal Form -> Lista de Cestas (Carrinho)
-            const listaCestasNoPedidoEl = document.getElementById('lista-cestas-no-pedido');
-            const listaCestasVaziaEl = document.getElementById('lista-cestas-vazia');
-            
-            // Modal Pagamento
-            const modalPagamento = document.getElementById('modal-pagamento');
-            const formPagamento = document.getElementById('form-pagamento');
-            const btnCancelarPagamento = document.getElementById('btn-cancelar-pagamento');
-            const modalClienteNome = document.getElementById('modal-cliente-nome');
-            const modalClienteValor = document.getElementById('modal-cliente-valor');
-            const modalErrorPagamento = document.getElementById('modal-error-pagamento');
-
-            // Modal WhatsApp
-            const modalWhatsApp = document.getElementById('modal-whatsapp');
-            const modalWppClienteNome = document.getElementById('modal-wpp-cliente-nome');
-            const btnFecharWhatsApp = document.getElementById('btn-fechar-whatsapp');
-
-            /* MODIFICADO: Seletores de Botão por CLASSE */
-            const btnsExportar = document.querySelectorAll('.btn-exportar');
-            const btnsCarregar = document.querySelectorAll('.btn-carregar');
-            const btnsImportarCard = document.querySelectorAll('.btn-importar-card');
-            
-            // Modal Exportar
-            const modalExportar = document.getElementById('modal-exportar');
-            const exportRelatorioEl = document.getElementById('export-relatorio');
-            const exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
-            const btnBaixarJson = document.getElementById('btn-baixar-json');
-            const btnFecharExportar = document.getElementById('btn-fechar-exportar');
-            const btnGerarResumoWpp = document.getElementById('btn-gerar-resumo-wpp'); // NOVO
-            const exportWppError = document.getElementById('export-wpp-error'); // NOVO
-
-            // Modal Aviso
-            const modalAviso = document.getElementById('modal-aviso');
-            const modalAvisoTitulo = document.getElementById('modal-aviso-titulo');
-            const modalAvisoTexto = document.getElementById('modal-aviso-texto');
-            const btnFecharAviso = document.getElementById('btn-fechar-aviso');
-
-            // Inputs de Arquivo
-            const inputCarregarArquivo = document.getElementById('input-carregar-arquivo');
-            const inputCarregarCard = document.getElementById('input-carregar-card');
-
-
-            // --- Estado da Aplicação ---
-            let todasAsRotas = {}; // Objeto para guardar todas as rotas
-            let rotaAtivaId = null; // ID da rota sendo visualizada
-            let CLIENTES_CACHE = {}; // Cache para busca rápida de clientes por nome
-
-            let entregaParaPagarId = null; // ID da entrega no modal de pagamento
-            let whatsAppEntregaId = null; // ID da entrega no modal de WhatsApp
-            let editingEntregaId = null;
-            
-            let cestasDoPedidoAtual = []; // "Carrinho" do formulário
-            let filtroRotaAtiva = 'CUIABÁ'; // MODIFICADO: Padrão alterado
-            let modoAtual = 'admin'; // 'admin', 'entregador', 'montador'
-
-            // --- Funções ---
-
-            // --- Funções de UI (Modo, Modais, etc) ---
-
-            /**
-             * Alterna a visualização do app (Admin, Entregador, Montador)
-             */
-            function setModoVisualizacao(modo) {
-                modoAtual = modo;
-                // CORREÇÃO: Garante que a classe base sempre exista
-                body.className = `bg-gray-100 antialiased modo-${modo}`;
-                
-                // Atualiza botões da barra superior (mobile)
-                [btnTopAdmin, btnTopEntregador, btnTopMontador].forEach(btn => btn.classList.add('hidden'));
-                document.getElementById(`btn-top-${modo}`).classList.remove('hidden');
-
-                // Atualiza botões da barra superior (desktop)
-                [btnModoAdmin, btnModoEntregador, btnModoMontador].forEach(btn => {
-                    btn.classList.remove('bg-blue-100', 'text-blue-700', 'bg-green-100', 'text-green-700', 'bg-purple-100', 'text-purple-700');
-                    btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
-                });
-                
-                let btnAtivoDesktop = document.getElementById(`btn-modo-${modo}`);
-                btnAtivoDesktop.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-100');
-                if (modo === 'admin') btnAtivoDesktop.classList.add('bg-blue-100', 'text-blue-700');
-                if (modo === 'entregador') btnAtivoDesktop.classList.add('bg-green-100', 'text-green-700');
-                if (modo === 'montador') btnAtivoDesktop.classList.add('bg-purple-100', 'text-purple-700');
-                
-                // Atualiza a visualização dos cards e do resumo
-                renderizarEntregas();
-                renderizarResumo();
-            }
-            
-            function mostrarAviso(mensagem, titulo = "Atenção") {
-                modalAvisoTitulo.textContent = titulo;
-                modalAvisoTexto.textContent = mensagem;
-                modalAviso.classList.remove('hidden');
-            }
-            function fecharAviso() {
-                modalAviso.classList.add('hidden');
-            }
-
-            function abrirFormModal() {
-                modalFormEntrega.classList.remove('hidden');
-                body.classList.add('overflow-hidden'); // Trava o scroll do body
-            }
-            function fecharFormModal() {
-                modalFormEntrega.classList.add('hidden');
-                body.classList.remove('overflow-hidden');
-            }
-            
-            // --- Funções de Formatação ---
-
-            function formatarMoeda(valor) {
-                return parseFloat(valor).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-            }
-            function formatarData(isoString) {
-                if (!isoString) return '';
-                const data = new Date(isoString);
-                return data.toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-            function getDiaDaSemana(dataString) {
-                if (!dataString) return '-';
-                const data = new Date(dataString + 'T12:00:00'); // Evita fuso
-                const dia = data.toLocaleDateString('pt-BR', { weekday: 'long' });
-                return dia.charAt(0).toUpperCase() + dia.slice(1);
-            }
-            function normalizarString(str) {
-                if (typeof str !== 'string') return '';
-                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            }
-
-            // --- Funções de Gerenciamento de Rotas (Admin) ---
-
-            function salvarTodasAsRotas() {
-                // Gerenciamento de limite (MAX_ROTAS)
-                const chavesRotas = Object.keys(todasAsRotas);
-                if (chavesRotas.length > MAX_ROTAS) {
-                    const chavesOrdenadas = chavesRotas.sort((a, b) => a - b);
-                    const chavesParaRemover = chavesOrdenadas.slice(0, chavesOrdenadas.length - MAX_ROTAS);
-                    chavesParaRemover.forEach(chave => delete todasAsRotas[chave]);
-                }
-                localStorage.setItem('gerenciadorDeRotas', JSON.stringify(todasAsRotas));
-                if (rotaAtivaId) {
-                    localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                }
-            }
-
-            function getEntregasAtivas() {
-                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
-                    return todasAsRotas[rotaAtivaId].entregas;
-                }
-                return [];
-            }
-            function getRotaAtiva() {
-                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
-                    return todasAsRotas[rotaAtivaId];
-                }
-                return null;
-            }
-
-            function popularSelectRotas() {
-                selectRotaAtiva.innerHTML = '';
-                const chavesOrdenadas = Object.keys(todasAsRotas).sort((a, b) => b - a);
-                chavesOrdenadas.forEach(id => {
-                    const rota = todasAsRotas[id];
-                    const option = document.createElement('option');
-                    option.value = id;
-                    const dataFormatada = rota.data ? new Date(rota.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem Data';
-                    option.textContent = `${rota.nome} (${dataFormatada})`;
-                    if (id === rotaAtivaId) {
-                        option.selected = true;
-                    }
-                    selectRotaAtiva.appendChild(option);
-                });
-            }
-
-            function carregarRotaAtiva() {
-                const rota = getRotaAtiva();
-                if (!rota) {
-                    if (Object.keys(todasAsRotas).length === 0) {
-                        criarNovaRota(false);
-                    } else {
-                        rotaAtivaId = Object.keys(todasAsRotas)[0];
-                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                    }
-                    popularSelectRotas();
-                    carregarRotaAtiva();
-                    return;
-                }
-
-                inputNomeRota.value = rota.nome;
-                inputDataRota.value = rota.data;
-                displayDiaSemana.textContent = getDiaDaSemana(rota.data);
-
-                rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-                inputDespesaAbastecimento.value = rota.despesas.abastecimento || 0;
-                inputDespesaAlimentacao.value = rota.despesas.alimentacao || 0;
-                inputDespesaExtra.value = rota.despesas.extra || 0;
-
-                selectRotaAtiva.value = rotaAtivaId;
-                
-                renderizarEntregas();
-                renderizarResumo();
-            }
-
-            function criarNovaRota(atualizarTela = true) {
-                const novoId = Date.now().toString();
-                const hoje = new Date().toISOString().split('T')[0];
-                const novaRota = {
-                    id: novoId,
-                    nome: "Nova Rota",
-                    data: hoje,
-                    entregas: [],
-                    despesas: { abastecimento: 0, alimentacao: 0, extra: 0 }
-                };
-                todasAsRotas[novoId] = novaRota;
-                rotaAtivaId = novoId;
-                salvarTodasAsRotas();
-                if (atualizarTela) {
-                    popularSelectRotas();
-                    carregarRotaAtiva();
-                }
-            }
-
-            function atualizarInfoRota() {
-                const rota = getRotaAtiva();
-                if (!rota) return;
-                rota.nome = inputNomeRota.value || "Rota Sem Nome";
-                rota.data = inputDataRota.value;
-                displayDiaSemana.textContent = getDiaDaSemana(rota.data);
-                salvarTodasAsRotas();
-                popularSelectRotas();
-            }
-
-            function salvarDespesas() {
-                const rota = getRotaAtiva();
-                if (!rota) return;
-                rota.despesas = {
-                    abastecimento: parseFloat(inputDespesaAbastecimento.value) || 0,
-                    alimentacao: parseFloat(inputDespesaAlimentacao.value) || 0,
-                    extra: parseFloat(inputDespesaExtra.value) || 0
-                };
-                salvarTodasAsRotas();
-            }
-
-            function excluirRotaAtiva() {
-                 if (Object.keys(todasAsRotas).length <= 1) {
-                    mostrarAviso("Você não pode excluir a última rota.");
-                    return;
-                }
-                delete todasAsRotas[rotaAtivaId];
-                const chavesOrdenadas = Object.keys(todasAsRotas).sort((a, b) => b - a);
-                rotaAtivaId = chavesOrdenadas[0];
-                salvarTodasAsRotas();
-                popularSelectRotas();
-                carregarRotaAtiva();
-            }
-
-            /**
-             * Função de compatibilidade. Transforma pedidos antigos (cesta única)
-             * no novo formato (array de cestas).
-             */
-            function migrarFormatoCestas(entrega) {
-                if (Array.isArray(entrega.cestas)) {
-                    // Garante que o formato novo tenha os campos novos (brindeOpcoes)
-                    return entrega.cestas.map(cesta => ({
-                        ...cesta,
-                        brindeOpcoes: cesta.brindeOpcoes || (cesta.brindeDescricao ? [cesta.brindeDescricao] : [])
-                    }));
-                }
-                // Formato antigo: migra
-                if (entrega.cesta && entrega.cesta.nome) {
-                    return [{
-                        nome: entrega.cesta.nome,
-                        valor: entrega.cesta.valor,
-                        quantidade: entrega.quantidade || 1,
-                        tipo: entrega.tipo || 'Normal',
-                        brinde: entrega.brinde || 'Não',
-                        brindeDescricao: entrega.brindeDescricao || '', // Mantém por segurança
-                        brindeOpcoes: entrega.brindeOpcoes || (entrega.brindeDescricao ? [entrega.brindeDescricao] : []), // Migra brindeDescricao
-                        codigoAlterada: entrega.codigoAlterada || '',
-                        codigoFinal: entrega.codigoFinal || '',
-                        partesAlteradas: entrega.partesAlteradas || []
-                    }];
-                }
-                return []; // Formato inválido ou vazio
-            }
-
-            // --- Funções de Renderização (Cards e Resumo) ---
-
-            function renderizarEntregas() {
-                listaEntregasEl.innerHTML = '';
-                const entregas = getEntregasAtivas();
-
-                const entregasFiltradas = entregas.filter(e => {
-                    const rotaPedido = e.rotaEntrega || 'N/A';
-                    if (filtroRotaAtiva === 'TODOS') return true; // Mantido por segurança, embora 'TODOS' não exista mais no UI
-                    return rotaPedido === filtroRotaAtiva;
-                });
-                
-                const entregasOrdenadas = entregasFiltradas;
-
-                if (entregasOrdenadas.length === 0) {
-                    listaVaziaEl.classList.remove('hidden');
-                    return;
-                }
-                listaVaziaEl.classList.add('hidden');
-
-                entregasOrdenadas.forEach((entrega, index) => {
-                    const card = document.createElement('div');
-                    card.dataset.id = entrega.id;
-                    
-                    let rotaClass = `rota-${entrega.rotaEntrega || 'N/A'}`;
-                    let statusClass = '';
-                    if (entrega.status === 'Entregue') statusClass = 'entregue';
-                    if (entrega.status === 'Cancelada') statusClass = 'cancelada';
-                    if (entrega.status === 'Montado') statusClass = 'montado';
-
-                    card.className = `bg-white p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col w-full overflow-hidden ${rotaClass} ${statusClass}`;
-                    
-                    let obsInfo = '';
-                    if (entrega.observacao) {
-                        obsInfo = `
-                            <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
-                                <span class="text-xs font-bold text-red-700">OBSERVAÇÃO:</span>
-                                <p class="pre-wrap-texto text-red-700">${entrega.observacao}</p>
-                            </div>
-                        `;
-                    }
-                    
-                    let statusInfo = '';
-                    if (entrega.status === 'Entregue') {
-                        statusInfo = `<div class="text-xs text-green-700 mt-2"><span class="font-semibold">Pagamento:</span> ${entrega.formaPagamento.join(', ')} | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}</div>`;
-                    } else if (entrega.status === 'Cancelada') {
-                        statusInfo = `<div class="text-xs text-red-700 mt-2"><span class="font-semibold">Status:</span> CANCELADA | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}</div>`;
-                    } else if (entrega.status === 'Montado') {
-                        statusInfo = `<div class="text-xs text-blue-700 mt-2"><span class="font-semibold">Status:</span> MONTADO | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioMontagem)}</div>`;
-                    }
-                    
-                    let idInfo = ''; 
-
-                    let infoClienteHtml = `
-                        <div class="flex-1 min-w-0">
-                            ${idInfo}
-                            <p class="text-xl font-semibold text-gray-900 break-words" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
-                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
-                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
-                            <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
-                            ${obsInfo}
-                        </div>
-                        <div class="flex flex-col items-center justify-center admin-view ml-2">
-                            <button class="btn-mover-cima text-gray-400 p-2 ${index === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${index === 0 ? 'disabled' : ''}>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
-                            </button>
-                            <button class="btn-mover-baixo text-gray-400 p-2 ${index === entregasOrdenadas.length - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${index === entregasOrdenadas.length - 1 ? 'disabled' : ''}>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                        </div>
-                    `;
-
-                    // Lógica de Cestas (Multi-Cesta)
-                    const cestasParaRenderizar = migrarFormatoCestas(entrega);
-                    let infoCestasHtml = '';
-                    let valorTotalEntrega = 0;
-                    
-                    cestasParaRenderizar.forEach(cesta => {
-                        const valorCestaTotal = cesta.valor * cesta.quantidade;
-                        valorTotalEntrega += valorCestaTotal;
-                        
-                        let tagsCesta = '';
-                        // MODIFICADO: Lógica da tag Brinde
-                        if (cesta.brinde === 'Sim') {
-                            const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
-                            tagsCesta += `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde: ${brindesTxt}</span>`;
-                        }
-                        if (cesta.tipo === 'Alterada') tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Cesta: Alterada</span>`;
-                        if (cesta.codigoFinal) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Final: ${cesta.codigoFinal}</span>`;
-                        if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Partes: ${cesta.partesAlteradas.join(', ')}</span>`;
-                        
-                        let detalhesCestaHtml = '';
-                        if (cesta.tipo === 'Alterada' && cesta.codigoAlterada) {
-                             detalhesCestaHtml = `
-                                <div class="mt-2 pt-2 border-t border-gray-200">
-                                    <span class="text-xs font-bold text-yellow-700">DETALHES:</span>
-                                    <p class="pre-wrap-texto text-yellow-700">${cesta.codigoAlterada}</p>
-                                </div>
-                            `;
-                        }
-
-                        infoCestasHtml += `
-                            <div class="p-2 bg-gray-50 rounded-md border border-gray-300">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-semibold text-gray-800">${cesta.quantidade}x ${cesta.nome}</span>
-                                    <span class="text-sm font-semibold text-gray-800">${formatarMoeda(valorCestaTotal)}</span>
-                                </div>
-                                <div class="mt-1 flex flex-wrap gap-1">
-                                    ${tagsCesta}
-                                </div>
-                                ${detalhesCestaHtml}
-                            </div>
-                        `;
-                    });
-
-                    // Botões de Ação (Editar, Cancelar, Entregar, Montar)
-                    let botoesAcaoHtml = '';
-                    // CORREÇÃO: Botão Editar agora é 'admin-view'
-                    const btnEditarHtml = `
-                        <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                            Editar
-                        </button>`;
-                    
-                    if (entrega.status === 'Pendente') {
-                        botoesAcaoHtml = `
-                            ${btnEditarHtml}
-                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
-                                Cancelar
-                            </button>
-                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
-                                Marcar Entrega
-                            </button>
-                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
-                                Marcar como Montado
-                            </button>
-                        `;
-                    } else if (entrega.status === 'Montado') {
-                         botoesAcaoHtml = `
-                            ${btnEditarHtml}
-                            <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
-                                Cancelar
-                            </button>
-                            <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
-                                Marcar Entrega
-                            </button>
-                            <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-600 text-white cursor-not-allowed col-span-2" data-id="${entrega.id}" disabled>
-                                Montado
-                            </button>
-                         `;
-                    } else if (entrega.status === 'Entregue') {
-                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-green-600 text-white cursor-not-allowed col-span-2" disabled>Entregue</button>`;
-                    } else {
-                        botoesAcaoHtml = `<button class="btn-entregue w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-gray-500 text-white cursor-not-allowed col-span-2" disabled>Cancelada</button>`;
-                    }
-
-                    card.innerHTML = `
-                        <!-- Seção 1: Cliente e Setas (Admin) -->
-                        <div class="flex justify-between items-start">
-                            ${infoClienteHtml}
-                        </div>
-                        
-                        <!-- Seção 2: Cestas e Valor Total -->
-                        <div class="mt-4 space-y-2">
-                            ${infoCestasHtml}
-                        </div>
-                        <div class="flex justify-end items-center mt-2 p-2 bg-gray-100 rounded-md">
-                            <span class="text-sm font-medium text-gray-600 mr-2">VALOR TOTAL:</span>
-                            <span class="text-lg font-bold text-gray-900">${formatarMoeda(valorTotalEntrega)}</span>
-                        </div>
-
-                        <!-- Blocos de Info (Obs, Detalhes, Status) -->
-                        <div class="mt-2 space-y-2 overflow-hidden">
-                            ${statusInfo}
-                        </div>
-                        
-                        <!-- Barra de Ações (Ícones) -->
-                        <div class="montador-hidden grid grid-cols-5 gap-1 mt-4 pt-4 border-t border-gray-200">
-                            <!-- Mapa -->
-                            <button class="btn-card-maps flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.status === 'Pendente' || entrega.status === 'Montado' ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.status === 'Pendente' || entrega.status === 'Montado' ? '' : 'disabled'}>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
-                                <span class="text-xs mt-1">Mapa</span>
-                            </button>
-                            <!-- WhatsApp -->
-                            <button class="btn-card-whatsapp flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.cliente.celular ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.cliente.celular ? '' : 'disabled'} data-id="${entrega.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.626-2.957 6.584-6.591 6.584zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.068-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.1-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.05-.087-.182-.133-.38-.232z"/></svg>
-                                <span class="text-xs mt-1">Wpp</span>
-                            </button>
-                            <!-- Ligar -->
-                            <button class="btn-card-ligar flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.cliente.celular ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.cliente.celular ? '' : 'disabled'}>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C6.477 18 2 13.523 2 8V3z" /></svg>
-                                <span class="text-xs mt-1">Ligar</span>
-                            </button>
-                            <!-- Exportar Card -->
-                            <button class="btn-card-exportar flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md" data-id="${entrega.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                <span class="text-xs mt-1">JSON</span>
-                            </button>
-                        </div>
-
-                        <!-- Botões de Ação (Abaixo dos Ícones) -->
-                        <div class="grid grid-cols-2 gap-2 mt-2">
-                            ${botoesAcaoHtml}
-                        </div>
-                    `;
-                    listaEntregasEl.appendChild(card);
-                });
-            }
-
-            function renderizarResumo() {
-                const entregas = getEntregasAtivas();
-                let totalCestas = 0;
-                let cestasBreakdown = {};
-                let rotasBreakdown = {};
-                let pedidosRotaBreakdown = {};
-
-                entregas.forEach(entrega => {
-                    if (entrega.status === 'Cancelada') return;
-
-                    const rotaPedido = entrega.rotaEntrega || 'N/A';
-                    pedidosRotaBreakdown[rotaPedido] = (pedidosRotaBreakdown[rotaPedido] || 0) + 1;
-                    
-                    const cestas = migrarFormatoCestas(entrega);
-                    cestas.forEach(cesta => {
-                        totalCestas += cesta.quantidade;
-                        cestasBreakdown[cesta.nome] = (cestasBreakdown[cesta.nome] || 0) + cesta.quantidade;
-                        rotasBreakdown[rotaPedido] = (rotasBreakdown[rotaPedido] || 0) + cesta.quantidade;
-                    });
-                });
-
-                summaryTotalPedidos.textContent = entregas.filter(e => e.status !== 'Cancelada').length;
-                summaryTotalCestas.textContent = totalCestas;
-                summaryCestasBreakdown.innerHTML = Object.entries(cestasBreakdown).map(([n, q]) => `${n}: <strong>${q}</strong>`).join('<br>') || 'N/A';
-                summaryRotasBreakdown.innerHTML = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: <strong>${q}</strong>`).join('<br>') || 'N/A';
-            }
-            
-            // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
-
-            function toggleSubCampoAlterada() {
-                const tipo = document.querySelector('input[name="sub-tipo-cesta"]:checked').value;
-                if (tipo === 'Alterada') {
-                    subCampoAlterada.classList.remove('hidden');
-                } else {
-                    subCampoAlterada.classList.add('hidden');
-                }
-            }
-            function toggleSubCampoBrinde() {
-                const brinde = document.querySelector('input[name="sub-brinde"]:checked').value;
-                if (brinde === 'Sim') {
-                    subCampoBrinde.classList.remove('hidden');
-                } else {
-                    subCampoBrinde.classList.add('hidden');
-                }
-            }
-            
-            function adicionarCestaAoPedido() {
-                const selectedOption = subSelectCesta.options[subSelectCesta.selectedIndex];
-                const partesAlteradas = 
-                    Array.from(document.querySelectorAll('input[name="sub-partes_alteradas"]:checked'))
-                         .map(input => input.value);
-                // MODIFICADO: Captura Brindes
-                const brindeOpcoes = 
-                    Array.from(document.querySelectorAll('input[name="sub-brinde-opcoes"]:checked'))
-                         .map(input => input.value);
-
-                const novaCesta = {
-                    nome: selectedOption.value,
-                    valor: parseFloat(selectedOption.dataset.valor),
-                    quantidade: parseInt(subInputQuantidade.value) || 1,
-                    tipo: document.querySelector('input[name="sub-tipo-cesta"]:checked').value,
-                    brinde: document.querySelector('input[name="sub-brinde"]:checked').value,
-                    brindeOpcoes: brindeOpcoes, // NOVO
-                    brindeDescricao: '', // REMOVIDO: brindeOpcoes substitui
-                    codigoAlterada: subCodigoAlterada.value || '',
-                    codigoFinal: subCodigoFinal.value || '',
-                    partesAlteradas: partesAlteradas
-                };
-                
-                cestasDoPedidoAtual.push(novaCesta);
-                resetarSubFormulario();
-                renderCestasNoPedido();
-            }
-
-            function resetarSubFormulario() {
-                subSelectCesta.selectedIndex = 0;
-                subInputQuantidade.value = 1;
-                document.querySelector('input[name="sub-tipo-cesta"][value="Normal"]').checked = true;
-                document.querySelector('input[name="sub-brinde"][value="Não"]').checked = true;
-                // MODIFICADO: Reseta Checkboxes de Brinde
-                document.querySelectorAll('input[name="sub-brinde-opcoes"]:checked').forEach(cb => cb.checked = false);
-                subCodigoAlterada.value = '';
-                subCodigoFinal.value = '';
-                document.querySelectorAll('input[name="sub-partes_alteradas"]:checked').forEach(cb => cb.checked = false);
-                toggleSubCampoAlterada();
-                toggleSubCampoBrinde();
-            }
-            
-            function renderCestasNoPedido() {
-                listaCestasNoPedidoEl.innerHTML = '';
-                let valorTotal = 0;
-
-                if (cestasDoPedidoAtual.length === 0) {
-                    listaCestasVaziaEl.classList.remove('hidden');
-                    displayValorTotal.textContent = formatarMoeda(0);
-                    return;
-                }
-                
-                listaCestasVaziaEl.classList.add('hidden');
-                
-                cestasDoPedidoAtual.forEach((cesta, index) => {
-                    const valorCestaTotal = cesta.valor * cesta.quantidade;
-                    valorTotal += valorCestaTotal;
-
-                    const item = document.createElement('div');
-                    item.className = 'p-3 bg-white rounded-md border border-gray-300 flex justify-between items-center';
-                    item.innerHTML = `
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-gray-800">${cesta.quantidade}x ${cesta.nome}</p>
-                            <p class="text-xs text-gray-600">${cesta.tipo} ${cesta.brinde === 'Sim' ? '| Com Brinde' : ''}</p>
-                        </div>
-                        <div class="flex-shrink-0 flex items-center gap-4">
-                            <span class="text-sm font-semibold text-gray-800">${formatarMoeda(valorCestaTotal)}</span>
-                            <button type="button" data-index="${index}" class="btn-remover-cesta text-red-500 hover:text-red-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </div>
-                    `;
-                    listaCestasNoPedidoEl.appendChild(item);
-                });
-
-                displayValorTotal.textContent = formatarMoeda(valorTotal);
-            }
-            
-            function removerCestaDoPedido(index) {
-                cestasDoPedidoAtual.splice(index, 1);
-                renderCestasNoPedido();
-            }
-
-            function adicionarOuAtualizarEntrega(e) {
-                e.preventDefault();
-                
-                const rotaAtiva = getRotaAtiva();
-                if (!rotaAtiva) {
-                    mostrarAviso("Nenhuma rota ativa selecionada. Crie uma nova rota.");
-                    return;
-                }
-                const entregas = rotaAtiva.entregas;
-
-                const nomeClienteSelecionado = inputCliente.value;
-                // CORREÇÃO: Usar normalizarString para buscar no cache
-                const clienteSelecionado = CLIENTES_CACHE[normalizarString(nomeClienteSelecionado)];
-                let clienteData;
-                if (clienteSelecionado) {
-                    clienteData = clienteSelecionado;
-                } else {
-                    clienteData = { nome: nomeClienteSelecionado, celular: '', endereco: nomeClienteSelecionado, complemento: '' };
-                }
-
-                if (!clienteData.nome) {
-                    mostrarAviso('Por favor, selecione ou digite um nome de cliente.');
-                    return;
-                }
-                if (cestasDoPedidoAtual.length === 0) {
-                    mostrarAviso('É preciso adicionar ao menos uma cesta ao pedido.');
-                    return;
-                }
-
-                const dadosEntrega = {
-                    cliente: clienteData,
-                    observacao: obsClienteInput.value,
-                    rotaEntrega: selectRotaEntrega.value,
-                    cestas: cestasDoPedidoAtual // Salva o "carrinho"
-                };
-
-                if (editingEntregaId) {
-                    // MODO EDIÇÃO
-                    const index = entregas.findIndex(e => e.id.toString() === editingEntregaId.toString());
-                    if (index !== -1) {
-                        const entregaOriginal = entregas[index];
-                        entregas[index] = {
-                            ...entregaOriginal, // Mantém id, status, formaPagamento, horario, etc.
-                            ...dadosEntrega      // Sobrescreve com os dados do form
-                        };
-                        
-                        // Limpa campos antigos legados
-                        delete entregas[index].cesta; delete entregas[index].quantidade;
-                        delete entregas[index].tipo; delete entregas[index].brinde;
-                        delete entregas[index].brindeDescricao; delete entregas[index].brindeOpcoes; // Limpa o legado (agora está dentro de 'cestas')
-                        delete entregas[index].codigoAlterada;
-                        delete entregas[index].partesAlteradas;
-                        delete entregas[index].codigoFinal;
-                        
-                        mostrarAviso("Entrega atualizada com sucesso!");
-                    } else {
-                        mostrarAviso("Erro: Não foi possível encontrar a entrega para atualizar.");
-                    }
-                } else {
-                    // MODO NOVA ENTREGA
-                    const novaEntrega = {
-                        ...dadosEntrega,
-                        id: Date.now(),
-                        status: "Pendente",
-                        formaPagamento: [],
-                        horarioEntrega: null,
-                        horarioMontagem: null
-                    };
-                    entregas.push(novaEntrega);
-                }
-                
-                salvarTodasAsRotas();
-                
-                // CORREÇÃO: Reseta o filtro para a rota do pedido que acabou de ser salvo/editado
-                resetarFiltroParaPadrao(dadosEntrega.rotaEntrega); 
-                
-                renderizarEntregas();
-                renderizarResumo();
-                sairModoEdicao(); // Reseta e fecha o modal
-            }
-
-            function entrarModoEdicao(id) {
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === id);
-                if (!entrega) return;
-                
-                editingEntregaId = id;
-                
-                // Popula o formulário
-                inputCliente.value = entrega.cliente.nome;
-                inputCliente.dispatchEvent(new Event('input')); // Simula input para mostrar info
-                obsClienteInput.value = entrega.observacao || '';
-                selectRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ';
-
-                // Popula o "carrinho" (cestasDoPedidoAtual)
-                cestasDoPedidoAtual = migrarFormatoCestas(entrega);
-                renderCestasNoPedido();
-                
-                // Muda UI do Formulário
-                modalFormTitle.textContent = "Editar Entrega";
-                btnSubmitFormText.textContent = "Atualizar Entrega";
-                
-                abrirFormModal();
-            }
-
-            function sairModoEdicao() {
-                editingEntregaId = null;
-                cestasDoPedidoAtual = []; // Esvazia o carrinho
-                formEntrega.reset();
-                
-                // Reseta manualmente os campos que o reset() não pega
-                inputCliente.value = '';
-                inputCliente.dispatchEvent(new Event('input'));
-                selectRotaEntrega.value = 'CUIABÁ';
-                obsClienteInput.value = '';
-                
-                resetarSubFormulario();
-                renderCestasNoPedido();
-
-                // Muda UI do Formulário
-                modalFormTitle.textContent = "Lançar Nova Entrega";
-                btnSubmitFormText.textContent = "Lançar Entrega";
-                
-                fecharFormModal();
-            }
-
-            // --- Funções de Ação nos Cards ---
-
-            function moverEntrega(id, direcao) {
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === id);
-                if (index === -1) return;
-
-                if (direcao === 'cima' && index > 0) {
-                    [entregas[index - 1], entregas[index]] = [entregas[index], entregas[index - 1]];
-                } else if (direcao === 'baixo' && index < entregas.length - 1) {
-                    [entregas[index + 1], entregas[index]] = [entregas[index], entregas[index + 1]];
-                } else {
-                    return;
-                }
-                salvarTodasAsRotas();
-                renderizarEntregas(); // Re-renderiza para atualizar as setas
-            }
-            
-            function cancelarEntrega(id) {
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === id);
-                if (index !== -1) {
-                    entregas[index].status = "Cancelada";
-                    entregas[index].formaPagamento = [];
-                    entregas[index].horarioEntrega = new Date().toISOString();
-                }
-                salvarTodasAsRotas();
-                renderizarEntregas();
-                renderizarResumo();
-            }
-
-            function marcarComoMontado(id) {
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === id);
-                if (index !== -1) {
-                    entregas[index].status = "Montado";
-                    entregas[index].horarioMontagem = new Date().toISOString();
-                }
-                salvarTodasAsRotas();
-                renderizarEntregas();
-                renderizarResumo();
-            }
-
-            function abrirModalPagamento(id) {
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === id);
-                if (!entrega) return;
-
-                entregaParaPagarId = id;
-                
-                // Calcula o valor total (multi-cesta)
-                const cestas = migrarFormatoCestas(entrega);
-                const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
-                
-                modalClienteNome.textContent = entrega.cliente.nome;
-                modalClienteValor.textContent = formatarMoeda(valorTotal);
-                
-                formPagamento.reset();
-                modalErrorPagamento.classList.add('hidden');
-                modalPagamento.classList.remove('hidden');
-            }
-
-            function salvarPagamento(e) {
-                e.preventDefault();
-                const formasPagamentoSelecionadas = 
-                    Array.from(formPagamento.querySelectorAll('input[name="forma_pagamento"]:checked'))
-                         .map(input => input.value);
-                
-                if (formasPagamentoSelecionadas.length === 0) {
-                    modalErrorPagamento.classList.remove('hidden');
-                    return;
-                }
-                
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === entregaParaPagarId);
-                if (index !== -1) {
-                    entregas[index].status = "Entregue";
-                    entregas[index].formaPagamento = formasPagamentoSelecionadas;
-                    entregas[index].horarioEntrega = new Date().toISOString();
-                }
-                
-                salvarTodasAsRotas();
-                renderizarEntregas();
-                renderizarResumo();
-                modalPagamento.classList.add('hidden');
-                entregaParaPagarId = null;
-            }
-
-            function handleCardClick(e) {
-                // Ações do Card (Delegação de Evento)
-                const id = e.target.closest('[data-id]')?.dataset.id;
-                if (!id) return;
-
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === id);
-                if (!entrega) return;
-
-                // Mover Cima
-                if (e.target.closest('.btn-mover-cima')) {
-                    moverEntrega(id, 'cima'); return;
-                }
-                // Mover Baixo
-                if (e.target.closest('.btn-mover-baixo')) {
-                    moverEntrega(id, 'baixo'); return;
-                }
-                // Cancelar
-                if (e.target.closest('.btn-cancelar-entrega')) {
-                    cancelarEntrega(id); return;
-                }
-                // Editar
-                if (e.target.closest('.btn-editar-entrega')) {
-                    entrarModoEdicao(id); return;
-                }
-                // Marcar Montado
-                if (e.target.closest('.btn-montado')) {
-                    marcarComoMontado(id); return;
-                }
-                // Marcar Entregue
-                if (e.target.closest('.btn-entregue')) {
-                    abrirModalPagamento(id); return;
-                }
-                // Mapa
-                if (e.target.closest('.btn-card-maps')) {
-                    abrirGoogleMaps(entrega.cliente.endereco); return;
-                }
-                // Ligar
-                if (e.target.closest('.btn-card-ligar')) {
-                    const tel = (entrega.cliente.celular || '').replace(/\D/g, '');
-                    if (tel) window.open(`tel:${tel}`);
-                    return;
-                }
-                // WhatsApp
-                if (e.target.closest('.btn-card-whatsapp')) {
-                    whatsAppEntregaId = id;
-                    modalWppClienteNome.textContent = entrega.cliente.nome;
-                    modalWhatsApp.classList.remove('hidden');
-                    return;
-                }
-                // Exportar Card
-                if (e.target.closest('.btn-card-exportar')) {
-                    exportarCardComoJson(id); return;
-                }
-            }
-
-            // --- Funções de Ação do WhatsApp ---
-
-            function handleAcaoWhatsApp(e) {
-                const acao = e.target.closest('.btn-acao-wpp')?.dataset.acao;
-                if (!acao || !whatsAppEntregaId) return;
-
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === whatsAppEntregaId);
-                if (!entrega) return;
-
-                const tel = (entrega.cliente.celular || '').replace(/\D/g, '');
-                const nomeCliente = entrega.cliente.nome.split(' ')[0]; // Primeiro nome
-                
-                // Calcula o valor total (multi-cesta)
-                const cestas = migrarFormatoCestas(entrega);
-                const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
-
-                let texto = "";
-                let numeroDestino = tel; // Padrão é o cliente
-
-                switch (acao) {
-                    case 'avisar-chegando':
-                        texto = `Olá ${nomeCliente}! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado!`;
-                        break;
-                    case 'avisar-na-porta':
-                        texto = `Olá ${nomeCliente}, bom dia! O entregador da sua Cesta Básica já está na porta da sua casa aguardando. Obrigado!`;
-                        break;
-                    case 'agradecer':
-                        texto = `Obrigado ${nomeCliente} pela compra. Esperamos você no proximo mês!`;
-                        break;
-                    case 'enviar-pix':
-                        texto = `Olá ${nomeCliente}! O valor total do seu pedido é ${formatarMoeda(valorTotal)}. \n\nNossa chave Pix é:\n${CHAVE_PIX_PADRAO}\n\nPor favor, envie o comprovante. Obrigado!`;
-                        break;
-                    case 'compartilhar-admin':
-                        numeroDestino = ADMIN_WHATSAPP_NUMBER;
-                        texto = gerarResumoPedido(entrega, valorTotal);
-                        break;
-                }
-
-                if (numeroDestino) {
-                    const url = `https://api.whatsapp.com/send?phone=55${numeroDestino}&text=${encodeURIComponent(texto)}`;
-                    window.open(url, '_blank');
-                } else {
-                    mostrarAviso("Este cliente não possui um número de celular cadastrado.");
-                }
-
-                modalWhatsApp.classList.add('hidden');
-                whatsAppEntregaId = null;
-            }
-
-            function gerarResumoPedido(entrega, valorTotal) {
-                let resumo = `*PEDIDO CLIENTE: ${entrega.cliente.nome}*\n\n`;
-                resumo += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n`;
-                resumo += `*Complemento:* ${entrega.cliente.complemento || 'N/A'}\n`;
-                resumo += `*Celular:* ${entrega.cliente.celular || 'N/A'}\n`;
-                resumo += `*Rota:* ${entrega.rotaEntrega || 'N/A'}\n\n`;
-                
-                if (entrega.observacao) {
-                    resumo += `*OBSERVAÇÃO (GERAL):*\n${entrega.observacao}\n\n`;
-                }
-
-                resumo += `*--- CESTAS NO PEDIDO ---*\n`;
-                const cestas = migrarFormatoCestas(entrega);
-                cestas.forEach(cesta => {
-                    resumo += `*${cesta.quantidade}x ${cesta.nome}* (${formatarMoeda(cesta.valor * cesta.quantidade)})\n`;
-                    // MODIFICADO: Lógica de Brinde
-                    if (cesta.brinde === 'Sim') {
-                        const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
-                        resumo += `  - Brinde: ${brindesTxt}\n`;
-                    }
-                    if (cesta.tipo === 'Alterada') {
-                        resumo += `  - Cesta: Alterada\n`;
-                        if (cesta.codigoFinal) resumo += `  - Final: ${cesta.codigoFinal}\n`;
-                        if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) resumo += `  - Partes: ${cesta.partesAlteradas.join(', ')}\n`;
-                        if (cesta.codigoAlterada) resumo += `  - Detalhes: ${cesta.codigoAlterada}\n`;
-                    }
-                });
-
-                resumo += `\n*VALOR TOTAL: ${formatarMoeda(valorTotal)}*`;
-                return resumo;
-            }
-
-            function abrirGoogleMaps(query) {
-                if (!query) {
-                    mostrarAviso('O cliente não possui um código ou endereço para abrir no mapa.');
-                    return;
-                }
-                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-                window.open(url, '_blank');
-            }
-
-            // --- Funções de Importar/Exportar ---
-            
-            async function compartilharOuBaixar(blob, nomeArquivo) {
-                const data = {
-                    files: [new File([blob], nomeArquivo, { type: 'application/json' })],
-                    title: 'Rota de Entrega',
-                    text: `Backup da rota ${nomeArquivo}`,
-                };
-                
-                try {
-                    // Tenta usar a API de Compartilhamento (Mobile)
-                    if (navigator.canShare && navigator.canShare(data)) {
-                        await navigator.share(data);
-                    } else {
-                        // Fallback para Download (Desktop)
-                        throw new Error('API de compartilhamento não suportada.');
-                    }
-                } catch (err) {
-                    // Fallback para Download (Desktop)
-                    const a = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    a.href = url;
-                    a.download = nomeArquivo;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            }
-            
-            // MODIFICADO: Apenas abre o modal
-            function exportarDados() {
-                const rotaAtiva = getRotaAtiva();
-                if (!rotaAtiva || rotaAtiva.entregas.length === 0) {
-                    mostrarAviso("Nenhuma entrega na rota ativa para exportar.");
-                    return;
-                }
-                
-                // Prepara Relatório de Entregas Concluídas (para o <pre>)
-                const entregasConcluidas = rotaAtiva.entregas.filter(e => e.status === 'Entregue');
-                const entregasCanceladas = rotaAtiva.entregas.filter(e => e.status === 'Cancelada');
-                let relatorioTexto = "Nenhuma entrega finalizada.\n";
-
-                if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) {
-                    relatorioTexto = "";
-                }
-                if (entregasConcluidas.length > 0) {
-                    relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
-                    entregasConcluidas.forEach(e => {
-                        const cestas = migrarFormatoCestas(e);
-                        const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
-                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
-                        relatorioTexto += `Valor: ${formatarMoeda(valorTotal)}\n`;
-                        relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
-                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
-                        relatorioTexto += `-----------------------------\n`;
-                    });
-                }
-                if (entregasCanceladas.length > 0) {
-                    relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
-                    entregasCanceladas.forEach(e => {
-                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
-                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
-                        relatorioTexto += `-----------------------------\n`;
-                    });
-                }
-                exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
-
-                // Limpa o link WPP antigo e reseta o seletor
-                exportWhatsappLinkEl.innerHTML = `
-                    <button type="button" id="btn-gerar-resumo-wpp" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
-                        Gerar Resumo WhatsApp
-                    </button>`;
-                exportWppError.classList.add('hidden');
-                document.querySelectorAll('input[name="export-rota-wpp"]:checked').forEach(cb => cb.checked = false);
-                
-                // Adiciona o listener ao botão (precisa ser aqui, pois o botão é recriado)
-                document.getElementById('btn-gerar-resumo-wpp').addEventListener('click', gerarResumoWhatsApp);
-
-                modalExportar.classList.remove('hidden');
-            }
-
-            // MODIFICADO: Nova função para gerar o resumo WPP
-            function gerarResumoWhatsApp() {
-                const rotaAtiva = getRotaAtiva();
-                const rotasSelecionadas = 
-                    Array.from(document.querySelectorAll('input[name="export-rota-wpp"]:checked'))
-                         .map(input => input.value);
-                
-                if (rotasSelecionadas.length === 0) {
-                    exportWppError.classList.remove('hidden');
-                    return;
-                }
-                exportWppError.classList.add('hidden');
-
-                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n\n`;
-
-                // Filtra entregas pendentes pelas rotas selecionadas
-                const entregasPendentes = rotaAtiva.entregas.filter(e => 
-                    (e.status === 'Pendente' || e.status === 'Montado') && 
-                    rotasSelecionadas.includes(e.rotaEntrega)
-                );
-
-                whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
-                if(entregasPendentes.length > 0) {
-                    entregasPendentes.forEach((e, index) => {
-                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* (${e.rotaEntrega})\n`;
-                        // ... (gerar resumo do pedido)
-                    });
-                } else {
-                    whatsappTexto += `Nenhuma entrega pendente para as rotas selecionadas.\n`;
-                }
-                
-                // Relatório Financeiro (AGORA CONSIDERA APENAS ROTAS SELECIONADAS)
-                const entregasConcluidas = rotaAtiva.entregas.filter(e => 
-                    e.status === 'Entregue' && 
-                    rotasSelecionadas.includes(e.rotaEntrega)
-                );
-
-                let totalVendido = 0;
-                let totalPorPagamento = {};
-                entregasConcluidas.forEach(e => {
-                    const cestas = migrarFormatoCestas(e);
-                    const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
-                    totalVendido += valorTotal;
-                    
-                    if (e.formaPagamento.length === 0) {
-                         totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valorTotal;
-                    } else {
-                        const valorDividido = valorTotal / e.formaPagamento.length;
-                        e.formaPagamento.forEach(forma => {
-                            totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido;
-                        });
-                    }
-                });
-
-                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO (Rotas: ${rotasSelecionadas.join(', ')}) ---\n`;
-                whatsappTexto += `*Vendas Concluídas:*\n`;
-                whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
-                
-                whatsappTexto += `\n*Recebimentos por Forma:*\n`;
-                if(Object.keys(totalPorPagamento).length > 0) {
-                    Object.keys(totalPorPagamento).forEach(forma => {
-                        whatsappTexto += `   ${forma}: ${formatarMoeda(totalPorPagamento[forma])}\n`;
-                    });
-                } else {
-                    whatsappTexto += 'Nenhum recebimento.\n';
-                }
-
-                // Despesas (Despesas são da rota inteira, não por sub-rota)
-                const despesas = rotaAtiva.despesas;
-                const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
-                whatsappTexto += `\n*Despesas da Rota (Total):*\n`;
-                whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
-                whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
-                whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
-                whatsappTexto += `Total Despesas: *${formatarMoeda(totalDespesas)}*\n`;
-                
-                const balanco = totalVendido - totalDespesas;
-                whatsappTexto += `\n*BALANÇO (Vendido ${rotasSelecionadas.join(', ')} - Despesas Totais):* *${formatarMoeda(balanco)}*\n`;
-                
-                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
-                
-                // Substitui o botão "Gerar" pelo link
-                exportWhatsappLinkEl.innerHTML = `
-                    <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
-                        Enviar Resumo no WhatsApp
-                    </a>`;
-            }
-            
-            async function exportarCardComoJson(id) {
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === id);
-                if (!entrega) return;
-                
-                const jsonDados = JSON.stringify(entrega, null, 2);
-                const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}.json`;
-                
-                await compartilharOuBaixar(blob, nomeArquivo);
-            }
-
-            function carregarDados(jsonDados) {
-                try {
-                    const dadosCarregados = JSON.parse(jsonDados);
-                    
-                    // Caso 1: É o formato NOVO (Objeto Rota)
-                    if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
-                        if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) {
-                            throw new Error('Objeto de rota inválido. Faltando id, nome ou data.');
-                        }
-                        let novoId = dadosCarregados.id;
-                        if (todasAsRotas[novoId]) {
-                            novoId = `import-${Date.now()}`;
-                        }
-                        dadosCarregados.id = novoId;
-                        
-                        // Garante que a rota importada tem os campos novos
-                        dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-                        dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
-                            ...e,
-                            // Garante que o cliente é um objeto (compatibilidade com formato antigo)
-                            cliente: typeof e.cliente === 'object' ? e.cliente : {
-                                nome: e.codigoCliente || 'Cliente Antigo',
-                                celular: '', endereco: e.codigoCliente || 'Sem Endereço', complemento: ''
-                            },
-                            rotaEntrega: e.rotaEntrega || 'CUIABÁ',
-                            horarioMontagem: e.horarioMontagem || null
-                        }));
-
-                        todasAsRotas[novoId] = dadosCarregados;
-                        rotaAtivaId = novoId;
-                        
-                        salvarTodasAsRotas();
-                        popularSelectRotas();
-                        carregarRotaAtiva();
-                        
-                    } 
-                    // Caso 2: É o formato ANTIGO (Array de Entregas)
-                    else if (Array.isArray(dadosCarregados)) {
-                        const rotaAtiva = getRotaAtiva();
-                        if (!rotaAtiva) {
-                             mostrarAviso("Nenhuma rota ativa. Crie uma nova rota antes de carregar um arquivo antigo.");
-                             return;
-                        }
-                        rotaAtiva.entregas = dadosCarregados.map(e => ({
-                            ...e,
-                            cliente: typeof e.cliente === 'object' ? e.cliente : {
-                                nome: e.codigoCliente || 'Cliente Antigo',
-                                celular: '', endereco: e.codigoCliente || 'Sem Endereço', complemento: ''
-                            },
-                            rotaEntrega: e.rotaEntrega || 'CUIABÁ',
-                            horarioMontagem: e.horarioMontagem || null
-                        }));
-                        salvarTodasAsRotas();
-                        renderizarEntregas();
-                        renderizarResumo();
-                    } else {
-                        throw new Error('Formato de arquivo JSON desconhecido.');
-                    }
-                } catch (error) {
-                    console.error("Erro ao carregar JSON:", error);
-                    mostrarAviso(`Dados inválidos. Verifique o arquivo. (Erro: ${error.message})`);
-                }
-            }
-            
-            function handleCardImportado(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const jsonCard = event.target.result;
-                        const novaEntrega = JSON.parse(jsonCard);
-                        
-                        if (!novaEntrega.id || !novaEntrega.cliente || !novaEntrega.status) {
-                             throw new Error('Este não parece ser um arquivo de card válido.');
-                        }
-                        
-                        // Garante que a entrega importada tem os campos novos
-                        novaEntrega.rotaEntrega = novaEntrega.rotaEntrega || 'CUIABÁ';
-                        novaEntrega.horarioMontagem = novaEntrega.horarioMontagem || null;
-
-                        const rotaAtiva = getRotaAtiva();
-                        if (!rotaAtiva) {
-                            mostrarAviso("Nenhuma rota ativa para adicionar o card.");
-                            return;
-                        }
-                        
-                        // Checa duplicidade
-                        if (rotaAtiva.entregas.find(e => e.id === novaEntrega.id)) {
-                            mostrarAviso("Este card de entrega (ID) já existe nesta rota.");
-                            return;
-                        }
-                        
-                        rotaAtiva.entregas.push(novaEntrega);
-                        salvarTodasAsRotas();
-                        
-                        resetarFiltroParaPadrao(novaEntrega.rotaEntrega);
-                        
-                        renderizarEntregas();
-                        renderizarResumo();
-                        mostrarAviso("Card importado com sucesso!", "Sucesso");
-
-                    } catch (error) {
-                        mostrarAviso(`Erro ao processar o arquivo: ${error.message}`);
-                    }
-                };
-                reader.readAsText(file);
-                e.target.value = null;
-            }
-            
-            function resetarFiltroParaPadrao(rotaDoPedido = null) {
-                let filtroAlvo = rotaDoPedido || 'CUIABÁ';
-                filtroRotaAtiva = filtroAlvo; 
-
-                document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
-                
-                const filtroAtivoBtn = document.querySelector(`.btn-filtro-rota[data-filtro="${filtroAlvo}"]`);
-                if (filtroAtivoBtn) {
-                    filtroAtivoBtn.classList.add('btn-filtro-ativo');
-                } else {
-                    const primeiroFiltro = document.querySelector('.btn-filtro-rota[data-filtro="CUIABÁ"]');
-                    if (primeiroFiltro) {
-                        primeiroFiltro.classList.add('btn-filtro-ativo');
-                        filtroRotaAtiva = 'CUIABÁ';
-                    }
-                }
-            }
-            
-            function atualizarFiltroRota(e) {
-                const filtroBtn = e.target.closest('.btn-filtro-rota');
-                if (!filtroBtn) return;
-                
-                filtroRotaAtiva = filtroBtn.dataset.filtro;
-                
-                document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
-                filtroBtn.classList.add('btn-filtro-ativo');
-                
-                renderizarEntregas();
-            }
-
-            // --- Inicialização e Event Listeners ---
-
-            function iniciarAplicativo() {
-                // 1. Carregar Clientes (do clientes.js)
-                try {
-                    if (typeof CLIENTES_DB !== 'undefined' && Array.isArray(CLIENTES_DB)) {
-                        datalistClientes.innerHTML = '';
-                        CLIENTES_DB.forEach(cliente => {
-                            const option = document.createElement('option');
-                            option.value = cliente.nome;
-                            datalistClientes.appendChild(option);
-                            CLIENTES_CACHE[normalizarString(cliente.nome)] = cliente;
-                        });
-                    } else {
-                        console.error("CLIENTES_DB não encontrado. Verifique o 'clientes.js'.");
-                        mostrarAviso("Erro ao carregar banco de dados de clientes. Verifique o 'clientes.js'.");
-                    }
-                } catch (e) {
-                     console.error("Erro ao processar clientes:", e);
-                     mostrarAviso("Erro ao processar o arquivo 'clientes.js'.");
-                }
-                
-                // 2. Carregar Rotas
-                const dadosSalvos = localStorage.getItem('gerenciadorDeRotas');
-                if (dadosSalvos) {
-                    todasAsRotas = JSON.parse(dadosSalvos);
-                }
-                
-                // 3. Descobrir qual rota está ativa
-                rotaAtivaId = localStorage.getItem('rotaAtivaId');
-
-                // 4. Se não houver rotas, ou a rota ativa não existir, cria uma nova
-                if (!rotaAtivaId || !todasAsRotas[rotaAtivaId]) {
-                    if (Object.keys(todasAsRotas).length === 0) {
-                        criarNovaRota(false);
-                    } else {
-                        rotaAtivaId = Object.keys(todasAsRotas)[0];
-                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                    }
-                }
-                
-                // 5. Define o modo inicial (ANTES de carregar a rota, para o FAB aparecer)
-                setModoVisualizacao('admin');
-
-                // 6. Popular o <select> e carregar a rota ativa na tela
-                popularSelectRotas();
-                carregarRotaAtiva();
-                                
-                // 7. Define o filtro inicial
-                resetarFiltroParaPadrao(null); // Usa o padrão 'CUIABÁ'
-            }
-
-            // --- Adiciona todos os Event Listeners ---
-
-            // Navegação (Modos)
-            btnModoAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnModoEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnModoMontador.addEventListener('click', () => setModoVisualizacao('montador'));
-            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
-
-            // Gerenciamento de Rota (Admin)
-            selectRotaAtiva.addEventListener('change', (e) => {
-                rotaAtivaId = e.target.value;
-                localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                carregarRotaAtiva();
-            });
-            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
-            inputNomeRota.addEventListener('change', atualizarInfoRota);
-            inputDataRota.addEventListener('change', atualizarInfoRota);
-            btnExcluirRota.addEventListener('click', excluirRotaAtiva);
-
-            // Despesas (Entregador)
-            inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
-            inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
-            inputDespesaExtra.addEventListener('change', salvarDespesas);
-
-            // Filtros de Rota
-            filtrosRotaEl.addEventListener('click', atualizarFiltroRota);
-            
-            // Lista de Entregas (Delegação de Evento)
-            listaEntregasEl.addEventListener('click', handleCardClick);
-
-            // Modal Formulário
-            btnAbrirFormModal.addEventListener('click', () => {
-                sairModoEdicao(); // Garante que é um formulário novo
-                abrirFormModal();
-            });
-            btnFecharFormModal.addEventListener('click', sairModoEdicao);
-            formEntrega.addEventListener('submit', adicionarOuAtualizarEntrega);
-
-            // Modal Formulário -> Cliente
-            inputCliente.addEventListener('input', (e) => {
-                const nome = e.target.value;
-                // CORREÇÃO: Usar normalizarString para buscar no cache
-                const cliente = CLIENTES_CACHE[normalizarString(nome)];
-                if (cliente) {
-                    displayClienteEndereco.textContent = cliente.endereco || '-';
-                    displayClienteComplemento.textContent = cliente.complemento || '-';
-                    displayClienteCelular.textContent = cliente.celular || '-';
-                    infoClienteSelecionado.classList.remove('hidden');
-                } else {
-                    infoClienteSelecionado.classList.add('hidden');
-                }
-            });
-
-            // Modal Formulário -> Sub-Formulário (Adicionar Cesta)
-            btnAdicionarCesta.addEventListener('click', adicionarCestaAoPedido);
-            document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(radio => {
-                radio.addEventListener('change', toggleSubCampoAlterada);
-            });
-            document.querySelectorAll('input[name="sub-brinde"]').forEach(radio => {
-                radio.addEventListener('change', toggleSubCampoBrinde);
-            });
-            listaCestasNoPedidoEl.addEventListener('click', (e) => {
-                const btnRemover = e.target.closest('.btn-remover-cesta');
-                if (btnRemover) {
-                    removerCestaDoPedido(btnRemover.dataset.index);
-                }
-            });
-
-            // Modal Pagamento
-            btnCancelarPagamento.addEventListener('click', () => modalPagamento.classList.add('hidden'));
-            formPagamento.addEventListener('submit', salvarPagamento);
-            
-            // Modal WhatsApp
-            modalWhatsApp.addEventListener('click', handleAcaoWhatsApp);
-            btnFecharWhatsApp.addEventListener('click', () => modalWhatsApp.classList.add('hidden'));
-            
-            /* MODIFICADO: Event listeners para querySelectorAll */
-            btnsExportar.forEach(btn => btn.addEventListener('click', exportarDados));
-            
-            // Modal Exportar
-            btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
-            btnBaixarJson.addEventListener('click', () => {
-                const rotaAtiva = getRotaAtiva();
-                if (!rotaAtiva) return;
-                const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
-                compartilharOuBaixar(blob, nomeArquivo);
-            });
-            // NOVO: Listener para o botão de gerar resumo WPP
-            btnGerarResumoWpp.addEventListener('click', gerarResumoWhatsApp);
-
-
-            // Modal Aviso
-            btnFecharAviso.addEventListener('click', fecharAviso);
-
-            // Importação/Exportação de Arquivos
-            /* MODIFICADO: Event listeners para querySelectorAll */
-            btnsCarregar.forEach(btn => btn.addEventListener('click', () => inputCarregarArquivo.click()));
-            inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
-            btnsImportarCard.forEach(btn => btn.addEventListener('click', () => inputCarregarCard.click()));
-            inputCarregarCard.addEventListener('change', handleCardImportado);
-            
-            // Inicialização
-            iniciarAplicativo();
-        });
-    </script>
-</body>
-</html>
-`
-
+const CLIENTES_DB = [
+    [
+  {
+    "id": "1743716759186-AbC9O",
+    "nome": "010 Natalia",
+    "celular": "5565984685473.0",
+    "endereco": "010 Natalia",
+    "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
+  },
+  {
+    "id": "1747405315026-AbC9O",
+    "nome": "1002 VG ALAMEDA",
+    "celular": "55659.0",
+    "endereco": "1002",
+    "complemento": "Rua: Alameda Júlio Mulher, 575, bairro: Alameda - VG"
+  },
+  {
+    "id": "1752701262149-AbC9O",
+    "nome": "1008 ",
+    "celular": "56592921006.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1744810424520-AbC9O",
+    "nome": "1029 COXIPO PEDRA 90",
+    "celular": "556598143344.0",
+    "endereco": "1029",
+    "complemento": "Rua 63 quadra 2 casa 11 residencial sonho meu bairro pedra 90 Sheila"
+  },
+  {
+    "id": "1746880332318-AbC9O",
+    "nome": "1040 CUIABA DOM AQUINO",
+    "celular": "5565981165681.0",
+    "endereco": "1040",
+    "complemento": "RUA TELES PIRES 105 \nBAIRRO DOM AQUINO"
+  },
+  {
+    "id": "1745073601990-AbC9O",
+    "nome": "1045 VG IKARAI",
+    "celular": "5565992177303.0",
+    "endereco": "1045",
+    "complemento": "rua Etevaldo Rodrigues \nquadra 19\ncasa 6"
+  },
+  {
+    "id": "1746797865838-AbC9O",
+    "nome": "1087 CUIABA DESPRAIADO",
+    "celular": "5565996627603.0",
+    "endereco": "1087",
+    "complemento": "Avenida: Mário Palma\nBairro: Ribeirão do Lipa\nN: 438\nCondomínio chapada das borboletas bloco 20 apartamento 204 \nErica Souza Lima"
+  },
+  {
+    "id": "1745673684436-AbC9O",
+    "nome": "1185 CPA RESID SAO CARLOS",
+    "celular": "5565984067156.0",
+    "endereco": "1185",
+    "complemento": "Bloco 24"
+  },
+  {
+    "id": "1744475364119-AbC9O",
+    "nome": "1242 CPA JOAO BOSCO PINHEIRO",
+    "celular": "5565984353513.0",
+    "endereco": "1242",
+    "complemento": "Rua 13 quadra 14 casa 02 João Bosco Pinheiro"
+  },
+  {
+    "id": "1744025170394-AbC9O",
+    "nome": "1254 - VG - CRISTO REI",
+    "celular": "5565984411860.0",
+    "endereco": "1254",
+    "complemento": "RUA DAS ANDORINHAS, QUADRA 26, LOTE 06, CRISTO REI"
+  },
+  {
+    "id": "1743691078897-AbC9O",
+    "nome": "1276 Jd Ikaray Vg",
+    "celular": "5565992434046.0",
+    "endereco": "1276",
+    "complemento": "⭐⭐⭐⭐ Rua Pedro José Ferreira, quadra 3, casa 5A"
+  },
+  {
+    "id": "1747407883267-AbC9O",
+    "nome": "1326 CPA PRIMEIRO DE MARCO",
+    "celular": "5565992033006.0",
+    "endereco": "1326",
+    "complemento": "Rua W Q62 Casa 9"
+  },
+  {
+    "id": "1744369292413-AbC9O",
+    "nome": "1338 VG CRISTO REI",
+    "celular": "5565992058082.0",
+    "endereco": "1338",
+    "complemento": "RUA CAPIM CIDREIRA 25 C26 RESID FLOR DE YPE"
+  },
+  {
+    "id": "1747317797923-AbC9O",
+    "nome": "1362 VG ZERO",
+    "celular": "5565992095092.0",
+    "endereco": "1362",
+    "complemento": "Rua Cuiabá, 11, cs03"
+  },
+  {
+    "id": "1744646680245-AbC9O",
+    "nome": "1385 VG SAO MATEUS",
+    "celular": "5565992136286.0",
+    "endereco": "1385",
+    "complemento": "Rua L qd 23 casa 13 residencial São Matheus"
+  },
+  {
+    "id": "1744898693039-AbC9O",
+    "nome": "140 CENTRO CUIABA",
+    "celular": "5565999403983.0",
+    "endereco": "140",
+    "complemento": "Rua cel Benedito Leite  528 entre a barão e s joaquim Murtinho"
+  },
+  {
+    "id": "1744462226113-AbC9O",
+    "nome": "1426 IRMA - VG SAO MATEUS CASA DA IRMA",
+    "celular": "5565984225695.0",
+    "endereco": "1426 Irmã ",
+    "complemento": "Rua. Maria Tereza da Conceição. Quadra 108. lote 8 bairro São Mateus"
+  },
+  {
+    "id": "1745929977487-AbC9O",
+    "nome": "1517 CUIABA DESPRAIADO",
+    "celular": "5565993293336.0",
+    "endereco": "1517",
+    "complemento": " rua K quadra 16 casa 23"
+  },
+  {
+    "id": "1745928035669-AbC9O",
+    "nome": "1521 COXIPO RESID COXIPÓ ",
+    "celular": "5565992731937.0",
+    "endereco": "1521",
+    "complemento": "Rua trinta e cinco,casa 70 \nBairro Getúlio Vargas"
+  },
+  {
+    "id": "1745930076029-AbC9O",
+    "nome": "1529 CUIABA JD CUIABA",
+    "celular": "5565992390281.0",
+    "endereco": "1529",
+    "complemento": "Rua Itu 91 jardim Cuiabá"
+  },
+  {
+    "id": "1744369000633-AbC9O",
+    "nome": "1571 COXIPO PQ OHARA",
+    "celular": "55992462917.0",
+    "endereco": "1571",
+    "complemento": "RUA PATATIVAS CASA 5 PQ OHARA"
+  },
+  {
+    "id": "1746877225607-AbC9O",
+    "nome": "1611 COXIPO PQ CUIABA",
+    "celular": "55659.0",
+    "endereco": "1611",
+    "complemento": "Rua U4  q103  c4 kitnet"
+  },
+  {
+    "id": "1743687550453-AbC9O",
+    "nome": "163 Santa Laura",
+    "celular": "5565981123604.0",
+    "endereco": "163 Santa Laura",
+    "complemento": "⭐⭐⭐⭐ Rua 3 Lagoas qdr 47 casa 14 Santa Laura"
+  },
+  {
+    "id": "1744898033334-AbC9O",
+    "nome": "1655 CUIABA NOVO TERCEIRO",
+    "celular": "5565992632563.0",
+    "endereco": "1655",
+    "complemento": "Rua professor Floriano Siqueira número 70 bairro Novo terceiro"
+  },
+  {
+    "id": "1744429265682-AbC9O",
+    "nome": "1696 VG MILTON FIGUEIREDO",
+    "celular": "5565992740313.0",
+    "endereco": "1696",
+    "complemento": "Residencial Milton Figueiredo \n\nVárzea Grande \nRua Kayabi \nQuadra 03\nCasa 🏠 13"
+  },
+  {
+    "id": "1746883854156-AbC9O",
+    "nome": "1742 VG FIGUEIRINHA",
+    "celular": "5565992825222.0",
+    "endereco": "1742",
+    "complemento": "Rua kaiser 339 V G\n Dulcelina Socorro Firmino de Lima Silva"
+  },
+  {
+    "id": "1745587073831-AbC9O",
+    "nome": "1771 VG COSTA VERDE",
+    "celular": "5565992881215.0",
+    "endereco": "1771",
+    "complemento": "Rua santos Dumont 4710 área b qdra 7 costa verde várzea grande 78128470"
+  },
+  {
+    "id": "1744369521495-AbC9O",
+    "nome": "1784 VG JD DOS ESTADOS",
+    "celular": "5565992906518.0",
+    "endereco": "1784",
+    "complemento": "RUA RORAIMA, Q55 C6 JD DOS ESTADOS VG"
+  },
+  {
+    "id": "1744462674130-AbC9O",
+    "nome": "1829 VG SAO MATEUS",
+    "celular": "5565996419707.0",
+    "endereco": "1829",
+    "complemento": "Rua 38 quadra 1 lote 11 n fundo da ecoclima climatização são Matheus"
+  },
+  {
+    "id": "1744292359919-AbC9O",
+    "nome": "1839 COXIPO STA TERESINHA",
+    "celular": "55992990079.0",
+    "endereco": "1839",
+    "complemento": "Rua 29 quadra 12 casa 23 setor D residencial santa terezinha cuiaba MT"
+  },
+  {
+    "id": "1745947672652-AbC9O",
+    "nome": "1894 COXIPO JD UNIVERSITARIO",
+    "celular": "5565993125708.0",
+    "endereco": "1894",
+    "complemento": "End travessa Teófilo Otoni quadra 13 casa 26\nParque universitário"
+  },
+  {
+    "id": "1744466950937-AbC9O",
+    "nome": "1897 COXIPO RESID COXIPO",
+    "celular": "5565993134514.0",
+    "endereco": "1897",
+    "complemento": "Rua 13 quadra 41 casa 2 parque  residencial  coxipo"
+  },
+  {
+    "id": "1744122636340-AbC9O",
+    "nome": "2017 CUIABA GRANDE TERCEIRO",
+    "celular": "5565993416163.0",
+    "endereco": "2017",
+    "complemento": "RUA RIO XINGU, Q28, C14 GRANDE TERCEIRO"
+  },
+  {
+    "id": "1746617246484-AbC9O",
+    "nome": "2069 VG NOVO MUNDO Jardim Dos Estados",
+    "celular": "5565993493771.0",
+    "endereco": "2069",
+    "complemento": "Rua quatorze quadra 20 casa 01"
+  },
+  {
+    "id": "1744369622837-AbC9O",
+    "nome": "2172 CPA JD FORIANOPLIS",
+    "celular": "5565996158414.0",
+    "endereco": "2172",
+    "complemento": "RUA 10 ESQUINA COM 23, ENCIMA DA FARMACIA, PORTAO LATERAL BRANCO"
+  },
+  {
+    "id": "1743676561245-AbC9O",
+    "nome": "220",
+    "celular": "5565984420925.0",
+    "endereco": "Rua natalino fontes 279 jardim paulista",
+    "complemento": ""
+  },
+  {
+    "id": "1743687805137-AbC9O",
+    "nome": "220 Jd Paulista",
+    "celular": "5565984420925.0",
+    "endereco": "220 Jd Paulista",
+    "complemento": "⭐⭐⭐⭐⭐ Rua natalino fontes 279 jardim paulista"
+  },
+  {
+    "id": "1746805563887-AbC9O",
+    "nome": "2228 COXIPO PQ ATALAIA",
+    "celular": "5565992347782.0",
+    "endereco": "2228",
+    "complemento": "Rua N \nQuadra 11\nCasa 10 \nParque atalaia"
+  },
+  {
+    "id": "1747317579862-AbC9O",
+    "nome": "2336 CPA CENTRO AMERICA",
+    "celular": "5565998042504.0",
+    "endereco": "2336",
+    "complemento": "Rua Diniz Pinto de Matos\nN 08 quadra 39\nCPA 2\nCep 78055614"
+  },
+  {
+    "id": "1744039543435-AbC9O",
+    "nome": "2356 - CPA - COLINA VERDE",
+    "celular": "5565996459196.0",
+    "endereco": "2356",
+    "complemento": "Rua eucalipto número 19 casa do portão branco"
+  },
+  {
+    "id": "1744210245921-AbC9O",
+    "nome": "2359 VG CANELAS",
+    "celular": "5565999795979.0",
+    "endereco": "2359",
+    "complemento": "PADILHA OU MB MATERIAIS PARA CONSTRUCAO"
+  },
+  {
+    "id": "1746013342924-AbC9O",
+    "nome": "2365 CPA CENTRO AMERICA",
+    "celular": "5565981193797.0",
+    "endereco": "2365",
+    "complemento": "Rua Amazonas \nQdra 39 \nCasa 12\nBairro centro América"
+  },
+  {
+    "id": "1744032927406-AbC9O",
+    "nome": "2436 - VG - CENTRO",
+    "celular": "556599175137.0",
+    "endereco": "2436",
+    "complemento": "RUA GOIAS, 600, CENTRO, VG"
+  },
+  {
+    "id": "1744639551750-AbC9O",
+    "nome": "2445 COXIPO NICO BARACAT",
+    "celular": "5565999286672.0",
+    "endereco": "2445",
+    "complemento": " rua 07 quadra 05 casa 11 Nico baracat 1"
+  },
+  {
+    "id": "1744734094249-AbC9O",
+    "nome": "246 VG CRISTO REI",
+    "celular": "5565993125235.0",
+    "endereco": "246",
+    "complemento": "Rua Alacir de Lannes 295 Cristo rei Várzea Grande \n\nCasa Cinza de Esquina"
+  },
+  {
+    "id": "1747405585210-AbC9O",
+    "nome": "246ESTUDIO VG CRISTO REI",
+    "celular": "5565993125235.0",
+    "endereco": "246ESTUDIO",
+    "complemento": "Segue localização 📍\n\nO estúdio fica dentro da Academia Estação Funcional última sala .\n\nA entrada é pela lateral portão todo branco que é em frente à loja loira moda fitness que também fica dentro da academia . \n\nCaso portão esteja fechado ele é de correr só puxar para o lado ☺️\n\nPassa a catraca a última sala\nEm frente ao bebedouro ."
+  },
+  {
+    "id": "1746879439109-AbC9O",
+    "nome": "247 VG CRISTO REI",
+    "celular": "5565992219912.0",
+    "endereco": "247",
+    "complemento": "Rua seis quadra seis casa 27"
+  },
+  {
+    "id": "1746705052313-AbC9O",
+    "nome": "2503 CUIABA SANTA ISABEL",
+    "celular": "5565992811718.0",
+    "endereco": "2503",
+    "complemento": "Kit Net Azul, Mora Em Cima, Chamar Por Mika"
+  },
+  {
+    "id": "1747483498301-AbC9O",
+    "nome": "2533 CUIABA PROX PRONTO SOCORRO ESTACIONAMENTO ESQUINA",
+    "celular": "5565996358326.0",
+    "endereco": "2533",
+    "complemento": "ESTACIONAMENTO ESQUINA CAIADO PNEUS"
+  },
+  {
+    "id": "1743591300538-AbC9O",
+    "nome": "2547 - Jocineide",
+    "celular": "5565999831007.0",
+    "endereco": "Av. Ribeirão Preto quadra12 casa 19 CPA1",
+    "complemento": ""
+  },
+  {
+    "id": "1746029390412-AbC9O",
+    "nome": "2553 CUIABA VERDAO",
+    "celular": "55659.0",
+    "endereco": "2553",
+    "complemento": "Av agrícola Paes de barros \nNúmero 798\nVerdão"
+  },
+  {
+    "id": "1744124595601-AbC9O",
+    "nome": "2556 - CPA - CPA 2",
+    "celular": "5565999865310.0",
+    "endereco": "2556",
+    "complemento": "RUA AGUAPEI Q76 C02 CPA II"
+  },
+  {
+    "id": "1746880527432-AbC9O",
+    "nome": "2563 CUIABA SANTA ISABEL",
+    "celular": "5565981316932.0",
+    "endereco": "2563",
+    "complemento": "Avenida metropolitana 538 bairro Santa Isabel Cuiabá mato grosso"
+  },
+  {
+    "id": "1746627081700-AbC9O",
+    "nome": "2570 CUIABA DESPRAIADO",
+    "celular": "5565999112311.0",
+    "endereco": "2570 CUIABA",
+    "complemento": "Rua Dos Ypes Q11 C4"
+  },
+  {
+    "id": "1744027349877-AbC9O",
+    "nome": "2570 VG JD MARINGA",
+    "celular": "5565999912311.0",
+    "endereco": "2570",
+    "complemento": "Rua vicente Ferreira Q32 L14 Jardim Maringá 2 parque do lago"
+  },
+  {
+    "id": "1745073453890-AbC9O",
+    "nome": "2657 VG SAI MATEUS",
+    "celular": "5565981594188.0",
+    "endereco": "2657",
+    "complemento": "Rua: F  Quadra:11 Casa:16 Bairro: São Mateus   Várzea grande"
+  },
+  {
+    "id": "1744810228918-AbC9O",
+    "nome": "2662 COXIPO ALTOS DO PARQUE ",
+    "celular": "5565992091600.0",
+    "endereco": "2662",
+    "complemento": "Endereço\nRua D\nQuadra 14\nCasa 95\nLote 10\nAltos do parque 2\nCasa amarela sem muro na frente"
+  },
+  {
+    "id": "1745330516311-AbC9O",
+    "nome": "287 COXIPO PEDRA 90",
+    "celular": "5565992171205.0",
+    "endereco": "287",
+    "complemento": "Rua 21\nQuadra 119\nCasa 13\nBairro pedra 90"
+  },
+  {
+    "id": "1751129742960-AbC9O",
+    "nome": "2936 vg Cristo Rei",
+    "celular": "5565981182836.0",
+    "endereco": "2936",
+    "complemento": "Rua Ana Francisca de Barros número 472 Cristo rei VG"
+  },
+  {
+    "id": "1746022041090-AbC9O",
+    "nome": "2956 COXIPO ALICE NOVACK",
+    "celular": "5565993586062.0",
+    "endereco": "2956",
+    "complemento": "Rua c quadra 05 casa 19 Res Alice novack portão laranjado."
+  },
+  {
+    "id": "1743699158109-AbC9O",
+    "nome": "2981",
+    "celular": "5565992757702.0",
+    "endereco": "2981",
+    "complemento": "Rua Major João Vieira N° 1330 Várzea-Grande Bairro Manga \n\nPonto referência: Barbearia do Leandro rua da Caixa D'água do DAE"
+  },
+  {
+    "id": "1746797187284-AbC9O",
+    "nome": "3057 VG JACARANDA",
+    "celular": "5565993267988.0",
+    "endereco": "3057",
+    "complemento": "Rua jaboticabeira q01 casa14"
+  },
+  {
+    "id": "1747759562889-AbC9O",
+    "nome": "3148 COXIPO NOVA ESPERANCA",
+    "celular": "5565992332053.0",
+    "endereco": "3148",
+    "complemento": "Rua Otacílio adalto da paz quadra 41 casa 26 nova esperança 1 Cuiabá"
+  },
+  {
+    "id": "1752259815497-AbC9O",
+    "nome": "3232 Cpa Jd Renascer",
+    "celular": "556584291481.0",
+    "endereco": "3232",
+    "complemento": "rua tiradentes nº 600 jd renascer"
+  },
+  {
+    "id": "1744811332910-AbC9O",
+    "nome": "334 VG PQ DO LAGO",
+    "celular": "5565992409288.0",
+    "endereco": "334",
+    "complemento": "rua Bueno Aires quadra 14 lote 9"
+  },
+  {
+    "id": "1746278483332-AbC9O",
+    "nome": "3359 CUIABA DANTA ISABEL",
+    "celular": "5565984449716.0",
+    "endereco": "3359",
+    "complemento": "Rua Moacir de Freitas bairro Santa angelita casa 5"
+  },
+  {
+    "id": "1745427115521-AbC9O",
+    "nome": "3380 CUIABA RIBEIRAO DO LIPA",
+    "celular": "5565981121799.0",
+    "endereco": "3380",
+    "complemento": "avenida Mário palma n 182 bairro Ribeirão do lipa"
+  },
+  {
+    "id": "1745510948736-AbC9O",
+    "nome": "3424 CPA JD UNIAO",
+    "celular": "5565993450801.0",
+    "endereco": "3424",
+    "complemento": "RUA LONDRINA 412 BAIRRO JARDIM UNIAO"
+  },
+  {
+    "id": "1744026904798-AbC9O",
+    "nome": "362 MAE - VG - PAIAGUAS",
+    "celular": "5566999747134.0",
+    "endereco": "362",
+    "complemento": "NAO TEM ENDEREÇO - SO FOTO"
+  },
+  {
+    "id": "1746026502481-AbC9O",
+    "nome": "380 CPA CENTRO AMÉRICA ",
+    "celular": "5565984322775.0",
+    "endereco": "380",
+    "complemento": "Rua Seis quadra 43 casa 02.   Centro América. Cuiabá"
+  },
+  {
+    "id": "1747406188899-AbC9O",
+    "nome": "3866 CUIABA DESPRAIADO",
+    "celular": "5565999756216.0",
+    "endereco": "3866",
+    "complemento": "Avenida Florinda negrão número 253"
+  },
+  {
+    "id": "1744463904132-AbC9O",
+    "nome": "389 CUIABA CENTRO GARAGEM CARRO",
+    "celular": "5565996281803.0",
+    "endereco": "389",
+    "complemento": ""
+  },
+  {
+    "id": "1746969188257-AbC9O",
+    "nome": "391 VG GUARITA",
+    "celular": "55659.0",
+    "endereco": "391",
+    "complemento": ""
+  },
+  {
+    "id": "1746793798989-AbC9O",
+    "nome": "3916 COXIPO SANTA TERESINHA",
+    "celular": "5565996268012.0",
+    "endereco": "3916",
+    "complemento": "Avenida B\nQ 02\nNúmero 06\nSetor D\nResidencial santa terezinha"
+  },
+  {
+    "id": "1744813229786-AbC9O",
+    "nome": "3954 CPA DR FABIO",
+    "celular": "5565992435588.0",
+    "endereco": "3954",
+    "complemento": "Rua: Botafogo \nQuadra: 17\nCasa: 12\nBairro: Doutor Fábio Leitte ll"
+  },
+  {
+    "id": "1745588027573-AbC9O",
+    "nome": "419 CPA NOVA CANAA",
+    "celular": "5565993571186.0",
+    "endereco": "419",
+    "complemento": "Rua i\nQuadra 06\nCasa 04\nResidencial nova Canaã"
+  },
+  {
+    "id": "1743716584818-AbC9O",
+    "nome": "4444",
+    "celular": "5565992146568.0",
+    "endereco": "4444",
+    "complemento": "⭐ Rua deputado Oscar Soares quadra quadra 115 lote 12 bairro São Simão vg"
+  },
+  {
+    "id": "1744723741457-AbC9O",
+    "nome": "4538 VG SAO GONÇALO ",
+    "celular": "55984044290.0",
+    "endereco": "4538",
+    "complemento": "Rua Noronha dos santos quadra 6  casa  5"
+  },
+  {
+    "id": "1744380262319-AbC9O",
+    "nome": "455 CUIABA COOPHAMIL",
+    "celular": "5565984077488.0",
+    "endereco": "455",
+    "complemento": "Rua G 141 - Coophamil, Bar Com Mesa De Sinuca, Entrar Lela Lateral, Casa No Fundo"
+  },
+  {
+    "id": "1744462818379-AbC9O",
+    "nome": "470 Cuiabá Cidade VERDE ",
+    "celular": "5565996316052.0",
+    "endereco": "470",
+    "complemento": "Avenida Florianópolis \nN 40\nBairro Cidade Verde \nCuiabá MT"
+  },
+  {
+    "id": "1744462438076-AbC9O",
+    "nome": "4723 COXIPO STA TERESINHA",
+    "celular": "5565996025757.0",
+    "endereco": "4723",
+    "complemento": "Rua 05 Quadra 06 Casa 18\nSetor E3 Santa Terezinha l"
+  },
+  {
+    "id": "1743687346812-AbC9O",
+    "nome": "4797 COXIPO Pedra 90",
+    "celular": "5565992474426.0",
+    "endereco": "4797",
+    "complemento": "⭐⭐⭐ Rua 46 quadra 207 casa 06 pedra 90 IIEtapa"
+  },
+  {
+    "id": "1745427330960-AbC9O",
+    "nome": "482 VG CRISTO REI",
+    "celular": "5565984171361.0",
+    "endereco": "482",
+    "complemento": "Rua : Benedito Vaz de Figueiredo, 328 Cristo Rei"
+  },
+  {
+    "id": "1745073967209-AbC9O",
+    "nome": "4835 CUIABA CIDADE ALTA",
+    "celular": "5565992310652.0",
+    "endereco": "4835",
+    "complemento": "Rua: Ataide de Lima Bastos número: 503 bairro Cidade alta Cuiabá"
+  },
+  {
+    "id": "1744728979101-AbC9O",
+    "nome": "4973 VG CRISTO REI",
+    "celular": "5565992023639.0",
+    "endereco": "4973",
+    "complemento": "Rua presidente manoel de quadra 14 casa 09"
+  },
+  {
+    "id": "1744810353418-AbC9O",
+    "nome": "5049 COXIPO RSID COXIPO",
+    "celular": "5516994134887.0",
+    "endereco": "5049",
+    "complemento": "Rua 11 quadra 32 casa 02 bairro Residencial Coxipó"
+  },
+  {
+    "id": "1744196711960-AbC9O",
+    "nome": "5059 CPA RESID SANTA INES",
+    "celular": "5565981228187.0",
+    "endereco": "5059",
+    "complemento": "Bloco Verde Apto 404 Em Frente A Um Mercadinho"
+  },
+  {
+    "id": "1746882697277-AbC9O",
+    "nome": "510 VG CRISTO REI",
+    "celular": "5565984331285.0",
+    "endereco": "510",
+    "complemento": "Rua Egito\nQuadra 28\nCasa 16\nBairro Santa fé"
+  },
+  {
+    "id": "1747317389675-AbC9O",
+    "nome": "532 CUIABA GRANDE TERCEIRO",
+    "celular": "5565992337854.0",
+    "endereco": "532",
+    "complemento": "Travessa general Melo 93 cpos Elísios"
+  },
+  {
+    "id": "1744896415577-AbC9O",
+    "nome": "5410 VG MAPIM",
+    "celular": "5565992922630.0",
+    "endereco": "5410",
+    "complemento": "Rua Dante de Oliveira ou rua F quadra 11 casa 12 Mapim"
+  },
+  {
+    "id": "1744124309367-AbC9O",
+    "nome": "546 - CPA - DOM BOSCO REGIAO DO BOSQUE DA SAUDE",
+    "celular": "5565992997148.0",
+    "endereco": "546",
+    "complemento": "RUA UM, Q4, C21 DOM BOSCO"
+  },
+  {
+    "id": "1746793873842-AbC9O",
+    "nome": "5460 COXIPO RECANTO DO SOL",
+    "celular": "5565996744565.0",
+    "endereco": "5460",
+    "complemento": "Rua F, Quadra 09, Casa 17Residencial Nilce Paes Barreto"
+  },
+  {
+    "id": "1746878708975-AbC9O",
+    "nome": "551 VG CENTRO",
+    "celular": "5565993251927.0",
+    "endereco": "551",
+    "complemento": "Dará em uma lanchonete mas a minha casa é logo mais a frente ,na frente da casa tem um pé de manga grande  portão preto"
+  },
+  {
+    "id": "1744897714761-AbC9O",
+    "nome": "5581 VG JD GLORIA",
+    "celular": "5565993296785.0",
+    "endereco": "5581",
+    "complemento": "Rua Diamantino quadra 7 lote 14 bairro Jardim gloria 2"
+  },
+  {
+    "id": "1747317938435-AbC9O",
+    "nome": "5625 VG SANTA ISABEL",
+    "celular": "5565993429880.0",
+    "endereco": "5625",
+    "complemento": "Rua Lourenço Q4 casa 14"
+  },
+  {
+    "id": "1745586764431-AbC9O",
+    "nome": "5867 COXIPO SANTA LAURA",
+    "celular": "556699527369.0",
+    "endereco": "5867",
+    "complemento": "Rua 4 qd 4 lote 22 vila cuiaba"
+  },
+  {
+    "id": "1744121397859-AbC9O",
+    "nome": "657 CUIABA CIDADE ALTA",
+    "celular": "5565984747544.0",
+    "endereco": "657",
+    "complemento": "RUA PROF JOAO NUNES, 220 CIDADE ALTA"
+  },
+  {
+    "id": "1744898498559-AbC9O",
+    "nome": "763 VG SAO MATEUS",
+    "celular": "5565992628334.0",
+    "endereco": "763",
+    "complemento": "Rua 05  quadra 179 casa 01 \nSão  Mateus  final da rua cinco"
+  },
+  {
+    "id": "1744724589322-AbC9O",
+    "nome": "767 COXIPO JD UNIVERSITARIO",
+    "celular": "5565999157177.0",
+    "endereco": "767",
+    "complemento": "Rua Antônio conselheiro quadra 15 casa 18 parque universitário"
+  },
+  {
+    "id": "1744285084273-AbC9O",
+    "nome": "776 CUIABA DUQUE DE CAXIAS",
+    "celular": "5565992851595.0",
+    "endereco": "Rua : General Ribeiro Teofilo de Arruda\nNúmero: 314 \nBairro Duque de Caxias",
+    "complemento": ""
+  },
+  {
+    "id": "1746627440530-AbC9O",
+    "nome": "845 Cpa Jd Uniao",
+    "celular": "5565993047551.0",
+    "endereco": "845",
+    "complemento": "Rua 09 Q03 C 03"
+  },
+  {
+    "id": "1746021033860-AbC9O",
+    "nome": "A00106 VG CRISTO REI",
+    "celular": "5565992201317.0",
+    "endereco": "A00106",
+    "complemento": "Rua 11 quadra 68 casa 5 cohab cristo rei"
+  },
+  {
+    "id": "1744369446107-AbC9O",
+    "nome": "A110 CPA JD VITORIA",
+    "celular": "5565993532341.0",
+    "endereco": "A10",
+    "complemento": "CONDOMINIO A, CASA 119, JD VITORIA"
+  },
+  {
+    "id": "1746879108023-AbC9O",
+    "nome": "A24 COXIPO TUIUIU",
+    "celular": "5565996670481.0",
+    "endereco": "A24",
+    "complemento": "Rua C\nQuadra 15\nCasa 365\nCondomínio tuiuiú."
+  },
+  {
+    "id": "1747758975176-AbC9O",
+    "nome": "A288 VG JD PRIMAVERA",
+    "celular": "5565992253424.0",
+    "endereco": "A288",
+    "complemento": "RUA RENATO JOSE Q40 C4"
+  },
+  {
+    "id": "1749264971421-AbC9O",
+    "nome": "A30 VG Pq DELREY",
+    "celular": "5565984554664.0",
+    "endereco": "A30",
+    "complemento": "Rua Pará\nQuadra 17 \nCasa 19 \nParque Del Rey \nVG \nAtrás da fábrica da marajá \nPróximo a escola Luis Revelles"
+  },
+  {
+    "id": "1746278037920-AbC9O",
+    "nome": "A32 CUIABA SANTA ISABEL",
+    "celular": "5565993499772.0",
+    "endereco": "A32",
+    "complemento": "Rua; gavião real \nNúmero: 21\nBairro: Barra do pari"
+  },
+  {
+    "id": "1744370016913-AbC9O",
+    "nome": "A551A - CPA PEDREGAL",
+    "celular": "556599989423.0",
+    "endereco": "A551A",
+    "complemento": "RUA MARCILIO ZEFERINO CASA 24 PEDREGAL"
+  },
+  {
+    "id": "1744370080373-AbC9O",
+    "nome": "A551B - CPA NOVO HORIZONTE",
+    "celular": "5565999839423.0",
+    "endereco": "A551B",
+    "complemento": "RUA BRASILIA 462 NOVO HORIZONTE"
+  },
+  {
+    "id": "1745929882686-AbC9O",
+    "nome": "A558 VG JACARANDA",
+    "celular": "5565984459730.0",
+    "endereco": "A558",
+    "complemento": "Bloco 5 ap 12 lado A"
+  },
+  {
+    "id": "1744391325448-AbC9O",
+    "nome": "A8903 CUIABA CENTRO RESTAURANTE DO BUGRE ",
+    "celular": "",
+    "endereco": "A8903",
+    "complemento": "PARAR O CARRO NA VAGA DE CARGA E DESCARGA E LIGAR PISCA ALERTA"
+  },
+  {
+    "id": "1746274444284-AbC9O",
+    "nome": "AA0138 COXIPOJD UNIVERSITÁRIOS",
+    "celular": "55659.0",
+    "endereco": "AA0138",
+    "complemento": "Chacara Ao Lado Da Escolinha De Futebol Do Santos"
+  },
+  {
+    "id": "1752946280020-AbC9O",
+    "nome": "Aa0140 VG Nova Esperanca",
+    "celular": "5565984076900.0",
+    "endereco": "Aa0140",
+    "complemento": "Avenida Tiradentes  quadra 45 casa 16"
+  },
+  {
+    "id": "1748352631210-AbC9O",
+    "nome": "Aa0561 COXIPO TIJUCAL",
+    "celular": "5565984627677.0",
+    "endereco": "Aa0561",
+    "complemento": "Rua carvalhos dourados, quadra 03, casa 16 jardim dos ipes"
+  },
+  {
+    "id": "1746798905102-AbC9O",
+    "nome": "AA0570 CPA  Serra Dourada",
+    "celular": "5565984129004.0",
+    "endereco": "Aa0570",
+    "complemento": "Rua j quadra 17 casa 20 parede azul ao lado da casa de área na frente"
+  },
+  {
+    "id": "1747484035184-AbC9O",
+    "nome": "AA087 COXIPO OSMAR CABRAL",
+    "celular": "5565984128266.0",
+    "endereco": "AA087",
+    "complemento": "Rua 25, número 65 quadra 14 Brasil 21 próximo do Osmar Cabral"
+  },
+  {
+    "id": "1744645065291-AbC9O",
+    "nome": "Aa3309 CPA COND SERRA AZUL 2",
+    "celular": "5565992104774.0",
+    "endereco": "Aa3309",
+    "complemento": "Rua 08 quadra 12 casa 18"
+  },
+  {
+    "id": "1744429712684-AbC9O",
+    "nome": "Aa5244 CUIABA NOVO COLORADO",
+    "celular": "5565999436695.0",
+    "endereco": "AA5244",
+    "complemento": "rua Frei Quirino Q10 csa05 colorado"
+  },
+  {
+    "id": "1747405855865-AbC9O",
+    "nome": "AA6169 CUIABA CENTRO FINAL",
+    "celular": "5565999723794.0",
+    "endereco": "Aa6169",
+    "complemento": "Rua zulmira Canavarros 380 centro norte"
+  },
+  {
+    "id": "1748720356937-AbC9O",
+    "nome": "Aa7503 CPA JD VITORIA",
+    "celular": "5565999024075.0",
+    "endereco": "AA7503",
+    "complemento": "Rua 6 A quadra A7 casa 11 jd Vitória?"
+  },
+  {
+    "id": "1747405983812-AbC9O",
+    "nome": "AB1818 CPA PEDREGAL",
+    "celular": "5565992964698.0",
+    "endereco": "AB1818",
+    "complemento": "Aqui na rua Maranguape 477"
+  },
+  {
+    "id": "1743696033215-AbC9O",
+    "nome": "Ac Dora",
+    "celular": "5565993198668.0",
+    "endereco": "Ac Dora",
+    "complemento": "Rua 18 Qdra 111 casa 49 pedra 90"
+  },
+  {
+    "id": "1746617761132-AbC9O",
+    "nome": "AC0190 VG ALAMEDA",
+    "celular": "5565998043108.0",
+    "endereco": "AC0190",
+    "complemento": "Travessa curtume 211"
+  },
+  {
+    "id": "1745847725845-AbC9O",
+    "nome": "AC12 CPA JD FLORIANOPOLIS",
+    "celular": "5565996264120.0",
+    "endereco": "Ac12",
+    "complemento": "Rua 27 casa 2"
+  },
+  {
+    "id": "1744125557025-AbC9O",
+    "nome": "AC1212 - VG - PAIAGUAS",
+    "celular": "5565993182728.0",
+    "endereco": "AC1212",
+    "complemento": "RUA 35 Q96 C43 VG PAIAGUAS"
+  },
+  {
+    "id": "1744121022045-AbC9O",
+    "nome": "AC16 - VG  SANTA CECILIA -  COHAB PRIMAVERA",
+    "celular": "5565992378840.0",
+    "endereco": "AC16",
+    "complemento": "RUA FLOR DO CAMPO, Q48 C30 SANTA CECILIA"
+  },
+  {
+    "id": "1746190371768-AbC9O",
+    "nome": "AC20 COXIPO JD IMPERIAL",
+    "celular": "5565993492572.0",
+    "endereco": "AC20",
+    "complemento": "Na rua das orquídeas 470 Jd imperial 2"
+  },
+  {
+    "id": "1744737730440-AbC9O",
+    "nome": "AC22 VG JACARANDA",
+    "celular": "5566999142421.0",
+    "endereco": "AC22",
+    "complemento": "Residencial jequitiba  Quadra 22 casa 32 rua Q"
+  },
+  {
+    "id": "1746189730529-AbC9O",
+    "nome": "AC3 COXIPO PEDRA 90",
+    "celular": "5565993293183.0",
+    "endereco": "Ac3",
+    "complemento": "Avenida existente chácara 6 casa 3 \nPedra 90"
+  },
+  {
+    "id": "1745588167122-AbC9O",
+    "nome": "AC321 CPA ARAES",
+    "celular": "5565992500572.0",
+    "endereco": "AC321",
+    "complemento": "Desembargador José de Mesquita número 677 bairro Araés"
+  },
+  {
+    "id": "1750357599994-AbC9O",
+    "nome": "Ac377 Cuiaba Coophamil",
+    "celular": "5565999529100.0",
+    "endereco": "Ac377",
+    "complemento": "Rua Manoel Ramos de Lino quadra 39 bloco 4 apto 10 Ed acácias lado esquerdo"
+  },
+  {
+    "id": "1744284759754-AbC9O",
+    "nome": "AC44 VG ENGORDADOR",
+    "celular": "556594465784.0",
+    "endereco": "Ac44",
+    "complemento": ""
+  },
+  {
+    "id": "1754682032870-AbC9O",
+    "nome": "Ac594 Jd Vitoria",
+    "celular": "5565981104245.0",
+    "endereco": "Ac594",
+    "complemento": "Bairro jardim Vitória\nRua 10\nQuadra 18 \nCasa 406"
+  },
+  {
+    "id": "1746020233654-AbC9O",
+    "nome": "AC622 COXIPO PQ CUIABA",
+    "celular": "5565992513959.0",
+    "endereco": "Ac622",
+    "complemento": "Rua p4 quadra 86 Casa 9"
+  },
+  {
+    "id": "1746632588015-AbC9O",
+    "nome": "AC661 VG SAO SIMÃO ",
+    "celular": "55659.0",
+    "endereco": "AC661",
+    "complemento": "Rua alto coite quadra 115 casa 7 portão cinza"
+  },
+  {
+    "id": "1746139756737-AbC9O",
+    "nome": "AC7711 CPA RESID SAO CARLOS",
+    "celular": "5565992569012.0",
+    "endereco": "AC7711",
+    "complemento": "Residencial São Carlos \nBloco 15\nApto 202\nEm frente da ÁGUAS CUIABÁ \nPróximo à policlínica do Planalto."
+  },
+  {
+    "id": "1745671276483-AbC9O",
+    "nome": "AC781 COXIPÓ BRASIL 21",
+    "celular": "5565981233921.0",
+    "endereco": "AC781",
+    "complemento": "Bairro Brasil 21 rua 05 quadra 39 casa 51"
+  },
+  {
+    "id": "1753465072113-AbC9O",
+    "nome": "Ac8033 VG Figueirinha",
+    "celular": "5565993331747.0",
+    "endereco": "Ac8033",
+    "complemento": "Rua Gonçalo Domingos De Campos número 980,bairro figueirinha varzea grande"
+  },
+  {
+    "id": "1746706399381-AbC9O",
+    "nome": "AC8300 CPA PERTO DA LAGOA",
+    "celular": "5565992859807.0",
+    "endereco": "AC8300",
+    "complemento": "E na casa vermelha portão branco prox a esquina"
+  },
+  {
+    "id": "1753207409969-AbC9O",
+    "nome": "Ac9920 VG Mapim",
+    "celular": "5565993450375.0",
+    "endereco": "Ac9920",
+    "complemento": "Rua Q quadra 24 lote 21 bairro mapim várzea grande"
+  },
+  {
+    "id": "1744200931786-AbC9O",
+    "nome": "AD784 CPA LAGOA",
+    "celular": "556598114128.0",
+    "endereco": "AD784",
+    "complemento": "Rua 59, qda 2 casa 22, CPA 3 setor 4"
+  },
+  {
+    "id": "1744375824927-AbC9O",
+    "nome": "AS109 CPA NOVO PARAISO CASA DA NORA",
+    "celular": "5565992685852.0",
+    "endereco": "AS109 CASA DA NORA",
+    "complemento": "LIGAR 98143-1612 - Rua flor do serrado casa 184 novo paraíso 01"
+  },
+  {
+    "id": "1701788946996-AbC9O",
+    "nome": "Assoc Apoio Paciente Oncologico Cuiaba",
+    "celular": "65999327575.0",
+    "endereco": "\nAv São Sebastião 4160 Quilombo",
+    "complemento": ""
+  },
+  {
+    "id": "1697199610225-AbC9O",
+    "nome": "Associacao Espirita",
+    "celular": "65999827110.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1744812178907-AbC9O",
+    "nome": "B123 CPA TERRA NOVA",
+    "celular": "5565992558205.0",
+    "endereco": "B123",
+    "complemento": "Av A, 26  apto 42, Residencial Perola Bairro Terra Nova, Cuiaba/MT Cep 78.050-400\nEm frente Escola Quintino"
+  },
+  {
+    "id": "1744119965591-AbC9O",
+    "nome": "B294 COXIPÓ PEDRA 90",
+    "celular": "5565992907361.0",
+    "endereco": "B294",
+    "complemento": "Rua26 qudra140 casa27 pedra 90"
+  },
+  {
+    "id": "1751563783804-AbC9O",
+    "nome": "B311 Cuiaba Novo Terceiro",
+    "celular": "5565992492971.0",
+    "endereco": "B311",
+    "complemento": "Rua: Tambaú n.42"
+  },
+  {
+    "id": "1746277588980-AbC9O",
+    "nome": "B360 CUIABA DESPRAIADO",
+    "celular": "5565984491899.0",
+    "endereco": "B360",
+    "complemento": "Rua Colômbia 354 Ribeirão da Ponte"
+  },
+  {
+    "id": "1752686334421-AbC9O",
+    "nome": "B366 Vg Vitoria Regia",
+    "celular": "5565992441910.0",
+    "endereco": "B366",
+    "complemento": "Rua A quadra 8 casa 26 residencial vida nova \nBairro vitória regia"
+  },
+  {
+    "id": "1750791453069-AbC9O",
+    "nome": "B6 Cpa Jd Vitoria",
+    "celular": "5565984321684.0",
+    "endereco": "B6",
+    "complemento": "Rua 3A Q3A casa 09 jardim Vitória"
+  },
+  {
+    "id": "1753728479577-AbC9O",
+    "nome": "C013 CPA Planalto",
+    "celular": "5565984782544.0",
+    "endereco": "C013",
+    "complemento": "Rua 12 quadra 15 casa 46"
+  },
+  {
+    "id": "1747759466621-AbC9O",
+    "nome": "C0364 CPA LAGOA",
+    "celular": "5565992147852.0",
+    "endereco": "C0364",
+    "complemento": "Rua 36 quadra 44 casa 27 CPA 3 setor 3"
+  },
+  {
+    "id": "1750265620957-AbC9O",
+    "nome": "C0470 VG SAO SIMAO",
+    "celular": "5565993478640.0",
+    "endereco": "C0470",
+    "complemento": "Rua: elvir pulquerio de França \nBairro: São Simão \nQuadra 60, lote 19"
+  },
+  {
+    "id": "1754681501762-AbC9O",
+    "nome": "C0542 Cpa Novo Paraiso",
+    "celular": "5565992714431.0",
+    "endereco": "C0542",
+    "complemento": "Bairro novo paraíso 02\nAvenida Jaime Campos q 45 casa 05"
+  },
+  {
+    "id": "1744123115143-AbC9O",
+    "nome": "C065 CUIABA JD CALIIFORNIA",
+    "celular": "5565996418414.0",
+    "endereco": "C065",
+    "complemento": "RUA 13 Q10 C5 JD CALIFORNIA"
+  },
+  {
+    "id": "1746186470682-AbC9O",
+    "nome": "C0715 COXIPO PEDRA 90",
+    "celular": "5565996690532.0",
+    "endereco": "C0715",
+    "complemento": "Residencial Flor de Liz 208, Pedra 90 Cuiabá MT"
+  },
+  {
+    "id": "1744029108373-AbC9O",
+    "nome": "C0803 - VG - JD GLORIA",
+    "celular": "65998125594.0",
+    "endereco": "C0803",
+    "complemento": "Rua da Glória número 706 próximo ao comercial Pantanal"
+  },
+  {
+    "id": "1747317698729-AbC9O",
+    "nome": "C0923 VG CRISTO REI",
+    "celular": "5565999370834.0",
+    "endereco": "C0923",
+    "complemento": "Profa Fátima.\nRua 11 Q 25 C18 Cohab D.Orlando Chaves Cristo Rei Vg"
+  },
+  {
+    "id": "1744370175006-AbC9O",
+    "nome": "C543 CPA JD VITORIA",
+    "celular": "5565993066065.0",
+    "endereco": "C543",
+    "complemento": "RUA 6 Q10 C553 JD VITORIA"
+  },
+  {
+    "id": "1744428195600-AbC9O",
+    "nome": "C8851 COXIPO SANTA CRUZ",
+    "celular": "5565996042218.0",
+    "endereco": "C8851",
+    "complemento": "Rua Olavo Bilac, Qd06 lote 60\nSobrado 3 - Bairro Santa Cruz I. "
+  },
+  {
+    "id": "1744898919192-AbC9O",
+    "nome": "Ca521 CUIABA Sta ISABEL",
+    "celular": "5565999743994.0",
+    "endereco": "Ca521",
+    "complemento": "Bairro Santa Isabel Cuiabá  Rua Nova Olímpia número 596"
+  },
+  {
+    "id": "1723844474072-AbC9O",
+    "nome": "Capelania Militar Nossa Senhora Do Carmo ",
+    "celular": "65999733403.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1743687948074-AbC9O",
+    "nome": "Cartao Rogerio",
+    "celular": "5565984588706.0",
+    "endereco": "Cartao Rogerio",
+    "complemento": "Rua: São Pedro \nCasa: 8A\nBairro: Ikaray \nQuadra 38"
+  },
+  {
+    "id": "1743716115068-AbC9O",
+    "nome": "Cartoon Sistemas Tiago Melo",
+    "celular": "5565981009310.0",
+    "endereco": "Cartoon Sistemas Tiago Melo",
+    "complemento": "Entregar No Estacionamento Atras Do Predio. Ligar Antes."
+  },
+  {
+    "id": "1744462966978-AbC9O",
+    "nome": "CB652 CUIABA Campo Velho",
+    "celular": "5565984715419.0",
+    "endereco": "CB652",
+    "complemento": "Rua Presidente Médici,368 campo velho."
+  },
+  {
+    "id": "1748357986748-AbC9O",
+    "nome": "CBA0051 CUIABA CENTRO IMOBILIARIA CLASSICA",
+    "celular": "5565999824608.0",
+    "endereco": "Cba0051",
+    "complemento": "Rua Castelo Branco 317 quilombo . "
+  },
+  {
+    "id": "1744122853966-AbC9O",
+    "nome": "CBA01 - CUIABA - SANTA ANGELITA",
+    "celular": "5565984743780.0",
+    "endereco": "CBA01",
+    "complemento": "RUA DR MOACIR DE FREITAS 88 BAIRRO SANTA ANGELITA"
+  },
+  {
+    "id": "1746013150400-AbC9O",
+    "nome": "CBA033 CUIABA QUILOMBO",
+    "celular": "5565999166662.0",
+    "endereco": "CBA033",
+    "complemento": "prédio espelhado Studio informática"
+  },
+  {
+    "id": "1748948547426-AbC9O",
+    "nome": "CBA0331 CUIABA SANTA ISABEL",
+    "celular": "5565984798302.0",
+    "endereco": "CBA0332",
+    "complemento": "Santa Isabel Cuiabá 538 Metropolitana"
+  },
+  {
+    "id": "1745846982740-AbC9O",
+    "nome": "CBA066 CUIABA SANTA HELENA",
+    "celular": "5565981406300.0",
+    "endereco": "CBA066",
+    "complemento": "RUA NILO PECANHA NR 155 BAIRRO  SANTA HELENA, PONTO DE REFERÊNCIA. BANCO DE SANGUE IHEMCO"
+  },
+  {
+    "id": "1754400204587-AbC9O",
+    "nome": "Cba0772 Santa Isabel Kit Net Verde Dona Socorro",
+    "celular": "5565992524992.0",
+    "endereco": "Cba0772",
+    "complemento": "Rua nova Denise n:45 - Santa Isabel, próximo ao supermercado concórdia"
+  },
+  {
+    "id": "1751133328419-AbC9O",
+    "nome": "Cba0773 Goiabeiras BECO LIGAR CLIENTE",
+    "celular": "5565996891792.0",
+    "endereco": "Cba0773",
+    "complemento": "Rua Marechal Floriano Peixoto, Casa 35, Em um Beco, Travessa 25 de agosto, "
+  },
+  {
+    "id": "1743678796163-AbC9O",
+    "nome": "CBA0912 CUIABA BARBADO RUI",
+    "celular": "5565993068357.0",
+    "endereco": "Rui Fiado",
+    "complemento": "Av. Tancredo Neves, 1682 - Praeiro, Cuiabá - MT, 78060-020"
+  },
+  {
+    "id": "1753723068655-AbC9O",
+    "nome": "Cba1003 Boa Esperança ",
+    "celular": "5565999011197.0",
+    "endereco": "Cba1003",
+    "complemento": "Rua 08, no. 890, Bairro Boa Esperança"
+  },
+  {
+    "id": "1746797802242-AbC9O",
+    "nome": "CBA1125 CUIABA PRAEIRO",
+    "celular": "5565992918976.0",
+    "endereco": "CbA1125",
+    "complemento": "Rua filipinas número 37A praeirinho Ponto de referência mercado Ronaldo ou Beco sem saída"
+  },
+  {
+    "id": "1751129451746-AbC9O",
+    "nome": "Cba1153 Cuiaba Campo Velho",
+    "celular": "5565981652604.0",
+    "endereco": "Cba1153",
+    "complemento": "Avenida Presidente medici \n729\nCampo velho\nSobradinho amarelo"
+  },
+  {
+    "id": "1746704525405-AbC9O",
+    "nome": "CBA1197 CUIABA RIBEIRAO DO LIPA",
+    "celular": "5565981344197.0",
+    "endereco": "CBA1197",
+    "complemento": "Av mario palmas 265 ribeirao do lipa"
+  },
+  {
+    "id": "1751129285329-AbC9O",
+    "nome": "Cba13214 Cuiaba  Praeiro",
+    "celular": "5565992023503.0",
+    "endereco": "Cba13214",
+    "complemento": "É Rua Agenor Lino sobrinho Quadra 2 casa 8 Bairro Novo Praieiro praierinho"
+  },
+  {
+    "id": "1750188698181-AbC9O",
+    "nome": "Cba140 Cuiaba Centro",
+    "celular": "5565999403983.0",
+    "endereco": "Cba140",
+    "complemento": "Rua cel Benedito Leite  528 entre a barão e s joaquim Murtinho"
+  },
+  {
+    "id": "1751976668968-AbC9O",
+    "nome": "Cba140 Dom Aquino",
+    "celular": "5565999403983.0",
+    "endereco": "Cba140 Dom Aquino",
+    "complemento": "Na rua Santa Terezinha número 358 em frente a pracinha bairro  dom aquino"
+  },
+  {
+    "id": "1755805093304-AbC9O",
+    "nome": "Cba1421 Porto",
+    "celular": "5565992196808.0",
+    "endereco": "Cba1421",
+    "complemento": "Rua dos andradas n 35 verdão"
+  },
+  {
+    "id": "1745427056459-AbC9O",
+    "nome": "CBA1822 CUIABA SANTA ISABEL",
+    "celular": "5565992870489.0",
+    "endereco": "CBA1822",
+    "complemento": "Deputado Celso Mendes Quintela 202 Santa Isabel Cuiabá"
+  },
+  {
+    "id": "1746618523152-AbC9O",
+    "nome": "Cba1918 CUIABA GOIABEIRAS",
+    "celular": "5565999867373.0",
+    "endereco": "Cba1918",
+    "complemento": "Rua General Irineu de Souza 107,Bairro Duque de Caxias, estacionamento do Salão Patrícia Lopes, Cuiabá"
+  },
+  {
+    "id": "1746710079233-AbC9O",
+    "nome": "CBA20210 CUIABA RIBEIRA LIPA",
+    "celular": "55659.0",
+    "endereco": "Cba20210",
+    "complemento": "Kit net do seu gustavo"
+  },
+  {
+    "id": "1746020513157-AbC9O",
+    "nome": "CBA2123 CUIABA PORTO",
+    "celular": "5565992101667.0",
+    "endereco": "CBA2123",
+    "complemento": "Rua general osorio 420 casa 7 bairro do porto"
+  },
+  {
+    "id": "1749125658520-AbC9O",
+    "nome": "Cba2201 CUIABA PORTO",
+    "celular": "5565992791347.0",
+    "endereco": "CBA2201",
+    "complemento": "Rua Vicente Maria Botelho 235, casa corredor entre casa 44 e 54 porto"
+  },
+  {
+    "id": "1746278628664-AbC9O",
+    "nome": "CBA2209 CUIABA DOM AQUINO",
+    "celular": "5565992738284.0",
+    "endereco": "CBA2209",
+    "complemento": "Segue o endereço: \nAvenida Dom Bosco, 210 \nDom Aquino"
+  },
+  {
+    "id": "1746191584392-AbC9O",
+    "nome": "CBA229 CUIABA NOVO TERCEIRO",
+    "celular": "5565992194447.0",
+    "endereco": "CBA229",
+    "complemento": "Rua tombador 568 novo terceiro"
+  },
+  {
+    "id": "1748948753600-AbC9O",
+    "nome": "CBA2454 CUIABA CIDADE ALTA",
+    "celular": "5565999315167.0",
+    "endereco": "CBA2454",
+    "complemento": "Av Agricola Paes Se Barros 798. "
+  },
+  {
+    "id": "1754574839313-AbC9O",
+    "nome": "Cba2543 QUILOMBO",
+    "celular": "5565999811636.0",
+    "endereco": "Cba2543",
+    "complemento": "Rua Presidente Prudente de morais .n.70 bairro Quilombo Cuiabá"
+  },
+  {
+    "id": "1746618350862-AbC9O",
+    "nome": "CBA2569 CUIABA NOVO TERCEIRO",
+    "celular": "5565993113373.0",
+    "endereco": "CBA2569",
+    "complemento": "Rua Tombador 571 Novo Terceiro"
+  },
+  {
+    "id": "1753967124124-AbC9O",
+    "nome": "Cba2748 Centro ",
+    "celular": "5565999390575.0",
+    "endereco": "Cba2748",
+    "complemento": "Av. Sen. Filinto Müller, 1875 - Quilombo, Cuiabá - MT, 78043-500"
+  },
+  {
+    "id": "1748357632974-AbC9O",
+    "nome": "CBA3119 CBA JD CUIABA",
+    "celular": "5565981150342.0",
+    "endereco": "CBA3119",
+    "complemento": "Rua das Begonias 43 Jd Cuiaba"
+  },
+  {
+    "id": "1746705141868-AbC9O",
+    "nome": "CBA3226 CUIABA RIBEIRAO DO LIPA",
+    "celular": "5565992558694.0",
+    "endereco": "CBA3226",
+    "complemento": "Rua felicidade s silva\nNr 82\nBairro : Ribeirão do lipa\nComplemento : próx ao bar do baiano , casa de portão laranja , rua sem saída"
+  },
+  {
+    "id": "1749264171379-AbC9O",
+    "nome": "CBA3484 CUIABA SANTA ROSA",
+    "celular": "5565998088115.0",
+    "endereco": "Cba3484",
+    "complemento": "Rua patos de minas,82 jardim Mariana"
+  },
+  {
+    "id": "1746012868733-AbC9O",
+    "nome": "CBA465 CUIABA JD ARACA",
+    "celular": "5565992060450.0",
+    "endereco": "CBA465",
+    "complemento": "Rua i quadra 5 casa 9 bairro jardim Araçá"
+  },
+  {
+    "id": "1754051203307-AbC9O",
+    "nome": "Cba5067 Alvorada",
+    "celular": "5565981346555.0",
+    "endereco": "Cba5067",
+    "complemento": "Rua do caju numero.cs 287:alvorada"
+  },
+  {
+    "id": "1753121453889-AbC9O",
+    "nome": "Cba5276 Cuiabá Santa Rosa",
+    "celular": "5565993042431.0",
+    "endereco": "Cba5276",
+    "complemento": "Rua f .n57"
+  },
+  {
+    "id": "1754314966228-AbC9O",
+    "nome": "Cba5332  Paiaguas",
+    "celular": "5565981146634.0",
+    "endereco": "Cba5332",
+    "complemento": ""
+  },
+  {
+    "id": "1747318127674-AbC9O",
+    "nome": "CbA5332 CPA PAIAGUAS",
+    "celular": "5565981146634.0",
+    "endereco": "CBA5332",
+    "complemento": "Chacara So Entregar "
+  },
+  {
+    "id": "1746139472300-AbC9O",
+    "nome": "CBA565 CUIABA GRANDE TERCEIRO ",
+    "celular": "5565992571474.0",
+    "endereco": "CBA565",
+    "complemento": "Rua Rio Piriguara quadra 21 casa 29 bairro grande terceiro"
+  },
+  {
+    "id": "1755976123760-AbC9O",
+    "nome": "Cba660 Despraiado",
+    "celular": "5565993325898.0",
+    "endereco": "Cba660",
+    "complemento": "Não tem o nome da Rua, mais é Quadra 04, Casa 01 - Bairro despraiado"
+  },
+  {
+    "id": "1745852805638-AbC9O",
+    "nome": "CBA6622 CUIABA SANTA ISABEL",
+    "celular": "5565984332931.0",
+    "endereco": "CBA6622",
+    "complemento": "Rua Doutor ADEMAR DE BARROS \n755."
+  },
+  {
+    "id": "1746538413084-AbC9O",
+    "nome": "CBA7702 CUIABA NOVO COLORADO",
+    "celular": "5565996337409.0",
+    "endereco": "CBA7702",
+    "complemento": "Rua Paulo altran \nBairro Jardim colorado \nCasa 04 \nPonto de referência enfrente da kitinete do candir"
+  },
+  {
+    "id": "1755706784238-AbC9O",
+    "nome": "Cba7704 Cidade Verde",
+    "celular": "5565992335142.0",
+    "endereco": "Cba7704",
+    "complemento": "Rua Oir de Castilho nº. 141 - Jardim Primavera - Cuiabá"
+  },
+  {
+    "id": "1746277522491-AbC9O",
+    "nome": "Cba776 CUIABA COOPHAMIL",
+    "celular": "5565992729724.0",
+    "endereco": "CBA776",
+    "complemento": "Rua Manoel Ramos, lino   número 514 bairro Coophamil"
+  },
+  {
+    "id": "1746618097596-AbC9O",
+    "nome": "CBA7920 CUIABA NOVO COLORADO",
+    "celular": "5565993407253.0",
+    "endereco": "CBA7920",
+    "complemento": "Rua pastor Sebastião de brito casa 11 quadra 4 bairro novo colorado"
+  },
+  {
+    "id": "1755627130289-AbC9O",
+    "nome": "Cba8003 Sta Isabel",
+    "celular": "5565981125838.0",
+    "endereco": "Cba8003",
+    "complemento": "Rua 9 casa 220"
+  },
+  {
+    "id": "1747147402116-AbC9O",
+    "nome": "CBA8005 CUIABA CENTRO",
+    "celular": "5565993550115.0",
+    "endereco": "CBA8005",
+    "complemento": ""
+  },
+  {
+    "id": "1746966175516-AbC9O",
+    "nome": "Cba8231 CUIABA GOIABEIRAS",
+    "celular": "5565992953920.0",
+    "endereco": "Cba8231",
+    "complemento": "Rua Rui Barbosa 261 goiabeiras"
+  },
+  {
+    "id": "1747489798377-AbC9O",
+    "nome": "CBA8330 CUIABA GRANDE TERCEIRO",
+    "celular": "5565993368561.0",
+    "endereco": "CBA8330",
+    "complemento": "Rua Sergipe casa 2"
+  },
+  {
+    "id": "1745686860086-AbC9O",
+    "nome": "CBA881 CUIABA FLORAIS",
+    "celular": "55659.0",
+    "endereco": "Cba881",
+    "complemento": "quadra 3 casa 18"
+  },
+  {
+    "id": "1746706703324-AbC9O",
+    "nome": "CBA8991 CUIABA RIBEIRAO DO LIPA",
+    "celular": "5565981285970.0",
+    "endereco": "CBA8991",
+    "complemento": "Ultima Casa Do Lado Direito, Esquina, Portao Fechado"
+  },
+  {
+    "id": "1754400465814-AbC9O",
+    "nome": "Cba9943 Santa Isabel",
+    "celular": "5565996292487.0",
+    "endereco": "Cba9943",
+    "complemento": "Rua Cirilo pinto casa 50 São benedito"
+  },
+  {
+    "id": "1703334327734-AbC9O",
+    "nome": "Cond Resid Jardim Shangri-la",
+    "celular": "65999228386.0",
+    "endereco": "Cnpj 3592541000190",
+    "complemento": ""
+  },
+  {
+    "id": "1755526089556-AbC9O",
+    "nome": "CONFRA BEBIDARIA GETULIO VARGAS",
+    "celular": "555565992854587.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1755524783028-AbC9O",
+    "nome": "CONFRA BEBIDARIA PORTO",
+    "celular": "5565992854587.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1753449347509-AbC9O",
+    "nome": "Cox0039 Pedra 90",
+    "celular": "556596202784.0",
+    "endereco": "Cox0039",
+    "complemento": "Rua 21\nQuadra 123\nCasa 45\nBairro pedra 90"
+  },
+  {
+    "id": "1746702977752-AbC9O",
+    "nome": "COX0043 COXIPO JD IMPERIAL",
+    "celular": "5565999848234.0",
+    "endereco": "COX0043",
+    "complemento": "Rua 2 quadra 4 a casa 5 residencial Cláudio Marchetti Jardim imperial"
+  },
+  {
+    "id": "1746703094480-AbC9O",
+    "nome": "COX0338 COXIPO PQ ATALAIA",
+    "celular": "5565999075918.0",
+    "endereco": "COX0338",
+    "complemento": "ua o quadra20 casa19 parque Atalaia"
+  },
+  {
+    "id": "1749264027936-AbC9O",
+    "nome": "COX0339 COXIPO PASCOAL RAMOS",
+    "celular": "5565993259782.0",
+    "endereco": "Cox0339",
+    "complemento": "Rua 8 jardim botânico casa sem número"
+  },
+  {
+    "id": "1747481668715-AbC9O",
+    "nome": "COX0411 COXIPO RES COXIPO",
+    "celular": "5565998446601.0",
+    "endereco": "Cox0411",
+    "complemento": "R. Dezenove, 21 - Res. Coxipo, Cuiabá - MT, 78088-525"
+  },
+  {
+    "id": "1750274642590-AbC9O",
+    "nome": "Cox0443 Coxipo Pq Atalaia",
+    "celular": "5565993249615.0",
+    "endereco": "Cox0443",
+    "complemento": "Rua 2 Q6 Casa 14"
+  },
+  {
+    "id": "1746538267363-AbC9O",
+    "nome": "COX0490 COXIPO JD UNIVERSITARIO",
+    "celular": "55659.0",
+    "endereco": "COX0490",
+    "complemento": "Rua 02, Quadra 03, Casa 28 - Residencial Acacia do Coxipó.\nBairro: Jardim Universitário \nCidade: Cuiabá-MT"
+  },
+  {
+    "id": "1748696870967-AbC9O",
+    "nome": "COX1008 COXIPO BELITA COSTA MARQUES",
+    "celular": "5565981035344.0",
+    "endereco": "COX1008",
+    "complemento": "Rua dois quadra 5 casa 11 Belita Costa Marques"
+  },
+  {
+    "id": "1744292520158-AbC9O",
+    "nome": "Cox1011 COXIPO STA TERESINHA",
+    "celular": "5565993382231.0",
+    "endereco": "Cox1011",
+    "complemento": "Residencial santa terezinha Cuiabá MT Rua 29 quadra 12 casa 23 setor D próximo ao ponto final da itapaje"
+  },
+  {
+    "id": "1745846175498-AbC9O",
+    "nome": "COX1018 COXIPÓ NILCE PAES BARRETO",
+    "celular": "5565999274993.0",
+    "endereco": "COX1018",
+    "complemento": "Na rua da Castrillon do Distrito\nRua: E\nQd:03\nCs: 14\nResidencial Aguas Claras\nBairro: Pascoal Ramos"
+  },
+  {
+    "id": "1746534181235-AbC9O",
+    "nome": "COX1046 COXIPO TIJUCAL",
+    "celular": "5565981403396.0",
+    "endereco": "COX1046",
+    "complemento": "Rua 234 quadra 78 casa 41 bairro Tijucal setor 2"
+  },
+  {
+    "id": "1746274903752-AbC9O",
+    "nome": "COX107 COXIPÓ PQ CUIABA",
+    "celular": "5565996234271.0",
+    "endereco": "COX107",
+    "complemento": "Rua p1 \nQuadra 50 casa 16\nParque Cuiabá"
+  },
+  {
+    "id": "1746533956887-AbC9O",
+    "nome": "COX1123 COXIPO NOVA ESPERANÇA ",
+    "celular": "55659.0",
+    "endereco": "Cox1123",
+    "complemento": "Rua:09\nQuadra:09\nCasa:23\nNova esperança 3 Cuiabá \nCEP 78099-479"
+  },
+  {
+    "id": "1746012176046-AbC9O",
+    "nome": "COX113 COXIPÓ RESID COXIPO ",
+    "celular": "5565984484203.0",
+    "endereco": "COX113",
+    "complemento": "Rua 12 casa 10 residencial Coxipó"
+  },
+  {
+    "id": "1751721691019-AbC9O",
+    "nome": "Cox1215 Coxipo Tijucal",
+    "celular": "5565992804260.0",
+    "endereco": "Cox1215",
+    "complemento": "avenida das flores n° 514\nbairro São Francisco"
+  },
+  {
+    "id": "1746704264432-AbC9O",
+    "nome": "COX1235 COXIPO LAGOA AZUL",
+    "celular": "5565993198801.0",
+    "endereco": "COX1235",
+    "complemento": "Rua Diamantino 9 lagoa azul"
+  },
+  {
+    "id": "1749263948589-AbC9O",
+    "nome": "COX1255 COXIPÓ Pedra 90",
+    "celular": "5565984412683.0",
+    "endereco": "COX1255",
+    "complemento": "Rua 24, casa 13, quadra 130"
+  },
+  {
+    "id": "1746534043436-AbC9O",
+    "nome": "Cox144 COXIPÓ SAO GONCALO",
+    "celular": "5565992431782.0",
+    "endereco": "COX144",
+    "complemento": "Meu endereço é Rua 2 quadra 9 casa número n5 na COHAB São Gonçalo no Coxipó Ok"
+  },
+  {
+    "id": "1748697052923-AbC9O",
+    "nome": "COX1616 COXIPO TIJUCAL",
+    "celular": "55659992536814.0",
+    "endereco": "COX1616",
+    "complemento": "Rua 29 qdra 29 casa 2 jardim passaredo"
+  },
+  {
+    "id": "1746275317254-AbC9O",
+    "nome": "COX166 COXIPO JD IMPERIAL",
+    "celular": "5567981667259.0",
+    "endereco": "COX166",
+    "complemento": "Rua três mil e cem quadra 14 casa, 11"
+  },
+  {
+    "id": "1750242564852-AbC9O",
+    "nome": "COX1796 COXIPO PQ ATALAIA",
+    "celular": "5565992057397.0",
+    "endereco": "COX1796",
+    "complemento": "Rua 06 quadra 10 casa 22 parque atalaia loteamento jardim das oliveiras proximo distribuidora rocha"
+  },
+  {
+    "id": "1748870911224-AbC9O",
+    "nome": "Cox1815 COXIPO TIJUCAL",
+    "celular": "5565992259151.0",
+    "endereco": "COX1815",
+    "complemento": "Rua das orquídeas número 540, bairro São Francisco"
+  },
+  {
+    "id": "1754920364222-AbC9O",
+    "nome": "Cox1820 Brasil 21",
+    "celular": "5565996699245.0",
+    "endereco": "Cox1820",
+    "complemento": "Brasil 21 R8 Q 36 C38"
+  },
+  {
+    "id": "1746012488333-AbC9O",
+    "nome": "COX1942 COXIPO JD GRAMADO",
+    "celular": "5565993291064.0",
+    "endereco": "COX1942",
+    "complemento": "Rua lixeira \nBairro jardi Gramado"
+  },
+  {
+    "id": "1750178878746-AbC9O",
+    "nome": "COX1968 COXIPO BOA ESPERANÇA ",
+    "celular": "5565993336772.0",
+    "endereco": "Cox1968",
+    "complemento": "Rua: Benedito Maciel da Cruz n° 138 \nBairro: Boa Esperança\nPonto de referência: Em frente a UFMT"
+  },
+  {
+    "id": "1746273505241-AbC9O",
+    "nome": "COX198 COXIPO REAL PARQUE",
+    "celular": "5565992030331.0",
+    "endereco": "COX198",
+    "complemento": "Rua dos lírios quadra 16 casa 07 bairro real parque Cuiabá"
+  },
+  {
+    "id": "1748869442366-AbC9O",
+    "nome": "COX2049 COXIPO PASCOAL RAMOS",
+    "celular": "5565993453560.0",
+    "endereco": "Cox2049",
+    "complemento": "Rua São Gerônimo número 523 são Sebastião"
+  },
+  {
+    "id": "1750438630243-AbC9O",
+    "nome": "COX2049A COXIPO NOVA ESPERANÇA ",
+    "celular": "556599453560.0",
+    "endereco": "Cox2049A",
+    "complemento": "Avenida Paulo Rabelo de Castro lote 14 quadra 03 nova esperança 3 - Ao lado da oficina Macedo quinta  Roda"
+  },
+  {
+    "id": "1748697109800-AbC9O",
+    "nome": "COX2205 COXIPÓ TIJUCAL",
+    "celular": "5565992281296.0",
+    "endereco": "COX2205",
+    "complemento": "Rua cento e oito quadra 14 casa 14 setor 01 bairro Tijucal próximo ao colégio Manoel Cavalcante Proença"
+  },
+  {
+    "id": "1749037859920-AbC9O",
+    "nome": "COX2207 COXIPÓ AV DAS TORRES",
+    "celular": "5565992576221.0",
+    "endereco": "Cox2207",
+    "complemento": "Rua N\nQuadra 8\nCasa 27\nResidencial Avelino \nSão Sebastião"
+  },
+  {
+    "id": "1749263857915-AbC9O",
+    "nome": "COX2448 COXIPO PEDRA 90",
+    "celular": "5565999294837.0",
+    "endereco": "Cox2448",
+    "complemento": "Rua 28\nQ b\nC 1\nResidencial sonho meu \nPedra 90"
+  },
+  {
+    "id": "1748093484808-AbC9O",
+    "nome": "COX249 COXIPO PQ CUIABA",
+    "celular": "5565996365014.0",
+    "endereco": "Cox249",
+    "complemento": "Rua A, Quadra 6 A número 11 Parque Cuiabá"
+  },
+  {
+    "id": "1750354693714-AbC9O",
+    "nome": "Cox2662 COXIPO QLTOS DO PARQUE",
+    "celular": "5565992091600.0",
+    "endereco": "Cox2662",
+    "complemento": "Endereço\nRua D\nQuadra 14\nCasa 95\nLote 10\nAltos do parque 2\nCasa amarela sem muro na frente"
+  },
+  {
+    "id": "1746011890376-AbC9O",
+    "nome": "COX270 COXIPO BELITA COSTA MARQUES",
+    "celular": "5565993445236.0",
+    "endereco": "COX270",
+    "complemento": "Rua dois quadra seis casa quatorze loteamento belita Costa Marques"
+  },
+  {
+    "id": "1745928295269-AbC9O",
+    "nome": "COX301 COXIPÓ RESID TUIUIÚ ",
+    "celular": "5565999098997.0",
+    "endereco": "COX301",
+    "complemento": "Rua B\nCasa:432 Janaina\nCondominio  tuiuiu \nAltos parque"
+  },
+  {
+    "id": "1746274808187-AbC9O",
+    "nome": "COX308 COXIPO Grilo",
+    "celular": "5565981318624.0",
+    "endereco": "COX308",
+    "complemento": "Grilo"
+  },
+  {
+    "id": "1753527552803-AbC9O",
+    "nome": "Cox3209 Pq Cuiaba",
+    "celular": "5565999673646.0",
+    "endereco": "Cox3209",
+    "complemento": "Rua y 4 quadra 98 casa 8\nParque cuiaba"
+  },
+  {
+    "id": "1746794393718-AbC9O",
+    "nome": "Cox3351 COXIPO NICO BARACAT",
+    "celular": "5565999693588.0",
+    "endereco": "COX3351",
+    "complemento": "Rua 04 quadra 1 casa 32 residencial nico baracat 1"
+  },
+  {
+    "id": "1746877458352-AbC9O",
+    "nome": "COX3371 COXIPÓ PQ CUIABA",
+    "celular": "5565992453626.0",
+    "endereco": "COX3371",
+    "complemento": "Eu moro na rua vinte casa 30 jardin paulicéia em cuiaba"
+  },
+  {
+    "id": "1747481628906-AbC9O",
+    "nome": "COX340 COXIPO PQ CUIABA",
+    "celular": "5565992317349.0",
+    "endereco": "COX340",
+    "complemento": "Rua O5 Quadra 47 casa 8"
+  },
+  {
+    "id": "1748870385203-AbC9O",
+    "nome": "COX3573 COXIPO PEDRA 90",
+    "celular": "55659992730467.0",
+    "endereco": "COX3573",
+    "complemento": "Quadra 10 Casa 291"
+  },
+  {
+    "id": "1748696924445-AbC9O",
+    "nome": "COX4025 COXIPO GARCA BRANCA",
+    "celular": "5565999095817.0",
+    "endereco": "COX4025",
+    "complemento": "Avenida d sn altos do parque 2 rua a casa 71"
+  },
+  {
+    "id": "1753449510642-AbC9O",
+    "nome": "Cox4314 Altos Do Parque",
+    "celular": "5565992943517.0",
+    "endereco": "Cox4314",
+    "complemento": "Rua dezenove quadra 13 casa 29 Jardim Paulicéia"
+  },
+  {
+    "id": "1747317153886-AbC9O",
+    "nome": "COX4401 COXIPO PASCOAL RAMOS",
+    "celular": "5565981438100.0",
+    "endereco": "COX4401",
+    "complemento": "Rua Antônio Batista da cruz \nSem número\nPascoal ramos \nA única casa de muro azul no final da rua"
+  },
+  {
+    "id": "1753527034165-AbC9O",
+    "nome": "Cox4402 Pedra 90",
+    "celular": "5565992052166.0",
+    "endereco": "Chácara Veja A Foto",
+    "complemento": ""
+  },
+  {
+    "id": "1747481567054-AbC9O",
+    "nome": "COX4414 COXIPO PQ CUIABA",
+    "celular": "5565984365546.0",
+    "endereco": "COX4414",
+    "complemento": ""
+  },
+  {
+    "id": "1748870111225-AbC9O",
+    "nome": "COX4442 COXIPÓ Altos Do Parque",
+    "celular": "55659992983251.0",
+    "endereco": "COX4442",
+    "complemento": "RuaE lote 29 casa 106 quadra 14 altos do parque 2"
+  },
+  {
+    "id": "1748870206687-AbC9O",
+    "nome": "COX455 COXIPO Jd PASSAREDO",
+    "celular": "5565992146349.0",
+    "endereco": "Cox455",
+    "complemento": ""
+  },
+  {
+    "id": "1750525836028-AbC9O",
+    "nome": "Cox5032 Coxipo Jd Presidente",
+    "celular": "5565992214920.0",
+    "endereco": "Cox5032",
+    "complemento": "R i\nQ 17\nC 18\nJd presidente 2"
+  },
+  {
+    "id": "1746704123278-AbC9O",
+    "nome": "COX5100 COXIPO JD UNIVERSITARIO",
+    "celular": "5565981374762.0",
+    "endereco": "COX5100",
+    "complemento": "Cuiabá \nJardim universitário \nRua Antônio conselheiro \nCasa 22 \nQuadra 15"
+  },
+  {
+    "id": "1744644756335-AbC9O",
+    "nome": "COX5109 COXIPO SAO JOA DEL REY",
+    "celular": "5565981702216.0",
+    "endereco": "5109",
+    "complemento": "Rua 11 quadra L casa 15"
+  },
+  {
+    "id": "1746703286813-AbC9O",
+    "nome": "COX5113 COXIPO JD Fortaleza",
+    "celular": "5565993439124.0",
+    "endereco": "COX5113",
+    "complemento": "Avenida Fortaleza número 14 bairro Manduri do lado do Bojão motos em frente a padaria amisterda"
+  },
+  {
+    "id": "1746451049771-AbC9O",
+    "nome": "COX515 COXIPO JD FORTALEZA",
+    "celular": "5565993295485.0",
+    "endereco": "COX515",
+    "complemento": "Rua F8 quadra 10 casa 299 jardim Fortaleza cuiaba"
+  },
+  {
+    "id": "1746011730604-AbC9O",
+    "nome": "COX552 COXIPO PEDRA 90",
+    "celular": "5565992139351.0",
+    "endereco": "COX552",
+    "complemento": "Avenida Existente  chacará 33 nova esperança frente com a rua 35  do pedra noventa ao lado da dobradeira de calhas"
+  },
+  {
+    "id": "1746274243141-AbC9O",
+    "nome": "COX553 COXIPÓ NOVA ESPERANCA",
+    "celular": "5565999513172.0",
+    "endereco": "COX553",
+    "complemento": "RUA: MARIA DOS REIS SANTOS \n\nQD. 40 N 36°\n\nB. NOVA ESPERANÇA I"
+  },
+  {
+    "id": "1748352743966-AbC9O",
+    "nome": "Cox555 COXIPO TIJUCAL",
+    "celular": "5565992247903.0",
+    "endereco": "COX555",
+    "complemento": "Rua 127, casa 12, qd 33, St 01. Tijucal. Cuiabá MT"
+  },
+  {
+    "id": "1746275200224-AbC9O",
+    "nome": "COX565 COXIPO RESID AVELINO",
+    "celular": "5568984210009.0",
+    "endereco": "COX565",
+    "complemento": "Rua K N57"
+  },
+  {
+    "id": "1746451379133-AbC9O",
+    "nome": "COX608 COXIPÓ NICO BARACAT",
+    "celular": "5565981198033.0",
+    "endereco": "COX608",
+    "complemento": "Rua 6 quadra 4 casa 13"
+  },
+  {
+    "id": "1746533910829-AbC9O",
+    "nome": "COX77 COXIPÓ ALTOS DO COXIPO TIJUCAL",
+    "celular": "5565984451341.0",
+    "endereco": "COX77",
+    "complemento": "Rua quadra 10 casa 6 alto do Coxipó"
+  },
+  {
+    "id": "1747481516015-AbC9O",
+    "nome": "COX7703 COXIPO OSMAR CABRAL",
+    "celular": "5565992304813.0",
+    "endereco": "COX7703",
+    "complemento": "Rua 03 quadra 03 casa 03\nOsmar cabral"
+  },
+  {
+    "id": "1746703199823-AbC9O",
+    "nome": "COX7721 VG MAPIM",
+    "celular": "5565998111152.0",
+    "endereco": "COX7721",
+    "complemento": "Residencial Nassarden. \nRua Acácia, N° 3 apartamento 6 bairro Mapim, Várzea Grande. \n\nCEP 78144500"
+  },
+  {
+    "id": "1749259991266-AbC9O",
+    "nome": "COX7731 COXIPO NICO BARACAT",
+    "celular": "5565996022969.0",
+    "endereco": "Cox7731",
+    "complemento": "Avenida c. Casa 1.  Quadra 1\nBairro _ nico baracate 3"
+  },
+  {
+    "id": "1746877356917-AbC9O",
+    "nome": "COX7885 COXIPO PEDRA 90",
+    "celular": "5565993337782.0",
+    "endereco": "COX7885",
+    "complemento": "Meu nome é josyane Ferreira Silva \nRua 52 quadra 193 casa 30 bairro pedra 90 \nPagamento cartão de crédito"
+  },
+  {
+    "id": "1749086027810-AbC9O",
+    "nome": "COX8002 COXIPÓ Nilce Paes Barreto",
+    "celular": "5565999365423.0",
+    "endereco": "Cox8002",
+    "complemento": "Rua B quadra1 casa 16"
+  },
+  {
+    "id": "1746275394283-AbC9O",
+    "nome": "COX802 COXIPÓ PA ATALAIA",
+    "celular": "5565999594384.0",
+    "endereco": "COX802",
+    "complemento": "Rua n quadra 50 casa 16 bairro parque atalaia. Cuiabá"
+  },
+  {
+    "id": "1748093550969-AbC9O",
+    "nome": "COX87 COXIPO INDUSTRIARIO",
+    "celular": "5565993068362.0",
+    "endereco": "Cox87",
+    "complemento": "Rua 2 \nQdra 24 \nCasa  338\nIndustriário 2 \nCasa de esquina em frente a caixa d'água desativada"
+  },
+  {
+    "id": "1746793738996-AbC9O",
+    "nome": "COX978 COXIPO NICO BARACAT",
+    "celular": "5565999673453.0",
+    "endereco": "COX978",
+    "complemento": "Rua 1 quadra 2 casa 5 Nico Baracat 3"
+  },
+  {
+    "id": "1746451256479-AbC9O",
+    "nome": "COX982 COXIPO JD IMPERIAL",
+    "celular": "5565992591881.0",
+    "endereco": "COX982",
+    "complemento": "Rua 3200 Q 12 C 3. Jardim Imperial cuida"
+  },
+  {
+    "id": "1753967712981-AbC9O",
+    "nome": "CPA0035 JD FLORIANOPOLIS",
+    "celular": "5565996845037.0",
+    "endereco": "Cpa0035",
+    "complemento": "Rua 17 casa 2 jardim Florianópolis"
+  },
+  {
+    "id": "1751051239331-AbC9O",
+    "nome": "Cpa0081 Cpa Tres Barras",
+    "celular": "5565993247646.0",
+    "endereco": "Cpa0081",
+    "complemento": "Rua 4 \nQuadra 3 \nCasa 11"
+  },
+  {
+    "id": "1753967359762-AbC9O",
+    "nome": "Cpa0091 Carumbe",
+    "celular": "5565996019094.0",
+    "endereco": "Cpa0091",
+    "complemento": "Rua Amâncio pedroso de jesus número 244 bairro Carumbé"
+  },
+  {
+    "id": "1747145071363-AbC9O",
+    "nome": "CPA0223 CPA JD UNIAO",
+    "celular": "5565981060444.0",
+    "endereco": "CPA0223",
+    "complemento": "CASA GRADE BRANCA LADO ESQUERDO... A CASA E DA IRMA DELE"
+  },
+  {
+    "id": "1750242454445-AbC9O",
+    "nome": "CPA0338 CPA FINAL SERRA DOURADA",
+    "celular": "5565984290338.0",
+    "endereco": "CPA0338",
+    "complemento": "R. das Flôres, 51 - Serra Dourada, Cuiabá - MT"
+  },
+  {
+    "id": "1749265259010-AbC9O",
+    "nome": "Cpa0339 CPA Lagoa",
+    "celular": "5565999585286.0",
+    "endereco": "Cpa0339",
+    "complemento": "Rua 38 \nQuadra 68 \nCasa 27 \nCPA 4 - 2 etapa"
+  },
+  {
+    "id": "1751053657524-AbC9O",
+    "nome": "Cpa0449 Cpa Final",
+    "celular": "5565999811331.0",
+    "endereco": "Cpa0449",
+    "complemento": "Av.B Q1Lt.33 C 1688"
+  },
+  {
+    "id": "1745074085478-AbC9O",
+    "nome": "CPA0663 CPA 4",
+    "celular": "5565992148210.0",
+    "endereco": "Cpa0663",
+    "complemento": "Endereço rua maçarico de coleira casa 12 quadra 60 cpa 4"
+  },
+  {
+    "id": "1754145557434-AbC9O",
+    "nome": "Cpa0883 Paiaguás ",
+    "celular": "5565999144624.0",
+    "endereco": "Cpa0883",
+    "complemento": "Rua las Vegas, S/N\nBairro três poderes / Cuiabá \nCasa em frente à barbearia R.F"
+  },
+  {
+    "id": "1744639339802-AbC9O",
+    "nome": "Cpa1012 CPA Monica",
+    "celular": "5565981754394.0",
+    "endereco": "Cpa1012",
+    "complemento": "Alameda 07 casa 05 bairro CPA III St 01, casa de Muro branco e grades brancas, com uma árvore na frente, ao lado de uma oficina, e enfrente ao Paiva Distribuidora."
+  },
+  {
+    "id": "1746540204901-AbC9O",
+    "nome": "CPA1023 CPA DR FABIO",
+    "celular": "5565981116670.0",
+    "endereco": "CPA1023",
+    "complemento": "Rua dos trabalhadores, esquina com a rua das flores Dr Fábio 2 ,casa 16"
+  },
+  {
+    "id": "1746881057620-AbC9O",
+    "nome": "CPA103 CPA LAGOA",
+    "celular": "5565992063347.0",
+    "endereco": "CPA103",
+    "complemento": "Rua vinte número 24 quadra 21 bairro tancredo neves"
+  },
+  {
+    "id": "1752951531888-AbC9O",
+    "nome": "Cpa1042 Cpa Planalto",
+    "celular": "5562992089131.0",
+    "endereco": "Cpa1042",
+    "complemento": "Rua altas 369 bairro planalto"
+  },
+  {
+    "id": "1744464088311-AbC9O",
+    "nome": "CPA110 CPA NOVO PARAISO",
+    "celular": "5565984067767.0",
+    "endereco": "CPA110",
+    "complemento": "Rua : Cristiano Teodoro (próximo a rua das crianças)\nNúmero: 210 \nBairro novo paraíso 2\nCuiabá MT"
+  },
+  {
+    "id": "1746709820261-AbC9O",
+    "nome": "CPA11576 CPA DR FABIO",
+    "celular": "5565981694644.0",
+    "endereco": "CPA11576",
+    "complemento": ""
+  },
+  {
+    "id": "1746013229251-AbC9O",
+    "nome": "CPA1176 C0A JD VITORIA",
+    "celular": "5565984030639.0",
+    "endereco": "CPA1176",
+    "complemento": "Rua 3a quadra 3a casa 300 última casa da rua jd vitoria"
+  },
+  {
+    "id": "1746880845071-AbC9O",
+    "nome": "CPA1411 CPA LAGOA",
+    "celular": "5565992526850.0",
+    "endereco": "CPA1411",
+    "complemento": "Rua quarenta e cinco, número 34, quadra 12 CPA 3, setor 4"
+  },
+  {
+    "id": "1751738696145-AbC9O",
+    "nome": "Cpa1525 Cpa Meio",
+    "celular": "5565992773918.0",
+    "endereco": "Cpa1525",
+    "complemento": "Rua 119, quadra 123 casa 18. CPA IV, 4° etapa"
+  },
+  {
+    "id": "1748948970159-AbC9O",
+    "nome": "CPA1753 CPA Planalto",
+    "celular": "5565992841450.0",
+    "endereco": "CPA1753",
+    "complemento": "Rua : Pacaraima 508"
+  },
+  {
+    "id": "1746140074804-AbC9O",
+    "nome": "CPA1872 CPA ILZA TERESINHA",
+    "celular": "5565993084483.0",
+    "endereco": "CPA1872",
+    "complemento": "Rua i \nQuadra 08 \nLote 08 \nCasa 391 \nRes. Ilza Therezinha Paggot \nCuiabá - MT"
+  },
+  {
+    "id": "1745847402701-AbC9O",
+    "nome": "CPA1910 CPA JD UNIAO",
+    "celular": "5565993426299.0",
+    "endereco": "CPA1910",
+    "complemento": "Rua Araraguaria 3 centro político administrativo"
+  },
+  {
+    "id": "1746139628057-AbC9O",
+    "nome": "CPA1944 CPA PAIAGUAS",
+    "celular": "5565993293915.0",
+    "endereco": "CPA1944",
+    "complemento": "Residencial paiaguas,QD 5B, apto 103,bl 08"
+  },
+  {
+    "id": "1746140007387-AbC9O",
+    "nome": "CPA1969 CPA NOVA CANAA",
+    "celular": "5565993339144.0",
+    "endereco": "CPA1969",
+    "complemento": "Rua i \nCasa 06 \nQuadra 06\nResidencial nova canaã"
+  },
+  {
+    "id": "1746465077133-AbC9O",
+    "nome": "CPA201 CPA LIXEIRA",
+    "celular": "5565999198207.0",
+    "endereco": "CPA201",
+    "complemento": "Rua são Luiz N 868"
+  },
+  {
+    "id": "1746705563117-AbC9O",
+    "nome": "CPA2105 CPA PAIAGUAS",
+    "celular": "5565996407423.0",
+    "endereco": "CPA2105",
+    "complemento": "Rua B Qdr 3B ELA E ZELADORA DO PREDIO PRISCILA"
+  },
+  {
+    "id": "1746140170143-AbC9O",
+    "nome": "Cpa2205 CPA PAIAGUAS",
+    "celular": "5565996618318.0",
+    "endereco": "CPA2205",
+    "complemento": "Rua dos lirios Q07casa 258 \nBairro três poderes"
+  },
+  {
+    "id": "1750444530888-AbC9O",
+    "nome": "Cpa2206 CPA Novo Paraíso",
+    "celular": "5565984396637.0",
+    "endereco": "Cpa2206",
+    "complemento": "Rua Olacir de souza\nQd:28 Cs:19"
+  },
+  {
+    "id": "1751983312142-AbC9O",
+    "nome": "Cpa2341 Tres Barras",
+    "celular": "5565992050436.0",
+    "endereco": "Cpa2341",
+    "complemento": "Rua 4 número 11"
+  },
+  {
+    "id": "1747843423493-AbC9O",
+    "nome": "Cpa241 CPA LIXEIRA",
+    "celular": "5565993536949.0",
+    "endereco": "Cpa241",
+    "complemento": "Rua professor Benedito de Melo n 09 Bairro lixeira"
+  },
+  {
+    "id": "1750788038743-AbC9O",
+    "nome": "Cpa256A - CPA DOM BOSCO",
+    "celular": "5565992182644.0",
+    "endereco": "CPA256A",
+    "complemento": "Rua A, 28 Muro Marrom Portao Preto Dom Bosco Cuiabá"
+  },
+  {
+    "id": "1750788093209-AbC9O",
+    "nome": "CPA256B - CPA TERRA NOVA",
+    "celular": "5565984144168.0",
+    "endereco": "CPA256B",
+    "complemento": "Rua I, 65.\nBloco 3\nApartamento 43\nResidencial Ágata \nBairro Terra Nova"
+  },
+  {
+    "id": "1744901068383-AbC9O",
+    "nome": "CPA273 FILHA CPA JD NOVO PARAISO",
+    "celular": "5565996009707.0",
+    "endereco": "Cpa273 FILHA",
+    "complemento": "Rua Benedito Alves q55 c06 - Novo Paraiso"
+  },
+  {
+    "id": "1747317513026-AbC9O",
+    "nome": "CPA2885 CPA JONAS PINHEIRO",
+    "celular": "5565992089574.0",
+    "endereco": "CPA2885",
+    "complemento": "Rua O, q22, cs36 Jonas pinheiro"
+  },
+  {
+    "id": "1751048314887-AbC9O",
+    "nome": "Cpa3005 Cpa Forum",
+    "celular": "65992012501.0",
+    "endereco": "Cpa3005",
+    "complemento": "E No Forum De Cuiaba"
+  },
+  {
+    "id": "1751050349853-AbC9O",
+    "nome": "Cpa4119 Cpa Jd Uniao",
+    "celular": "5565996426689.0",
+    "endereco": "Cpa4119",
+    "complemento": "Rua araraguaria\nNúmero 6\nBairro Jardim União"
+  },
+  {
+    "id": "1751899133053-AbC9O",
+    "nome": "Cpa4476 Jd Florianopolis",
+    "celular": "5565981333868.0",
+    "endereco": "Cpa4476",
+    "complemento": "Rua 22 quadra 99 casa 19"
+  },
+  {
+    "id": "1750178807826-AbC9O",
+    "nome": "Cpa4540 CPA LAGOA",
+    "celular": "5565993487940.0",
+    "endereco": "Cpa4540",
+    "complemento": ""
+  },
+  {
+    "id": "1760212920810-AbC9O",
+    "nome": "Cpa457 Jd Renascer",
+    "celular": "5565993051367.0",
+    "endereco": "Cpa457",
+    "complemento": "Bairro jardim renascer rua frei caneca n 38"
+  },
+  {
+    "id": "1746453170539-AbC9O",
+    "nome": "CPA503 CPA CARUMBE",
+    "celular": "5565992835603.0",
+    "endereco": "CPA503",
+    "complemento": "R h casa 57 bairro jardim campo verde"
+  },
+  {
+    "id": "1746452942759-AbC9O",
+    "nome": "CPA5076 CPA JD RENASCER",
+    "celular": "5565981407093.0",
+    "endereco": "CPA5076",
+    "complemento": "Rua diamantino  101 Jd Renascer "
+  },
+  {
+    "id": "1746539124150-AbC9O",
+    "nome": "CPA5088 CPA Centro America",
+    "celular": "5565993282590.0",
+    "endereco": "CPA5088",
+    "complemento": "Rua 7 casa 5 quadra 57M"
+  },
+  {
+    "id": "1746013449011-AbC9O",
+    "nome": "CPA546 CPA DOM BOSCO",
+    "celular": "5565992997148.0",
+    "endereco": "CPA546",
+    "complemento": "Rua: um quadra 04 casa 21 Dom bosco"
+  },
+  {
+    "id": "1753967576729-AbC9O",
+    "nome": "Cpa5678 MEIO DO CPA",
+    "celular": "5565981121594.0",
+    "endereco": "Cpa5678",
+    "complemento": "Rua Diamantino, quadra 73, casa 18, CPA 2."
+  },
+  {
+    "id": "1746629447837-AbC9O",
+    "nome": "CPA5721 CPA TRES BARRAS",
+    "celular": "5565992007508.0",
+    "endereco": "CPA5721",
+    "complemento": "Rua treze quadra 21 casa 16 três barras"
+  },
+  {
+    "id": "1746709578511-AbC9O",
+    "nome": "CPA5772 CPA MORADA DA SERRA",
+    "celular": "5565993106497.0",
+    "endereco": "CPA5772",
+    "complemento": "Av. Pernambuco \nN 11 \nQuadra 11 \nMorada da Serra \nCep: 78055428. DISTRIBUIDORA ARAUJO"
+  },
+  {
+    "id": "1754920501927-AbC9O",
+    "nome": "Cpa6601 Carumbe",
+    "celular": "5565992901772.0",
+    "endereco": "Cpa6601",
+    "complemento": "Rua e são roque\nNúmero 4179\nBairro Carumbé"
+  },
+  {
+    "id": "1754920858639-AbC9O",
+    "nome": "Cpa6601mae Carumbe",
+    "celular": "5565992901772.0",
+    "endereco": "Cpa6601mae",
+    "complemento": "Kit Net Portão Pequeno Amarelo"
+  },
+  {
+    "id": "1746538639134-AbC9O",
+    "nome": "CPA6602 CPA JD UNIAO",
+    "celular": "5565992589727.0",
+    "endereco": "CPA6602",
+    "complemento": "Rua 22 de novembro, 463, já união"
+  },
+  {
+    "id": "1746539302584-AbC9O",
+    "nome": "CPA702 CPA ALPHAVILLE 2",
+    "celular": "5565984040545.0",
+    "endereco": "CPA702",
+    "complemento": "Alameda Araguaia número 20\nAntônio Roberto da Costa Junior"
+  },
+  {
+    "id": "1750444688194-AbC9O",
+    "nome": "CPA7228 CPA Final Do Bairro",
+    "celular": "5565981341704.0",
+    "endereco": "Cpa7228",
+    "complemento": "Rua M\nQuadra 18\nCasa 21"
+  },
+  {
+    "id": "1747483560709-AbC9O",
+    "nome": "CPA7304 CPA LAGOA",
+    "celular": "5565993463275.0",
+    "endereco": "Cpa7304",
+    "complemento": "Rua 35 quadra 41 casa 24 CPA 3"
+  },
+  {
+    "id": "1745589556655-AbC9O",
+    "nome": "CPA741 CPA LIXEIRA CELIA",
+    "celular": "5565999550112.0",
+    "endereco": "CPA741",
+    "complemento": "CASA MURO BRANCO LADO DIREITO"
+  },
+  {
+    "id": "1755008692362-AbC9O",
+    "nome": "Cpa7706 Lagoa Novo Horizonte",
+    "celular": "5565981673931.0",
+    "endereco": "Cpa7706",
+    "complemento": "Rua sao Paulo, n 176 ,novo horizonte casa da esquina"
+  },
+  {
+    "id": "1746538937183-AbC9O",
+    "nome": "CPA7709 CPA JD UNIAO",
+    "celular": "5565996614773.0",
+    "endereco": "CPA7709",
+    "complemento": "Rua 22 \nCasa 19\nQuadra 99"
+  },
+  {
+    "id": "1746705717756-AbC9O",
+    "nome": "CPA7742 CPA PERTO DA LAGOA",
+    "celular": "5565993113325.0",
+    "endereco": "CPA7742",
+    "complemento": "Rua 50 quadra 23 casa 19 cpa 3 setor 4"
+  },
+  {
+    "id": "1755807141946-AbC9O",
+    "nome": "Cpa7993 Jd Florianopolis",
+    "celular": "5565993435955.0",
+    "endereco": "Cpa7993",
+    "complemento": "Rua 21 quadra 28 casa 01 jardim Florianópolis, Cuiabá"
+  },
+  {
+    "id": "1745673762872-AbC9O",
+    "nome": "CPA8209 CPA CPA IV",
+    "celular": "5565992617955.0",
+    "endereco": "CPA8209",
+    "complemento": "Rua siriri cavaleiros quadra 92 casa5 cpa4 terceira etapa , enfrente o colégio panaroto"
+  },
+  {
+    "id": "1748949050951-AbC9O",
+    "nome": "CPA864 CPA PLANALTO",
+    "celular": "55659996760501.0",
+    "endereco": "CPA864",
+    "complemento": ""
+  },
+  {
+    "id": "1754051644442-AbC9O",
+    "nome": "Cpa8801 Jd Vitoria",
+    "celular": "5565992228668.0",
+    "endereco": "Cpa8801",
+    "complemento": "Condomínio jardim Vitória A \nAvenida José Estevão torquato da Silva \nJardim Vitória \n78055731"
+  },
+  {
+    "id": "1746020635576-AbC9O",
+    "nome": "CPA8851 CPA NOVO HORIZONTE",
+    "celular": "5565992163899.0",
+    "endereco": "CPA8851",
+    "complemento": "Rua Várzea Bonita\nCasa 35. \nBairro Novo Horizonte \nCuiabá"
+  },
+  {
+    "id": "1754056819358-AbC9O",
+    "nome": "Cpa9196 Final Cpa",
+    "celular": "5565992571781.0",
+    "endereco": "Cpa9196",
+    "complemento": "Casa 2 quadra 57"
+  },
+  {
+    "id": "1752258584045-AbC9O",
+    "nome": "Cpa9332 Planalto",
+    "celular": "5565992322793.0",
+    "endereco": "Cpa9332",
+    "complemento": "Rua: K quadra: 11 lote: 8 casa: 42\nSol Nascente Cuiabá"
+  },
+  {
+    "id": "1759176414818-AbC9O",
+    "nome": "Cpa9338 Jd União Cpa",
+    "celular": "5565993220774.0",
+    "endereco": "Cpa9338",
+    "complemento": "Rua vila nova \n 🏠 462\nBairro Jardim União \nPróximo a escola"
+  },
+  {
+    "id": "1748719167714-AbC9O",
+    "nome": "Cpa9882 Cpa Jd Vitoria",
+    "celular": "5565996940156.0",
+    "endereco": "Cpa9882",
+    "complemento": "Aqui é Eliana, da rua 9, 421, Jd. Vitoria."
+  },
+  {
+    "id": "1755006596307-AbC9O",
+    "nome": "Cpa9932 Bela Vista ",
+    "celular": "5565992854674.0",
+    "endereco": "Cpa9932",
+    "complemento": "Rua Manoel Rodrigues Paiva  n° 170 Quadra 43 Bela Vista"
+  },
+  {
+    "id": "1746710636935-AbC9O",
+    "nome": "CPA9933 CPA PLANALTO",
+    "celular": "5565999455917.0",
+    "endereco": "CPA9933",
+    "complemento": "Rua SD número 257 bairro Planalto"
+  },
+  {
+    "id": "1743553904002-AbC9O",
+    "nome": "Cs 1515",
+    "celular": "5565984491018.0",
+    "endereco": "Rua 10, Casa 2, Shangrila",
+    "complemento": "Casa Verde De Muro Azul"
+  },
+  {
+    "id": "1744030491977-AbC9O",
+    "nome": "CS PLENITUDE ZILDA",
+    "celular": "5565996442659.0",
+    "endereco": "CS PLENITUDE ZILDA ",
+    "complemento": "RUA A, QUADRA 1,  CASA 63, COXIPO, SAO GONCALO"
+  },
+  {
+    "id": "1751484332619-AbC9O",
+    "nome": "Cs Silvio Vg Mapim",
+    "celular": "5565996686707.0",
+    "endereco": "CS Silvio",
+    "complemento": "Rua peru quadra 07 lote 16"
+  },
+  {
+    "id": "1746020382650-AbC9O",
+    "nome": "CS0032 VG CONSTRUMAT",
+    "celular": "5565984525689.0",
+    "endereco": "CS0032",
+    "complemento": "Rua coronel Manoel Gomes  Casa 42 \nBairro construmat vg\nPróximo do bar da cida"
+  },
+  {
+    "id": "1743591942061-AbC9O",
+    "nome": "Cs01001 VG Figueironha",
+    "celular": "5565993496295.0",
+    "endereco": "Cs01001",
+    "complemento": "Rua mercurio 251\nFigueirinha VG"
+  },
+  {
+    "id": "1744023832198-AbC9O",
+    "nome": "Cs01015 CUIABA SANTA ISABEL",
+    "celular": "5565992475450.0",
+    "endereco": "CS01015",
+    "complemento": "Av. Agrícola Paes de barros n°2839 Santa Isabel"
+  },
+  {
+    "id": "1747483311612-AbC9O",
+    "nome": "CS0776 VG AGUA VERMELHA",
+    "celular": "5565993568815.0",
+    "endereco": "Cs0776",
+    "complemento": ""
+  },
+  {
+    "id": "1744284921466-AbC9O",
+    "nome": "CS09311 COXIPO PEDRA 90",
+    "celular": "5565992768612.0",
+    "endereco": "Cs09311",
+    "complemento": "Rua 24 quadra 133 casa 37"
+  },
+  {
+    "id": "1744032199242-AbC9O",
+    "nome": "CS0990 - CPA - CPA II",
+    "celular": "5565993323456.0",
+    "endereco": "CS0990",
+    "complemento": "Rua 3 ou rua Minas Gerais n 11\nRua da escola fato cpa"
+  },
+  {
+    "id": "1743591746192-AbC9O",
+    "nome": "Cs09910 VG CRISTO REI",
+    "celular": "5565993260961.0",
+    "endereco": "Cs09910",
+    "complemento": ""
+  },
+  {
+    "id": "1744127035443-AbC9O",
+    "nome": "CS0992 CUIABA DOM AQUINO",
+    "celular": "5565984680248.0",
+    "endereco": "Cs0992",
+    "complemento": ""
+  },
+  {
+    "id": "1751913070423-AbC9O",
+    "nome": "Cs1026 Vg Itororo",
+    "celular": "5565992310065.0",
+    "endereco": "Cs1026",
+    "complemento": "Quadra 24 casa 03"
+  },
+  {
+    "id": "1745073773950-AbC9O",
+    "nome": "Cs1041 CUIABA DOM AQUINO",
+    "celular": "5565992381191.0",
+    "endereco": "Cs1041",
+    "complemento": "Travessa severiano de Albuquerque 50 bairro Dom Aquino"
+  },
+  {
+    "id": "1744811952302-AbC9O",
+    "nome": "CS1053 CPA JS FLORIANOPOLIS",
+    "celular": "5565993179002.0",
+    "endereco": "Cs1053",
+    "complemento": "Rua 21 Quadra 47 n 873 jardim Florianópolis Cuiabá"
+  },
+  {
+    "id": "1744033194523-AbC9O",
+    "nome": "CS1237 - COXIPO - JD UNIVERSITÁRIO ",
+    "celular": "5565992693124.0",
+    "endereco": "CS1237",
+    "complemento": "Rua Francisco Manoel Barroso quadra 12 casa 13 parque universitário Cuiabá"
+  },
+  {
+    "id": "1744029616329-AbC9O",
+    "nome": "Cs15001 - ALVORADA - CUIABA",
+    "celular": "5565981166810.0",
+    "endereco": "Cs15001",
+    "complemento": "Rua Fortaleza 368 \nBairro Alvorada"
+  },
+  {
+    "id": "1754672631172-AbC9O",
+    "nome": "Cs151617 VG Alameda",
+    "celular": "5565984721317.0",
+    "endereco": "Cs151617",
+    "complemento": "Travessa da independência 490"
+  },
+  {
+    "id": "1746014226398-AbC9O",
+    "nome": "CS2000 CPA CPA3",
+    "celular": "5565999031748.0",
+    "endereco": "CS2000",
+    "complemento": "Rua 78 quadra 22 casa 10 setor 1 CPA 3"
+  },
+  {
+    "id": "1744371968346-AbC9O",
+    "nome": "CS2029 VG MAPIM CASSIA",
+    "celular": "556598463243.0",
+    "endereco": "RUA MIRASSOL, MAPIM",
+    "complemento": ""
+  },
+  {
+    "id": "1753526727045-AbC9O",
+    "nome": "Cs2062 Coxipó Recanto Do Sol",
+    "celular": "5565992752286.0",
+    "endereco": "Ce2062",
+    "complemento": "Avenida Itália Quadra 3 lote 16 Recanto do Sol CEP 78089-010"
+  },
+  {
+    "id": "1744034177328-AbC9O",
+    "nome": "CS2113 - VG - JACARANDA",
+    "celular": "5565992537052.0",
+    "endereco": "CS2113",
+    "complemento": "Rua jaboticabeira, Quadra 1,  casa 10  jequitibar"
+  },
+  {
+    "id": "1752257425408-AbC9O",
+    "nome": "Cs2233 Cpa Lagoa",
+    "celular": "5565992832352.0",
+    "endereco": "Cs2233",
+    "complemento": "Rua Peixoto quadra 156 casa 26 bairro Altos da serra Cuiabá"
+  },
+  {
+    "id": "1752084750937-AbC9O",
+    "nome": "Cs22909 Bg Primavera",
+    "celular": "55659.0",
+    "endereco": "Cs22909",
+    "complemento": ""
+  },
+  {
+    "id": "1746279242992-AbC9O",
+    "nome": "CS2408 CPA JD VITORIA",
+    "celular": "5565999367835.0",
+    "endereco": "Cs2408",
+    "complemento": "Rua 6 quadra 8 número 611 bairro Jardim Vitória Cuiabá"
+  },
+  {
+    "id": "1746878993467-AbC9O",
+    "nome": "CS2414 VG SAO SIMAO",
+    "celular": "5565992038830.0",
+    "endereco": "CS2414",
+    "complemento": "Rua deputado Oscar Soares quadra 115 lote 12"
+  },
+  {
+    "id": "1746278205806-AbC9O",
+    "nome": "Cs2502 CUIABA DESPRAIADO",
+    "celular": "5565993030212.0",
+    "endereco": "CS2502",
+    "complemento": "No bairro despraiado.rua Budapeste n 91"
+  },
+  {
+    "id": "1746536085490-AbC9O",
+    "nome": "CS2632 CUIABA NOVO TERCEIRO",
+    "celular": "5565992056010.0",
+    "endereco": "CS2632",
+    "complemento": "Avenida Beira Rio 315 bairro novo terceiro"
+  },
+  {
+    "id": "1746139942993-AbC9O",
+    "nome": "CS2854 CPA NOVO MATO GROSSO",
+    "celular": "5565992622109.0",
+    "endereco": "CS2854",
+    "complemento": "Rua Ipiranga número 4425 novo mato grosso"
+  },
+  {
+    "id": "1745846886055-AbC9O",
+    "nome": "CS29201 VG MANGA",
+    "celular": "5565984782146.0",
+    "endereco": "CS29201",
+    "complemento": "Av Gonçalo Botelho de Campos número 318"
+  },
+  {
+    "id": "1745331209833-AbC9O",
+    "nome": "Cs3020 VG JD ELDORADO",
+    "celular": "55659.0",
+    "endereco": "3020",
+    "complemento": "Rua: Turmalina \nQuadra: 175\nCasa:17\nBairro: Jd. Eldorado \nVárzea grande \nCasa com muro na cor marrom e cerca elétrica"
+  },
+  {
+    "id": "1744895174550-AbC9O",
+    "nome": "CS3307 COXIPO LEIDE LAURA",
+    "celular": "5565992553931.0",
+    "endereco": "Cs3307",
+    "complemento": "Rua H qdr 12 casa 38 residencial Nilce Paes Barreto"
+  },
+  {
+    "id": "1751987690906-AbC9O",
+    "nome": "Cs3407 Carumbe",
+    "celular": "5565992396011.0",
+    "endereco": "Cs3407",
+    "complemento": "Rua ciriaco candia número 515 bairro carumbe"
+  },
+  {
+    "id": "1746879303260-AbC9O",
+    "nome": "CS3487 VG CENTRO ",
+    "celular": "5565999649993.0",
+    "endereco": "CS3487",
+    "complemento": "Rua Travessa capitão Costa número 19 centro sul beco sem saída portão amarelo segunda casa"
+  },
+  {
+    "id": "1746710816960-AbC9O",
+    "nome": "CS3596 CPA JD LEBLON",
+    "celular": "5565992330839.0",
+    "endereco": "CS3596",
+    "complemento": "R oito de janeiro \nN 69\nJardim leblon"
+  },
+  {
+    "id": "1746708143986-AbC9O",
+    "nome": "CS36 VG MAPIM",
+    "celular": "5565993434683.0",
+    "endereco": "CS36",
+    "complemento": "Rua deusa quadra 4 casa 26"
+  },
+  {
+    "id": "1746798243563-AbC9O",
+    "nome": "CS3622 VG SAO MATEUS",
+    "celular": "5565992227073.0",
+    "endereco": "CS3622",
+    "complemento": "Rua Maria  de Lurdes Jordão Q17 C16 São Matheus \nVg\nCartão"
+  },
+  {
+    "id": "1746799030252-AbC9O",
+    "nome": "CS4401 CPA CENTRO AMÉRICA ",
+    "celular": "5565981147813.0",
+    "endereco": "CS4401",
+    "complemento": "Casa 16 Quadra 07"
+  },
+  {
+    "id": "1747142257202-AbC9O",
+    "nome": "Cs50212 CPA PLANALTO",
+    "celular": "5565993047378.0",
+    "endereco": "CS50212",
+    "complemento": "Rua neblina, N°01 Quadra 03\nJardim Itamarati"
+  },
+  {
+    "id": "1746138241960-AbC9O",
+    "nome": "CS5032 COXIPO COOPHEMA",
+    "celular": "5567998612723.0",
+    "endereco": "CS5032 COOPHEMA",
+    "complemento": "Rua Jundiaí número 32 Coophema"
+  },
+  {
+    "id": "1746138573574-AbC9O",
+    "nome": "CS5032 CUIABA VERDAO",
+    "celular": "5567998612723.0",
+    "endereco": "CS5032 VERDAO",
+    "complemento": "Rua b.n.135 VERDAO"
+  },
+  {
+    "id": "1748019030125-AbC9O",
+    "nome": "CS5100 VG SAO Mateus",
+    "celular": "5565992744326.0",
+    "endereco": "Cs5100",
+    "complemento": "Rua Nepoziano Jordão, quadra 20 casa 22 São Mateus, Vg"
+  },
+  {
+    "id": "1746800981929-AbC9O",
+    "nome": "CS5138 CPA TRES BARRAS",
+    "celular": "5565992172490.0",
+    "endereco": "Cs5138",
+    "complemento": "Rua: desessete \nQuadra: 25\nCasa: 16\nBairro: três barras/ Cuiabá"
+  },
+  {
+    "id": "1745846715300-AbC9O",
+    "nome": "CS5198 VG JD GLORIA",
+    "celular": "5565992637019.0",
+    "endereco": "CS5198",
+    "complemento": "Rua iara quadra 1.lote 20Jardim glória"
+  },
+  {
+    "id": "1747483762802-AbC9O",
+    "nome": "CS52201 CPA JD RENASCER",
+    "celular": "5565992620624.0",
+    "endereco": "Cs52201",
+    "complemento": "Damares souza rosa \n65993226893\nRUA nova mutum Jardim renascer casa 456"
+  },
+  {
+    "id": "1748093349692-AbC9O",
+    "nome": "CS5316 COXIPO 9SMAR CABRAL",
+    "celular": "5565984354013.0",
+    "endereco": "Cs5316",
+    "complemento": "Rua 04 quadra 04 casa 56 liberdade cuiaba"
+  },
+  {
+    "id": "1746538801126-AbC9O",
+    "nome": "CS551 CPA JD VITORIA",
+    "celular": "5565996442659.0",
+    "endereco": "CS551",
+    "complemento": "Rua 12 quadra  20 casa 265\nA segunda casa descendo o muro da igreja da esquina"
+  },
+  {
+    "id": "1744898819890-AbC9O",
+    "nome": "Cs589 CUIABA COOPHAMIL",
+    "celular": "5565999040445.0",
+    "endereco": "Cs589",
+    "complemento": "Rua radialista ituiu de morais Q28 casa 23"
+  },
+  {
+    "id": "1744734175519-AbC9O",
+    "nome": "Cs615 VG CRISTO REI",
+    "celular": "5565992600449.0",
+    "endereco": "Cs615",
+    "complemento": "Rua Mário Abrão nassarden 376"
+  },
+  {
+    "id": "1744196940453-AbC9O",
+    "nome": "Cs6316 CUIABA CIDADE ALTA",
+    "celular": "55999927053.0",
+    "endereco": "Cs6316",
+    "complemento": "Rua Maurício Cardoso  n 71  cidade alta  Cuiabá"
+  },
+  {
+    "id": "1750964264781-AbC9O",
+    "nome": "Cs6360 Centro Cuiaba",
+    "celular": "5565999748492.0",
+    "endereco": "Cs6360",
+    "complemento": "Rua 24 de outubro número 249 centro cuiaba"
+  },
+  {
+    "id": "1746797419505-AbC9O",
+    "nome": "CS6409 VG CRISTO REI",
+    "celular": "5565992442941.0",
+    "endereco": "Cs6409",
+    "complemento": "Rua deputado Miguel marcondes 967"
+  },
+  {
+    "id": "1744034955342-AbC9O",
+    "nome": "CS727 - VG - JD GLORIA",
+    "celular": "5565992052543.0",
+    "endereco": "CS727",
+    "complemento": "Rua nobres \nQuadra 27 \nCasa 7"
+  },
+  {
+    "id": "1745671937490-AbC9O",
+    "nome": "CS7366 VG SAO MATEUS",
+    "celular": "5565996228873.0",
+    "endereco": "CS7366",
+    "complemento": "Rua 9\nQ 212\nCasa 12\n\nSão Mateus\nVg"
+  },
+  {
+    "id": "1745928430596-AbC9O",
+    "nome": "CS73893 COXIPO SAO JOAO DEL REI",
+    "celular": "5565992778486.0",
+    "endereco": "CS73893",
+    "complemento": "rua SD quadra L casa 87 são João del rei"
+  },
+  {
+    "id": "1749645556888-AbC9O",
+    "nome": "Cs77389 CPA FINAL CPA",
+    "celular": "5565993025607.0",
+    "endereco": "Cs77389",
+    "complemento": "Rua b1 Q 16 casa 27"
+  },
+  {
+    "id": "1746877743343-AbC9O",
+    "nome": "CS7740 COXIPO CINTURAO VERDE",
+    "celular": "5565992692846.0",
+    "endereco": "CS7740",
+    "complemento": ""
+  },
+  {
+    "id": "1744896055805-AbC9O",
+    "nome": "CS80027 COXIPO PEDRA 90",
+    "celular": "5565993121939.0",
+    "endereco": "Cs80027",
+    "complemento": "Chácara Ao Lado Da Fábrica De Calhas"
+  },
+  {
+    "id": "1746181715163-AbC9O",
+    "nome": "CS80041 CUIABA PORTO",
+    "celular": "5565992474328.0",
+    "endereco": "CS80041",
+    "complemento": "Rua comodante costa., 2370 apto 201, bairro porto"
+  },
+  {
+    "id": "1747843486409-AbC9O",
+    "nome": "Cs8005 CPA BELA VISTA PROX SHOP PANTANAL",
+    "celular": "5565992287523.0",
+    "endereco": "CS8005",
+    "complemento": "Meu endereço :\nRua Acácio Mendes da Silva ( Antiga Rua 8), Quadra 11, Casa 239, Bela Vista."
+  },
+  {
+    "id": "1745589851406-AbC9O",
+    "nome": "CS822 CUIABA COHAB NOVA",
+    "celular": "5565999734696.0",
+    "endereco": "CS822",
+    "complemento": "Travessa Terenos 87 Cohab Nova"
+  },
+  {
+    "id": "1746453034273-AbC9O",
+    "nome": "CS86 CPA LIXEIRA",
+    "celular": "5565996940055.0",
+    "endereco": "CS86",
+    "complemento": "Rua Américo salgado 145 bairro lixeira casa da esquina"
+  },
+  {
+    "id": "1744027787087-AbC9O",
+    "nome": "Cs862 - FINAL DO CPA - RESID BURITI",
+    "celular": "5565992925058.0",
+    "endereco": "Cs862",
+    "complemento": "CASA DE ESQUINA -  rua c quadra 10 lote 28 casa  455 redencial buriti  "
+  },
+  {
+    "id": "1744118529034-AbC9O",
+    "nome": "Cs88 COXIPO JD UNIVERSITÁRIO ",
+    "celular": "55999216359.0",
+    "endereco": "Cs88",
+    "complemento": "Rua 7\nQdra 11 \nCasa 7 \nJardim Universitário"
+  },
+  {
+    "id": "1744375272983-AbC9O",
+    "nome": "Cs881 COXIPO NICO BARACAT",
+    "celular": "5565993049996.0",
+    "endereco": "Cs881",
+    "complemento": "Rua 5 qd 18 casa 06 ,chegando no posto de saúde entra na rua de frente a direita desce a segunda a esquerda casa de muro vermelho a direita."
+  },
+  {
+    "id": "1744121163800-AbC9O",
+    "nome": "CS88545 CUIABA MONTE LIBANO",
+    "celular": "5565996269587.0",
+    "endereco": "CS88545",
+    "complemento": "AV AFEGANISTAO Q10 C10 JARDIM MONTE LIBANO"
+  },
+  {
+    "id": "1744029988158-AbC9O",
+    "nome": "Cs9007 - CUIABA - PORTAO PEQUENO AO LADO DA MAX RELOJOARIA",
+    "celular": "5565981507343.0",
+    "endereco": "Cs9007",
+    "complemento": "Av General Mello, 2627 - Bairro Barbado\nAo lado da relojoaria do Max"
+  },
+  {
+    "id": "1751569110836-AbC9O",
+    "nome": "Cs9058 Cpa Meio Do Cpa",
+    "celular": "5565996448358.0",
+    "endereco": "Cpa9058",
+    "complemento": "Rua 159, Qdra 159 Casa 171 CPA IV quarta etapa."
+  },
+  {
+    "id": "1745586899859-AbC9O",
+    "nome": "CS9113 COXIPÓ SANTA TERESINHA",
+    "celular": "5565984026848.0",
+    "endereco": "CS9113",
+    "complemento": "Rua 35 Qdra 06 Casa 21Setor B Sisan"
+  },
+  {
+    "id": "1744639857388-AbC9O",
+    "nome": "CS9150 CUIABA PORTO ",
+    "celular": "5565996429089.0",
+    "endereco": "CS9150",
+    "complemento": "Rua Professor Feliciano Galdino 487Bairro Porto"
+  },
+  {
+    "id": "1744024179262-AbC9O",
+    "nome": "Cs9204 - CUIABA - RIBEIRAO DO LIPA - Despraiado",
+    "celular": "5565992077604.0",
+    "endereco": "Cs9204",
+    "complemento": "TEM UMA PLACA DE AÇAÍ NA FRENTE - RUA NILTON G SANTANA, 316, DESPRAIADO"
+  },
+  {
+    "id": "1755264697952-AbC9O",
+    "nome": "Cs9270 VG Asa Bela",
+    "celular": "5565992084423.0",
+    "endereco": "Cs9270",
+    "complemento": "Rua Colômbia quadra 05 casa 04 bairro asa bela várzea grande"
+  },
+  {
+    "id": "1754936312509-AbC9O",
+    "nome": "Cs9279 VG Paiaguas",
+    "celular": "5565999312261.0",
+    "endereco": "Cs9279",
+    "complemento": "Rua gaspar de souza \nQd 37\nCasa 17A"
+  },
+  {
+    "id": "1752343831865-AbC9O",
+    "nome": "Cs9283 Vc Mario Andreasa",
+    "celular": "5565993180857.0",
+    "endereco": "Cs9283",
+    "complemento": "Bairro: Jardim Petrópolis \nVargea Grande \nRua: coxipones casa:18 quadra :17\nPróximo a Coca cola"
+  },
+  {
+    "id": "1746883194983-AbC9O",
+    "nome": "Cs99009 COXIPO NOVA ESPERANCA",
+    "celular": "55659.0",
+    "endereco": "Cs99009",
+    "complemento": "Rua..o2..quadra..03..casa..57..n̈ova..esp...o3..prox̌imo..á...creche.. marcos...Coutinho"
+  },
+  {
+    "id": "1744032472708-AbC9O",
+    "nome": "CS9901 - BOA ESPERANÇA ",
+    "celular": "5565999552980.0",
+    "endereco": "CS9901",
+    "complemento": "Rua Sebastiana Paes de Barros 382 boa esperança cba"
+  },
+  {
+    "id": "1750791592630-AbC9O",
+    "nome": "Cs9903 CPA NOVA CONQUISTA",
+    "celular": "5565992955848.0",
+    "endereco": "Cs9903",
+    "complemento": "Rua j quadra 12 lote 08 nova conquista"
+  },
+  {
+    "id": "1745069542016-AbC9O",
+    "nome": "Csa213 CUIABA DOM AQUI",
+    "celular": "5565992381191.0",
+    "endereco": "Csa213",
+    "complemento": "Travessa severiano de Albuquerque 50 bairro Dom Aquino"
+  },
+  {
+    "id": "1744119471709-AbC9O",
+    "nome": "CX01 COXIPO JD BOTANICO",
+    "celular": "5565993312410.0",
+    "endereco": "CX01",
+    "complemento": "Rua 8 casa 26"
+  },
+  {
+    "id": "1744368571530-AbC9O",
+    "nome": "CX012 COXIPO RESID NILCE PAES BARRETO",
+    "celular": "5565984425082.0",
+    "endereco": "CX0112",
+    "complemento": "RUA J, Q13, C2 RESID NILCE PAES BARRETO.   -   Muro azul portão  marrom  ao lado de um monte de terra lixeira azul"
+  },
+  {
+    "id": "1744896128738-AbC9O",
+    "nome": "CX192 COXIPO JD DOS IPES",
+    "celular": "5565992315259.0",
+    "endereco": "Cx192",
+    "complemento": "Rua carvalho dourado , quadra 26 ,casa 20 , Jardim dos ipês Cuiabá MT"
+  },
+  {
+    "id": "1746191695138-AbC9O",
+    "nome": "CX364 COXIPO SALVADOR COSTA MARQUES",
+    "celular": "5565992422485.0",
+    "endereco": "CX364",
+    "complemento": "Rua 30 qdra 29 casa 10\nResidencial Salvador costa Marques\nCuiabá \nNa Av das torres depois do posto de gasolina segunda rotatória"
+  },
+  {
+    "id": "1746185146974-AbC9O",
+    "nome": "CX538 COXIPO SANTA LAURA",
+    "celular": "5565981247335.0",
+    "endereco": "CX538",
+    "complemento": "Rua Engenheiro Pedro Borges da Silva NR 402 Santa Laura."
+  },
+  {
+    "id": "1744897395363-AbC9O",
+    "nome": "CX662 COXIPO JD PRESIDENTE",
+    "celular": "5565992561302.0",
+    "endereco": "Cx662",
+    "complemento": ""
+  },
+  {
+    "id": "1745332472820-AbC9O",
+    "nome": "CX729 COXIPO ALTOS DO PARQUE",
+    "celular": "5565993499436.0",
+    "endereco": "Cx729",
+    "complemento": "E na Rua A quadra 01 Casa 25 lote 03"
+  },
+  {
+    "id": "1744724406210-AbC9O",
+    "nome": "CX802 COXIPO ITAPAJE",
+    "celular": "5565999427778.0",
+    "endereco": "Cx802",
+    "complemento": "Rua Pareci,11,quadra 16\nResidencial Itapaje \nEm frente ao supermercado Capeletti \nCasa amarela com grandes brancas"
+  },
+  {
+    "id": "1744428267632-AbC9O",
+    "nome": "CX82 COXIPO JD PASSAREDO",
+    "celular": "5565993609371.0",
+    "endereco": "Cx82",
+    "complemento": "R31 q39 casa 07 Jd Passaredo"
+  },
+  {
+    "id": "1744428057933-AbC9O",
+    "nome": "CX87 COXIPO INDUSTRIARIO",
+    "celular": "5565993068362.0",
+    "endereco": "Cx87",
+    "complemento": "Rua 2  Qdra 24  Casa  338 Industriário 2  Casa de esquina em frente a caixa d'água desativada"
+  },
+  {
+    "id": "1746614024642-AbC9O",
+    "nome": "D076 COXIPO JD IMPERIAL",
+    "celular": "5565996324960.0",
+    "endereco": "D076",
+    "complemento": "Av Edna Maria Albuquerque aff  n:1100 bloco 6 apt 201\nCondomínio parque chapada dos sabias"
+  },
+  {
+    "id": "1745847824964-AbC9O",
+    "nome": "D092 CPA POÇÃO ",
+    "celular": "5565999022812.0",
+    "endereco": "D092",
+    "complemento": "Endereço Rua sergio chavier de matos 205 Bairro Poção."
+  },
+  {
+    "id": "1744811825912-AbC9O",
+    "nome": "D14 CUIABA PRAEIRINHO",
+    "celular": "5565992561937.0",
+    "endereco": "D14",
+    "complemento": ""
+  },
+  {
+    "id": "1744644137323-AbC9O",
+    "nome": "D191 VG SERRA DOURADA",
+    "celular": "5565993127976.0",
+    "endereco": "D191",
+    "complemento": "Endereço rua Santa Cruz quadra 2 casa 16 serra dourada Várzea Grande ponto de referência bar do Sidney (manquinho)"
+  },
+  {
+    "id": "1744811701918-AbC9O",
+    "nome": "D326 CUIABA CAMPO VELHO",
+    "celular": "5565992504503.0",
+    "endereco": "D326",
+    "complemento": ""
+  },
+  {
+    "id": "1747483626653-AbC9O",
+    "nome": "D408 CPA LAGOA",
+    "celular": "5565984214069.0",
+    "endereco": "D408",
+    "complemento": "Rua 17 quadra 29 casa 24 CPA 3 Setor 5"
+  },
+  {
+    "id": "1744299621398-AbC9O",
+    "nome": "D473 CPA Terra Nova",
+    "celular": "5565992197656.0",
+    "endereco": "D473",
+    "complemento": "Bloco 01 apartamento 24 Resid Agua Marinha"
+  },
+  {
+    "id": "1746274524177-AbC9O",
+    "nome": "D513 COXIPO RESID COXIPÓ ",
+    "celular": "55659.0",
+    "endereco": "D513",
+    "complemento": "Rua 26 qdra 62 casa 14\nResidencial Coxipo"
+  },
+  {
+    "id": "1745510640763-AbC9O",
+    "nome": "D526 CUIABA SANTA ISABEL",
+    "celular": "5565992568778.0",
+    "endereco": "D526",
+    "complemento": "Rua dos Trabalhadores n.317 muro verde Portão branco"
+  },
+  {
+    "id": "1744464182860-AbC9O",
+    "nome": "D624 CPA JD VITORIA",
+    "celular": "5565996606220.0",
+    "endereco": "D624",
+    "complemento": "Rua 14\nQuadra 26\nLote 12\nNúmero 294\nJardim Vitória"
+  },
+  {
+    "id": "1703094076559-AbC9O",
+    "nome": "Daniella Guimarães Dias",
+    "celular": "65981152329.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1746274682463-AbC9O",
+    "nome": "DK997 COXIPO TIJUCAL IRMA",
+    "celular": "5565993454843.0",
+    "endereco": "DK997 TIJUCAL",
+    "complemento": "Rua 403 q128 c60"
+  },
+  {
+    "id": "1746186323304-AbC9O",
+    "nome": "E0410 COXIPO JD UNIVERSITÁRIO",
+    "celular": "5565992814957.0",
+    "endereco": "E0410",
+    "complemento": "Rua padre jose de Anchieta n 12 q 05"
+  },
+  {
+    "id": "1747843292902-AbC9O",
+    "nome": "E0413 CUIABA SANTA ISABEL",
+    "celular": "5565992738426.0",
+    "endereco": "E0413",
+    "complemento": "Rua Nova olimpia 344 santa isabel Cuiabá  meu nome Ideni"
+  },
+  {
+    "id": "1745587856661-AbC9O",
+    "nome": "E0729 VG MANGA",
+    "celular": "5565992649746.0",
+    "endereco": "E0729",
+    "complemento": "Rua Ary Paes Barreto, 965 Manga"
+  },
+  {
+    "id": "1743687210990-AbC9O",
+    "nome": "E0776 - COXIPO Sala 2 - BAIRRO BOA ESPERANÇA ",
+    "celular": "5565999822521.0",
+    "endereco": "E0776 Sala 2",
+    "complemento": ""
+  },
+  {
+    "id": "1744119676346-AbC9O",
+    "nome": "E12 VG CENTRO",
+    "celular": "5565993119933.0",
+    "endereco": "E12",
+    "complemento": "Rua toquio n 160 Centro Vg"
+  },
+  {
+    "id": "1747317055686-AbC9O",
+    "nome": "E24 COXIPÓ NOVO MILENIO",
+    "celular": "5565992092823.0",
+    "endereco": "E24",
+    "complemento": "Rua :21 qua:dra 20 casa: 02 bairro : novo milênio"
+  },
+  {
+    "id": "1743681377071-AbC9O",
+    "nome": "E26 Sao Joao Del Rey",
+    "celular": "5565993367663.0",
+    "endereco": "E26 Sao Joao Del Rei",
+    "complemento": "Rua46 Q84 casa 266 são João del rei"
+  },
+  {
+    "id": "1745671785583-AbC9O",
+    "nome": "E28 COXIPO PEDRA 90",
+    "celular": "5565992162744.0",
+    "endereco": "E28",
+    "complemento": "Linha 17 pedra 90"
+  },
+  {
+    "id": "1746710197048-AbC9O",
+    "nome": "E783 COXIPÓ RIO JANGADA",
+    "celular": "5565981224865.0",
+    "endereco": "E783",
+    "complemento": "Condomínio Rio jangada casa 472\nFê"
+  },
+  {
+    "id": "1691187789455-AbC9O",
+    "nome": "Edna Escobal",
+    "celular": "65981142193.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1746798769183-AbC9O",
+    "nome": "Ee077 CPA JD UNIAO",
+    "celular": "5565984155661.0",
+    "endereco": "EE077",
+    "complemento": "Rua Vila Nova n° 681  bairro Jardim União"
+  },
+  {
+    "id": "1749265183179-AbC9O",
+    "nome": "EE10 CPA Lagoa",
+    "celular": "5565992858330.0",
+    "endereco": "EE10",
+    "complemento": "Endereço rua a dois quadra 81 número 16"
+  },
+  {
+    "id": "1744370934390-AbC9O",
+    "nome": "FABRICA SOFA",
+    "celular": "5565993382502.0",
+    "endereco": "FABRICA SOFA",
+    "complemento": ""
+  },
+  {
+    "id": "1743592154968-AbC9O",
+    "nome": "Fiado 1015 Edineise",
+    "celular": "5565984221761.0",
+    "endereco": "Fiado 1015",
+    "complemento": "Rua 13 qdra 15 casa 36 Francisca Loreira Borba"
+  },
+  {
+    "id": "1692185385055-AbC9O",
+    "nome": "Fuxico Do Bem",
+    "celular": "65981140109.0",
+    "endereco": "Doação para a Casa da Mãe Joana",
+    "complemento": ""
+  },
+  {
+    "id": "1747147262857-AbC9O",
+    "nome": "G0057 CUIABA QUILOMBO",
+    "celular": "5566999683376.0",
+    "endereco": "G0057",
+    "complemento": "Rua corsino do amarantes 515"
+  },
+  {
+    "id": "1747142991683-AbC9O",
+    "nome": "G0058 COXIPO JD UNIVERSITARIO",
+    "celular": "5565999698878.0",
+    "endereco": "G0058",
+    "complemento": "Rua 1700 -Qd 40- Casa 6 Jardim Imperial  Cuiabá.  Portão  vermelho."
+  },
+  {
+    "id": "1747144579808-AbC9O",
+    "nome": "G0059 RETIRAR JORDRE JANUARIO",
+    "celular": "55659.0",
+    "endereco": "G0059",
+    "complemento": "RETIRAR"
+  },
+  {
+    "id": "1745516981833-AbC9O",
+    "nome": "Igreja Prebiteriana Monte Sião",
+    "celular": "5565992568778.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1722895623675-AbC9O",
+    "nome": "Igreja Presbiteriana Betesda \nCNPJ 27.489.349/0001-95",
+    "celular": "65992604107.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1702997856596-AbC9O",
+    "nome": "Imobiliária e construtora Georgia Mirella Ltda",
+    "celular": "6530463600.0",
+    "endereco": "av Miguel sutil N° 8800 bairro Duque caxias",
+    "complemento": ""
+  },
+  {
+    "id": "1749051175424-AbC9O",
+    "nome": "Lauro Pereira da Silva",
+    "celular": "5565999513172.0",
+    "endereco": "Rua Mário Dos Reis Santos Q40 CS36 Nova Esperança Cuiaba",
+    "complemento": ""
+  },
+  {
+    "id": "1683214443809-AbC9O",
+    "nome": "Luiz Felipe Buscariol Albres",
+    "celular": "65992063234.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1697459677727-AbC9O",
+    "nome": "Luiz Felipe Buscariol Albres",
+    "celular": "992063234.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1727371853084-AbC9O",
+    "nome": "Martinha Rosa da Silva\n- Cpf 879.164.441.00",
+    "celular": "55999852666.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1746444630741-AbC9O",
+    "nome": "MM CAMINHOES VG RODOVIA",
+    "celular": "5565992408557.0",
+    "endereco": "MM CAMINHOES",
+    "complemento": ""
+  },
+  {
+    "id": "1699013495337-AbC9O",
+    "nome": "MM COMÉRCIO DE CAMINHÕES EIRELLI",
+    "celular": "5565992408557.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1706901660205-AbC9O",
+    "nome": "MT LOC",
+    "celular": "65996802940.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1744640051984-AbC9O",
+    "nome": "MT PRINT CUIABÁ Lixeira",
+    "celular": "",
+    "endereco": "MT PRINT",
+    "complemento": ""
+  },
+  {
+    "id": "1744812346788-AbC9O",
+    "nome": "MTLOC CPA AREAO",
+    "celular": "",
+    "endereco": "MTLOC",
+    "complemento": ""
+  },
+  {
+    "id": "1733857436878-AbC9O",
+    "nome": "Najara de siqueira Saldanha",
+    "celular": "5565981177422.0",
+    "endereco": "Rua 31, q38, Casa 5, Tres Barras, Cuiaba",
+    "complemento": ""
+  },
+  {
+    "id": "1746138710075-AbC9O",
+    "nome": "P023 SOGRA CUIABA SANTA ISABEL",
+    "celular": "6598115295.0",
+    "endereco": "P023 SOGRA",
+    "complemento": "Rua Antônio Antero pais de barros \nNumero 130\n"
+  },
+  {
+    "id": "1746537325255-AbC9O",
+    "nome": "P023 VG NOVO MUNDO",
+    "celular": "5565992647711.0",
+    "endereco": "P023",
+    "complemento": "Rua china\nQ 28\nL13"
+  },
+  {
+    "id": "1750515067453-AbC9O",
+    "nome": "P121 CUIABA SANTA ISABEL",
+    "celular": "5565992242479.0",
+    "endereco": "P121",
+    "complemento": "Rua doutor Moacyr de Freitas 89 fundos"
+  },
+  {
+    "id": "1746194416501-AbC9O",
+    "nome": "P127 COXIPO ALTOS DO PARQUE",
+    "celular": "55659.0",
+    "endereco": "P127",
+    "complemento": "Rua r qd 19 casa 118,altos do parque 1"
+  },
+  {
+    "id": "1748093413810-AbC9O",
+    "nome": "P215 VG JD VITORIA",
+    "celular": "5565992460815.0",
+    "endereco": "P215",
+    "complemento": "Meu endereço  rua vinte e oito\nCasa 2 quadra 48 jd Vitória Régia"
+  },
+  {
+    "id": "1744125448932-AbC9O",
+    "nome": "P23 - VG - PQ DO LAGO - SANTA LUZIA",
+    "celular": "5565993367899.0",
+    "endereco": "P23",
+    "complemento": "RUA PADRE FIRMO, Q9, C7 SANTA LUZIA"
+  },
+  {
+    "id": "1746276749886-AbC9O",
+    "nome": "P313 VG SAO MATEUS",
+    "celular": "5565999693759.0",
+    "endereco": "P313",
+    "complemento": "Rua  Francisco Alves  casa 10 quadra 143"
+  },
+  {
+    "id": "1745510792966-AbC9O",
+    "nome": "P314 VG JACARANDA",
+    "celular": "5565984499581.0",
+    "endereco": "P314",
+    "complemento": "Rua 20 qd 16 casa 01 de esquina residencial jacarandá"
+  },
+  {
+    "id": "1746618918527-AbC9O",
+    "nome": "P341 CPA BOSQUE DA SAUDE",
+    "celular": "5565992215434.0",
+    "endereco": "P341",
+    "complemento": "Salão De Beleza Esquina"
+  },
+  {
+    "id": "1749264654485-AbC9O",
+    "nome": "P358 VG PQ DELREY",
+    "celular": "5565992058195.0",
+    "endereco": "P358",
+    "complemento": "Avenida frei coimbrã n 37 A q 77 ouro verde Várzea Grande"
+  },
+  {
+    "id": "1754660409591-AbC9O",
+    "nome": "P406 Novo Paraiso",
+    "celular": "5565984125223.0",
+    "endereco": "P406",
+    "complemento": "Rua Emiliano A da Silva 592\nNovo paraíso,  em frente ao campo"
+  },
+  {
+    "id": "1747142142170-AbC9O",
+    "nome": "P452 VG ZERO",
+    "celular": "5565992700868.0",
+    "endereco": "P452",
+    "complemento": "Rua gaúcha n 14 bairro 23 de setembro Várzea Grande"
+  },
+  {
+    "id": "1749037764844-AbC9O",
+    "nome": "P490 COXIPO STA TERESINHA",
+    "celular": "5565993038754.0",
+    "endereco": "P490",
+    "complemento": "Rua 37, quadra 03 casa 11 bairro santa Terezinha 2"
+  },
+  {
+    "id": "1746139554958-AbC9O",
+    "nome": "P617 CPA PAIAGUAS",
+    "celular": "5566981210070.0",
+    "endereco": "P617",
+    "complemento": "Rua i, 23, bloco C, ap. 34"
+  },
+  {
+    "id": "1747407175578-AbC9O",
+    "nome": "P625 CPA ENTRE LAGOA E TRES BARRAS KITNET GISLAINE",
+    "celular": "5565993547101.0",
+    "endereco": "P625",
+    "complemento": "Rua Q quadra 27 casa 07 bairro jardim Brasil"
+  },
+  {
+    "id": "1746807217331-AbC9O",
+    "nome": "P656 COXIPO PEIXARIA ",
+    "celular": "5565992500238.0",
+    "endereco": "P656",
+    "complemento": ""
+  },
+  {
+    "id": "1745585644720-AbC9O",
+    "nome": "P667 COXIPO OSMAR CABRAL",
+    "celular": "5565984433454.0",
+    "endereco": "P667",
+    "complemento": ""
+  },
+  {
+    "id": "1744464262551-AbC9O",
+    "nome": "P81 CPA ALTOS DA SERRA",
+    "celular": "5565992903646.0",
+    "endereco": "P81",
+    "complemento": "Casa 27 qdr 202"
+  },
+  {
+    "id": "1751741638872-AbC9O",
+    "nome": "Pa2110 Cpa Meio",
+    "celular": "5565984289535.0",
+    "endereco": "Pa2110",
+    "complemento": "Rua general Carneiro n\n16 quadra 106"
+  },
+  {
+    "id": "1748093854520-AbC9O",
+    "nome": "Pa2209 CPA FLORIANOPOLIS",
+    "celular": "5565981184385.0",
+    "endereco": "Pa2209",
+    "complemento": ""
+  },
+  {
+    "id": "1744811460181-AbC9O",
+    "nome": "PA39 VG Jd Gloria",
+    "celular": "5565992121552.0",
+    "endereco": "PA39",
+    "complemento": ""
+  },
+  {
+    "id": "1748696987954-AbC9O",
+    "nome": "Pa53 COXIPO OSMAR CABRAL",
+    "celular": "5565999175357.0",
+    "endereco": "PA53",
+    "complemento": "Rua 18 quadra lotes casa 96 Brasil 21"
+  },
+  {
+    "id": "1743678986567-AbC9O",
+    "nome": "Pa64 COXIPO NICO BARACAT",
+    "celular": "5565992427329.0",
+    "endereco": "Pa64",
+    "complemento": "⭐⭐⭐ Rua 09\nQd 06\nCasa 31\nResidencial Nico Baracat 1"
+  },
+  {
+    "id": "1747481440430-AbC9O",
+    "nome": "Pa65 COXIPO NOVA ESPERANÇA ",
+    "celular": "5565984731757.0",
+    "endereco": "Pa65",
+    "complemento": "Rua Carlos Alberto Feitosa Macedo,Quadra 02, número 30 bairro nova esperança 2"
+  },
+  {
+    "id": "1744896314546-AbC9O",
+    "nome": "Pa661 VG SÃO MATEUS",
+    "celular": "5565992826843.0",
+    "endereco": "Pa661",
+    "complemento": "Rua André Maggie  quadra 212 casa 10 são Mateus"
+  },
+  {
+    "id": "1747142214344-AbC9O",
+    "nome": "PA7112 VG NOVA ESPERANÇA ",
+    "celular": "5565992994644.0",
+    "endereco": "PA7112",
+    "complemento": "Aquino nova esperança em vg no Jd Petrópolis rua flor do cerrado 3 qda 10"
+  },
+  {
+    "id": "1748870047747-AbC9O",
+    "nome": "PB118 COXIPÓ NICO BARACAT",
+    "celular": "5565981429055.0",
+    "endereco": "PB118",
+    "complemento": "Rua 6 quadra 19 casa 13 Residencial nico baracat 2"
+  },
+  {
+    "id": "1748093129460-AbC9O",
+    "nome": "PB130 VG MAPIM",
+    "celular": "5565984294108.0",
+    "endereco": "PB130",
+    "complemento": "Rua DNR quadra 01 casa 17 Mapim VG"
+  },
+  {
+    "id": "1746708267424-AbC9O",
+    "nome": "PB135 COXIPÓ BELVEDERE",
+    "celular": "5565999470123.0",
+    "endereco": "Pb135",
+    "complemento": "Rua dos sabias qd 6 casa 13"
+  },
+  {
+    "id": "1748697588155-AbC9O",
+    "nome": "PB138 CUIABA COOPHAMIL",
+    "celular": "5565992870931.0",
+    "endereco": "PB138",
+    "complemento": "Rua G 144 cophamil"
+  },
+  {
+    "id": "1746535906022-AbC9O",
+    "nome": "PB140 CUIABA CENTRO ",
+    "celular": "55659.0",
+    "endereco": "PB140 CENTRO",
+    "complemento": "R. João Bento, 580 - Quilombo, Cuiabá - MT, 7804"
+  },
+  {
+    "id": "1744811002570-AbC9O",
+    "nome": "PB145 VG PAIAGUAS",
+    "celular": "5565992948324.0",
+    "endereco": "Pb145",
+    "complemento": "Rua Jacó, 14, c10B"
+  },
+  {
+    "id": "1754672475441-AbC9O",
+    "nome": "Pb300 VG Manga",
+    "celular": "5565992391010.0",
+    "endereco": "Pb300",
+    "complemento": "Rua coronel Manoel Gomes, 1399, manga"
+  },
+  {
+    "id": "1744061775262-AbC9O",
+    "nome": "PC152 - COXIPO - SAO JOAO DEL REY",
+    "celular": "5565992337098.0",
+    "endereco": "PC152",
+    "complemento": "Alameda B, 115, são João del rey"
+  },
+  {
+    "id": "1746444564560-AbC9O",
+    "nome": "PC156 VG MANGA",
+    "celular": "55659.0",
+    "endereco": "PC156",
+    "complemento": "O endereço é rua Juscelino reinners número 299"
+  },
+  {
+    "id": "1754398758257-AbC9O",
+    "nome": "Pc160 Grande Terceiro",
+    "celular": "5565999191065.0",
+    "endereco": "Pc160",
+    "complemento": "Rua Rio mutum quadra 07 casa 11 bairro grande terceiro Cuiabá"
+  },
+  {
+    "id": "1750438754345-AbC9O",
+    "nome": "PC1650 COXIPO NOVA ESPERANCA",
+    "celular": "5565996237841.0",
+    "endereco": "PC1650",
+    "complemento": "Rua das chácaras quadra 02 casa 49 - Em frente à mercearia rosani"
+  },
+  {
+    "id": "1745679268572-AbC9O",
+    "nome": "PC197 CUIABA COOPHAMIL",
+    "celular": "5565993073039.0",
+    "endereco": "PC197",
+    "complemento": "Rua 9 csa 220 bairro Jardim beira rio no fundo do coophamil"
+  },
+  {
+    "id": "1746278340197-AbC9O",
+    "nome": "PC200 CUIABA JD PETROPOLIS",
+    "celular": "5565996890550.0",
+    "endereco": "Pc200",
+    "complemento": "Bloco 14 Apartamento 204"
+  },
+  {
+    "id": "1751482463198-AbC9O",
+    "nome": "Pc2106 Vg Paiaguas",
+    "celular": "5565992693858.0",
+    "endereco": "Pc2106",
+    "complemento": ""
+  },
+  {
+    "id": "1748093601192-AbC9O",
+    "nome": "PC236 COXIPO SAO GONCALO",
+    "celular": "5565996788673.0",
+    "endereco": "Pc236",
+    "complemento": "Rua: Vinte e um, 15\nQ: 41 Coabi São Gonçalo \nCuiabá-MT."
+  },
+  {
+    "id": "1746277873921-AbC9O",
+    "nome": "PC25 CUIABA GOIABEIRAS",
+    "celular": "5565993009302.0",
+    "endereco": "Pc25",
+    "complemento": "Endereço e rua general rabelo 240 bairro duque de Caxias Cuiabá, fundo do shopping goiabeiras"
+  },
+  {
+    "id": "1747319059115-AbC9O",
+    "nome": "PC32 CUIABA CENTRO CORONEL NETO",
+    "celular": "5565999711471.0",
+    "endereco": "Pc32",
+    "complemento": "Rua coronel Neto 230"
+  },
+  {
+    "id": "1750178617950-AbC9O",
+    "nome": "Pc59 VG JD ELDORADO",
+    "celular": "5565992851581.0",
+    "endereco": "Pc59",
+    "complemento": "Rua Coroatá antiga 138 Qd: 100 Lot: 07 Jd. Eldorado Vg"
+  },
+  {
+    "id": "1744299841998-AbC9O",
+    "nome": "PC6655 CPA MORADA DA SERRA",
+    "celular": "5565984550972.0",
+    "endereco": "PC6655",
+    "complemento": "Kitnet azul em frente a distribuidora os barba"
+  },
+  {
+    "id": "1744026736579-AbC9O",
+    "nome": "Pc72 - OSMAR CABRAL - COXIPO",
+    "celular": "5565996282152.0",
+    "endereco": "Pc72",
+    "complemento": "Rua 25, Tem Foto No App"
+  },
+  {
+    "id": "1755970927184-AbC9O",
+    "nome": "Pc90 Vg Canelas",
+    "celular": "5565996085703.0",
+    "endereco": "Pc90",
+    "complemento": "Rua 29 quadra 05 casa 4 a"
+  },
+  {
+    "id": "1748697280953-AbC9O",
+    "nome": "PD068 CUIABA ARAES",
+    "celular": "5565984396908.0",
+    "endereco": "PD068",
+    "complemento": "Rua João Sevriano da Fonseca 722"
+  },
+  {
+    "id": "1749264434518-AbC9O",
+    "nome": "Pd082 VG PQ DO LAGO",
+    "celular": "5565984057214.0",
+    "endereco": "Pd082",
+    "complemento": "Avenida Papa João XXIII \nQ 45 casa 5\nMaringa 1 Parque do lago"
+  },
+  {
+    "id": "1746798372953-AbC9O",
+    "nome": "PD086 CPA JD UNIAO",
+    "celular": "5565984451509.0",
+    "endereco": "PD086",
+    "complemento": "R Airton senna 235 b jardim União Cuiabá"
+  },
+  {
+    "id": "1745588801009-AbC9O",
+    "nome": "PD101 CUIABA LIXEIRA",
+    "celular": "5565992499440.0",
+    "endereco": "PD101",
+    "complemento": "Rua sao Francisco  de Assis 35"
+  },
+  {
+    "id": "1744124471805-AbC9O",
+    "nome": "PD262 - CPA - JD FLORIANOPOLIS",
+    "celular": "65992683581.0",
+    "endereco": "PD262",
+    "complemento": "CASA VERMELHA, GRADE BRANCA"
+  },
+  {
+    "id": "1744285910073-AbC9O",
+    "nome": "Pd363 VG ",
+    "celular": "5565996046624.0",
+    "endereco": "Pd363",
+    "complemento": "Rua cutitiba, quadra 28, lote 14, portao verde"
+  },
+  {
+    "id": "1745330682804-AbC9O",
+    "nome": "PD579 VG PAIAGUAS MARIA",
+    "celular": "5565992443014.0",
+    "endereco": "Pd579",
+    "complemento": ""
+  },
+  {
+    "id": "1747317102234-AbC9O",
+    "nome": "Pe0776 COXIPO JD IMPERIAL",
+    "celular": "5565993540489.0",
+    "endereco": "Pe0776",
+    "complemento": "Aqui na rua samambaia cs/26/Q22 jardim Imperial 2 muito obrigado"
+  },
+  {
+    "id": "1746880958849-AbC9O",
+    "nome": "Pe104 CPA BURITI FINAL CPA",
+    "celular": "5565992696906.0",
+    "endereco": "Pe104",
+    "complemento": "Rua p quadra 13 casa 314 residenccial buriti"
+  },
+  {
+    "id": "1745947441748-AbC9O",
+    "nome": "PE3406 CUIABA NOVO TERCEIRO",
+    "celular": "5565999583897.0",
+    "endereco": "PE3406",
+    "complemento": "Rua Floriano figueiredo, n.138 bairro novo terceiro"
+  },
+  {
+    "id": "1744373137209-AbC9O",
+    "nome": "Pe3450 VG JD GLORIA",
+    "celular": "5565996487954.0",
+    "endereco": "Pe3450",
+    "complemento": "Rua jaciara , lote 10 , Q 34 jardim Glória 2  VG"
+  },
+  {
+    "id": "1748697377799-AbC9O",
+    "nome": "PE3453 CPA PRIMEIRO DE MARCO",
+    "celular": "5565984783967.0",
+    "endereco": "Pe3453",
+    "complemento": "Rua: Y, quadra: 59, casa: 06, Bairro primeiro de março."
+  },
+  {
+    "id": "1744896216692-AbC9O",
+    "nome": "PE403 COXIPO PQ CUIABA",
+    "celular": "5565996435554.0",
+    "endereco": "Pe403",
+    "complemento": "Bairro reserva do Coxipó \nAvenida F\nCasa 17\nFica no grilo no fundo do Coxipó"
+  },
+  {
+    "id": "1746274340558-AbC9O",
+    "nome": "PE416 COXIPÓ CHACARA DOS PINHEIROS",
+    "celular": "5565999790823.0",
+    "endereco": "PE416",
+    "complemento": "Kit Net Esquina Em Frente a AABB"
+  },
+  {
+    "id": "1747932981797-AbC9O",
+    "nome": "PE4325 VG MARIO ANDREAZA",
+    "celular": "5565992175493.0",
+    "endereco": "Pe4325",
+    "complemento": "Rua 14 quadra 2 lote 31 bairro Júlio domingos várzea grande mt"
+  },
+  {
+    "id": "1755706892961-AbC9O",
+    "nome": "Pe512 DESPRAIADO",
+    "celular": "556599818481.0",
+    "endereco": "Pe512",
+    "complemento": "Indianara Bertoldo Vestena Ribeiro  \nRua Raul Santos Costa, 06, Ribeirão do Lipa, Cuiabá, MT, CEP: 78048-160 \nComplemento: Quadra 02, Casa  Condomínio Pacem"
+  },
+  {
+    "id": "1755622943184-AbC9O",
+    "nome": "Pe6 AVO carumbe",
+    "celular": "55659.0",
+    "endereco": "Pe6 AVO",
+    "complemento": "Rua Kassim Mohamed, 490 Jd Campo Verde"
+  },
+  {
+    "id": "1749038389184-AbC9O",
+    "nome": "Pe6 CPA CARUMBE",
+    "celular": "55659984661268.0",
+    "endereco": "Pe6",
+    "complemento": "Rua Kassim Mohamed, 363"
+  },
+  {
+    "id": "1750686347907-AbC9O",
+    "nome": "Pe717 Vg Construmat",
+    "celular": "5565984698388.0",
+    "endereco": "Pe717",
+    "complemento": "Rua Leopoldino Procópio 175 construmat Várzea Grande"
+  },
+  {
+    "id": "1746798016437-AbC9O",
+    "nome": "PE862 CUIABA BARBADO",
+    "celular": "5565993417737.0",
+    "endereco": "Pe862",
+    "complemento": "Avenida tranquedo Neves número 873 Barbado"
+  },
+  {
+    "id": "1744294451835-AbC9O",
+    "nome": "PLE AMANDA CUIABA",
+    "celular": "5565981399487.0",
+    "endereco": "Ple Amanda",
+    "complemento": "Rua SAN Francisco 410\nBairro: Jardim Califórnia \nCondomínio Garden Shangri-lá Apto 1404 torre 2"
+  },
+  {
+    "id": "1744293311970-AbC9O",
+    "nome": "PLE ANTONIA VG JD DOA ESTADOS",
+    "celular": "5565984077168.0",
+    "endereco": "PLE ANTONIA",
+    "complemento": ""
+  },
+  {
+    "id": "1744288392144-AbC9O",
+    "nome": "Ple Cris CUIABA CRIS",
+    "celular": "",
+    "endereco": "Ple Cris",
+    "complemento": ""
+  },
+  {
+    "id": "1744292699427-AbC9O",
+    "nome": "PLE ELISANGELA VG JD GLORIA",
+    "celular": "5565993617877.0",
+    "endereco": "PLE ELISANGELA",
+    "complemento": ""
+  },
+  {
+    "id": "1744429562257-AbC9O",
+    "nome": "PLE SUZANA CUIABA PORTO",
+    "celular": "5565998059564.0",
+    "endereco": "Ple Suzana",
+    "complemento": "Resid Ipiranga II - Bloco B2 Apto 103"
+  },
+  {
+    "id": "1746795477336-AbC9O",
+    "nome": "PLE01 VG JD GLORIA",
+    "celular": "5565993617877.0",
+    "endereco": "PLE01",
+    "complemento": "Rua professora Lenine c povoas 180"
+  },
+  {
+    "id": "1746795584452-AbC9O",
+    "nome": "PLE02 VG JD DOS ESTADOS ANTONIA",
+    "celular": "5565984077168.0",
+    "endereco": "PLE02",
+    "complemento": ""
+  },
+  {
+    "id": "1746880198601-AbC9O",
+    "nome": "PLE03 CUIABA CENTRO",
+    "celular": "5565992515116.0",
+    "endereco": "PLE03",
+    "complemento": ""
+  },
+  {
+    "id": "1746884423759-AbC9O",
+    "nome": "PLE04 CPA PAIAGUAS",
+    "celular": "5565998059564.0",
+    "endereco": "PLE04 PAIAGUAS",
+    "complemento": "Rua g quadra 5A \nPróx a quadra de esportes do bairro"
+  },
+  {
+    "id": "1746880710223-AbC9O",
+    "nome": "PLE04 CUIABA PORTO",
+    "celular": "5565998059564.0",
+    "endereco": "Ple04",
+    "complemento": "Bloco B2 apto103 suzana"
+  },
+  {
+    "id": "1744428515263-AbC9O",
+    "nome": "PONTEC VG CENTRO",
+    "celular": "556599933562.0",
+    "endereco": "Pontec",
+    "complemento": "Ac Sao Paulo 82 Centro Vg"
+  },
+  {
+    "id": "1745931882430-AbC9O",
+    "nome": "PR9 COXIPO JD DOS IPES",
+    "celular": "5565999415851.0",
+    "endereco": "PR9",
+    "complemento": "Rua coqueiro verdes número 17 quadra 9"
+  },
+  {
+    "id": "1688134953645-AbC9O",
+    "nome": "Rigatrans transportes ltda",
+    "celular": "65999672911.0",
+    "endereco": "",
+    "complemento": ""
+  },
+  {
+    "id": "1747759607232-AbC9O",
+    "nome": "S124 CPA BELA VISTA PROXIMO SHOP PANTANAL",
+    "celular": "5565992626898.0",
+    "endereco": "S124",
+    "complemento": "No bairro Bela vista perto do parque da família rua 16 Quadra 31 lote 02 casa 20 perto do parque da família vc pode trazer a maquininha"
+  },
+  {
+    "id": "1754750092662-AbC9O",
+    "nome": "S191 Osmar Cabral",
+    "celular": "5565992080069.0",
+    "endereco": "S191",
+    "complemento": ""
+  },
+  {
+    "id": "1746021256509-AbC9O",
+    "nome": "S193 CUIABA SANTA ISABEL",
+    "celular": "5565996086168.0",
+    "endereco": "S193",
+    "complemento": "Rua clara nunes 137"
+  },
+  {
+    "id": "1744041645422-AbC9O",
+    "nome": "S494 - CPA - JD FLORIANOPOLIS",
+    "celular": "5565992557345.0",
+    "endereco": "Rua 19, Q 60, C 13 - JD FLORIANOPOLIS",
+    "complemento": "⭐⭐⭐ 99262-7916 LIGAR NORMAL"
+  },
+  {
+    "id": "1749036422670-AbC9O",
+    "nome": "SINDILIMP MT - CNPJ 10.908.038/0001-10",
+    "celular": "5565993489540.0",
+    "endereco": "Rua Osório Duque estrada, número 131, Araés",
+    "complemento": ""
+  },
+  {
+    "id": "1706532749909-AbC9O",
+    "nome": "Sociedade Beneficente Salmo 23",
+    "celular": "65992725330.0",
+    "endereco": "Rua 25 De Agosto",
+    "complemento": "COTAÇÃO VÁLIDA ATÉ O DIA 02/02/2024"
+  },
+  {
+    "id": "1749038045053-AbC9O",
+    "nome": "Vg0061 VG ZERO",
+    "celular": "5544991771397.0",
+    "endereco": "Vg0061",
+    "complemento": "Rua Bom jesus N 772\nBairro 23 de setembro \nVarzea grande \nAtrás da empresa de petróleo vindo de Cuiabá penúltima casa portão azul"
+  },
+  {
+    "id": "1744120618982-AbC9O",
+    "nome": "VG01 - VG PAIAGUAS",
+    "celular": "55993626643.0",
+    "endereco": "VG01",
+    "complemento": "CASA DA MAE DELA"
+  },
+  {
+    "id": "1744034532475-AbC9O",
+    "nome": "VG010 - SAO MATEUS - VG",
+    "celular": "5565999721076.0",
+    "endereco": "VG010",
+    "complemento": "RUA 8, Q212, C2, SAO MATEUS, VG"
+  },
+  {
+    "id": "1754931134533-AbC9O",
+    "nome": "Vg0449 Jd Maringa",
+    "celular": "5511942188978.0",
+    "endereco": "Vg0449",
+    "complemento": "Residencial Santa Barbara 4 etapa bloco 17 apto 404\nRua tricolor \nJardim Maringá 3"
+  },
+  {
+    "id": "1748018567038-AbC9O",
+    "nome": "VG0544 VG IKARAI",
+    "celular": "5565984588706.0",
+    "endereco": "VG0544 ",
+    "complemento": "Rua: São Pedro \nCasa: 8A\nBairro: Ikaray \nQuadra 38"
+  },
+  {
+    "id": "1755106660810-AbC9O",
+    "nome": "Vg0549 Jd Maringa",
+    "celular": "5565993104316.0",
+    "endereco": "Vg0549",
+    "complemento": "Rua Xavantina qd 02 CS 05 bairro Jardim União\nVg"
+  },
+  {
+    "id": "1749038150289-AbC9O",
+    "nome": "VG0633 VG Jd Dos ESTADOS",
+    "celular": "5565992547207.0",
+    "endereco": "VG0633",
+    "complemento": "Rua nova Guarantã, 81-A"
+  },
+  {
+    "id": "1744035196281-AbC9O",
+    "nome": "VG080 - VG - PAIAGUAS - TEM UMA TENDA ARMADA DENTRO DA CASA - PORTAO FECHADO LADO ESQUERDO",
+    "celular": "5565992779863.0",
+    "endereco": "VG080",
+    "complemento": "Edilson Paiaguas"
+  },
+  {
+    "id": "1744283016210-AbC9O",
+    "nome": "VG098 VG JD GLORIA",
+    "celular": "5565993494260.0",
+    "endereco": "Vg098",
+    "complemento": ""
+  },
+  {
+    "id": "1746795770657-AbC9O",
+    "nome": "VG1012 VG CENTRO CARTOON",
+    "celular": "5565981009310.0",
+    "endereco": "VG1012",
+    "complemento": "Predio"
+  },
+  {
+    "id": "1744289544129-AbC9O",
+    "nome": "VG1019 VG BAIRRO PEDRO CELESTINO",
+    "celular": "5565992594228.0",
+    "endereco": "Vg1019",
+    "complemento": "Rua são Fernando q, 13 casa 2 r Celestino Enrique Pereira"
+  },
+  {
+    "id": "1746277043062-AbC9O",
+    "nome": "VG1054 VG MANGA",
+    "celular": "5565992460474.0",
+    "endereco": "Vg1054",
+    "complemento": "Rua cel Manoel Gomes 1358 manga"
+  },
+  {
+    "id": "1746138853341-AbC9O",
+    "nome": "VG1083 VG JD IKARAI",
+    "celular": "5565984729084.0",
+    "endereco": "VG1083",
+    "complemento": "Rua Jornalista Nilson Dos Santos Quadra J Área A, Ikarai."
+  },
+  {
+    "id": "1746277133770-AbC9O",
+    "nome": "VG1232 VG CRISTO REI",
+    "celular": "5565992771926.0",
+    "endereco": "VG1232",
+    "complemento": "Rua dos ingas quadra 2 casa 36 portão azul"
+  },
+  {
+    "id": "1749264698687-AbC9O",
+    "nome": "VG1266 VG PQ DO LAGO",
+    "celular": "5565996814907.0",
+    "endereco": "Vg1266",
+    "complemento": "Rua São João \nQ.09\nC.09\nVila rica parque do lago"
+  },
+  {
+    "id": "1746277190826-AbC9O",
+    "nome": "VG128 VG JD DOS ESTADOS",
+    "celular": "5565996033318.0",
+    "endereco": "VG128",
+    "complemento": "Rua romaima Q63 casa 18 jardim dos estados"
+  },
+  {
+    "id": "1751308171450-AbC9O",
+    "nome": "Vg1294 Vg Jd Das Flores",
+    "celular": "5565984675995.0",
+    "endereco": "Vg1294",
+    "complemento": "Rua das Papoulas Casa 3 Q 4 Jardim estrela Dalva Várzea Grande"
+  },
+  {
+    "id": "1751302859990-AbC9O",
+    "nome": "Vg1309 Vg Alameda",
+    "celular": "5565984786623.0",
+    "endereco": "Vg1309",
+    "complemento": "Rua vitorino monteiro n10 bairro alameda Várzea grande"
+  },
+  {
+    "id": "1747933136796-AbC9O",
+    "nome": "VG1319 VG JACARANDA",
+    "celular": "5565984692805.0",
+    "endereco": "VG1319",
+    "complemento": "RUA: H\nQuadra: 28\nCasa: 14\nBairro: Joze Carlos Guimaraes\nVarzea-Grande"
+  },
+  {
+    "id": "1746186187969-AbC9O",
+    "nome": "VG137 VG MANGA",
+    "celular": "5565984674120.0",
+    "endereco": "VG137",
+    "complemento": "Rua ary paes barreto 357 Manga"
+  },
+  {
+    "id": "1744120856471-AbC9O",
+    "nome": "Vg1496 VG CENTRO",
+    "celular": "5565992188047.0",
+    "endereco": "Vg1496",
+    "complemento": "RUA POETA BELMIRO BRAGA, 14 CENTRO VG"
+  },
+  {
+    "id": "1751653192783-AbC9O",
+    "nome": "Vg1577 Vg J Jardim Dos Estados",
+    "celular": "55659.0",
+    "endereco": "Vg1577",
+    "complemento": "Rua nova Olímpia q 02 c 16 Jardim dos estados ( resd Cabo Michel)"
+  },
+  {
+    "id": "1749744613641-AbC9O",
+    "nome": "VG169 VG PONTE NOVA",
+    "celular": "5565981736994.0",
+    "endereco": "VG169",
+    "complemento": ""
+  },
+  {
+    "id": "1746627320084-AbC9O",
+    "nome": "VG1721 VG SANTA LAURA",
+    "celular": "55659.0",
+    "endereco": "VG1721",
+    "complemento": ""
+  },
+  {
+    "id": "1744639723606-AbC9O",
+    "nome": "VG1723 VG STA ISABEL",
+    "celular": "5565993073312.0",
+    "endereco": "VG1723",
+    "complemento": "Rua : canário qdr 12 Casa 12 sta isabel Vg"
+  },
+  {
+    "id": "1746535652817-AbC9O",
+    "nome": "VG1728 VG MANGA",
+    "celular": "5565984063545.0",
+    "endereco": "VG1728",
+    "complemento": "Avenida Gonçalo botelho de Campos  número  318  em frente  380"
+  },
+  {
+    "id": "1746139072669-AbC9O",
+    "nome": "VG1749 VG JACARANDA",
+    "celular": "5565999865781.0",
+    "endereco": "VG1749",
+    "complemento": "Rua=Roosevelt.Q=23.C=02.Aqui no Residencial Jacaranda."
+  },
+  {
+    "id": "1755706734550-AbC9O",
+    "nome": "Vg1786 VG Paiaguas",
+    "celular": "5565992910705.0",
+    "endereco": "Vg1786",
+    "complemento": "Rua =diego botelho casa area 1a qdra 93 residencial jatoba bairro paiaguas varzea grande"
+  },
+  {
+    "id": "1745675597120-AbC9O",
+    "nome": "VG1821 VG JACARANDA",
+    "celular": "5565981654371.0",
+    "endereco": "VG1821",
+    "complemento": "Rua 17 Quadra 08 cs 24"
+  },
+  {
+    "id": "1748018499796-AbC9O",
+    "nome": "VG1832 VG AEROPORTO",
+    "celular": "5565992692844.0",
+    "endereco": "VG1832",
+    "complemento": "Rua Santa Genoveva qdra 08, bloco A3, Apto 102 Residencial Aeroporto VG"
+  },
+  {
+    "id": "1754937948488-AbC9O",
+    "nome": "Vg1904 Figueirinha",
+    "celular": "5565993186570.0",
+    "endereco": "Vg1904",
+    "complemento": "Rua Alacir de Lannes 364 figueirinha"
+  },
+  {
+    "id": "1746190293332-AbC9O",
+    "nome": "VG1910 VG FIGUEIRINHA",
+    "celular": "5565993230956.0",
+    "endereco": "VG1910",
+    "complemento": "Rua Gonçalo Domingos de campos  n 556 fiqueirinha"
+  },
+  {
+    "id": "1751044598391-AbC9O",
+    "nome": "Vg1911 Vg Jd Gloria",
+    "celular": "5565998150975.0",
+    "endereco": "Vg1911",
+    "complemento": ""
+  },
+  {
+    "id": "1752244581672-AbC9O",
+    "nome": "Vg1912 Mapim Rose",
+    "celular": "5565992066568.0",
+    "endereco": "Vg1912",
+    "complemento": "Dentro Da Empresa Eurofwr"
+  },
+  {
+    "id": "1751648884091-AbC9O",
+    "nome": "Vg2005 Vg Pirinel",
+    "celular": "5565984359860.0",
+    "endereco": "Vg2005",
+    "complemento": "Rua Orlando Silva\nQuadra 99\nCasa 136"
+  },
+  {
+    "id": "1746889945400-AbC9O",
+    "nome": "VG2009 VG MANGA",
+    "celular": "5565993283840.0",
+    "endereco": "Vg2009",
+    "complemento": "Rua dito número 260, bairro da manga"
+  },
+  {
+    "id": "1745673263074-AbC9O",
+    "nome": "VG206 VG SAO MATEUS",
+    "celular": "55.0",
+    "endereco": "VG206",
+    "complemento": "Rua L quadra23 casa3. Residencial São ,Mateus vg"
+  },
+  {
+    "id": "1751044903515-AbC9O",
+    "nome": "Vg2127 Vg Passagem Da Conceicao",
+    "celular": "5565984362293.0",
+    "endereco": "Vg2127",
+    "complemento": "Rua água boa quadra 04 casa 14"
+  },
+  {
+    "id": "1749264513079-AbC9O",
+    "nome": "VG2208 VG JD PAULA",
+    "celular": "5565981411550.0",
+    "endereco": "Vg2208",
+    "complemento": "Rua coronel João Bueno 19 qd93 Paula 2 vg"
+  },
+  {
+    "id": "1751648956197-AbC9O",
+    "nome": "Vg2295 Vg Costa Verde",
+    "celular": "5565996818185.0",
+    "endereco": "Vg2295",
+    "complemento": "Rua Bahia, A5, quadra 173"
+  },
+  {
+    "id": "1751913403522-AbC9O",
+    "nome": "Vg2436 Jacaranda",
+    "celular": "5565999249851.0",
+    "endereco": "Vg2436",
+    "complemento": "Rua das jaqueira,QD20,CS13"
+  },
+  {
+    "id": "1746617851732-AbC9O",
+    "nome": "VG2539 VG JD PRIMAVERA",
+    "celular": "5565999795979.0",
+    "endereco": "VG2539",
+    "complemento": "Padilha Materiais para construção"
+  },
+  {
+    "id": "1746277342853-AbC9O",
+    "nome": "Vg2542 Vg JACARANDA",
+    "celular": "556599805807.0",
+    "endereco": "VG2542",
+    "complemento": ""
+  },
+  {
+    "id": "1750265880855-AbC9O",
+    "nome": "Vg262 Vg Marajoara",
+    "celular": "556598178271.0",
+    "endereco": "VG262",
+    "complemento": "Rua governador José Rondon casa 1"
+  },
+  {
+    "id": "1754937324252-AbC9O",
+    "nome": "Vg2675 VG Marajoara",
+    "celular": "5565981223945.0",
+    "endereco": "Vg2675",
+    "complemento": "Rua Barcelos 1369 jardim eldorado"
+  },
+  {
+    "id": "1744291104016-AbC9O",
+    "nome": "Vg2751 VG JD IKARAI",
+    "celular": "5565996232883.0",
+    "endereco": "Vg2751",
+    "complemento": "Rua Florêncio Silva claro, 30, Residencial athaide monteiro, Jd ikarai"
+  },
+  {
+    "id": "1744729211955-AbC9O",
+    "nome": "VG298 VG SANTA ISABEL",
+    "celular": "5565992999820.0",
+    "endereco": "Vg298",
+    "complemento": "Rua mar das caraibas \nN.33 \nQd. 11 \nSanta Isabel vg"
+  },
+  {
+    "id": "1747317840873-AbC9O",
+    "nome": "VG2991 VG JACARANDA",
+    "celular": "5565984739253.0",
+    "endereco": "VG2991",
+    "complemento": "Rua três Maria \nQuadra 08\nCasa 13"
+  },
+  {
+    "id": "1745069826631-AbC9O",
+    "nome": "Vg3021 VG NOVA ESPERANÇA ",
+    "celular": "5565981369986.0",
+    "endereco": "Vg3021",
+    "complemento": ""
+  },
+  {
+    "id": "1747149818612-AbC9O",
+    "nome": "VG3145 VG SAO MATEUS",
+    "celular": "5565992139151.0",
+    "endereco": "VG3145",
+    "complemento": "Rua Jonas pinheiro ( antiga rua 10)\nQuadra 86\nCasa 22\nSão Mateus"
+  },
+  {
+    "id": "1751911836856-AbC9O",
+    "nome": "Vg3307 Vg Canelas ",
+    "celular": "5565992714043.0",
+    "endereco": "Vg3307",
+    "complemento": "Rua 850, Canelas Várzea grande"
+  },
+  {
+    "id": "1746704365892-AbC9O",
+    "nome": "VG3308 VG PAIAGUAS",
+    "celular": "5565992764081.0",
+    "endereco": "VG3308",
+    "complemento": "Bairro Parque paiaguás várzea grande Rua Demétrio Quadra13 Casa21"
+  },
+  {
+    "id": "1746019870340-AbC9O",
+    "nome": "VG3377 VG CRISTO REI",
+    "celular": "5565984396658.0",
+    "endereco": "VG3377",
+    "complemento": "Rua Weimar Torres número 77 Cristo Rei VG"
+  },
+  {
+    "id": "1751648655290-AbC9O",
+    "nome": "Vg3391 Vg Aeroporto",
+    "celular": "55659.0",
+    "endereco": "Vg3391",
+    "complemento": "Jardim aeroporto rua sta genoveva  quadra8  bloco b2  apto 302"
+  },
+  {
+    "id": "1752597374412-AbC9O",
+    "nome": "Vg3410 Canelas",
+    "celular": "5565992659963.0",
+    "endereco": "Vg3410",
+    "complemento": "Rua Dionísio \nBairro canelas \nCasa 21A\nQuadra 82\n\nCEP 78148-772\n\nAntiga rua 300"
+  },
+  {
+    "id": "1746138922816-AbC9O",
+    "nome": "VG344 VG MAPIM",
+    "celular": "5565984416786.0",
+    "endereco": "VG344",
+    "complemento": "Rua Urubupungá quadra 20 casa 03"
+  },
+  {
+    "id": "1751907678419-AbC9O",
+    "nome": "Vg3487 Cristo Rei",
+    "celular": "5565984471622.0",
+    "endereco": "Vg3487",
+    "complemento": "Rua dos Anturius \nCasa 12 próximo a distribuidora do tumtum"
+  },
+  {
+    "id": "1753204001606-AbC9O",
+    "nome": "Vg362 VG Paiaguas",
+    "celular": "55659.0",
+    "endereco": "Vg362",
+    "complemento": "Casa Do Lado Esquerdo, Baixada, Só Mato"
+  },
+  {
+    "id": "1744725158553-AbC9O",
+    "nome": "VG3811 VG CRISTO REI",
+    "celular": "5565992056961.0",
+    "endereco": "Vg3811",
+    "complemento": "Rua presidente manoel de quadra 14 casa 09"
+  },
+  {
+    "id": "1747142068453-AbC9O",
+    "nome": "VG3896 VG JD MARINGA",
+    "celular": "5565984552522.0",
+    "endereco": "VG3896",
+    "complemento": "Rua: Angola \nQ20\nC13\nVilla vitória 2 Jaime campos"
+  },
+  {
+    "id": "1746138979788-AbC9O",
+    "nome": "VG395 VG JD IKARAI",
+    "celular": "5565992602955.0",
+    "endereco": "VG395",
+    "complemento": "Rua Florêncio Silva Claro \nQuadra 20\nCasa 14B \nIcaray"
+  },
+  {
+    "id": "1745673170378-AbC9O",
+    "nome": "VG3951 VG JD IKARAI",
+    "celular": "5565999930467.0",
+    "endereco": "VG3951",
+    "complemento": "Rua Rio Branco QD 2 casa 8 bairro parque del rei"
+  },
+  {
+    "id": "1752597551238-AbC9O",
+    "nome": "Vg4018 Rodovia Capao",
+    "celular": "5565992124870.0",
+    "endereco": "Vg4018",
+    "complemento": "Rua IPE amarelo QD 23 casa20 jardim botânico (antigo 7 de maio)"
+  },
+  {
+    "id": "1747145158313-AbC9O",
+    "nome": "VG4116 VG SAO MATEUS",
+    "celular": "5565992373091.0",
+    "endereco": "VG4116",
+    "complemento": "Rua 175 Quadra 98 casa 18São Mateus VG"
+  },
+  {
+    "id": "1755264535099-AbC9O",
+    "nome": "Vg4362 Vg Jd Eldorado",
+    "celular": "5565992109336.0",
+    "endereco": "Vg4362",
+    "complemento": "Rua altamira quadra 52 lote 16 j.eldorado vg"
+  },
+  {
+    "id": "1752246427088-AbC9O",
+    "nome": "Vg4529",
+    "celular": "5565992171863.0",
+    "endereco": "Vg4529",
+    "complemento": "Rua da harmonia \nRua 12 quadra 26 casa 03"
+  },
+  {
+    "id": "1751913333631-AbC9O",
+    "nome": "Vg4546 Vg Jacaranda",
+    "celular": "5565993044898.0",
+    "endereco": "Vg4546",
+    "complemento": "Residencial Veredas\nRua 15 Q 08 C 11"
+  },
+  {
+    "id": "1745846548329-AbC9O",
+    "nome": "VG482 VG JD PAULA 2",
+    "celular": "5565996138198.0",
+    "endereco": "VG482",
+    "complemento": "Mascarenhas de Moraes Q 48l18 jardim Paula 2"
+  },
+  {
+    "id": "1753526857788-AbC9O",
+    "nome": "Vg5138 VG Canelas",
+    "celular": "5565996424966.0",
+    "endereco": "Vg5138",
+    "complemento": "Rua B \nQuadra 7 \nCasa n12 \nLote 11\nBairro Ouro Branco/Canelas \nCEP: 78135-520"
+  },
+  {
+    "id": "1746020058535-AbC9O",
+    "nome": "VG5351 VG SAO MATEUS",
+    "celular": "5565993473971.0",
+    "endereco": "VG5351",
+    "complemento": "Rua 22 quadra 43 lote 22 são mateus"
+  },
+  {
+    "id": "1754759018310-AbC9O",
+    "nome": "Vg5509 Pq Do Lago",
+    "celular": "5565992315727.0",
+    "endereco": "Vg5509",
+    "complemento": ""
+  },
+  {
+    "id": "1749744558992-AbC9O",
+    "nome": "VG562 VG SAO MATEUS",
+    "celular": "5565999664986.0",
+    "endereco": "VG562",
+    "complemento": "Rua 17 quadra 164 casa 19 bairro são Mateus várzea grande"
+  },
+  {
+    "id": "1752597495277-AbC9O",
+    "nome": "Vg564 Paiaguas Chacara",
+    "celular": "5565992253753.0",
+    "endereco": "Vg564",
+    "complemento": "Casa 180\nQd 195\nBairro Paiaguais"
+  },
+  {
+    "id": "1746535551782-AbC9O",
+    "nome": "VG576 VG SANTA ISABEL",
+    "celular": "5565992792488.0",
+    "endereco": "VG576",
+    "complemento": "Rua das Palmas 65\nSanta Isabel"
+  },
+  {
+    "id": "1745585791311-AbC9O",
+    "nome": "VG610 VG ALAMEDA KIT NET 14 Wender",
+    "celular": "5565992064554.0",
+    "endereco": "VG610",
+    "complemento": ""
+  },
+  {
+    "id": "1744372094980-AbC9O",
+    "nome": "VG6570 VG RESID JULIO DOMINGOS",
+    "celular": "5565981711236.0",
+    "endereco": "AV B Q25 C4 RESID JULIO DOMINGOS DE AMPOS",
+    "complemento": ""
+  },
+  {
+    "id": "1749264326038-AbC9O",
+    "nome": "VG6607 VG Centro",
+    "celular": "556598479713.0",
+    "endereco": "Vg6607",
+    "complemento": "Rua Minas gerais,22 nova várzea grande"
+  },
+  {
+    "id": "1746797547268-AbC9O",
+    "nome": "Vg720 VG CANELAS",
+    "celular": "5565992364158.0",
+    "endereco": "VG720",
+    "complemento": "Rua primavera arbórea casa 07 quadra 04 bairro Ouro Branco/ canelas várzea Grande"
+  },
+  {
+    "id": "1745673000562-AbC9O",
+    "nome": "VG7201 PAI VG CRISTO REI",
+    "celular": "5565999852666.0",
+    "endereco": "VG7201 Padre Santos",
+    "complemento": ""
+  },
+  {
+    "id": "1745070159161-AbC9O",
+    "nome": "VG7201 VG CRISTO REI",
+    "celular": "5565999852666.0",
+    "endereco": "Vg7201",
+    "complemento": "Rua Adamantina quadra C casa 02 Cristo Rei"
+  },
+  {
+    "id": "1745934451141-AbC9O",
+    "nome": "VG727 VG JD MARAJOARA",
+    "celular": "5565993346389.0",
+    "endereco": "VG727",
+    "complemento": "Maria das gracas \nBairro marajoara \nRua parecis\nCasa 08\nQuadra 27"
+  },
+  {
+    "id": "1746878467371-AbC9O",
+    "nome": "VG7332 VG PQ DO LAGO",
+    "celular": "5565992171980.0",
+    "endereco": "VG7332",
+    "complemento": "Rua João Lopes de macedo Q 22 lote 08 maringa 2"
+  },
+  {
+    "id": "1744811216825-AbC9O",
+    "nome": "VG765 VG JD DOS ESTADOS",
+    "celular": "5565992762428.0",
+    "endereco": "VG765",
+    "complemento": "Rua Portimão quadra 06 casa 17 loteamento jardim Maria Isabel jardim dos estados"
+  },
+  {
+    "id": "1746451706449-AbC9O",
+    "nome": "VG769 VG COSTA VERDE",
+    "celular": "5565992385981.0",
+    "endereco": "VG769",
+    "complemento": "Rua A quadra 8 casa 26 residencial vida nova"
+  },
+  {
+    "id": "1746139282143-AbC9O",
+    "nome": "VG770 VG CANELAS",
+    "celular": "5565992782386.0",
+    "endereco": "VG770",
+    "complemento": "Rua Jacó, 14,área 10A, canelas"
+  },
+  {
+    "id": "1751995403179-AbC9O",
+    "nome": "Vg7708 Vg Eldorado ",
+    "celular": "5565984466843.0",
+    "endereco": "Vg7708",
+    "complemento": "Rua barão do ipanema Q f casa 7"
+  },
+  {
+    "id": "1746191388578-AbC9O",
+    "nome": "VG7711 VG NOVA ESPERANÇA ",
+    "celular": "5565992117821.0",
+    "endereco": "VG7711",
+    "complemento": "Rua 20\nQuadra 57\nCasa 19\nBairro Nova Esperança-Varzea Grande."
+  },
+  {
+    "id": "1745929762632-AbC9O",
+    "nome": "VG772 VG SANTA LUZIA PQ DO LAGO",
+    "celular": "5565992939466.0",
+    "endereco": "VG772",
+    "complemento": "Rua Feliciano francolino \nQ 09 \nC 11"
+  },
+  {
+    "id": "1750265666457-AbC9O",
+    "nome": "VG7731 VG PAIAGUAS",
+    "celular": "5565992717482.0",
+    "endereco": "Vg7731",
+    "complemento": ""
+  },
+  {
+    "id": "1745686691246-AbC9O",
+    "nome": "VG781 CASA VG JACARANDA",
+    "celular": "5565992700940.0",
+    "endereco": "VG781 CASA",
+    "complemento": "Rua toranja \nQuadra 18\nCasa 06\nResidencial solares do Tarumã \nVárzea grande Mt"
+  },
+  {
+    "id": "1744733879097-AbC9O",
+    "nome": "Vg781 VG JD GLORIA",
+    "celular": "5565992700940.0",
+    "endereco": "Vg781",
+    "complemento": "Rua da bondade  número 210 ,jardim Glória II varzea grande/MT. -  Rua da bondade esquina com a rua da Glória  entregar  na Oficina JM Auto Car  ao lado da escola adventista"
+  },
+  {
+    "id": "1746617504177-AbC9O",
+    "nome": "VG7885 VG PAIAGUAS",
+    "celular": "5565992816265.0",
+    "endereco": "VG7885",
+    "complemento": ""
+  },
+  {
+    "id": "1751129875855-AbC9O",
+    "nome": "Vg808 Vg Sao Simao",
+    "celular": "5565992133526.0",
+    "endereco": "Rua 05 quadra 116 casa 21 bairro São Simão/ jardim Mariana",
+    "complemento": ""
+  },
+  {
+    "id": "1753203654542-AbC9O",
+    "nome": "Vg8308 VG Pq Do Lago",
+    "celular": "5565992522240.0",
+    "endereco": "Vg8308",
+    "complemento": "Na segunda  rua Lote7"
+  },
+  {
+    "id": "1746139165320-AbC9O",
+    "nome": "VG833 VG PQ DO LAGO",
+    "celular": "5565981558519.0",
+    "endereco": "VG833",
+    "complemento": "Rua São José 475, pq do lago"
+  },
+  {
+    "id": "1752946148191-AbC9O",
+    "nome": "Vg8782 VG Rodovia Novo Mundo",
+    "celular": "5565992072349.0",
+    "endereco": "Vg8782",
+    "complemento": "Rua .Antilhas \nQdr. 16\nCasa7A\nResidencial novo mundo vg"
+  },
+  {
+    "id": "1754937798060-AbC9O",
+    "nome": "Vg8830 VG Marajoara",
+    "celular": "5565984094441.0",
+    "endereco": "Vg8830",
+    "complemento": "Rua Ariquemes 9, quadra 16,  jardim marajoara 2 várzea grande"
+  },
+  {
+    "id": "1748093273787-AbC9O",
+    "nome": "VG919 VG PQ DO LAGO",
+    "celular": "5565992423580.0",
+    "endereco": "Vg919",
+    "complemento": "Rua Campo verde Q05 casa 01 santa clara várzea grande"
+  },
+  {
+    "id": "1747843186198-AbC9O",
+    "nome": "VG9220 VG MAPIM",
+    "celular": "5565993471659.0",
+    "endereco": "Vg9220",
+    "complemento": "Ok rua girassol mapim Q.05 L.16"
+  },
+  {
+    "id": "1746192865740-AbC9O",
+    "nome": "VG984 VG JD PAUL",
+    "celular": "5565992239158.0",
+    "endereco": "VG984",
+    "complemento": "Rua marechal menna Barreto 9 qd 27 \nJardim Paula 2"
+  },
+  {
+    "id": "1749264824883-AbC9O",
+    "nome": "Vg9903 Vg JACARANDA",
+    "celular": "5565992144773.0",
+    "endereco": "Vg9903 ",
+    "complemento": "R 10\nQ 11\nC 08 residencial jacaranda"
+  },
+  {
+    "id": "1746884742917-AbC9O",
+    "nome": "VG992 VG CRISTO REI",
+    "celular": "5565984650562.0",
+    "endereco": "VG992",
+    "complemento": "Rua Presidente Alencastro número 28 completo 09 COHAB Cristo rei"
+  },
+  {
+    "id": "1750242746219-AbC9O",
+    "nome": "Vg9931 VG SAO SIMÃO ",
+    "celular": "5565993543406.0",
+    "endereco": "VG9931",
+    "complemento": "Rua chama mussa , bairro São Simão,  várzea Grande"
+  },
+  {
+    "id": "1752597601062-AbC9O",
+    "nome": "Vg9932 Vg Novo Mundo Rodovia",
+    "celular": "5565993067808.0",
+    "endereco": "Vg9932",
+    "complemento": "Rua Suíça bairro novo mundo área A quadra 04"
+  },
+  {
+    "id": "1746138797218-AbC9O",
+    "nome": "VG999 VG COSTA VERDE",
+    "celular": "5565996705033.0",
+    "endereco": "VG999",
+    "complemento": "Rua isabel de Almeida e silva\nQuadra:121\nCsa:02\nJardim costa verde"
+  },
+  {
+    "id": "1757684527047-AbC9O",
+    "nome": "XR196 AREIAO KIT NET VERDE",
+    "celular": "5565981246732.0",
+    "endereco": "Xr196",
+    "complemento": "Chamar Na Porta 3"
+  }
+];
