@@ -55,7 +55,7 @@
         .rota-COXIPÓ { border-left-color: #f97316; /* orange-500 */ }
 
         /* Classes de Visibilidade por Modo */
-        .admin-view, .entregador-view, .montador-view {
+        .admin-view, .entregador-view, .montador-view, .relatorio-view {
             display: none; /* Oculto por padrão */
         }
 
@@ -93,6 +93,27 @@
             display: none;
         }
 
+        /* NOVO: Modo RELATORIO */
+        .modo-relatorio .relatorio-view {
+            display: block;
+        }
+        .modo-relatorio .btn-top-relatorio {
+            display: inline-flex;
+        }
+        /* No modo relatório, esconder tudo que não é o relatório */
+        .modo-relatorio .admin-view,
+        .modo-relatorio .entregador-view,
+        .modo-relatorio .montador-view,
+        .modo-relatorio #filtros-rota,
+        .modo-relatorio #lista-entregas,
+        .modo-relatorio #lista-vazia,
+        .modo-relatorio .btn-importar-card,
+        .modo-relatorio .btn-exportar,
+        .modo-relatorio .btn-carregar,
+        .modo-relatorio #btn-abrir-form-modal {
+            display: none;
+        }
+
         /* Estilo para botão de filtro de rota ativo */
         .btn-filtro-ativo {
             background-color: #1d4ed8 !important;
@@ -117,6 +138,35 @@
         .modo-montador .montador-hidden {
             display: none;
         }
+
+        /* NOVO: Estilos para o Relatório Visual */
+        #visual-report-content h3 {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 600; /* font-semibold */
+            margin-top: 1.5rem; /* mt-6 */
+            padding-bottom: 0.5rem; /* pb-2 */
+            border-bottom-width: 2px;
+        }
+        #visual-report-content h4 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            margin-top: 1rem; /* mt-4 */
+            margin-left: 0.5rem; /* ml-2 */
+        }
+        #visual-report-content p {
+            font-size: 0.875rem; /* text-sm */
+            margin-left: 1.5rem; /* ml-6 */
+            padding: 0.25rem 0; /* py-1 */
+            border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+        }
+        #visual-report-content p .tipo-cesta {
+            font-weight: 500; /* font-medium */
+            color: #4b5563; /* text-gray-600 */
+        }
+        #visual-report-content p .brinde-cesta {
+            font-weight: 600; /* font-semibold */
+            color: #db2777; /* text-pink-600 */
+        }
     </style>
 </head>
 <!-- CORREÇÃO: Adicionado 'modo-admin' como padrão para o FAB aparecer -->
@@ -137,6 +187,13 @@
                         <button id="btn-top-admin" class="btn-top-nav text-xs font-medium py-2 px-3 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
                         <button id="btn-top-entregador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-green-100 text-green-700">ENTREGADOR</button>
                         <button id="btn-top-montador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-purple-100 text-purple-700">MONTADOR</button>
+                        <!-- NOVO: Botão Relatório Mobile -->
+                        <button id="btn-top-relatorio" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-gray-100 text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <!-- Botões de Modo (Visíveis no SM+, escondidos no Mobile) -->
@@ -144,6 +201,13 @@
                     <button id="btn-modo-admin" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
                     <button id="btn-modo-entregador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">ENTREGADOR</button>
                     <button id="btn-modo-montador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">MONTADOR</button>
+                    <!-- NOVO: Botão Relatório Desktop -->
+                    <button id="btn-modo-relatorio" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -242,6 +306,15 @@
                     </div>
                 </div>
                 <!-- REMOVIDO: Pedidos por Rota -->
+            </div>
+        </section>
+
+        <!-- NOVO: Seção de Relatório Visual -->
+        <section id="secao-relatorio" class="relatorio-view bg-white p-4 sm:p-6 rounded-lg shadow-md mb-4">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Relatório Visual da Rota</h2>
+            <div id="visual-report-content" class="space-y-4">
+                <!-- Conteúdo do relatório será gerado pelo JS -->
+                <p class="text-gray-500">Carregando relatório...</p>
             </div>
         </section>
 
@@ -651,9 +724,11 @@
             const btnModoAdmin = document.getElementById('btn-modo-admin');
             const btnModoEntregador = document.getElementById('btn-modo-entregador');
             const btnModoMontador = document.getElementById('btn-modo-montador');
+            const btnModoRelatorio = document.getElementById('btn-modo-relatorio'); // NOVO
             const btnTopAdmin = document.getElementById('btn-top-admin');
             const btnTopEntregador = document.getElementById('btn-top-entregador');
             const btnTopMontador = document.getElementById('btn-top-montador');
+            const btnTopRelatorio = document.getElementById('btn-top-relatorio'); // NOVO
             
             // Gerenciamento de Rotas (Admin Header)
             const btnNovaRota = document.getElementById('btn-nova-rota');
@@ -673,6 +748,9 @@
             const summaryTotalCestas = document.getElementById('summary-total-cestas');
             const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
             const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
+
+            // NOVO: Relatório Visual
+            const visualReportContent = document.getElementById('visual-report-content');
 
             // Filtros de Rota
             const filtrosRotaEl = document.getElementById('filtros-rota');
@@ -764,7 +842,7 @@
             
             let cestasDoPedidoAtual = []; // "Carrinho" do formulário
             let filtroRotaAtiva = 'CUIABÁ'; // MODIFICADO: Padrão alterado
-            let modoAtual = 'admin'; // 'admin', 'entregador', 'montador'
+            let modoAtual = 'admin'; // 'admin', 'entregador', 'montador', 'relatorio' // NOVO
 
             // --- Funções ---
 
@@ -779,12 +857,12 @@
                 body.className = `bg-gray-100 antialiased modo-${modo}`;
                 
                 // Atualiza botões da barra superior (mobile)
-                [btnTopAdmin, btnTopEntregador, btnTopMontador].forEach(btn => btn.classList.add('hidden'));
+                [btnTopAdmin, btnTopEntregador, btnTopMontador, btnTopRelatorio].forEach(btn => btn.classList.add('hidden')); // NOVO
                 document.getElementById(`btn-top-${modo}`).classList.remove('hidden');
 
                 // Atualiza botões da barra superior (desktop)
-                [btnModoAdmin, btnModoEntregador, btnModoMontador].forEach(btn => {
-                    btn.classList.remove('bg-blue-100', 'text-blue-700', 'bg-green-100', 'text-green-700', 'bg-purple-100', 'text-purple-700');
+                [btnModoAdmin, btnModoEntregador, btnModoMontador, btnModoRelatorio].forEach(btn => { // NOVO
+                    btn.classList.remove('bg-blue-100', 'text-blue-700', 'bg-green-100', 'text-green-700', 'bg-purple-100', 'text-purple-700', 'bg-gray-200', 'text-gray-900'); // NOVO
                     btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
                 });
                 
@@ -793,10 +871,16 @@
                 if (modo === 'admin') btnAtivoDesktop.classList.add('bg-blue-100', 'text-blue-700');
                 if (modo === 'entregador') btnAtivoDesktop.classList.add('bg-green-100', 'text-green-700');
                 if (modo === 'montador') btnAtivoDesktop.classList.add('bg-purple-100', 'text-purple-700');
+                if (modo === 'relatorio') btnAtivoDesktop.classList.add('bg-gray-200', 'text-gray-900'); // NOVO
                 
                 // Atualiza a visualização dos cards e do resumo
                 renderizarEntregas();
                 renderizarResumo();
+                
+                // NOVO: Renderiza o relatório visual se estiver nesse modo
+                if (modo === 'relatorio') {
+                    renderizarRelatorioVisual();
+                }
             }
             
             function mostrarAviso(mensagem, titulo = "Atenção") {
@@ -925,6 +1009,11 @@
                 
                 renderizarEntregas();
                 renderizarResumo();
+                
+                // NOVO: Renderiza o relatório se for o modo ativo
+                if (modoAtual === 'relatorio') {
+                    renderizarRelatorioVisual();
+                }
             }
 
             function criarNovaRota(atualizarTela = true) {
@@ -1246,24 +1335,76 @@
                 summaryRotasBreakdown.innerHTML = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: <strong>${q}</strong>`).join('<br>') || 'N/A';
             }
             
-            // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
+            // NOVO: Função para gerar o relatório visual
+            function renderizarRelatorioVisual() {
+                const rotaAtiva = getRotaAtiva();
+                if (!rotaAtiva) {
+                    visualReportContent.innerHTML = '<p class="text-gray-500">Nenhuma rota ativa carregada.</p>';
+                    return;
+                }
+                
+                const entregas = rotaAtiva.entregas.filter(e => e.status !== 'Cancelada');
+                
+                if (entregas.length === 0) {
+                    visualReportContent.innerHTML = '<p class="text-gray-500">Nenhum pedido (não cancelado) nesta rota.</p>';
+                    return;
+                }
 
-            function toggleSubCampoAlterada() {
-                const tipo = document.querySelector('input[name="sub-tipo-cesta"]:checked').value;
-                if (tipo === 'Alterada') {
-                    subCampoAlterada.classList.remove('hidden');
-                } else {
-                    subCampoAlterada.classList.add('hidden');
+                // 1. Agrupar por Rota (CUIABÁ, VG, CPA, COXIPÓ)
+                const rotasAgrupadas = {
+                    'CUIABÁ': [],
+                    'VG': [],
+                    'CPA': [],
+                    'COXIPÓ': []
+                };
+
+                entregas.forEach(entrega => {
+                    const rotaKey = entrega.rotaEntrega || 'CUIABÁ';
+                    if (rotasAgrupadas.hasOwnProperty(rotaKey)) {
+                        rotasAgrupadas[rotaKey].push(entrega);
+                    }
+                });
+
+                let htmlFinal = '';
+
+                // 2. Iterar sobre os grupos de rota
+                for (const nomeRota in rotasAgrupadas) {
+                    const entregasDaRota = rotasAgrupadas[nomeRota];
+                    if (entregasDaRota.length === 0) continue;
+
+                    let rotaClass = `rota-${nomeRota}`;
+                    htmlFinal += `<h3 class="border-l-4 ${rotaClass} pl-2">${nomeRota} (${entregasDaRota.length} Pedidos)</h3>`;
+
+                    // 3. Iterar sobre as entregas
+                    entregasDaRota.forEach(entrega => {
+                        htmlFinal += `<h4>-- ${entrega.cliente.nome}</h4>`;
+                        
+                        const cestas = migrarFormatoCestas(entrega);
+
+                        // 4. Iterar sobre as cestas
+                        cestas.forEach(cesta => {
+                            let detalhesCesta = '';
+                            if (cesta.tipo === 'Alterada') {
+                                detalhesCesta = `<span class="tipo-cesta"> (Alterada${cesta.codigoFinal ? ` - Final: ${cesta.codigoFinal}` : ''})</span>`;
+                            } else {
+                                detalhesCesta = `<span class="tipo-cesta"> (Normal)</span>`;
+                            }
+
+                            if (cesta.brinde === 'Sim') {
+                                const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
+                                detalhesCesta += ` <span class="brinde-cesta">[Brinde: ${brindesTxt}]</span>`;
+                            }
+
+                            htmlFinal += `<p>--- ${cesta.quantidade}x ${cesta.nome} ${detalhesCesta}</p>`;
+                        });
+                    });
                 }
+                
+                visualReportContent.innerHTML = htmlFinal;
             }
-            function toggleSubCampoBrinde() {
-                const brinde = document.querySelector('input[name="sub-brinde"]:checked').value;
-                if (brinde === 'Sim') {
-                    subCampoBrinde.classList.remove('hidden');
-                } else {
-                    subCampoBrinde.classList.add('hidden');
-                }
-            }
+
+
+            // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
             
             function adicionarCestaAoPedido() {
                 const selectedOption = subSelectCesta.options[subSelectCesta.selectedIndex];
@@ -2141,12 +2282,14 @@
             btnModoAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
             btnModoEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
             btnModoMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            btnModoRelatorio.addEventListener('click', () => setModoVisualizacao('relatorio')); // NOVO
             
             // ##### CORREÇÃO DO CICLO DE MODO MOBILE #####
             // Agora, clicar no botão mobile alterna para o PRÓXIMO modo
             btnTopAdmin.addEventListener('click', () => setModoVisualizacao('entregador'));
             btnTopEntregador.addEventListener('click', () => setModoVisualizacao('montador'));
-            btnTopMontador.addEventListener('click', () => setModoVisualizacao('admin'));
+            btnTopMontador.addEventListener('click', () => setModoVisualizacao('relatorio')); // NOVO
+            btnTopRelatorio.addEventListener('click', () => setModoVisualizacao('admin')); // NOVO
 
             // Gerenciamento de Rota (Admin)
             selectRotaAtiva.addEventListener('change', (e) => {
@@ -2249,5 +2392,6 @@
     </script>
 </body>
 </html>
+
 
 
