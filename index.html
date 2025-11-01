@@ -2,110 +2,89 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestor de Rotas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rota de Entrega</title>
     <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carrega Fonte Padrão (Inter) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Carrega o Banco de Dados de Clientes -->
+    <!-- NOVO: Carrega o Banco de Dados de Clientes -->
+    <!-- Este arquivo DEVE estar na mesma pasta que este HTML -->
     <script src="clientes.js"></script>
-    
     <style>
-        /* Define a fonte padrão */
+        /* Estilos Globais */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* gray-100 */
-        }
-        
-        /* --- Nova Barra Superior Fixa --- */
-        #top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 40;
-            background-color: #ffffff;
-            border-bottom: 1px solid #e5e7eb; /* gray-200 */
-        }
-        /* Botão de modo ativo */
-        .btn-modo-ativo {
-            background-color: #2563eb; /* blue-600 */
-            color: #ffffff !important;
+            /* Garante que o scroll seja suave */
+            scroll-behavior: smooth;
         }
 
-        /* --- Novo Modal de Formulário --- */
-        #modal-form {
-            position: fixed;
-            inset: 0;
-            z-index: 50;
-            background-color: rgba(0, 0, 0, 0.5);
+        /* Hack para esconder a barra de scroll horizontal dos filtros */
+        #filtros-rota::-webkit-scrollbar {
+            display: none;
+        }
+        #filtros-rota {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Classe para item entregue */
+        .entregue {
+            background-color: #f0fdf4; /* green-50 */
+            border-left-color: #22c55e; /* green-500 */
+        }
+        .entregue .btn-entregue {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+        }
+
+        /* Classe para item montado */
+        .montado {
+            background-color: #f0f9ff; /* blue-50 */
+            border-left-color: #2563eb; /* blue-600 */
+        }
+
+        /* Classe para item cancelado */
+        .cancelada {
+            background-color: #f3f4f6; /* gray-100 */
+            border-left-color: #6b7280; /* gray-500 */
+            opacity: 0.7;
+        }
+        
+        /* Classes de Rota (Cor da Borda) */
+        .rota-CUIABÁ { border-left-color: #2563eb; /* blue-600 */ }
+        .rota-VG { border-left-color: #db2777; /* pink-600 */ }
+        .rota-CPA { border-left-color: #16a34a; /* green-600 */ }
+        .rota-COXIPÓ { border-left-color: #f97316; /* orange-500 */ }
+
+        /* Classes de Visibilidade por Modo */
+        .admin-view, .entregador-view, .montador-view {
             display: none; /* Oculto por padrão */
-            overflow-y: auto; /* Permite scroll no modal */
-        }
-        .modal-form-content {
-            height: 100%;
-            width: 100%;
-            background-color: #f3f4f6; /* gray-100 */
-        }
-        @media (min-width: 768px) {
-            /* Em telas maiores, não é tela cheia */
-            .modal-form-content {
-                height: auto;
-                max-height: 90vh;
-                max-width: 60rem; /* 960px */
-                margin: 2.5rem auto;
-                border-radius: 0.5rem; /* rounded-lg */
-                overflow-y: auto;
-            }
-            #modal-form {
-                padding: 2.5rem; /* Adiciona padding em volta */
-            }
-        }
-        
-        /* --- Novo Botão Flutuante (FAB) --- */
-        #btn-abrir-form-modal {
-            position: fixed;
-            bottom: 2rem; /* 32px */
-            right: 1.5rem; /* 24px */
-            z-index: 40;
-            background-color: #2563eb; /* blue-600 */
-            color: #ffffff;
-            width: 4rem; /* 64px */
-            height: 4rem; /* 64px */
-            border-radius: 9999px; /* rounded-full */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease-out;
-        }
-        #btn-abrir-form-modal:hover {
-            transform: scale(1.05);
         }
 
-        /* Classes de Status (Entregue, Cancelada, Montado) */
-        .entregue { background-color: #f0fdf4 !important; border-left-color: #22c55e !important; }
-        .cancelada { background-color: #f3f4f6 !important; border-left-color: #6b7280 !important; opacity: 0.7; }
-        .montado { background-color: #f0f9ff !important; border-left-color: #3b82f6 !important; }
-        
-        /* Cores de Rota */
-        .rota-CUIABÁ { background-color: #e0f2fe; border-left-color: #0284c7; }
-        .rota-VG { background-color: #fef3c7; border-left-color: #d97706; }
-        .rota-CPA { background-color: #fce7f3; border-left-color: #db2777; }
-        .rota-COXIPÓ { background-color: #dcfce7; border-left-color: #16a34a; }
+        /* Modo ADMIN (Padrão) */
+        .modo-admin .admin-view {
+            display: block; /* ou flex, grid, etc. */
+        }
+        .modo-admin .btn-top-admin {
+            display: inline-flex;
+        }
 
-        /* Lógica de Visibilidade por Modo */
-        .entregador-view, .montador-view { display: none; }
-        .modo-entregador .entregador-view { display: block; }
-        .modo-entregador .admin-view, .modo-entregador .montador-view { display: none; }
-        .modo-montador .montador-view { display: block; }
-        .modo-montador .admin-view, .modo-montador .entregador-view { display: none; }
-        .modo-entregador #secao-despesas.entregador-view { display: block; }
-        /* O FAB de Adicionar só aparece para Admin */
-        .modo-entregador #btn-abrir-form-modal,
+        /* Modo ENTREGADOR */
+        .modo-entregador .entregador-view {
+            display: block; /* ou flex, grid, etc. */
+        }
+        .modo-entregador .btn-top-entregador {
+            display: inline-flex;
+        }
+        .modo-entregador #btn-abrir-form-modal {
+            display: none; /* Entregador não lança pedido */
+        }
+
+        /* Modo MONTADOR */
+        .modo-montador .montador-view {
+            display: block; /* ou flex, grid, etc. */
+        }
+        .modo-montador .btn-top-montador {
+            display: inline-flex;
+        }
         .modo-montador #btn-abrir-form-modal {
             display: none;
         }
@@ -128,7 +107,9 @@
         }
 
         /* Lógica de visibilidade para Modo Montador */
-        /* CORRIGIDO: A sintaxe aninhada (SASS) foi convertida para CSS puro */
+        .montador-hidden {
+            display: block;
+        }
         .modo-montador .montador-hidden {
             display: none;
         }
@@ -137,28 +118,31 @@
 <body class="bg-gray-100 antialiased">
     
     <!-- =================================================================== -->
-    <!-- NOVA BARRA SUPERIOR FIXA -->
+    <!-- BARRA SUPERIOR FIXA (NAV) -->
     <!-- =================================================================== -->
-    <nav id="top-bar" class="p-2 sm:p-4">
-        <div class="container mx-auto max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-2">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex-shrink-0">
-                Gestor de Rotas
-            </h1>
-            <!-- Botões de Modo -->
-            <div class="flex bg-gray-200 rounded-lg p-1 w-full sm:w-auto">
-                <button id="btn-top-admin" class="btn-modo-ativo text-gray-800 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto">
-                    ADMIN
-                </button>
-                <button id="btn-top-entregador" class="text-gray-600 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-gray-300">
-                    ENTREGADOR
-                </button>
-                <button id="btn-top-montador" class="text-gray-600 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-gray-300">
-                    MONTADOR
-                </button>
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        <div class="container mx-auto max-w-5xl p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <!-- Título -->
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Rota de Entrega</h1>
+                    <!-- Botões de Modo (Visíveis no Mobile, escondidos no SM+) -->
+                    <div class="sm:hidden flex-shrink-0">
+                        <button id="btn-top-admin" class="btn-top-nav text-xs font-medium py-2 px-3 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
+                        <button id="btn-top-entregador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-green-100 text-green-700">ENTREGADOR</button>
+                        <button id="btn-top-montador" class="btn-top-nav hidden text-xs font-medium py-2 px-3 rounded-md bg-purple-100 text-purple-700">MONTADOR</button>
+                    </div>
+                </div>
+                <!-- Botões de Modo (Visíveis no SM+, escondidos no Mobile) -->
+                <div class="hidden sm:flex sm:space-x-2 mt-2 sm:mt-0">
+                    <button id="btn-modo-admin" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
+                    <button id="btn-modo-entregador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">ENTREGADOR</button>
+                    <button id="btn-modo-montador" class="btn-modo text-sm font-medium py-2 px-4 rounded-md bg-white text-gray-700 hover:bg-gray-100">MONTADOR</button>
+                </div>
             </div>
         </div>
     </nav>
-    
+
     <!-- =================================================================== -->
     <!-- PÁGINA PRINCIPAL (ÚNICA) -->
     <!-- =================================================================== -->
@@ -178,19 +162,21 @@
                         <div class="md:col-span-2">
                             <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
                             <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                <!-- Rotas preenchidas pelo JS -->
+                                <!-- Rotas serão preenchidas pelo JS -->
                             </select>
                         </div>
                         <div class="md:col-span-1">
+                            <label for="btn-nova-rota" class="block text-sm font-medium text-gray-700">&nbsp;</label>
                             <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Nova
+                                Nova Rota
                             </button>
                         </div>
                         <div class="md:col-span-1">
-                             <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-400 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
+                            <label for="btn-excluir-rota" class="block text-sm font-medium text-gray-700">&nbsp;</label>
+                             <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                                Excluir
+                                Excluir Rota
                             </button>
                         </div>
                         <div class="md:col-span-2">
@@ -200,7 +186,7 @@
                         <div class="md:col-span-2">
                             <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
                             <div class="flex items-center">
-                                <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                                 <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm sm:text-base min-w-[100px] sm:min-w-[120px] justify-center">-</span>
                             </div>
                         </div>
@@ -300,71 +286,81 @@
         <!-- Espaçador para o FAB não cobrir o último card -->
         <div class="h-24"></div> 
     </main>
-    
+
     <!-- =================================================================== -->
-    <!-- NOVO BOTÃO FLUTUANTE (FAB) -->
+    <!-- BOTÃO FLUTUANTE (FAB) PARA ABRIR MODAL -->
     <!-- =================================================================== -->
-    <button id="btn-abrir-form-modal" class="admin-view">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    <button id="btn-abrir-form-modal" class="admin-view fixed z-30 bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
     </button>
-    
 
     <!-- =================================================================== -->
-    <!-- NOVO MODAL DO FORMULÁRIO -->
+    <!-- MODAL DE FORMULÁRIO (Lançar/Editar) -->
     <!-- =================================================================== -->
-    <div id="modal-form">
-        <div class="modal-form-content">
-            <!-- Cabeçalho Fixo do Formulário -->
-            <header class="sticky top-0 z-30 bg-white shadow-sm p-4 flex justify-between items-center">
-                <h2 id="form-entrega-title" class="text-xl font-semibold text-gray-900">Lançar Nova Entrega</h2>
-                <button id="btn-fechar-form-modal" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                    Cancelar
+    <div id="modal-form-entrega" class="fixed inset-0 z-50 hidden flex items-start justify-center bg-black bg-opacity-50 overflow-y-auto pt-10">
+        <div class="bg-gray-100 rounded-lg shadow-xl w-full max-w-4xl m-4">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-300">
+                <h3 id="modal-form-title" class="text-xl font-semibold text-gray-800">Lançar Nova Entrega</h3>
+                <button id="btn-fechar-form-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
-            </header>
+            </div>
 
-            <!-- Container do Formulário (com scroll) -->
-            <div class="p-4">
-                <form id="form-entrega" class="container mx-auto max-w-5xl space-y-6">
-                    <!-- Seção 1: Dados do Cliente -->
-                    <fieldset class="bg-white p-4 rounded-lg shadow-md">
-                        <legend class="text-lg font-medium text-gray-900 mb-2">1. Dados do Cliente</legend>
+            <!-- Formulário Principal (Dentro do Modal) -->
+            <form id="form-entrega">
+                <div class="p-4 space-y-4">
+                    
+                    <!-- Seção 1: Cliente e Rota -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-3">1. Cliente e Rota</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                                <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione...">
+                                <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
                                 <datalist id="lista-clientes">
                                     <!-- Clientes carregados via JS -->
                                 </datalist>
                             </div>
                             <div>
-                                <label for="input-rota-entrega" class="block text-sm font-medium text-gray-700">Rota do Pedido</label>
-                                <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <label for="select-rota-entrega" class="block text-sm font-medium text-gray-700">Rota da Entrega</label>
+                                <select id="select-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                                     <option value="CUIABÁ">CUIABÁ</option>
                                     <option value="VG">VG</option>
                                     <option value="CPA">CPA</option>
                                     <option value="COXIPÓ">COXIPÓ</option>
                                 </select>
                             </div>
-                            <div class="md:col-span-2">
-                                <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                                <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco..."></textarea>
-                            </div>
-                            <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-700 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
+                            <div id="info-cliente-selecionado" class="md:col-span-2 hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
                                 <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
                                 <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
                                 <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
                             </div>
+                            <div class="md:col-span-2">
+                                <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Geral do Pedido)</label>
+                                <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco. Entregar após as 14h..."></textarea>
+                            </div>
                         </div>
-                    </fieldset>
+                    </div>
                     
-                    <!-- Seção 2: Adicionar Cestas ao Pedido (Sub-Formulário) -->
-                    <fieldset id="form-add-cesta" class="bg-white border border-gray-300 rounded-lg p-4">
-                        <legend class="text-lg font-medium text-gray-900 mb-4 px-2">2. Adicionar Cesta</legend>
+                    <!-- Seção 2: Cestas (Carrinho) -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-3">2. Cestas no Pedido</h4>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="md:col-span-1 space-y-4">
+                        <!-- Lista de Cestas Adicionadas -->
+                        <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
+                            <!-- Cestas adicionadas pelo JS aparecerão aqui -->
+                        </div>
+                        <p id="lista-cestas-vazia" class="text-center text-gray-500 py-4">Nenhuma cesta adicionada ao pedido.</p>
+                        
+                        <!-- Sub-Formulário para adicionar Cesta -->
+                        <div class="bg-gray-50 p-3 rounded-md border border-gray-300">
+                            <h5 class="text-md font-semibold text-gray-700 mb-3">Adicionar Cesta ao Pedido</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label for="sub-select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
                                     <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
@@ -380,13 +376,11 @@
                                 </div>
                                 <div>
                                     <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                    <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                    <input type="number" id="sub-input-quantidade" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
                                 </div>
-                            </div>
-                            <div class="md:col-span-1 space-y-4">
-                                <div>
+                                <div class="space-y-2">
                                     <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
-                                    <div class="mt-2 flex space-x-4">
+                                    <div class="flex space-x-4">
                                         <label class="flex items-center">
                                             <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                             <span class="ml-2 text-sm text-gray-700">Normal</span>
@@ -397,9 +391,9 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div>
+                                <div class="space-y-2">
                                     <label class="block text-sm font-medium text-gray-700">Brinde?</label>
-                                    <div class="mt-2 flex space-x-4">
+                                    <div class="flex space-x-4">
                                         <label class="flex items-center">
                                             <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
                                             <span class="ml-2 text-sm text-gray-700">Não</span>
@@ -410,13 +404,13 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div id="sub-campo-brinde-descricao" class="hidden">
-                                    <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Qual o brinde?</label>
+                                <div id="sub-campo-brinde" class="hidden md:col-span-2">
+                                    <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Descrição do Brinde</label>
                                     <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
                                 </div>
                             </div>
                             <div class="md:col-span-1 space-y-4">
-                                <div id="sub-campo-alterada" class="hidden space-y-4">
+                                <div id="sub-campo-alterada" class="hidden space-y-4 mt-4">
                                     <!-- NOVO: Campo Código Final -->
                                     <div>
                                         <label for="sub-codigo-final" class="block text-sm font-medium text-gray-700">Código Final (Opcional)</label>
@@ -424,119 +418,145 @@
                                     </div>
                                     <div>
                                         <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                        <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão..."></textarea>
+                                        <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão"></textarea>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Partes Alteradas</label>
-                                        <div class="mt-2 space-y-2">
-                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                    <div id="sub-campo-partes-alteradas">
+                                        <label class="block text-sm font-medium text-gray-700">Partes Alteradas (Múltiplo)</label>
+                                        <div class="mt-2 grid grid-cols-2 gap-2">
+                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                                 <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
+                                                <span class="ml-3 text-sm font-medium text-gray-700">Arroz</span>
                                             </label>
-                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                                 <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-900">Alimento</span>
+                                                <span class="ml-3 text-sm font-medium text-gray-700">Alimento</span>
                                             </label>
-                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                            <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                                                 <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                                <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
+                                                <span class="ml-3 text-sm font-medium text-gray-700">Limpeza</span>
                                             </label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-4 flex justify-end">
-                            <button type="button" id="btn-add-cesta" class="flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Adicionar Cesta
+                            <button type="button" id="btn-adicionar-cesta" class="w-full mt-4 flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Adicionar Cesta ao Pedido
                             </button>
                         </div>
-                    </fieldset>
-                    
-                    <!-- Seção 3: Resumo do Pedido -->
-                    <fieldset class="bg-white border border-gray-300 rounded-lg p-4">
-                        <legend class="text-lg font-medium text-gray-900 mb-4 px-2">3. Resumo do Pedido</legend>
-                        <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
-                            <p id="lista-cestas-vazia" class="text-center text-gray-700 py-2">Nenhuma cesta adicionada.</p>
+                    </div>
+                </div>
+
+                <!-- Rodapé do Modal (Ações) -->
+                <div class="bg-gray-200 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-left">
+                        <span class="text-sm text-gray-600">Valor Total do Pedido</span>
+                        <div id="display-valor-total" class="text-2xl font-bold text-gray-900">
+                            R$ 0,00
                         </div>
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Valor Total do Pedido</label>
-                                <div id="display-valor" class="mt-1 text-2xl font-bold text-gray-900">
-                                    R$ 0,00
-                                </div>
-                            </div>
-                            <button id="btn-submit-form" type="submit" class="w-full md:w-auto flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-6 py-4 text-base font-medium text-white shadow-sm hover:bg-blue-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                <span id="btn-submit-form-text">Lançar Entrega</span>
-                            </button>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
+                    </div>
+                    <button type="submit" id="btn-submit-form" class="w-full sm:w-auto flex justify-center items-center rounded-md border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700">
+                        <span id="btn-submit-form-text">Lançar Entrega</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
-
     <!-- =================================================================== -->
-    <!-- MODAIS (Permanecem os mesmos) -->
+    <!-- MODAL DE PAGAMENTO (Entregador) -->
     <!-- =================================================================== -->
-    
-    <!-- Modal de Pagamento -->
     <div id="modal-pagamento" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
             <form id="form-pagamento">
                 <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Confirmar Entrega e Pagamento</h3>
-                    <p class="text-sm text-gray-700 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
-                    <p class="text-sm text-gray-700 mb-4">Valor: <strong id="modal-cliente-valor"></strong></p>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Entrega e Pagamento</h3>
+                    <p class="text-sm text-gray-600 mb-1">Cliente: <strong id="modal-cliente-nome"></strong></p>
+                    <p class="text-sm text-gray-600 mb-4">Valor Total: <strong id="modal-cliente-valor"></strong></p>
                     
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Forma(s) de Pagamento:</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Forma(s) de Pagamento (Selecione ao menos uma):</label>
                     <div id="modal-error-pagamento" class="text-red-600 text-sm mb-2 hidden">É obrigatório selecionar ao menos uma forma de pagamento.</div>
                     <div class="space-y-2">
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                             <input type="checkbox" name="forma_pagamento" value="Dinheiro" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-900">Dinheiro</span>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Dinheiro</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                             <input type="checkbox" name="forma_pagamento" value="Pix" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-900">Pix</span>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Pix</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                             <input type="checkbox" name="forma_pagamento" value="Cartão" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-900">Cartão</span>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Cartão</span>
                         </label>
-                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
                             <input type="checkbox" name="forma_pagamento" value="Fiado" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                            <span class="ml-3 text-sm font-medium text-gray-900">Fiado</span>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Fiado</span>
                         </label>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-                    <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
+                    <button type="button" id="btn-cancelar-pagamento" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Cancelar</button>
                     <button type="submit" id="btn-confirmar-pagamento" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">Confirmar Entrega</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Exportar -->
+    <!-- =================================================================== -->
+    <!-- MODAL DE AÇÕES DO WHATSAPP (Entregador) -->
+    <!-- =================================================================== -->
+    <div id="modal-whatsapp" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Ação WhatsApp</h3>
+                <p class="text-sm text-gray-600 mb-4">Escolha uma ação para o cliente: <strong id="modal-wpp-cliente-nome"></strong></p>
+                <div class="space-y-3">
+                    <button data-acao="avisar-chegando" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                        Avisar (Estou Chegando)
+                    </button>
+                    <button data-acao="avisar-na-porta" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Avisar (Cheguei na Porta)
+                    </button>
+                    <button data-acao="agradecer" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18H10a2 2 0 002-2v-6.333a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 008.943 6H8a2 2 0 00-2 2v2.333zM10 15a1 1 0 100-2 1 1 0 000 2zm4-2a1 1 0 100-2 1 1 0 000 2z" /></svg>
+                        Agradecer (Pós-Venda)
+                    </button>
+                    <button data-acao="enviar-pix" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2H8a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                        Enviar Chave Pix
+                    </button>
+                    <button data-acao="compartilhar-admin" class="btn-acao-wpp w-full flex items-center text-left rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 1 1 0 000-2zM2 8a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
+                        Compartilhar Pedido (Admin)
+                    </button>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
+                <button type="button" id="btn-fechar-whatsapp" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL DE EXPORTAR (Admin / Entregador) -->
+    <!-- =================================================================== -->
     <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Exportar Rota</h3>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
                 
                 <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Baixar/Compartilhar Arquivo da Rota (.json)
                 </button>
 
-                <h4 class="text-lg font-semibold text-gray-900 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
-                <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-400 rounded-md bg-gray-50">
+                <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
+                <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md bg-gray-50">
                     <pre class="text-xs text-gray-700">Nenhuma entrega concluída.</pre>
                 </div>
 
@@ -545,47 +565,19 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de WhatsApp -->
-    <div id="modal-whatsapp" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Ação WhatsApp</h3>
-                <p class="text-sm text-gray-700 mb-6">Para: <strong id="modal-whatsapp-cliente" class="text-gray-900">Nome do Cliente</strong></p>
-                <div class="space-y-3">
-                    <a id="btn-whatsapp-avisar" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
-                        Avisar Cliente (Chegando)
-                    </a>
-                    <a id="btn-whatsapp-chegou" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-yellow-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-yellow-600">
-                        Avisar (Cheguei na Porta)
-                    </a>
-                    <a id="btn-whatsapp-agradecer" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-600">
-                        Agradecer (Pós-Venda)
-                    </a>
-                    <a id="btn-whatsapp-pix" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-gray-700 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-800">
-                        Enviar Chave Pix
-                    </a>
-                    <a id="btn-whatsapp-compartilhar" href="#" target="_blank" rel="noopener noreferrer" class="flex justify-center items-center w-full rounded-md border border-transparent bg-purple-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-purple-700">
-                        Compartilhar Pedido (Admin)
-                    </a>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-whatsapp" class="rounded-md border border-gray-400 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Aviso -->
+    <!-- =================================================================== -->
+    <!-- MODAL DE AVISO (Global) -->
+    <!-- =================================================================== -->
     <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Atenção</h3>
-                <p id="modal-aviso-texto" class="text-gray-700 mb-6">Mensagem de aviso.</p>
+                <h3 id="modal-aviso-titulo" class="text-xl font-semibold text-gray-800 mb-4">Atenção</h3>
+                <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
                 <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
@@ -593,56 +585,67 @@
         </div>
     </div>
 
-    <!-- Inputs de Arquivo Ocultos -->
+    <!-- Inputs de Arquivo (Ocultos) -->
     <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
     <input type="file" id="input-carregar-card" class="hidden" accept=".json,application/json">
 
 
-    <!-- =================================================================== -->
-    <!-- SCRIPT (Contém toda a lógica) -->
-    <!-- =================================================================== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- Constantes ---
-            const CHAVE_PIX_PADRAO = "seu-email@provedor.com"; // <-- MUDE AQUI SUA CHAVE PIX
+            const MAX_ROTAS = 30; // Limite de rotas salvas
+            const ADMIN_WHATSAPP_NUMBER = "65984491018"; // Número para compartilhar pedido
+            const CHAVE_PIX_PADRAO = "Aqui vai sua chave PIX (CNPJ, Celular, Email ou Aleatória)"; // Chave Pix Padrão
 
             // --- Seletores de Elementos ---
             
-            // Lógica de Página e Navegação
-            const bodyEl = document.body;
-            
-            // Nova Barra Superior
+            // Navegação (Top Bar e Modos)
+            const body = document.body;
+            const btnModoAdmin = document.getElementById('btn-modo-admin');
+            const btnModoEntregador = document.getElementById('btn-modo-entregador');
+            const btnModoMontador = document.getElementById('btn-modo-montador');
             const btnTopAdmin = document.getElementById('btn-top-admin');
             const btnTopEntregador = document.getElementById('btn-top-entregador');
             const btnTopMontador = document.getElementById('btn-top-montador');
             
-            <!-- MODIFICADO: Seletores do Header Admin removidos (agora não é colapsável)
-            -->
-            
-            // Gerenciamento de Rotas (Dentro do Header)
+            // Gerenciamento de Rotas (Admin Header)
             const btnNovaRota = document.getElementById('btn-nova-rota');
             const selectRotaAtiva = document.getElementById('select-rota-ativa');
             const inputNomeRota = document.getElementById('input-nome-rota');
             const inputDataRota = document.getElementById('input-data-rota');
             const displayDiaSemana = document.getElementById('display-dia-semana');
             const btnExcluirRota = document.getElementById('btn-excluir-rota');
-
-            // Seção Despesas (Entregador)
+            
+            // Despesas (Entregador)
             const inputDespesaAbastecimento = document.getElementById('input-despesa-abastecimento');
             const inputDespesaAlimentacao = document.getElementById('input-despesa-alimentacao');
             const inputDespesaExtra = document.getElementById('input-despesa-extra');
 
-            // Novo Modal de Formulário
-            const modalForm = document.getElementById('modal-form');
-            const btnAbrirFormModal = document.getElementById('btn-abrir-form-modal'); // FAB
-            const btnFecharFormModal = document.getElementById('btn-fechar-form-modal'); // Botão "Cancelar" no header do modal
-            
-            // Formulário (Dentro do Modal)
+            // Resumo (Montador)
+            const summaryTotalPedidos = document.getElementById('summary-total-pedidos');
+            const summaryTotalCestas = document.getElementById('summary-total-cestas');
+            const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
+            const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
+
+            // Filtros de Rota
+            const filtrosRotaEl = document.getElementById('filtros-rota');
+
+            // Lista de Entregas
+            const listaEntregasEl = document.getElementById('lista-entregas');
+            const listaVaziaEl = document.getElementById('lista-vazia');
+
+            // Modal Formulário (Lançar/Editar)
+            const btnAbrirFormModal = document.getElementById('btn-abrir-form-modal');
+            const modalFormEntrega = document.getElementById('modal-form-entrega');
+            const btnFecharFormModal = document.getElementById('btn-fechar-form-modal');
+            const modalFormTitle = document.getElementById('modal-form-title');
             const formEntrega = document.getElementById('form-entrega');
-            const formEntregaTitle = document.getElementById('form-entrega-title');
             const btnSubmitForm = document.getElementById('btn-submit-form');
             const btnSubmitFormText = document.getElementById('btn-submit-form-text');
+            const displayValorTotal = document.getElementById('display-valor-total');
+            
+            // Modal Form -> Cliente
             const inputCliente = document.getElementById('input-cliente');
             const datalistClientes = document.getElementById('lista-clientes');
             const infoClienteSelecionado = document.getElementById('info-cliente-selecionado');
@@ -650,29 +653,23 @@
             const displayClienteComplemento = document.getElementById('display-cliente-complemento');
             const displayClienteCelular = document.getElementById('display-cliente-celular');
             const obsClienteInput = document.getElementById('obs-cliente');
-            const displayValor = document.getElementById('display-valor');
-            const inputRotaEntrega = document.getElementById('input-rota-entrega');
+            const selectRotaEntrega = document.getElementById('select-rota-entrega');
 
-            // Sub-Formulário de Adicionar Cesta
-            const formAddCesta = document.getElementById('form-add-cesta');
-            const btnAddCesta = document.getElementById('btn-add-cesta');
+            // Modal Form -> Sub-Formulário (Adicionar Cesta)
+            const btnAdicionarCesta = document.getElementById('btn-adicionar-cesta');
             const subSelectCesta = document.getElementById('sub-select-cesta');
             const subInputQuantidade = document.getElementById('sub-input-quantidade');
-            const subCampoBrindeDescricao = document.getElementById('sub-campo-brinde-descricao');
+            const subCampoBrinde = document.getElementById('sub-campo-brinde');
             const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao');
             const subCampoAlterada = document.getElementById('sub-campo-alterada');
             const subCodigoAlterada = document.getElementById('sub-codigo-alterada');
             const subCodigoFinal = document.getElementById('sub-codigo-final'); // NOVO SELETOR
 
-            // Lista de Cestas no Pedido (Formulário)
+            // Modal Form -> Lista de Cestas (Carrinho)
             const listaCestasNoPedidoEl = document.getElementById('lista-cestas-no-pedido');
             const listaCestasVaziaEl = document.getElementById('lista-cestas-vazia');
             
-            // Lista de Entregas (Página Rota)
-            const listaEntregasEl = document.getElementById('lista-entregas');
-            const listaVaziaEl = document.getElementById('lista-vazia');
-            
-            // Modais
+            // Modal Pagamento
             const modalPagamento = document.getElementById('modal-pagamento');
             const formPagamento = document.getElementById('form-pagamento');
             const btnCancelarPagamento = document.getElementById('btn-cancelar-pagamento');
@@ -680,43 +677,41 @@
             const modalClienteValor = document.getElementById('modal-cliente-valor');
             const modalErrorPagamento = document.getElementById('modal-error-pagamento');
 
-            <!-- MODIFICADO: Seletores de Botão por CLASSE */
+            // Modal WhatsApp
+            const modalWhatsApp = document.getElementById('modal-whatsapp');
+            const modalWppClienteNome = document.getElementById('modal-wpp-cliente-nome');
+            const btnFecharWhatsApp = document.getElementById('btn-fechar-whatsapp');
+
+            /* MODIFICADO: Seletores de Botão por CLASSE */
             const btnsExportar = document.querySelectorAll('.btn-exportar');
             const btnsCarregar = document.querySelectorAll('.btn-carregar');
             const btnsImportarCard = document.querySelectorAll('.btn-importar-card');
             
+            // Modal Exportar
             const modalExportar = document.getElementById('modal-exportar');
             const exportRelatorioEl = document.getElementById('export-relatorio');
             const exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
-            const btnFecharExportar = document.getElementById('btn-fechar-exportar');
             const btnBaixarJson = document.getElementById('btn-baixar-json');
+            const btnFecharExportar = document.getElementById('btn-fechar-exportar');
 
-            const modalWhatsApp = document.getElementById('modal-whatsapp');
-            const modalWhatsAppCliente = document.getElementById('modal-whatsapp-cliente');
-            const btnFecharWhatsApp = document.getElementById('btn-fechar-whatsapp');
-
+            // Modal Aviso
             const modalAviso = document.getElementById('modal-aviso');
+            const modalAvisoTitulo = document.getElementById('modal-aviso-titulo');
             const modalAvisoTexto = document.getElementById('modal-aviso-texto');
             const btnFecharAviso = document.getElementById('btn-fechar-aviso');
-            
+
+            // Inputs de Arquivo
             const inputCarregarArquivo = document.getElementById('input-carregar-arquivo');
             const inputCarregarCard = document.getElementById('input-carregar-card');
-            
-            const summaryTotalPedidos = document.getElementById('summary-total-pedidos');
-            const summaryTotalCestas = document.getElementById('summary-total-cestas');
-            const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
-            const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
-            
-            const filtrosRotaContainer = document.getElementById('filtros-rota');
+
 
             // --- Estado da Aplicação ---
-            let todasAsRotas = {};
-            let rotaAtivaId = null;
-            const MAX_ROTAS = 30;
-            let CLIENTES_CACHE = {};
+            let todasAsRotas = {}; // Objeto para guardar todas as rotas
+            let rotaAtivaId = null; // ID da rota sendo visualizada
+            let CLIENTES_CACHE = {}; // Cache para busca rápida de clientes por nome
 
-            let entregaParaPagarId = null;
-            let whatsAppEntregaId = null;
+            let entregaParaPagarId = null; // ID da entrega no modal de pagamento
+            let whatsAppEntregaId = null; // ID da entrega no modal de WhatsApp
             let editingEntregaId = null;
             
             let cestasDoPedidoAtual = []; // "Carrinho" do formulário
@@ -725,88 +720,84 @@
 
             // --- Funções ---
 
-            // --- Funções de Navegação e UI ---
-            
-            /**
-             * Abre o modal do formulário
-             */
-            function abrirFormModal() {
-                modalForm.style.display = 'block';
-                bodyEl.classList.add('overflow-hidden'); // Impede scroll do body
-            }
+            // --- Funções de UI (Modo, Modais, etc) ---
 
             /**
-             * Fecha o modal do formulário
-             */
-            function fecharFormModal() {
-                modalForm.style.display = 'none';
-                bodyEl.classList.remove('overflow-hidden');
-            }
-
-            /**
-             * Alterna entre os modos Admin, Entregador e Montador
+             * Alterna a visualização do app (Admin, Entregador, Montador)
              */
             function setModoVisualizacao(modo) {
                 modoAtual = modo;
-                bodyEl.classList.remove('modo-admin', 'modo-entregador', 'modo-montador');
+                body.className = `bg-gray-100 antialiased modo-${modo}`;
                 
-                // Atualiza botões na barra SUPERIOR
-                btnTopAdmin.classList.remove('btn-modo-ativo');
-                btnTopEntregador.classList.remove('btn-modo-ativo');
-                btnTopMontador.classList.remove('btn-modo-ativo');
+                // Atualiza botões da barra superior (mobile)
+                [btnTopAdmin, btnTopEntregador, btnTopMontador].forEach(btn => btn.classList.add('hidden'));
+                document.getElementById(`btn-top-${modo}`).classList.remove('hidden');
 
-                if (modo === 'admin') {
-                    bodyEl.classList.add('modo-admin');
-                    btnTopAdmin.classList.add('btn-modo-ativo');
-                } else if (modo === 'entregador') {
-                    bodyEl.classList.add('modo-entregador');
-                    btnTopEntregador.classList.add('btn-modo-ativo');
-                } else if (modo === 'montador') {
-                    bodyEl.classList.add('modo-montador');
-                    btnTopMontador.classList.add('btn-modo-ativo');
-                }
+                // Atualiza botões da barra superior (desktop)
+                [btnModoAdmin, btnModoEntregador, btnModoMontador].forEach(btn => {
+                    btn.classList.remove('bg-blue-100', 'text-blue-700', 'bg-green-100', 'text-green-700', 'bg-purple-100', 'text-purple-700');
+                    btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                });
+                
+                let btnAtivoDesktop = document.getElementById(`btn-modo-${modo}`);
+                btnAtivoDesktop.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                if (modo === 'admin') btnAtivoDesktop.classList.add('bg-blue-100', 'text-blue-700');
+                if (modo === 'entregador') btnAtivoDesktop.classList.add('bg-green-100', 'text-green-700');
+                if (modo === 'montador') btnAtivoDesktop.classList.add('bg-purple-100', 'text-purple-700');
+                
+                // Atualiza a visualização dos cards e do resumo
+                renderizarEntregas();
+                renderizarResumo();
             }
             
-            function mostrarAviso(mensagem) {
+            function mostrarAviso(mensagem, titulo = "Atenção") {
+                modalAvisoTitulo.textContent = titulo;
                 modalAvisoTexto.textContent = mensagem;
                 modalAviso.classList.remove('hidden');
             }
-
             function fecharAviso() {
                 modalAviso.classList.add('hidden');
             }
 
-            // --- Funções de Formatação ---
+            function abrirFormModal() {
+                modalFormEntrega.classList.remove('hidden');
+                body.classList.add('overflow-hidden'); // Trava o scroll do body
+            }
+            function fecharFormModal() {
+                modalFormEntrega.classList.add('hidden');
+                body.classList.remove('overflow-hidden');
+            }
             
+            // --- Funções de Formatação ---
+
             function formatarMoeda(valor) {
                 return parseFloat(valor).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
             }
-            
             function formatarData(isoString) {
                 if (!isoString) return '';
                 const data = new Date(isoString);
                 return data.toLocaleString('pt-BR', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             }
-
             function getDiaDaSemana(dataString) {
                 if (!dataString) return '-';
-                const data = new Date(dataString + 'T12:00:00');
+                const data = new Date(dataString + 'T12:00:00'); // Evita fuso
                 const dia = data.toLocaleDateString('pt-BR', { weekday: 'long' });
                 return dia.charAt(0).toUpperCase() + dia.slice(1);
             }
-
-            // --- Funções de Dados (Rotas) ---
-
-            function salvarLocalStorage() {
-                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
-                    salvarTodasAsRotas();
-                }
+            function normalizarString(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             }
 
+            // --- Funções de Gerenciamento de Rotas (Admin) ---
+
             function salvarTodasAsRotas() {
+                // Gerenciamento de limite (MAX_ROTAS)
                 const chavesRotas = Object.keys(todasAsRotas);
                 if (chavesRotas.length > MAX_ROTAS) {
                     const chavesOrdenadas = chavesRotas.sort((a, b) => a - b);
@@ -819,57 +810,17 @@
                 }
             }
 
-            function iniciarAplicativo() {
-                // Carregar Clientes
-                try {
-                    if (typeof CLIENTES_DB !== 'undefined' && Array.isArray(CLIENTES_DB)) {
-                        datalistClientes.innerHTML = '';
-                        CLIENTES_DB.forEach(cliente => {
-                            const option = document.createElement('option');
-                            option.value = cliente.nome;
-                            datalistClientes.appendChild(option);
-                            CLIENTES_CACHE[cliente.nome.toLowerCase()] = cliente;
-                        });
-                    } else {
-                        console.error("CLIENTES_DB não encontrado.");
-                        mostrarAviso("Erro ao carregar banco de dados de clientes.");
-                    }
-                } catch (e) {
-                     console.error("Erro ao processar clientes:", e);
-                     mostrarAviso("Erro ao processar o arquivo 'clientes.js'.");
-                }
-
-                // Carregar Rotas
-                const dadosSalvos = localStorage.getItem('gerenciadorDeRotas');
-                if (dadosSalvos) {
-                    todasAsRotas = JSON.parse(dadosSalvos);
-                }
-
-                rotaAtivaId = localStorage.getItem('rotaAtivaId');
-
-                if (!rotaAtivaId || !todasAsRotas[rotaAtivaId]) {
-                    if (Object.keys(todasAsRotas).length === 0) {
-                        criarNovaRota(false);
-                    } else {
-                        rotaAtivaId = Object.keys(todasAsRotas).sort((a, b) => b - a)[0];
-                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                    }
-                }
-
-                popularSelectRotas();
-                carregarRotaAtiva();
-                
-                setModoVisualizacao('admin'); // Padrão
-                
-                toggleSubCampoAlterada();
-                toggleSubCampoBrinde();
-            }
-
             function getEntregasAtivas() {
                 if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
                     return todasAsRotas[rotaAtivaId].entregas;
                 }
                 return [];
+            }
+            function getRotaAtiva() {
+                if (rotaAtivaId && todasAsRotas[rotaAtivaId]) {
+                    return todasAsRotas[rotaAtivaId];
+                }
+                return null;
             }
 
             function popularSelectRotas() {
@@ -889,15 +840,16 @@
             }
 
             function carregarRotaAtiva() {
-                const rota = todasAsRotas[rotaAtivaId];
+                const rota = getRotaAtiva();
                 if (!rota) {
-                    console.error("Erro: Tentando carregar rota ativa, mas ID não encontrado.");
-                    if (Object.keys(todasAsRotas).length === 0) criarNovaRota(false);
-                    else rotaAtivaId = Object.keys(todasAsRotas).sort((a, b) => b - a)[0];
-                    localStorage.setItem('rotaAtivaId', rotaAtivaId);
-                    
+                    if (Object.keys(todasAsRotas).length === 0) {
+                        criarNovaRota(false);
+                    } else {
+                        rotaAtivaId = Object.keys(todasAsRotas)[0];
+                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                    }
                     popularSelectRotas();
-                    carregarRotaAtiva(); // Tenta novamente
+                    carregarRotaAtiva();
                     return;
                 }
 
@@ -919,17 +871,16 @@
             function criarNovaRota(atualizarTela = true) {
                 const novoId = Date.now().toString();
                 const hoje = new Date().toISOString().split('T')[0];
-
                 const novaRota = {
-                    id: novoId, nome: "Nova Rota", data: hoje,
+                    id: novoId,
+                    nome: "Nova Rota",
+                    data: hoje,
                     entregas: [],
                     despesas: { abastecimento: 0, alimentacao: 0, extra: 0 }
                 };
-
                 todasAsRotas[novoId] = novaRota;
                 rotaAtivaId = novoId;
                 salvarTodasAsRotas();
-                
                 if (atualizarTela) {
                     popularSelectRotas();
                     carregarRotaAtiva();
@@ -937,7 +888,7 @@
             }
 
             function atualizarInfoRota() {
-                const rota = todasAsRotas[rotaAtivaId];
+                const rota = getRotaAtiva();
                 if (!rota) return;
                 rota.nome = inputNomeRota.value || "Rota Sem Nome";
                 rota.data = inputDataRota.value;
@@ -947,7 +898,7 @@
             }
 
             function salvarDespesas() {
-                const rota = todasAsRotas[rotaAtivaId];
+                const rota = getRotaAtiva();
                 if (!rota) return;
                 rota.despesas = {
                     abastecimento: parseFloat(inputDespesaAbastecimento.value) || 0,
@@ -969,7 +920,32 @@
                 popularSelectRotas();
                 carregarRotaAtiva();
             }
-            
+
+            /**
+             * Função de compatibilidade. Transforma pedidos antigos (cesta única)
+             * no novo formato (array de cestas).
+             */
+            function migrarFormatoCestas(entrega) {
+                if (Array.isArray(entrega.cestas)) {
+                    return entrega.cestas; // Já está no formato novo
+                }
+                // Formato antigo: migra
+                if (entrega.cesta && entrega.cesta.nome) {
+                    return [{
+                        nome: entrega.cesta.nome,
+                        valor: entrega.cesta.valor,
+                        quantidade: entrega.quantidade || 1,
+                        tipo: entrega.tipo || 'Normal',
+                        brinde: entrega.brinde || 'Não',
+                        brindeDescricao: entrega.brindeDescricao || '',
+                        codigoAlterada: entrega.codigoAlterada || '',
+                        codigoFinal: entrega.codigoFinal || '',
+                        partesAlteradas: entrega.partesAlteradas || []
+                    }];
+                }
+                return []; // Formato inválido ou vazio
+            }
+
             // --- Funções de Renderização (Cards e Resumo) ---
 
             function renderizarEntregas() {
@@ -986,33 +962,23 @@
                   Agora a lista respeitará a ordem manual definida pelas setas.
                 */
                 const entregasOrdenadas = entregasFiltradas;
-                /*
-                const entregasOrdenadas = entregasFiltradas.sort((a, b) => {
-                    const rotaA = a.rotaEntrega || 'N/A';
-                    const rotaB = b.rotaEntrega || 'N/A';
-                    return rotaA.localeCompare(rotaB);
-                });
-                */
 
                 if (entregasOrdenadas.length === 0) {
                     listaVaziaEl.classList.remove('hidden');
                     return;
                 }
-                
                 listaVaziaEl.classList.add('hidden');
 
                 entregasOrdenadas.forEach((entrega, index) => {
                     const card = document.createElement('div');
                     card.dataset.id = entrega.id;
                     
+                    let rotaClass = `rota-${entrega.rotaEntrega || 'N/A'}`;
                     let statusClass = '';
                     if (entrega.status === 'Entregue') statusClass = 'entregue';
                     if (entrega.status === 'Cancelada') statusClass = 'cancelada';
                     if (entrega.status === 'Montado') statusClass = 'montado';
-                    
-                    const rotaClass = `rota-${(entrega.rotaEntrega || 'N/A').replace('/', '\\/')}`;
-                    const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
-                    
+
                     card.className = `bg-white p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
                     // MODIFICADO: Definição de obsInfo movida para ANTES de infoClienteHtml
@@ -1026,15 +992,13 @@
                         `;
                     }
                     
-                    // REMOVIDO: Bloco 'detalhesInfo' daqui. Ele será movido para dentro do loop de cestas.
-
                     let statusInfo = '';
                     if (entrega.status === 'Entregue') {
                         statusInfo = `<div class="text-xs text-green-700 mt-2"><span class="font-semibold">Pagamento:</span> ${entrega.formaPagamento.join(', ')} | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}</div>`;
                     } else if (entrega.status === 'Cancelada') {
                         statusInfo = `<div class="text-xs text-red-700 mt-2"><span class="font-semibold">Status:</span> CANCELADA | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioEntrega)}</div>`;
                     } else if (entrega.status === 'Montado') {
-                         statusInfo = `<div class="text-xs text-blue-700 mt-2"><span class="font-semibold">Status:</span> MONTADO | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioMontagem)}</div>`;
+                        statusInfo = `<div class="text-xs text-blue-700 mt-2"><span class="font-semibold">Status:</span> MONTADO | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioMontagem)}</div>`;
                     }
                     
                     // MODIFICADO: idInfo removido
@@ -1053,16 +1017,18 @@
                             ${obsInfo}
                         </div>
                         <div class="flex flex-col items-center justify-center admin-view ml-2">
-                            <button class="btn-mover-cima p-2 text-gray-500 ${index === 0 || isFinalizada ? 'opacity-25' : 'hover:text-blue-600'}" data-id="${entrega.id}" ${index === 0 || isFinalizada ? 'disabled' : ''}>
+                            <button class="btn-mover-cima text-gray-400 p-2 ${index === 0 ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Cima" ${index === 0 ? 'disabled' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
                             </button>
-                            <button class="btn-mover-baixo p-2 text-gray-500 ${index === entregasOrdenadas.length - 1 || isFinalizada ? 'opacity-25' : 'hover:text-blue-600'}" data-id="${entrega.id}" ${index === entregasOrdenadas.length - 1 || isFinalizada ? 'disabled' : ''}>
+                            <button class="btn-mover-baixo text-gray-400 p-2 ${index === entregasOrdenadas.length - 1 ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover para Baixo" ${index === entregasOrdenadas.length - 1 ? 'disabled' : ''}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                         </div>
                     `;
-                    
-                    let infoCestasHtml = '<div class="mt-2 space-y-2">';
+
+                    // Lógica de Cestas (Multi-Cesta)
+                    const cestasParaRenderizar = migrarFormatoCestas(entrega);
+                    let infoCestasHtml = '';
                     let valorTotalEntrega = 0;
                     
                     cestasParaRenderizar.forEach(cesta => {
@@ -1091,8 +1057,8 @@
                         infoCestasHtml += `
                             <div class="p-2 bg-gray-50 rounded-md border border-gray-300">
                                 <div class="flex justify-between items-center">
-                                    <span class="block text-base font-semibold text-gray-900">${cesta.quantidade}x ${cesta.nome}</span>
-                                    <span class="block text-lg font-bold text-blue-600 montador-hidden">${formatarMoeda(valorCestaTotal)}</span>
+                                    <span class="text-sm font-semibold text-gray-800">${cesta.quantidade}x ${cesta.nome}</span>
+                                    <span class="text-sm font-semibold text-gray-800">${formatarMoeda(valorCestaTotal)}</span>
                                 </div>
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${tagsCesta}
@@ -1102,17 +1068,8 @@
                             </div>
                         `;
                     });
-                    infoCestasHtml += `</div>`;
-                    
-                    if (cestasParaRenderizar.length > 1) {
-                         infoCestasHtml += `
-                            <div class="mt-2 text-right montador-hidden">
-                                <span class="text-sm font-medium text-gray-700">Valor Total do Pedido:</span>
-                                <span class="block text-xl font-bold text-blue-700">${formatarMoeda(valorTotalEntrega)}</span>
-                            </div>
-                         `;
-                    }
-                    
+
+                    // Botões de Ação (Editar, Cancelar, Entregar, Montar)
                     let botoesAcaoHtml = '';
                     if (entrega.status === 'Pendente') {
                         botoesAcaoHtml = `
@@ -1157,13 +1114,19 @@
                     }
 
                     card.innerHTML = `
-                        <!-- Seção Principal de Informações -->
+                        <!-- Seção 1: Cliente e Setas (Admin) -->
                         <div class="flex justify-between items-start">
                             ${infoClienteHtml}
                         </div>
                         
-                        <!-- Cestas -->
-                        ${infoCestasHtml}
+                        <!-- Seção 2: Cestas e Valor Total -->
+                        <div class="mt-4 space-y-2">
+                            ${infoCestasHtml}
+                        </div>
+                        <div class="flex justify-end items-center mt-2 p-2 bg-gray-100 rounded-md">
+                            <span class="text-sm font-medium text-gray-600 mr-2">VALOR TOTAL:</span>
+                            <span class="text-lg font-bold text-gray-900">${formatarMoeda(valorTotalEntrega)}</span>
+                        </div>
 
                         <!-- Blocos de Info (Obs, Detalhes, Status) -->
                         <div class="mt-2 space-y-2 overflow-hidden">
@@ -1172,40 +1135,40 @@
                         </div>
                         
                         <!-- Barra de Ações (Ícones) -->
-                        <div class="mt-4 pt-4 border-t border-gray-200 montador-hidden">
-                            <div class="grid grid-cols-4 gap-2">
-                                <button class="btn-card-maps flex flex-col items-center justify-center p-2 rounded-lg ${isFinalizada ? 'opacity-50' : 'hover:bg-gray-100'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
-                                    <span class="text-xs font-medium text-gray-700 mt-1">Mapa</span>
-                                </button>
-                                <button class="btn-card-whatsapp flex flex-col items-center justify-center p-2 rounded-lg ${isFinalizada ? 'opacity-50' : 'hover:bg-gray-100'}" title="Abrir WhatsApp" data-id="${entrega.id}" ${isFinalizada ? 'disabled' : ''}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM5.5 8.5A1.5 1.5 0 017 7h6a1.5 1.5 0 011.5 1.5v3A1.5 1.5 0 0113 13H7a1.5 1.5 0 01-1.5-1.5v-3z" /></svg>
-                                    <span class="text-xs font-medium text-gray-700 mt-1">Chat</span>
-                                </button>
-                                <button class="btn-card-ligar flex flex-col items-center justify-center p-2 rounded-lg ${isFinalizada ? 'opacity-50' : 'hover:bg-gray-100'}" title="Ligar para Cliente" data-id="${entrega.id}" ${isFinalizada ? 'disabled' : ''}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C6.477 18 2 13.523 2 8V3z" /></svg>
-                                    <span class="text-xs font-medium text-gray-700 mt-1">Ligar</span>
-                                </button>
-                                <button class="btn-card-json admin-view flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100" title="Exportar Card (.json)" data-id="${entrega.id}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                    <span class="text-xs font-medium text-gray-700 mt-1">JSON</span>
-                                </button>
-                            </div>
+                        <div class="montador-hidden grid grid-cols-5 gap-1 mt-4 pt-4 border-t border-gray-200">
+                            <!-- Mapa -->
+                            <button class="btn-card-maps flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.status === 'Pendente' || entrega.status === 'Montado' ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.status === 'Pendente' || entrega.status === 'Montado' ? '' : 'disabled'}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                                <span class="text-xs mt-1">Mapa</span>
+                            </button>
+                            <!-- WhatsApp -->
+                            <button class="btn-card-whatsapp flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.cliente.celular ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.cliente.celular ? '' : 'disabled'} data-id="${entrega.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.626-2.957 6.584-6.591 6.584zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.068-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.1-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.05-.087-.182-.133-.38-.232z"/></svg>
+                                <span class="text-xs mt-1">Wpp</span>
+                            </button>
+                            <!-- Ligar -->
+                            <button class="btn-card-ligar flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md ${entrega.cliente.celular ? '' : 'opacity-50 cursor-not-allowed'}" ${entrega.cliente.celular ? '' : 'disabled'}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C6.477 18 2 13.523 2 8V3z" /></svg>
+                                <span class="text-xs mt-1">Ligar</span>
+                            </button>
+                            <!-- Exportar Card -->
+                            <button class="btn-card-exportar flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-md" data-id="${entrega.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                <span class="text-xs mt-1">JSON</span>
+                            </button>
                         </div>
-                        
-                        <!-- Botões de Ação (Entregar, Cancelar, etc) -->
-                        <div class="mt-4 grid grid-cols-2 gap-2">
+
+                        <!-- Botões de Ação (Abaixo dos Ícones) -->
+                        <div class="grid grid-cols-2 gap-2 mt-2">
                             ${botoesAcaoHtml}
                         </div>
                     `;
                     listaEntregasEl.appendChild(card);
                 });
             }
-            
+
             function renderizarResumo() {
                 const entregas = getEntregasAtivas();
-                
-                const totalPedidos = entregas.length;
                 let totalCestas = 0;
                 let cestasBreakdown = {};
                 let rotasBreakdown = {};
@@ -1238,20 +1201,27 @@
 
             function toggleSubCampoAlterada() {
                 const tipo = document.querySelector('input[name="sub-tipo-cesta"]:checked').value;
-                if (tipo === 'Alterada') subCampoAlterada.classList.remove('hidden');
-                else subCampoAlterada.classList.add('hidden');
+                if (tipo === 'Alterada') {
+                    subCampoAlterada.classList.remove('hidden');
+                } else {
+                    subCampoAlterada.classList.add('hidden');
+                }
+            }
+            function toggleSubCampoBrinde() {
+                const brinde = document.querySelector('input[name="sub-brinde"]:checked').value;
+                if (brinde === 'Sim') {
+                    subCampoBrinde.classList.remove('hidden');
+                } else {
+                    subCampoBrinde.classList.add('hidden');
+                }
             }
             
-            function toggleSubCampoBrinde() {
-                const tipo = document.querySelector('input[name="sub-brinde"]:checked').value;
-                if (tipo === 'Sim') subCampoBrindeDescricao.classList.remove('hidden');
-                else subCampoBrindeDescricao.classList.add('hidden');
-            }
-
             function adicionarCestaAoPedido() {
                 const selectedOption = subSelectCesta.options[subSelectCesta.selectedIndex];
-                const partesAlteradas = Array.from(formAddCesta.querySelectorAll('input[name="sub-partes_alteradas"]:checked')).map(input => input.value);
-                
+                const partesAlteradas = 
+                    Array.from(document.querySelectorAll('input[name="sub-partes_alteradas"]:checked'))
+                         .map(input => input.value);
+
                 const novaCesta = {
                     nome: selectedOption.value,
                     valor: parseFloat(selectedOption.dataset.valor),
@@ -1265,12 +1235,11 @@
                 };
                 
                 cestasDoPedidoAtual.push(novaCesta);
+                resetarSubFormulario();
                 renderCestasNoPedido();
-                atualizarValorCesta();
-                resetarSubFormCesta();
             }
-            
-            function resetarSubFormCesta() {
+
+            function resetarSubFormulario() {
                 subSelectCesta.selectedIndex = 0;
                 subInputQuantidade.value = 1;
                 document.querySelector('input[name="sub-tipo-cesta"][value="Normal"]').checked = true;
@@ -1285,58 +1254,51 @@
             
             function renderCestasNoPedido() {
                 listaCestasNoPedidoEl.innerHTML = '';
+                let valorTotal = 0;
+
                 if (cestasDoPedidoAtual.length === 0) {
-                    listaCestasNoPedidoEl.appendChild(listaCestasVaziaEl);
+                    listaCestasVaziaEl.classList.remove('hidden');
+                    displayValorTotal.textContent = formatarMoeda(0);
                     return;
                 }
                 
-                if (listaCestasVaziaEl.parentNode === listaCestasNoPedidoEl) {
-                     listaCestasNoPedidoEl.removeChild(listaCestasVaziaEl);
-                }
+                listaCestasVaziaEl.classList.add('hidden');
                 
                 cestasDoPedidoAtual.forEach((cesta, index) => {
+                    const valorCestaTotal = cesta.valor * cesta.quantidade;
+                    valorTotal += valorCestaTotal;
+
                     const item = document.createElement('div');
-                    item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-300';
-                    const valorTotalItem = cesta.valor * cesta.quantidade;
-                    let detalhes = `${cesta.tipo}`;
-                    if (cesta.brinde === 'Sim') detalhes += `, ${cesta.brindeDescricao || 'Brinde'}`;
-                    
+                    item.className = 'p-3 bg-white rounded-md border border-gray-300 flex justify-between items-center';
                     item.innerHTML = `
-                        <div>
-                            <p class="font-semibold text-gray-900">${cesta.quantidade}x ${cesta.nome}</p>
-                            <p class="text-sm text-gray-700">${detalhes} - ${formatarMoeda(valorTotalItem)}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-800">${cesta.quantidade}x ${cesta.nome}</p>
+                            <p class="text-xs text-gray-600">${cesta.tipo} ${cesta.brinde === 'Sim' ? '| Com Brinde' : ''}</p>
                         </div>
-                        <button type="button" data-index="${index}" class="btn-remover-cesta text-red-500 hover:text-red-700 p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                        </button>
+                        <div class="flex-shrink-0 flex items-center gap-4">
+                            <span class="text-sm font-semibold text-gray-800">${formatarMoeda(valorCestaTotal)}</span>
+                            <button type="button" data-index="${index}" class="btn-remover-cesta text-red-500 hover:text-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
                     `;
                     listaCestasNoPedidoEl.appendChild(item);
                 });
+
+                displayValorTotal.textContent = formatarMoeda(valorTotal);
             }
             
-            function handleRemoverCesta(e) {
-                const btn = e.target.closest('.btn-remover-cesta');
-                if (!btn) return;
-                const index = parseInt(btn.dataset.index);
-                if (isNaN(index) || index < 0 || index >= cestasDoPedidoAtual.length) return;
+            function removerCestaDoPedido(index) {
                 cestasDoPedidoAtual.splice(index, 1);
                 renderCestasNoPedido();
-                atualizarValorCesta();
-            }
-            
-            function atualizarValorCesta() {
-                let valorTotal = 0;
-                cestasDoPedidoAtual.forEach(cesta => {
-                    valorTotal += cesta.valor * cesta.quantidade;
-                });
-                displayValor.textContent = formatarMoeda(valorTotal);
             }
 
             function adicionarOuAtualizarEntrega(e) {
                 e.preventDefault();
-                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                
+                const rotaAtiva = getRotaAtiva();
                 if (!rotaAtiva) {
-                    mostrarAviso("Nenhuma rota ativa selecionada.");
+                    mostrarAviso("Nenhuma rota ativa selecionada. Crie uma nova rota.");
                     return;
                 }
                 const entregas = rotaAtiva.entregas;
@@ -1344,35 +1306,38 @@
                 const nomeClienteSelecionado = inputCliente.value;
                 const clienteSelecionado = CLIENTES_CACHE[nomeClienteSelecionado.toLowerCase()];
                 let clienteData;
-
-                if (clienteSelecionado) clienteData = clienteSelecionado;
-                else clienteData = { nome: nomeClienteSelecionado, celular: '', endereco: nomeClienteSelecionado, complemento: '' };
+                if (clienteSelecionado) {
+                    clienteData = clienteSelecionado;
+                } else {
+                    clienteData = { nome: nomeClienteSelecionado, celular: '', endereco: nomeClienteSelecionado, complemento: '' };
+                }
 
                 if (!clienteData.nome) {
                     mostrarAviso('Por favor, selecione ou digite um nome de cliente.');
                     return;
                 }
-                
                 if (cestasDoPedidoAtual.length === 0) {
-                    mostrarAviso('Você deve adicionar ao menos uma cesta ao pedido.');
+                    mostrarAviso('É preciso adicionar ao menos uma cesta ao pedido.');
                     return;
                 }
 
-                const cestasParaSalvar = cestasDoPedidoAtual.map(c => ({...c}));
-                
-                const dadosDoForm = {
+                const dadosEntrega = {
                     cliente: clienteData,
                     observacao: obsClienteInput.value,
-                    rotaEntrega: inputRotaEntrega.value,
-                    cestas: cestasParaSalvar
+                    rotaEntrega: selectRotaEntrega.value,
+                    cestas: cestasDoPedidoAtual // Salva o "carrinho"
                 };
 
                 if (editingEntregaId) {
                     // MODO EDIÇÃO
-                    const index = entregas.findIndex(e => e.id.toString() === editingEntregaId);
+                    const index = entregas.findIndex(e => e.id.toString() === editingEntregaId.toString());
                     if (index !== -1) {
                         const entregaOriginal = entregas[index];
-                        entregas[index] = { ...entregaOriginal, ...dadosDoForm };
+                        entregas[index] = {
+                            ...entregaOriginal, // Mantém id, status, formaPagamento, horario, etc.
+                            ...dadosEntrega      // Sobrescreve com os dados do form
+                        };
+                        
                         // Limpa campos antigos legados
                         delete entregas[index].cesta; delete entregas[index].quantidade;
                         delete entregas[index].tipo; delete entregas[index].brinde;
@@ -1384,168 +1349,75 @@
                     } else {
                         mostrarAviso("Erro: Não foi possível encontrar a entrega para atualizar.");
                     }
-                    sairModoEdicao(); // Também fecha o modal
                 } else {
                     // MODO NOVA ENTREGA
                     const novaEntrega = {
-                        ...dadosDoForm,
-                        id: Date.now(), status: "Pendente",
-                        formaPagamento: [], horarioEntrega: null, horarioMontagem: null
+                        ...dadosEntrega,
+                        id: Date.now(),
+                        status: "Pendente",
+                        formaPagamento: [],
+                        horarioEntrega: null,
+                        horarioMontagem: null
                     };
                     entregas.push(novaEntrega);
-                    // Limpa o formulário principal
-                    formEntrega.reset();
-                    inputCliente.value = '';
-                    infoClienteSelecionado.classList.add('hidden');
-                    inputRotaEntrega.value = 'CUIABÁ';
-                    // Limpa o estado do "carrinho"
-                    cestasDoPedidoAtual = [];
-                    renderCestasNoPedido();
-                    atualizarValorCesta();
-                    resetarSubFormCesta();
-                    // Fecha o modal
-                    fecharFormModal();
                 }
                 
-                salvarLocalStorage();
+                salvarTodasAsRotas();
                 
-                // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o novo pedido apareça
-                resetarFiltroParaPadrao();
+                // CORREÇÃO: Reseta o filtro para a rota do pedido que acabou de ser salvo/editado
+                resetarFiltroParaPadrao(dadosEntrega.rotaEntrega); 
                 
                 renderizarEntregas();
                 renderizarResumo();
+                sairModoEdicao(); // Reseta e fecha o modal
             }
 
             function entrarModoEdicao(id) {
-                const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === id);
                 if (!entrega) return;
-
+                
                 editingEntregaId = id;
-
-                // 1. Preenche dados do cliente
+                
+                // Popula o formulário
                 inputCliente.value = entrega.cliente.nome;
-                inputCliente.dispatchEvent(new Event('input', { bubbles: true }));
+                inputCliente.dispatchEvent(new Event('input')); // Simula input para mostrar info
                 obsClienteInput.value = entrega.observacao || '';
-                inputRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ';
+                selectRotaEntrega.value = entrega.rotaEntrega || 'CUIABÁ';
 
-                // 2. Preenche o "carrinho"
-                cestasDoPedidoAtual = migrarFormatoCestas(entrega).map(c => ({...c}));
-                
-                // 3. Renderiza lista de cestas e valor
+                // Popula o "carrinho" (cestasDoPedidoAtual)
+                cestasDoPedidoAtual = migrarFormatoCestas(entrega);
                 renderCestasNoPedido();
-                atualizarValorCesta();
                 
-                // 4. Reseta o sub-form
-                resetarSubFormCesta();
-
-                // 5. Muda UI do formulário para "Modo Edição"
-                formEntregaTitle.textContent = 'Editar Entrega';
-                btnSubmitFormText.textContent = 'Atualizar Entrega';
-
-                // 6. Abre o modal do formulário
+                // Muda UI do Formulário
+                modalFormTitle.textContent = "Editar Entrega";
+                btnSubmitFormText.textContent = "Atualizar Entrega";
+                
                 abrirFormModal();
             }
 
             function sairModoEdicao() {
                 editingEntregaId = null;
+                cestasDoPedidoAtual = []; // Esvazia o carrinho
                 formEntrega.reset();
-
+                
+                // Reseta manualmente os campos que o reset() não pega
                 inputCliente.value = '';
-                infoClienteSelecionado.classList.add('hidden');
-                inputRotaEntrega.value = 'CUIABÁ';
+                inputCliente.dispatchEvent(new Event('input'));
+                selectRotaEntrega.value = 'CUIABÁ';
+                obsClienteInput.value = '';
                 
-                cestasDoPedidoAtual = [];
+                resetarSubFormulario();
                 renderCestasNoPedido();
-                atualizarValorCesta();
-                resetarSubFormCesta();
 
-                formEntregaTitle.textContent = 'Lançar Nova Entrega';
-                btnSubmitFormText.textContent = 'Lançar Entrega';
+                // Muda UI do Formulário
+                modalFormTitle.textContent = "Lançar Nova Entrega";
+                btnSubmitFormText.textContent = "Lançar Entrega";
                 
-                // Fecha o modal (se estiver aberto)
                 fecharFormModal();
             }
 
-            // --- Funções de Lógica dos Cards (Ações) ---
-            
-            function migrarFormatoCestas(entrega) {
-                if (entrega.cestas && Array.isArray(entrega.cestas)) {
-                    return entrega.cestas.map(c => {
-                        const cestaLimpa = { ...c };
-                        delete cestaLimpa.rotaEntrega;
-                        // Garante que o campo 'codigoFinal' exista
-                        cestaLimpa.codigoFinal = cestaLimpa.codigoFinal || '';
-                        return cestaLimpa;
-                    });
-                }
-                if (entrega.cesta) { // Formato antigo
-                    return [{
-                        nome: entrega.cesta.nome, valor: entrega.cesta.valor,
-                        quantidade: entrega.quantidade || 1, tipo: entrega.tipo || 'Normal',
-                        brinde: entrega.brinde || 'Não', brindeDescricao: entrega.brindeDescricao || '',
-                        codigoAlterada: entrega.codigoAlterada || '', partesAlteradas: entrega.partesAlteradas || [],
-                        codigoFinal: entrega.codigoFinal || ''
-                    }];
-                }
-                return [];
-            }
-            
-            function abrirGoogleMaps(query) {
-                if (!query) {
-                    mostrarAviso('Cliente não possui endereço para abrir no mapa.');
-                    return;
-                }
-                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
-            }
-
-            function abrirModalPagamento(id) {
-                const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
-                if (!entrega) return;
-                entregaParaPagarId = id;
-                
-                const cestas = migrarFormatoCestas(entrega);
-                const valorTotal = cestas.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-
-                modalClienteNome.textContent = entrega.cliente.nome;
-                modalClienteValor.textContent = formatarMoeda(valorTotal);
-                formPagamento.reset();
-                modalErrorPagamento.classList.add('hidden');
-                modalPagamento.classList.remove('hidden');
-            }
-
-            function fecharModalPagamento() {
-                modalPagamento.classList.add('hidden');
-                entregaParaPagarId = null;
-            }
-
-            function cancelarEntrega(id) {
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === id);
-                if (index !== -1) {
-                    entregas[index].status = "Cancelada";
-                    entregas[index].formaPagamento = [];
-                    entregas[index].horarioEntrega = new Date().toISOString();
-                }
-                salvarLocalStorage();
-                
-                // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o card importado apareça
-                resetarFiltroParaPadrao();
-                
-                renderizarEntregas();
-                renderizarResumo();
-            }
-            
-            function montarEntrega(id) {
-                const entregas = getEntregasAtivas();
-                const index = entregas.findIndex(e => e.id.toString() === id);
-                if (index !== -1 && entregas[index].status === 'Pendente') {
-                    entregas[index].status = "Montado";
-                    entregas[index].horarioMontagem = new Date().toISOString();
-                }
-                salvarLocalStorage();
-                renderizarEntregas();
-                renderizarResumo();
-            }
+            // --- Funções de Ação nos Cards ---
 
             function moverEntrega(id, direcao) {
                 const entregas = getEntregasAtivas();
@@ -1559,409 +1431,574 @@
                 } else {
                     return;
                 }
-                salvarLocalStorage();
+                salvarTodasAsRotas();
+                renderizarEntregas(); // Re-renderiza para atualizar as setas
+            }
+            
+            function cancelarEntrega(id) {
+                const entregas = getEntregasAtivas();
+                const index = entregas.findIndex(e => e.id.toString() === id);
+                if (index !== -1) {
+                    entregas[index].status = "Cancelada";
+                    entregas[index].formaPagamento = [];
+                    entregas[index].horarioEntrega = new Date().toISOString();
+                }
+                salvarTodasAsRotas();
                 renderizarEntregas();
+                renderizarResumo();
             }
 
-            function handleCardClick(e) {
-                const id = e.target.closest('[data-id]')?.dataset.id;
-                if (!id) return;
+            function marcarComoMontado(id) {
+                const entregas = getEntregasAtivas();
+                const index = entregas.findIndex(e => e.id.toString() === id);
+                if (index !== -1) {
+                    entregas[index].status = "Montado";
+                    entregas[index].horarioMontagem = new Date().toISOString();
+                }
+                salvarTodasAsRotas();
+                renderizarEntregas();
+                renderizarResumo();
+            }
 
-                // Ações de Mover
-                if (e.target.closest('.btn-mover-cima')) { moverEntrega(id, 'cima'); return; }
-                if (e.target.closest('.btn-mover-baixo')) { moverEntrega(id, 'baixo'); return; }
-                // Ação de Cancelar
-                if (e.target.closest('.btn-cancelar-entrega')) { cancelarEntrega(id); return; }
-                // Ação de Editar
-                if (e.target.closest('.btn-editar-entrega')) { entrarModoEdicao(id); return; }
-                // Ação de Marcar Montado
-                if (e.target.closest('.btn-montado')) { montarEntrega(id); return; }
-                // Ação de Marcar Entregue
-                if (e.target.closest('.btn-entregue')) { abrirModalPagamento(id); return; }
-                // Ação do Mapa
-                if (e.target.closest('.btn-card-maps')) {
-                    const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
-                    if (entrega) abrirGoogleMaps(entrega.cliente.endereco);
-                    return;
-                }
-                // Ação do WhatsApp
-                if (e.target.closest('.btn-card-whatsapp')) { abrirModalWhatsApp(id); return; }
-                // Ação de Ligar
-                if (e.target.closest('.btn-card-ligar')) {
-                    const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
-                    if (entrega && entrega.cliente.celular) {
-                        window.open(`tel:${entrega.cliente.celular.replace(/\D/g, '')}`, '_self');
-                    } else mostrarAviso('Cliente não possui celular cadastrado.');
-                    return;
-                }
-                // Ação de Exportar JSON do Card
-                if (e.target.closest('.btn-card-json')) {
-                    const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
-                    if (entrega) {
-                        const jsonDados = JSON.stringify(entrega, null, 2);
-                        const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}.json`;
-                        compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
-                    }
-                    return;
-                }
+            function abrirModalPagamento(id) {
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === id);
+                if (!entrega) return;
+
+                entregaParaPagarId = id;
+                
+                // Calcula o valor total (multi-cesta)
+                const cestas = migrarFormatoCestas(entrega);
+                const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
+                
+                modalClienteNome.textContent = entrega.cliente.nome;
+                modalClienteValor.textContent = formatarMoeda(valorTotal);
+                
+                formPagamento.reset();
+                modalErrorPagamento.classList.add('hidden');
+                modalPagamento.classList.remove('hidden');
             }
 
             function salvarPagamento(e) {
                 e.preventDefault();
-                const formasPagamento = Array.from(formPagamento.querySelectorAll('input[name="forma_pagamento"]:checked')).map(input => input.value);
-                if (formasPagamento.length === 0) {
+                const formasPagamentoSelecionadas = 
+                    Array.from(formPagamento.querySelectorAll('input[name="forma_pagamento"]:checked'))
+                         .map(input => input.value);
+                
+                if (formasPagamentoSelecionadas.length === 0) {
                     modalErrorPagamento.classList.remove('hidden');
                     return;
                 }
                 
-                const index = getEntregasAtivas().findIndex(e => e.id.toString() === entregaParaPagarId);
+                const entregas = getEntregasAtivas();
+                const index = entregas.findIndex(e => e.id.toString() === entregaParaPagarId);
                 if (index !== -1) {
-                    getEntregasAtivas()[index].status = "Entregue";
-                    getEntregasAtivas()[index].formaPagamento = formasPagamento;
-                    getEntregasAtivas()[index].horarioEntrega = new Date().toISOString();
+                    entregas[index].status = "Entregue";
+                    entregas[index].formaPagamento = formasPagamentoSelecionadas;
+                    entregas[index].horarioEntrega = new Date().toISOString();
                 }
                 
-                salvarLocalStorage();
+                salvarTodasAsRotas();
                 renderizarEntregas();
                 renderizarResumo();
-                fecharModalPagamento();
+                modalPagamento.classList.add('hidden');
+                entregaParaPagarId = null;
             }
 
-            // --- Funções de Lógica dos Modais (Wpp, Exportar, etc) ---
+            function handleCardClick(e) {
+                // Ações do Card (Delegação de Evento)
+                const id = e.target.closest('[data-id]')?.dataset.id;
+                if (!id) return;
 
-            function gerarTextoPedidoCompleto(entrega) {
-                const cestas = migrarFormatoCestas(entrega);
-                const valorTotal = cestas.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-
-                let texto = `*PEDIDO COMPARTILHADO*\n\n`;
-                texto += `*ID Cliente:* ${entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || 'N/A'}\n`;
-                texto += `*Cliente:* ${entrega.cliente.nome}\n`;
-                texto += `*Rota:* ${entrega.rotaEntrega || 'N/A'}\n`;
-                texto += `*Celular:* ${entrega.cliente.celular || 'N/A'}\n`;
-                texto += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n\n`;
-                
-                texto += `*Cestas no Pedido:*\n`;
-                cestas.forEach((cesta, index) => {
-                    texto += `  *Item ${index + 1}: ${cesta.quantidade}x ${cesta.nome}*\n`;
-                    if (cesta.tipo === 'Alterada') {
-                        if (cesta.codigoFinal) texto += `    Final: ${cesta.codigoFinal}\n`;
-                        if (cesta.codigoAlterada) texto += `    Detalhes: ${cesta.codigoAlterada}\n`;
-                    }
-                });
-                texto += `\n*Valor Total:* ${formatarMoeda(valorTotal)}\n`;
-                if (entrega.observacao) texto += `\n*Observação:*\n${entrega.observacao}\n`;
-                return texto;
-            }
-            
-            function abrirModalWhatsApp(id) {
-                const entrega = getEntregasAtivas().find(e => e.id.toString() === id);
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === id);
                 if (!entrega) return;
-                whatsAppEntregaId = id;
-                modalWhatsAppCliente.textContent = entrega.cliente.nome;
 
-                const telefoneLimpo = entrega.cliente.celular ? entrega.cliente.celular.replace(/\D/g, '') : null;
-                const semTelefone = !telefoneLimpo;
-
-                const toggleWhatsAppButton = (btn, disabled) => {
-                    if (disabled) btn.classList.add('opacity-50', 'cursor-not-allowed');
-                    else btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    btn.href = disabled ? '#' : btn.href;
-                };
-
-                const msgAvisar = "Olá! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado";
-                const btnAvisar = document.getElementById('btn-whatsapp-avisar');
-                btnAvisar.href = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgAvisar)}`;
-                toggleWhatsAppButton(btnAvisar, semTelefone);
-
-                const msgChegou = "Olá! Cheguei com a sua Cesta Básica e já estou aqui na porta aguardando. Obrigado!";
-                const btnChegou = document.getElementById('btn-whatsapp-chegou');
-                btnChegou.href = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgChegou)}`;
-                toggleWhatsAppButton(btnChegou, semTelefone);
-
-                const msgAgradecer = "Obrigado pela compra. Esperamos voce no proximo mês";
-                const btnAgradecer = document.getElementById('btn-whatsapp-agradecer');
-                btnAgradecer.href = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgAgradecer)}`;
-                toggleWhatsAppButton(btnAgradecer, semTelefone);
-
-                const numeroAdmin = "65984491018";
-                const msgCompartilhar = gerarTextoPedidoCompleto(entrega);
-                const btnCompartilhar = document.getElementById('btn-whatsapp-compartilhar');
-                btnCompartilhar.href = `https://api.whatsapp.com/send?phone=${numeroAdmin}&text=${encodeURIComponent(msgCompartilhar)}`;
-                toggleWhatsAppButton(btnCompartilhar, false); 
-
-                const cestasPix = migrarFormatoCestas(entrega);
-                const valorTotalPix = cestasPix.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-                const msgPix = `Olá ${entrega.cliente.nome}! O valor total do seu pedido é ${formatarMoeda(valorTotalPix)}. Nossa chave Pix é: ${CHAVE_PIX_PADRAO}`;
-                const btnPix = document.getElementById('btn-whatsapp-pix');
-                btnPix.href = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${encodeURIComponent(msgPix)}`;
-                toggleWhatsAppButton(btnPix, semTelefone);
-                
-                modalWhatsApp.classList.remove('hidden');
-            }
-
-            async function compartilharOuBaixarArquivo(data, filename, mimeType) {
-                const file = new File([data], filename, { type: mimeType });
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ title: 'Exportar Rota', text: `Arquivo: ${filename}`, files: [file] });
-                    } catch (error) {
-                        if (error.name !== 'AbortError') downloadArquivo(data, filename, mimeType);
-                    }
-                } else {
-                    downloadArquivo(data, filename, mimeType);
+                // Mover Cima
+                if (e.target.closest('.btn-mover-cima')) {
+                    moverEntrega(id, 'cima'); return;
+                }
+                // Mover Baixo
+                if (e.target.closest('.btn-mover-baixo')) {
+                    moverEntrega(id, 'baixo'); return;
+                }
+                // Cancelar
+                if (e.target.closest('.btn-cancelar-entrega')) {
+                    cancelarEntrega(id); return;
+                }
+                // Editar
+                if (e.target.closest('.btn-editar-entrega')) {
+                    entrarModoEdicao(id); return;
+                }
+                // Marcar Montado
+                if (e.target.closest('.btn-montado')) {
+                    marcarComoMontado(id); return;
+                }
+                // Marcar Entregue
+                if (e.target.closest('.btn-entregue')) {
+                    abrirModalPagamento(id); return;
+                }
+                // Mapa
+                if (e.target.closest('.btn-card-maps')) {
+                    abrirGoogleMaps(entrega.cliente.endereco); return;
+                }
+                // Ligar
+                if (e.target.closest('.btn-card-ligar')) {
+                    const tel = (entrega.cliente.celular || '').replace(/\D/g, '');
+                    if (tel) window.open(`tel:${tel}`);
+                    return;
+                }
+                // WhatsApp
+                if (e.target.closest('.btn-card-whatsapp')) {
+                    whatsAppEntregaId = id;
+                    modalWppClienteNome.textContent = entrega.cliente.nome;
+                    modalWhatsApp.classList.remove('hidden');
+                    return;
+                }
+                // Exportar Card
+                if (e.target.closest('.btn-card-exportar')) {
+                    exportarCardComoJson(id); return;
                 }
             }
+
+            // --- Funções de Ação do WhatsApp ---
+
+            function handleAcaoWhatsApp(e) {
+                const acao = e.target.closest('.btn-acao-wpp')?.dataset.acao;
+                if (!acao || !whatsAppEntregaId) return;
+
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === whatsAppEntregaId);
+                if (!entrega) return;
+
+                const tel = (entrega.cliente.celular || '').replace(/\D/g, '');
+                const nomeCliente = entrega.cliente.nome.split(' ')[0]; // Primeiro nome
+                
+                // Calcula o valor total (multi-cesta)
+                const cestas = migrarFormatoCestas(entrega);
+                const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
+
+                let texto = "";
+                let numeroDestino = tel; // Padrão é o cliente
+
+                switch (acao) {
+                    case 'avisar-chegando':
+                        texto = `Olá ${nomeCliente}! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado!`;
+                        break;
+                    case 'avisar-na-porta':
+                        texto = `Olá ${nomeCliente}, bom dia! O entregador da sua Cesta Básica já está na porta da sua casa aguardando. Obrigado!`;
+                        break;
+                    case 'agradecer':
+                        texto = `Obrigado ${nomeCliente} pela compra. Esperamos você no proximo mês!`;
+                        break;
+                    case 'enviar-pix':
+                        texto = `Olá ${nomeCliente}! O valor total do seu pedido é ${formatarMoeda(valorTotal)}. \n\nNossa chave Pix é:\n${CHAVE_PIX_PADRAO}\n\nPor favor, envie o comprovante. Obrigado!`;
+                        break;
+                    case 'compartilhar-admin':
+                        numeroDestino = ADMIN_WHATSAPP_NUMBER;
+                        texto = gerarResumoPedido(entrega, valorTotal);
+                        break;
+                }
+
+                if (numeroDestino) {
+                    const url = `https://api.whatsapp.com/send?phone=55${numeroDestino}&text=${encodeURIComponent(texto)}`;
+                    window.open(url, '_blank');
+                } else {
+                    mostrarAviso("Este cliente não possui um número de celular cadastrado.");
+                }
+
+                modalWhatsApp.classList.add('hidden');
+                whatsAppEntregaId = null;
+            }
+
+            function gerarResumoPedido(entrega, valorTotal) {
+                let resumo = `*PEDIDO CLIENTE: ${entrega.cliente.nome}*\n\n`;
+                resumo += `*Endereço:* ${entrega.cliente.endereco || 'N/A'}\n`;
+                resumo += `*Complemento:* ${entrega.cliente.complemento || 'N/A'}\n`;
+                resumo += `*Celular:* ${entrega.cliente.celular || 'N/A'}\n`;
+                resumo += `*Rota:* ${entrega.rotaEntrega || 'N/A'}\n\n`;
+                
+                if (entrega.observacao) {
+                    resumo += `*OBSERVAÇÃO (GERAL):*\n${entrega.observacao}\n\n`;
+                }
+
+                resumo += `*--- CESTAS NO PEDIDO ---*\n`;
+                const cestas = migrarFormatoCestas(entrega);
+                cestas.forEach(cesta => {
+                    resumo += `*${cesta.quantidade}x ${cesta.nome}* (${formatarMoeda(cesta.valor * cesta.quantidade)})\n`;
+                    if (cesta.brinde === 'Sim') resumo += `  - Brinde: ${cesta.brindeDescricao || 'Sim'}\n`;
+                    if (cesta.tipo === 'Alterada') {
+                        resumo += `  - Cesta: Alterada\n`;
+                        if (cesta.codigoFinal) resumo += `  - Final: ${cesta.codigoFinal}\n`;
+                        if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) resumo += `  - Partes: ${cesta.partesAlteradas.join(', ')}\n`;
+                        if (cesta.codigoAlterada) resumo += `  - Detalhes: ${cesta.codigoAlterada}\n`;
+                    }
+                });
+
+                resumo += `\n*VALOR TOTAL: ${formatarMoeda(valorTotal)}*`;
+                return resumo;
+            }
+
+            function abrirGoogleMaps(query) {
+                if (!query) {
+                    mostrarAviso('O cliente não possui um código ou endereço para abrir no mapa.');
+                    return;
+                }
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                window.open(url, '_blank');
+            }
+
+            // --- Funções de Importar/Exportar ---
             
-            function downloadArquivo(data, filename, mimeType) { // Fallback
-                const blob = new Blob([data], { type: mimeType });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; a.download = filename;
-                document.body.appendChild(a); a.click();
-                document.body.removeChild(a); URL.revokeObjectURL(url);
+            async function compartilharOuBaixar(blob, nomeArquivo) {
+                const data = {
+                    files: [new File([blob], nomeArquivo, { type: 'application/json' })],
+                    title: 'Rota de Entrega',
+                    text: `Backup da rota ${nomeArquivo}`,
+                };
+                
+                try {
+                    // Tenta usar a API de Compartilhamento (Mobile)
+                    if (navigator.canShare && navigator.canShare(data)) {
+                        await navigator.share(data);
+                    } else {
+                        // Fallback para Download (Desktop)
+                        throw new Error('API de compartilhamento não suportada.');
+                    }
+                } catch (err) {
+                    // Fallback para Download (Desktop)
+                    const a = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = nomeArquivo;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
             }
             
             function exportarDados() {
-                const rotaAtiva = todasAsRotas[rotaAtivaId];
-                if (!rotaAtiva) {
-                    mostrarAviso("Nenhuma rota ativa para exportar.");
+                const rotaAtiva = getRotaAtiva();
+                if (!rotaAtiva || rotaAtiva.entregas.length === 0) {
+                    mostrarAviso("Nenhuma entrega na rota ativa para exportar.");
                     return;
                 }
-                const entregas = rotaAtiva.entregas;
-                salvarLocalStorage(); 
-
-                const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
-                const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
                 
+                // 1. Prepara Relatório de Entregas Concluídas
+                const entregasConcluidas = rotaAtiva.entregas.filter(e => e.status === 'Entregue');
+                const entregasCanceladas = rotaAtiva.entregas.filter(e => e.status === 'Cancelada');
                 let relatorioTexto = "Nenhuma entrega finalizada.\n";
                 let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n\n`;
 
-                if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) relatorioTexto = "";
+                if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) {
+                    relatorioTexto = "";
+                }
 
                 if (entregasConcluidas.length > 0) {
                     relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
                     entregasConcluidas.forEach(e => {
                         const cestas = migrarFormatoCestas(e);
-                        const valorTotal = cestas.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-                        const totalItens = cestas.reduce((total, c) => total + c.quantidade, 0);
+                        const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
                         relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
-                        relatorioTexto += `Valor: ${formatarMoeda(valorTotal)} (${totalItens} ${totalItens > 1 ? 'itens' : 'item'})\n`;
+                        relatorioTexto += `Valor: ${formatarMoeda(valorTotal)}\n`;
                         relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
-                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n-----------------------------\n`;
+                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
+                        relatorioTexto += `-----------------------------\n`;
                     });
                 }
+
                 if (entregasCanceladas.length > 0) {
                     relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
                     entregasCanceladas.forEach(e => {
-                        relatorioTexto += `Cliente: ${e.cliente.nome}\nHorário: ${formatarData(e.horarioEntrega)}\n-----------------------------\n`;
+                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
+                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
+                        relatorioTexto += `-----------------------------\n`;
                     });
                 }
                 
-                const entregasPendentes = entregas.filter(e => e.status === 'Pendente' || e.status === 'Montado');
+                // 3. Prepara Texto para WhatsApp
+                const entregasPendentes = rotaAtiva.entregas.filter(e => e.status === 'Pendente' || e.status === 'Montado');
                 whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
                 if(entregasPendentes.length > 0) {
                     entregasPendentes.forEach((e, index) => {
-                        const cestas = migrarFormatoCestas(e);
-                        const valorTotalPendente = cestas.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-                        const statusTexto = e.status === 'Montado' ? ' (MONTADO)' : '';
-                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* [${e.rotaEntrega || 'N/A'}]${statusTexto}\n`;
-                        if (e.cliente.endereco) whatsappTexto += `   End: ${e.cliente.endereco}\n`;
-                        cestas.forEach(cesta => {
-                             whatsappTexto += `   - ${cesta.quantidade}x ${cesta.nome} ${cesta.tipo === 'Alterada' ? '(Alterada)' : ''}\n`;
-                        });
-                        whatsappTexto += `   *Total: ${formatarMoeda(valorTotalPendente)}*\n`;
-                        if (e.observacao) whatsappTexto += `   OBS: ${e.observacao}\n`;
+                        whatsappTexto += `${index + 1}. *${e.cliente.nome}* (${e.rotaEntrega})\n`;
+                        // ... (gerar resumo do pedido)
                     });
-                } else whatsappTexto += `Nenhuma entrega pendente.\n`;
+                } else {
+                    whatsappTexto += `Nenhuma entrega pendente.\n`;
+                }
                 
-                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
-                
-                let totalVendido = 0, totalPorCesta = {}, totalPorPagamento = {};
+                // 4. Relatório Financeiro (WhatsApp)
+                let totalVendido = 0;
+                let totalPorPagamento = {};
                 entregasConcluidas.forEach(e => {
                     const cestas = migrarFormatoCestas(e);
-                    const valor = cestas.reduce((total, c) => total + (c.valor * c.quantidade), 0);
-                    totalVendido += valor;
-                    cestas.forEach(cesta => {
-                        totalPorCesta[cesta.nome] = (totalPorCesta[cesta.nome] || 0) + (cesta.valor * cesta.quantidade);
-                    });
-                    if (e.formaPagamento.length === 0) totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valor;
-                    else {
-                        const valorDividido = valor / e.formaPagamento.length;
-                        e.formaPagamento.forEach(forma => totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido);
+                    const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
+                    totalVendido += valorTotal;
+                    
+                    if (e.formaPagamento.length === 0) {
+                         totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valorTotal;
+                    } else {
+                        const valorDividido = valorTotal / e.formaPagamento.length;
+                        e.formaPagamento.forEach(forma => {
+                            totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido;
+                        });
                     }
                 });
 
-                whatsappTexto += `\n*Vendas Concluídas:*\nTotal Vendido: *${formatarMoeda(totalVendido)}*\n`;
-                whatsappTexto += `\n*Detalhado por Cesta:*\n`;
-                if (Object.keys(totalPorCesta).length > 0) Object.keys(totalPorCesta).forEach(n => whatsappTexto += `   ${n}: ${formatarMoeda(totalPorCesta[n])}\n`);
-                else whatsappTexto += `   Nenhuma.\n`;
+                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
+                whatsappTexto += `*Vendas Concluídas:*\n`;
+                whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
+                
                 whatsappTexto += `\n*Recebimentos por Forma:*\n`;
-                if (Object.keys(totalPorPagamento).length > 0) Object.keys(totalPorPagamento).forEach(f => whatsappTexto += `   ${f}: ${formatarMoeda(totalPorPagamento[f])}\n`);
-                else whatsappTexto += `   Nenhum.\n`;
+                Object.keys(totalPorPagamento).forEach(forma => {
+                    whatsappTexto += `   ${forma}: ${formatarMoeda(totalPorPagamento[forma])}\n`;
+                });
 
+                // Despesas
                 const despesas = rotaAtiva.despesas;
                 const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
                 whatsappTexto += `\n*Despesas da Rota:*\n`;
                 whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
                 whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
-                whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\nTotal Despesas: *${formatarMoeda(totalDespesas)}*\n`;
-                whatsappTexto += `\n*BALANÇO FINAL (Vendido - Despesas):*\n*${formatarMoeda(totalVendido - totalDespesas)}*\n`;
-                whatsappTexto += `\n${relatorioTexto}`;
-
+                whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
+                whatsappTexto += `Total Despesas: *${formatarMoeda(totalDespesas)}*\n`;
+                
+                const balanco = totalVendido - totalDespesas;
+                whatsappTexto += `\n*BALANÇO (Vendido - Despesas):* *${formatarMoeda(balanco)}*\n`;
+                
                 exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
                 
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
-                exportWhatsappLinkEl.innerHTML = `<a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM5.5 8.5A1.5 1.5 0 017 7h6a1.5 1.5 0 011.5 1.5v3A1.5 1.5 0 0113 13H7a1.5 1.5 0 01-1.5-1.5v-3z" /></svg> Enviar Resumo no WhatsApp</a>`;
+                exportWhatsappLinkEl.innerHTML = `
+                    <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
+                        Enviar Resumo no WhatsApp
+                    </a>`;
 
                 modalExportar.classList.remove('hidden');
             }
-
-            // --- Funções de Importação/Exportação de Arquivos ---
+            
+            async function exportarCardComoJson(id) {
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === id);
+                if (!entrega) return;
+                
+                const jsonDados = JSON.stringify(entrega, null, 2);
+                const blob = new Blob([jsonDados], { type: 'application/json' });
+                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}.json`;
+                
+                await compartilharOuBaixar(blob, nomeArquivo);
+            }
 
             function carregarDados(jsonDados) {
-                if (!jsonDados) {
-                    mostrarAviso("O arquivo está vazio.");
-                    return;
-                }
                 try {
                     const dadosCarregados = JSON.parse(jsonDados);
-                    let rotaParaCarregar;
-
+                    
+                    // Caso 1: É o formato NOVO (Objeto Rota)
                     if (typeof dadosCarregados === 'object' && !Array.isArray(dadosCarregados) && dadosCarregados.entregas) {
-                        // Caso 1: É o formato NOVO (Objeto Rota)
-                        if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) throw new Error('Objeto de rota inválido.');
-                        rotaParaCarregar = dadosCarregados;
-                        let novoId = rotaParaCarregar.id;
-                        if (todasAsRotas[novoId]) novoId = `import-${Date.now()}`;
-                        rotaParaCarregar.id = novoId;
+                        if (!dadosCarregados.id || !dadosCarregados.nome || !dadosCarregados.data) {
+                            throw new Error('Objeto de rota inválido. Faltando id, nome ou data.');
+                        }
+                        let novoId = dadosCarregados.id;
+                        if (todasAsRotas[novoId]) {
+                            novoId = `import-${Date.now()}`;
+                        }
+                        dadosCarregados.id = novoId;
+                        
+                        // Garante que a rota importada tem os campos novos
+                        dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
+                        dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
+                            ...e,
+                            // Garante que o cliente é um objeto (compatibilidade com formato antigo)
+                            cliente: typeof e.cliente === 'object' ? e.cliente : {
+                                nome: e.codigoCliente || 'Cliente Antigo',
+                                celular: '', endereco: e.codigoCliente || 'Sem Endereço', complemento: ''
+                            },
+                            rotaEntrega: e.rotaEntrega || 'CUIABÁ',
+                            horarioMontagem: e.horarioMontagem || null
+                        }));
+
+                        todasAsRotas[novoId] = dadosCarregados;
+                        rotaAtivaId = novoId;
+                        
+                        salvarTodasAsRotas();
+                        popularSelectRotas();
+                        carregarRotaAtiva();
+                        
                     } 
+                    // Caso 2: É o formato ANTIGO (Array de Entregas)
                     else if (Array.isArray(dadosCarregados)) {
-                        // Caso 2: É o formato ANTIGO (Array de Entregas) - Adiciona na rota ativa
-                        const rotaAtiva = todasAsRotas[rotaAtivaId];
-                        if (!rotaAtiva) throw new Error("Nenhuma rota ativa para carregar dados antigos.");
-                        if (dadosCarregados.length > 0 && !dadosCarregados[0].id) throw new Error('Estrutura de dados antiga incompatível.');
-                        rotaAtiva.entregas = dadosCarregados;
-                        rotaParaCarregar = rotaAtiva; // Processa a rota ativa
+                        const rotaAtiva = getRotaAtiva();
+                        if (!rotaAtiva) {
+                             mostrarAviso("Nenhuma rota ativa. Crie uma nova rota antes de carregar um arquivo antigo.");
+                             return;
+                        }
+                        rotaAtiva.entregas = dadosCarregados.map(e => ({
+                            ...e,
+                            cliente: typeof e.cliente === 'object' ? e.cliente : {
+                                nome: e.codigoCliente || 'Cliente Antigo',
+                                celular: '', endereco: e.codigoCliente || 'Sem Endereço', complemento: ''
+                            },
+                            rotaEntrega: e.rotaEntrega || 'CUIABÁ',
+                            horarioMontagem: e.horarioMontagem || null
+                        }));
+                        salvarTodasAsRotas();
+                        renderizarEntregas();
+                        renderizarResumo();
                     } else {
                         throw new Error('Formato de arquivo JSON desconhecido.');
                     }
-
-                    // Migra todas as entregas dentro da rotaParaCarregar
-                    rotaParaCarregar.despesas = rotaParaCarregar.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-                    rotaParaCarregar.entregas = rotaParaCarregar.entregas.map(e => {
-                        const entregaMigrada = { ...e };
-                        if (!entregaMigrada.rotaEntrega) entregaMigrada.rotaEntrega = 'CUIABÁ';
-                        entregaMigrada.cestas = migrarFormatoCestas(entregaMigrada);
-                        entregaMigrada.horarioMontagem = entregaMigrada.horarioMontagem || null;
-                        // Limpa campos legados
-                        delete entregaMigrada.cesta; delete entregaMigrada.quantidade;
-                        delete entregaMigrada.tipo; delete entregaMigrada.brinde;
-                        delete entregaMigrada.brindeDescricao; delete entregaMigrada.codigoAlterada;
-                        delete entregaMigrada.partesAlteradas;
-                        delete entregaMigrada.codigoFinal;
-                        return entregaMigrada;
-                    });
-
-                    // Salva a rota processada
-                    todasAsRotas[rotaParaCarregar.id] = rotaParaCarregar;
-                    rotaAtivaId = rotaParaCarregar.id;
-                    
-                    salvarTodasAsRotas();
-                    popularSelectRotas();
-                    carregarRotaAtiva();
-
                 } catch (error) {
                     console.error("Erro ao carregar JSON:", error);
-                    mostrarAviso(`Dados inválidos. (Erro: ${error.message})`);
+                    mostrarAviso(`Dados inválidos. Verifique o arquivo. (Erro: ${error.message})`);
                 }
-            }
-
-            function handleArquivoCarregado(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => carregarDados(event.target.result);
-                reader.onerror = () => mostrarAviso('Não foi possível ler o arquivo.');
-                reader.readAsText(file);
-                e.target.value = null;
             }
             
-            function carregarCardNaRota(cardJson) {
-                try {
-                    let novaEntrega = JSON.parse(cardJson);
-                    if (!novaEntrega.id || !novaEntrega.cliente) throw new Error("Arquivo do card é inválido.");
-                    
-                    novaEntrega.rotaEntrega = novaEntrega.rotaEntrega || 'CUIABÁ';
-                    novaEntrega.cestas = migrarFormatoCestas(novaEntrega);
-                    novaEntrega.horarioMontagem = novaEntrega.horarioMontagem || null;
-                    // Limpa legados
-                    delete novaEntrega.cesta; delete novaEntrega.quantidade;
-                    // ... (etc)
-                    
-                    const rotaAtiva = todasAsRotas[rotaAtivaId];
-                    if (!rotaAtiva) {
-                         mostrarAviso("Nenhuma rota ativa para adicionar o card.");
-                         return;
-                    }
-                    if (rotaAtiva.entregas.find(e => e.id === novaEntrega.id)) novaEntrega.id = Date.now(); // Evita ID duplicado
-
-                    rotaAtiva.entregas.push(novaEntrega);
-                    salvarLocalStorage();
-                    
-                    // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o card importado apareça
-                    resetarFiltroParaTodas();
-                    
-                    renderizarEntregas();
-                    renderizarResumo();
-                    mostrarAviso("Card importado com sucesso!");
-
-                } catch (error) {
-                    console.error("Erro ao carregar Card JSON:", error);
-                    mostrarAviso(`Card inválido. (Erro: ${error.message})`);
-                }
-            }
-
             function handleCardImportado(e) {
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = (event) => carregarCardNaRota(event.target.result);
-                reader.onerror = () => mostrarAviso('Não foi possível ler o arquivo.');
+                reader.onload = (event) => {
+                    try {
+                        const jsonCard = event.target.result;
+                        const novaEntrega = JSON.parse(jsonCard);
+                        
+                        if (!novaEntrega.id || !novaEntrega.cliente || !novaEntrega.status) {
+                             throw new Error('Este não parece ser um arquivo de card válido.');
+                        }
+                        
+                        // Garante que a entrega importada tem os campos novos
+                        novaEntrega.rotaEntrega = novaEntrega.rotaEntrega || 'CUIABÁ';
+                        novaEntrega.horarioMontagem = novaEntrega.horarioMontagem || null;
+
+                        const rotaAtiva = getRotaAtiva();
+                        if (!rotaAtiva) {
+                            mostrarAviso("Nenhuma rota ativa para adicionar o card.");
+                            return;
+                        }
+                        
+                        // Checa duplicidade
+                        if (rotaAtiva.entregas.find(e => e.id === novaEntrega.id)) {
+                            mostrarAviso("Este card de entrega (ID) já existe nesta rota.");
+                            return;
+                        }
+                        
+                        rotaAtiva.entregas.push(novaEntrega);
+                        salvarTodasAsRotas();
+                        
+                        // CORREÇÃO: Reseta o filtro para a rota do card importado
+                        resetarFiltroParaPadrao(novaEntrega.rotaEntrega);
+                        
+                        renderizarEntregas();
+                        renderizarResumo();
+                        mostrarAviso("Card importado com sucesso!", "Sucesso");
+
+                    } catch (error) {
+                        mostrarAviso(`Erro ao processar o arquivo: ${error.message}`);
+                    }
+                };
                 reader.readAsText(file);
                 e.target.value = null;
             }
             
-            // CORREÇÃO: Nova função para resetar o filtro
-            function resetarFiltroParaPadrao() {
-                filtroRotaAtiva = 'CUIABÁ'; // MODIFICADO
+            // CORREÇÃO: Nova função para resetar o filtro para a ROTA DO PEDIDO
+            function resetarFiltroParaPadrao(rotaDoPedido = null) {
+                // Se uma rota específica for fornecida (ao salvar), mude para ela.
+                // Se não (ao carregar), mude para o padrão 'CUIABÁ'.
+                let filtroAlvo = rotaDoPedido || 'CUIABÁ';
+                filtroRotaAtiva = filtroAlvo; 
+
                 document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
-                // MODIFICADO
-                const primeiroFiltro = document.querySelector('.btn-filtro-rota[data-filtro="CUIABÁ"]');
-                if (primeiroFiltro) {
-                    primeiroFiltro.classList.add('btn-filtro-ativo');
+                
+                const filtroAtivoBtn = document.querySelector(`.btn-filtro-rota[data-filtro="${filtroAlvo}"]`);
+                if (filtroAtivoBtn) {
+                    filtroAtivoBtn.classList.add('btn-filtro-ativo');
+                } else {
+                    // Fallback se a rota do pedido não tiver um filtro (ex: "N/A")
+                    const primeiroFiltro = document.querySelector('.btn-filtro-rota[data-filtro="CUIABÁ"]');
+                    if (primeiroFiltro) {
+                        primeiroFiltro.classList.add('btn-filtro-ativo');
+                        filtroRotaAtiva = 'CUIABÁ';
+                    }
                 }
             }
             
             function atualizarFiltroRota(e) {
                 const filtroBtn = e.target.closest('.btn-filtro-rota');
                 if (!filtroBtn) return;
+                
                 filtroRotaAtiva = filtroBtn.dataset.filtro;
+                
                 document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
                 filtroBtn.classList.add('btn-filtro-ativo');
+                
                 renderizarEntregas();
             }
-            
-            // --- Inicialização e Event Listeners ---
-            
-            // Navegação (Nova Lógica de Modal e Top Bar)
-            btnAbrirFormModal.addEventListener('click', () => {
-                sairModoEdicao(); // Garante que é um formulário novo
-                abrirFormModal();
-            });
-            btnFecharFormModal.addEventListener('click', sairModoEdicao);
 
-            <!-- MODIFICADO: Listener do Header Admin removido
-            -->
+            // --- Inicialização e Event Listeners ---
+
+            function iniciarAplicativo() {
+                // 1. Carregar Clientes (do clientes.js)
+                try {
+                    if (typeof CLIENTES_DB !== 'undefined' && Array.isArray(CLIENTES_DB)) {
+                        datalistClientes.innerHTML = '';
+                        CLIENTES_DB.forEach(cliente => {
+                            const option = document.createElement('option');
+                            option.value = cliente.nome;
+                            datalistClientes.appendChild(option);
+                            CLIENTES_CACHE[normalizarString(cliente.nome)] = cliente;
+                        });
+                    } else {
+                        console.error("CLIENTES_DB não encontrado. Verifique o 'clientes.js'.");
+                        mostrarAviso("Erro ao carregar banco de dados de clientes. Verifique o 'clientes.js'.");
+                    }
+                } catch (e) {
+                     console.error("Erro ao processar clientes:", e);
+                     mostrarAviso("Erro ao processar o arquivo 'clientes.js'.");
+                }
+                
+                // 2. Carregar Rotas
+                const dadosSalvos = localStorage.getItem('gerenciadorDeRotas');
+                if (dadosSalvos) {
+                    todasAsRotas = JSON.parse(dadosSalvos);
+                }
+                
+                // 3. Descobrir qual rota está ativa
+                rotaAtivaId = localStorage.getItem('rotaAtivaId');
+
+                // 4. Se não houver rotas, ou a rota ativa não existir, cria uma nova
+                if (!rotaAtivaId || !todasAsRotas[rotaAtivaId]) {
+                    if (Object.keys(todasAsRotas).length === 0) {
+                        criarNovaRota(false);
+                    } else {
+                        rotaAtivaId = Object.keys(todasAsRotas)[0];
+                        localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                    }
+                }
+
+                // 5. Popular o <select> e carregar a rota ativa na tela
+                popularSelectRotas();
+                carregarRotaAtiva();
+                
+                // 6. Define o modo inicial
+                setModoVisualizacao('admin');
+                
+                // 7. Define o filtro inicial
+                resetarFiltroParaPadrao(null); // Usa o padrão 'CUIABÁ'
+            }
+
+            // --- Adiciona todos os Event Listeners ---
+
+            // Navegação (Modos)
+            btnModoAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
+            btnModoEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
+            btnModoMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
+            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
+            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+
+            // Gerenciamento de Rota (Admin)
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
                 localStorage.setItem('rotaAtivaId', rotaAtivaId);
@@ -1971,25 +2008,30 @@
             inputNomeRota.addEventListener('change', atualizarInfoRota);
             inputDataRota.addEventListener('change', atualizarInfoRota);
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
-            
-            // Página Rota (Lista e Filtros)
-            listaEntregasEl.addEventListener('click', handleCardClick);
-            filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
-            // Página Modo (Agora na Top Bar)
-            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
-            
-            // Seção Despesas (Listeners)
+            // Despesas (Entregador)
             inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
             inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
             inputDespesaExtra.addEventListener('change', salvarDespesas);
 
-            // Página Formulário (Dentro do Modal)
+            // Filtros de Rota
+            filtrosRotaEl.addEventListener('click', atualizarFiltroRota);
+            
+            // Lista de Entregas (Delegação de Evento)
+            listaEntregasEl.addEventListener('click', handleCardClick);
+
+            // Modal Formulário
+            btnAbrirFormModal.addEventListener('click', () => {
+                sairModoEdicao(); // Garante que é um formulário novo
+                abrirFormModal();
+            });
+            btnFecharFormModal.addEventListener('click', sairModoEdicao);
             formEntrega.addEventListener('submit', adicionarOuAtualizarEntrega);
+
+            // Modal Formulário -> Cliente
             inputCliente.addEventListener('input', (e) => {
-                const cliente = CLIENTES_CACHE[e.target.value.toLowerCase()];
+                const nome = e.target.value;
+                const cliente = CLIENTES_CACHE[normalizarString(nome)];
                 if (cliente) {
                     displayClienteEndereco.textContent = cliente.endereco || '-';
                     displayClienteComplemento.textContent = cliente.complemento || '-';
@@ -1999,30 +2041,45 @@
                     infoClienteSelecionado.classList.add('hidden');
                 }
             });
-            
-            // Página Formulário (Sub-form Cestas)
-            btnAddCesta.addEventListener('click', adicionarCestaAoPedido);
-            document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(r => r.addEventListener('change', toggleSubCampoAlterada));
-            document.querySelectorAll('input[name="sub-brinde"]').forEach(r => r.addEventListener('change', toggleSubCampoBrinde));
-            listaCestasNoPedidoEl.addEventListener('click', handleRemoverCesta);
-            
-            // Modais
-            btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
+
+            // Modal Formulário -> Sub-Formulário (Adicionar Cesta)
+            btnAdicionarCesta.addEventListener('click', adicionarCestaAoPedido);
+            document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(radio => {
+                radio.addEventListener('change', toggleSubCampoAlterada);
+            });
+            document.querySelectorAll('input[name="sub-brinde"]').forEach(radio => {
+                radio.addEventListener('change', toggleSubCampoBrinde);
+            });
+            listaCestasNoPedidoEl.addEventListener('click', (e) => {
+                const btnRemover = e.target.closest('.btn-remover-cesta');
+                if (btnRemover) {
+                    removerCestaDoPedido(btnRemover.dataset.index);
+                }
+            });
+
+            // Modal Pagamento
+            btnCancelarPagamento.addEventListener('click', () => modalPagamento.classList.add('hidden'));
             formPagamento.addEventListener('submit', salvarPagamento);
+            
+            // Modal WhatsApp
+            modalWhatsApp.addEventListener('click', handleAcaoWhatsApp);
             btnFecharWhatsApp.addEventListener('click', () => modalWhatsApp.classList.add('hidden'));
             
             /* MODIFICADO: Event listeners para querySelectorAll */
             btnsExportar.forEach(btn => btn.addEventListener('click', exportarDados));
             
+            // Modal Exportar
             btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
             btnBaixarJson.addEventListener('click', () => {
-                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                const rotaAtiva = getRotaAtiva();
                 if (!rotaAtiva) return;
-                salvarLocalStorage();
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-Nenhum]/gi, '_')}_${rotaAtiva.data}.json`;
-                compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
+                const blob = new Blob([jsonDados], { type: 'application/json' });
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
+                compartilharOuBaixar(blob, nomeArquivo);
             });
+
+            // Modal Aviso
             btnFecharAviso.addEventListener('click', fecharAviso);
 
             // Importação/Exportação de Arquivos
@@ -2038,6 +2095,4 @@
     </script>
 </body>
 </html>
-
-
 
