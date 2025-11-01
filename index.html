@@ -604,7 +604,6 @@
             
             // Lógica de Página e Navegação
             const bodyEl = document.body;
-            // (Páginas removidas, agora é um layout de modal)
             
             // Nova Barra Superior
             const btnTopAdmin = document.getElementById('btn-top-admin');
@@ -1021,6 +1020,7 @@
                     if (entrega.status === 'Montado') statusClass = 'montado';
                     
                     const rotaClass = `rota-${(entrega.rotaEntrega || 'N/A').replace('/', '\\/')}`;
+                    const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
                     
                     card.className = `bg-white p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
@@ -1402,6 +1402,10 @@
                 }
                 
                 salvarLocalStorage();
+                
+                // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o novo pedido apareça
+                resetarFiltroParaTodas();
+                
                 renderizarEntregas();
                 renderizarResumo();
             }
@@ -1888,6 +1892,10 @@
 
                     rotaAtiva.entregas.push(novaEntrega);
                     salvarLocalStorage();
+                    
+                    // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o card importado apareça
+                    resetarFiltroParaTodas();
+                    
                     renderizarEntregas();
                     renderizarResumo();
                     mostrarAviso("Card importado com sucesso!");
@@ -1906,6 +1914,13 @@
                 reader.onerror = () => mostrarAviso('Não foi possível ler o arquivo.');
                 reader.readAsText(file);
                 e.target.value = null;
+            }
+            
+            // CORREÇÃO: Nova função para resetar o filtro
+            function resetarFiltroParaTodas() {
+                filtroRotaAtiva = 'TODOS';
+                document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
+                document.querySelector('.btn-filtro-rota[data-filtro="TODAS"]').classList.add('btn-filtro-ativo');
             }
             
             function atualizarFiltroRota(e) {
