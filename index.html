@@ -17,100 +17,98 @@
         /* Define a fonte padrão */
         body {
             font-family: 'Inter', sans-serif;
-            /* Garante que o conteúdo não seja coberto pela barra inferior */
-            padding-bottom: 80px; /* Altura da barra de navegação */
+            background-color: #f3f4f6; /* gray-100 */
         }
         
-        /* --- Lógica de Navegação por Página --- */
-        .page {
-            display: none; /* Oculta todas as páginas por padrão */
-        }
-        .page-active {
-            display: block; /* Mostra apenas a página ativa */
-        }
-
-        /* --- Estilos da Barra de Navegação Inferior --- */
-        #bottom-nav {
+        /* --- Nova Barra Superior Fixa --- */
+        #top-bar {
             position: fixed;
-            bottom: 0;
+            top: 0;
             left: 0;
             right: 0;
-            z-index: 40; /* Abaixo dos modais (z-50) */
+            z-index: 40;
             background-color: #ffffff;
-            border-top: 1px solid #e5e7eb; /* gray-200 */
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            height: 72px; /* Altura fixa para o padding-bottom do body */
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
         }
-        .nav-button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            color: #6b7280; /* gray-500 */
-            font-size: 0.75rem; /* 12px */
-            line-height: 1rem;
-            font-weight: 500;
-            padding: 8px 4px;
-            transition: color 0.2s;
-        }
-        .nav-button svg {
-            width: 1.75rem; /* 28px */
-            height: 1.75rem; /* 28px */
-            margin-bottom: 2px;
-        }
-        /* Botão da "Ação Principal" (Adicionar) */
-        #nav-btn-adicionar {
-            color: #ffffff;
+        /* Botão de modo ativo */
+        .btn-modo-ativo {
             background-color: #2563eb; /* blue-600 */
-            border-radius: 9999px; /* rounded-full */
-            width: 64px; /* Largura fixa */
-            height: 64px; /* Altura fixa */
-            font-size: 0.75rem;
-            margin-top: -24px; /* Puxa para cima */
-            border: 4px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            flex-grow: 0;
-            flex-shrink: 0;
+            color: #ffffff !important;
         }
-        /* Cor do botão de navegação ativo */
-        .nav-button-active {
-            color: #2563eb; /* blue-600 */
-        }
-        /* --- Fim da Navegação Inferior --- */
 
-        /* Classe para item entregue */
-        .entregue {
-            background-color: #f0fdf4 !important;
-            border-left-color: #22c55e !important;
+        /* --- Novo Modal de Formulário --- */
+        #modal-form {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; /* Oculto por padrão */
+            overflow-y: auto; /* Permite scroll no modal */
         }
-        /* Classe para item cancelado */
-        .cancelada {
-            background-color: #f3f4f6 !important;
-            border-left-color: #6b7280 !important;
-            opacity: 0.7;
+        .modal-form-content {
+            height: 100%;
+            width: 100%;
+            background-color: #f3f4f6; /* gray-100 */
         }
-        /* Classe para item montado */
-        .montado {
-            background-color: #f0f9ff !important;
-            border-left-color: #3b82f6 !important;
+        @media (min-width: 768px) {
+            /* Em telas maiores, não é tela cheia */
+            .modal-form-content {
+                height: auto;
+                max-height: 90vh;
+                max-width: 60rem; /* 960px */
+                margin: 2.5rem auto;
+                border-radius: 0.5rem; /* rounded-lg */
+                overflow-y: auto;
+            }
+            #modal-form {
+                padding: 2.5rem; /* Adiciona padding em volta */
+            }
         }
         
-        /* Cores de Fundo por Rota */
-        .rota-CUIABÁ { background-color: #e0f2fe; border-left-color: #0284c7; } /* sky-100, sky-600 */
-        .rota-VG { background-color: #fef3c7; border-left-color: #d97706; } /* amber-100, amber-600 */
-        .rota-CPA { background-color: #fce7f3; border-left-color: #db2777; } /* pink-100, pink-600 */
-        .rota-COXIPÓ { background-color: #dcfce7; border-left-color: #16a34a; } /* green-100, green-600 */
+        /* --- Novo Botão Flutuante (FAB) --- */
+        #btn-abrir-form-modal {
+            position: fixed;
+            bottom: 2rem; /* 32px */
+            right: 1.5rem; /* 24px */
+            z-index: 40;
+            background-color: #2563eb; /* blue-600 */
+            color: #ffffff;
+            width: 4rem; /* 64px */
+            height: 4rem; /* 64px */
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-out;
+        }
+        #btn-abrir-form-modal:hover {
+            transform: scale(1.05);
+        }
 
-        /* Lógica de visibilidade para Modos (igual a antes) */
+        /* Classes de Status (Entregue, Cancelada, Montado) */
+        .entregue { background-color: #f0fdf4 !important; border-left-color: #22c55e !important; }
+        .cancelada { background-color: #f3f4f6 !important; border-left-color: #6b7280 !important; opacity: 0.7; }
+        .montado { background-color: #f0f9ff !important; border-left-color: #3b82f6 !important; }
+        
+        /* Cores de Rota */
+        .rota-CUIABÁ { background-color: #e0f2fe; border-left-color: #0284c7; }
+        .rota-VG { background-color: #fef3c7; border-left-color: #d97706; }
+        .rota-CPA { background-color: #fce7f3; border-left-color: #db2777; }
+        .rota-COXIPÓ { background-color: #dcfce7; border-left-color: #16a34a; }
+
+        /* Lógica de Visibilidade por Modo */
         .entregador-view, .montador-view { display: none; }
         .modo-entregador .entregador-view { display: block; }
         .modo-entregador .admin-view, .modo-entregador .montador-view { display: none; }
         .modo-montador .montador-view { display: block; }
         .modo-montador .admin-view, .modo-montador .entregador-view { display: none; }
         .modo-entregador #secao-despesas.entregador-view { display: block; }
+        /* O FAB de Adicionar só aparece para Admin */
+        .modo-entregador #btn-abrir-form-modal,
+        .modo-montador #btn-abrir-form-modal {
+            display: none;
+        }
 
         /* Estilo para botão de filtro de rota ativo */
         .btn-filtro-ativo {
@@ -119,13 +117,8 @@
             border-color: #1d4ed8;
         }
         
-        /* Estilo para Textarea (para detalhes e obs) */
-        textarea {
-            min-height: 100px;
-            white-space: pre-wrap;
-        }
-        
-        /* Estilo para exibir texto pré-formatado no card */
+        /* Estilos de Texto e Textarea */
+        textarea { min-height: 100px; white-space: pre-wrap; }
         .pre-wrap-texto {
             white-space: pre-wrap;
             word-break: break-word;
@@ -145,23 +138,44 @@
 <body class="bg-gray-100 antialiased">
     
     <!-- =================================================================== -->
-    <!-- PÁGINA 1: ROTA (LISTA DE ENTREGAS) -->
+    <!-- NOVA BARRA SUPERIOR FIXA -->
     <!-- =================================================================== -->
-    <main id="page-rota" class="page page-active">
+    <nav id="top-bar" class="p-2 sm:p-4">
+        <div class="container mx-auto max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex-shrink-0">
+                Gestor de Rotas
+            </h1>
+            <!-- Botões de Modo -->
+            <div class="flex bg-gray-200 rounded-lg p-1 w-full sm:w-auto">
+                <button id="btn-top-admin" class="btn-modo-ativo text-gray-800 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto">
+                    ADMIN
+                </button>
+                <button id="btn-top-entregador" class="text-gray-600 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-gray-300">
+                    ENTREGADOR
+                </button>
+                <button id="btn-top-montador" class="text-gray-600 font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm w-1/3 sm:w-auto hover:bg-gray-300">
+                    MONTADOR
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- =================================================================== -->
+    <!-- PÁGINA PRINCIPAL (ÚNICA) -->
+    <!-- =================================================================== -->
+    <main class="container mx-auto max-w-5xl p-4 mt-24 sm:mt-20">
         
         <!-- Cabeçalho da Rota (Admin) - Fixo/Colapsável -->
-        <header id="page-rota-header" class="admin-view sticky top-0 z-30 bg-gray-100 shadow-sm pt-4 pb-2 px-4">
+        <header id="page-rota-header" class="admin-view sticky top-0 z-30 bg-gray-100 shadow-sm pt-4 pb-2 px-4 -mt-4 -mx-4 mb-4">
             <div class="container mx-auto max-w-5xl">
                 <!-- Cabeçalho Visível (Botão de Toggle) -->
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-2xl font-semibold text-gray-900">Gerenciar Rota</h2>
                     <button id="btn-toggle-admin-header" class="text-gray-500 hover:text-blue-600 p-2">
-                        <!-- Ícone de Engrenagem (Aberto) -->
                         <svg id="icon-toggle-open" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <!-- Ícone de Fechar (Escondido) -->
                         <svg id="icon-toggle-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -210,298 +224,252 @@
             </div>
         </header>
 
-        <!-- Container da Lista de Entregas -->
-        <div class="container mx-auto max-w-5xl p-4">
-            
-            <!-- Painel de Resumo (Montador) -->
-            <section id="secao-resumo" class="montador-view bg-white p-4 rounded-lg shadow-md mb-4 space-y-2">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2 border-b pb-2">Resumo da Montagem</h2>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                        <span class="block font-medium text-gray-600">Total Pedidos:</span>
-                        <span id="summary-total-pedidos" class="text-lg font-bold text-gray-900">0</span>
-                    </div>
-                    <div>
-                        <span class="block font-medium text-gray-600">Total Cestas:</span>
-                        <span id="summary-total-cestas" class="text-lg font-bold text-gray-900">0</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="block font-medium text-gray-600">Cestas por Tipo:</span>
-                        <span id="summary-cestas-breakdown" class="text-xs text-gray-700">...</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="block font-medium text-gray-600">Cestas por Rota:</span>
-                        <span id="summary-rotas-breakdown" class="text-xs text-gray-700">...</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="block font-medium text-gray-600">Pedidos por Rota (Não Cancelados):</span>
-                        <span id="summary-pedidos-rota-breakdown" class="text-xs text-gray-700">...</span>
-                    </div>
+        <!-- Seção de Despesas (Entregador) -->
+        <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
+            <div class="grid grid-cols-1 gap-4 items-end">
+                <div>
+                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
+                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
                 </div>
-            </section>
+                <div>
+                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
+                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+                <div>
+                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
+                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+            </div>
+        </section>
 
-            <!-- Filtros de Rota (Todos os Modos) -->
-            <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4">
-                <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm">
-                    TODAS
-                </button>
-                <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ">
-                    CUIABÁ
-                </button>
-                <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG">
-                    VG
-                </button>
-                <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA">
-                    CPA
-                </button>
-                <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ">
-                    COXIPÓ
-                </button>
+        <!-- Painel de Resumo (Montador) -->
+        <section id="secao-resumo" class="montador-view bg-white p-4 rounded-lg shadow-md mb-4 space-y-2">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2 border-b pb-2">Resumo da Montagem</h2>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                    <span class="block font-medium text-gray-600">Total Pedidos:</span>
+                    <span id="summary-total-pedidos" class="text-lg font-bold text-gray-900">0</span>
+                </div>
+                <div>
+                    <span class="block font-medium text-gray-600">Total Cestas:</span>
+                    <span id="summary-total-cestas" class="text-lg font-bold text-gray-900">0</span>
+                </div>
+                <div class="col-span-2">
+                    <span class="block font-medium text-gray-600">Cestas por Tipo:</span>
+                    <span id="summary-cestas-breakdown" class="text-xs text-gray-700">...</span>
+                </div>
+                <div class="col-span-2">
+                    <span class="block font-medium text-gray-600">Cestas por Rota:</span>
+                    <span id="summary-rotas-breakdown" class="text-xs text-gray-700">...</span>
+                </div>
+                <div class="col-span-2">
+                    <span class="block font-medium text-gray-600">Pedidos por Rota (Não Cancelados):</span>
+                    <span id="summary-pedidos-rota-breakdown" class="text-xs text-gray-700">...</span>
+                </div>
             </div>
-            
-            <!-- Lista de Cards de Entrega -->
-            <div id="lista-entregas" class="space-y-4">
-                <!-- Cards serão injetados aqui pelo JavaScript -->
-            </div>
-            <p id="lista-vazia" class="text-center text-gray-700 py-10">Nenhuma entrega na rota.</p>
+        </section>
+
+        <!-- Filtros de Rota (Todos os Modos) -->
+        <div id="filtros-rota" class="flex flex-wrap gap-2 mb-4">
+            <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm">
+                TODAS
+            </button>
+            <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ">
+                CUIABÁ
+            </button>
+            <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG">
+                VG
+            </button>
+            <button data-filtro="CPA" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CPA">
+                CPA
+            </button>
+            <button data-filtro="COXIPÓ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-COXIPÓ">
+                COXIPÓ
+            </button>
         </div>
+        
+        <!-- Lista de Cards de Entrega -->
+        <div id="lista-entregas" class="space-y-4">
+            <!-- Cards serão injetados aqui pelo JavaScript -->
+        </div>
+        <p id="lista-vazia" class="text-center text-gray-700 py-10">Nenhuma entrega na rota.</p>
+
+        <!-- Espaçador para o FAB não cobrir o último card -->
+        <div class="h-24"></div> 
     </main>
     
     <!-- =================================================================== -->
-    <!-- PÁGINA 2: FORMULÁRIO (ADICIONAR/EDITAR) -->
+    <!-- NOVO BOTÃO FLUTUANTE (FAB) -->
     <!-- =================================================================== -->
-    <main id="page-form" class="page">
-        <!-- Cabeçalho Fixo do Formulário -->
-        <header class="sticky top-0 z-30 bg-white shadow-sm p-4 flex justify-between items-center">
-            <h2 id="form-entrega-title" class="text-xl font-semibold text-gray-900">Lançar Nova Entrega</h2>
-            <button id="btn-cancelar-form" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                Cancelar
-            </button>
-        </header>
+    <button id="btn-abrir-form-modal" class="admin-view">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+    </button>
+    
 
-        <!-- Container do Formulário -->
-        <div class="p-4">
-            <form id="form-entrega" class="container mx-auto max-w-5xl space-y-6">
-                <!-- Seção 1: Dados do Cliente -->
-                <fieldset class="bg-white p-4 rounded-lg shadow-md">
-                    <legend class="text-lg font-medium text-gray-900 mb-2">1. Dados do Cliente</legend>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione...">
-                            <datalist id="lista-clientes">
-                                <!-- Clientes carregados via JS -->
-                            </datalist>
-                        </div>
-                        <div>
-                            <label for="input-rota-entrega" class="block text-sm font-medium text-gray-700">Rota do Pedido</label>
-                            <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                <option value="CUIABÁ">CUIABÁ</option>
-                                <option value="VG">VG</option>
-                                <option value="CPA">CPA</option>
-                                <option value="COXIPÓ">COXIPÓ</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                            <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco..."></textarea>
-                        </div>
-                        <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-700 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
-                            <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
-                            <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
-                            <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
-                        </div>
-                    </div>
-                </fieldset>
-                
-                <!-- Seção 2: Adicionar Cestas ao Pedido (Sub-Formulário) -->
-                <fieldset id="form-add-cesta" class="bg-white border border-gray-300 rounded-lg p-4">
-                    <legend class="text-lg font-medium text-gray-900 mb-4 px-2">2. Adicionar Cesta</legend>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-1 space-y-4">
+    <!-- =================================================================== -->
+    <!-- NOVO MODAL DO FORMULÁRIO -->
+    <!-- =================================================================== -->
+    <div id="modal-form">
+        <div class="modal-form-content">
+            <!-- Cabeçalho Fixo do Formulário -->
+            <header class="sticky top-0 z-30 bg-white shadow-sm p-4 flex justify-between items-center">
+                <h2 id="form-entrega-title" class="text-xl font-semibold text-gray-900">Lançar Nova Entrega</h2>
+                <button id="btn-fechar-form-modal" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    Cancelar
+                </button>
+            </header>
+
+            <!-- Container do Formulário (com scroll) -->
+            <div class="p-4">
+                <form id="form-entrega" class="container mx-auto max-w-5xl space-y-6">
+                    <!-- Seção 1: Dados do Cliente -->
+                    <fieldset class="bg-white p-4 rounded-lg shadow-md">
+                        <legend class="text-lg font-medium text-gray-900 mb-2">1. Dados do Cliente</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="sub-select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
-                                <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                                    <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
-                                    <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
-                                    <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
-                                    <option value="Pequena Koblenz" data-valor="220.00">Pequena kolenz</option>
-                                    <option value="mÉDIA Bonini" data-valor="320.00">Média Bonini</option>
-                                    <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
-                                    <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
-                                    <option value="Grande Koblenz" data-valor="390.00">Grande koblenz</option>
+                                <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                                <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione...">
+                                <datalist id="lista-clientes">
+                                    <!-- Clientes carregados via JS -->
+                                </datalist>
+                            </div>
+                            <div>
+                                <label for="input-rota-entrega" class="block text-sm font-medium text-gray-700">Rota do Pedido</label>
+                                <select id="input-rota-entrega" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                    <option value="CUIABÁ">CUIABÁ</option>
+                                    <option value="VG">VG</option>
+                                    <option value="CPA">CPA</option>
+                                    <option value="COXIPÓ">COXIPÓ</option>
                                 </select>
                             </div>
-                            <div>
-                                <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                            <div class="md:col-span-2">
+                                <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
+                                <textarea id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco..."></textarea>
+                            </div>
+                            <div id="info-cliente-selecionado" class="hidden md:col-span-2 space-y-2 text-sm text-gray-700 border-l-4 border-blue-300 pl-3 py-2 bg-blue-50 rounded-r-md">
+                                <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
+                                <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
+                                <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
                             </div>
                         </div>
-                        <div class="md:col-span-1 space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
-                                <div class="mt-2 flex space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-gray-700">Normal</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sub-tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-gray-700">Alterada</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Brinde?</label>
-                                <div class="mt-2 flex space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-gray-700">Não</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sub-brinde" value="Sim" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm text-gray-700">Sim</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="sub-campo-brinde-descricao" class="hidden">
-                                <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Qual o brinde?</label>
-                                <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
-                            </div>
-                        </div>
-                        <div class="md:col-span-1 space-y-4">
-                            <div id="sub-campo-alterada" class="hidden space-y-4">
+                    </fieldset>
+                    
+                    <!-- Seção 2: Adicionar Cestas ao Pedido (Sub-Formulário) -->
+                    <fieldset id="form-add-cesta" class="bg-white border border-gray-300 rounded-lg p-4">
+                        <legend class="text-lg font-medium text-gray-900 mb-4 px-2">2. Adicionar Cesta</legend>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-1 space-y-4">
                                 <div>
-                                    <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                    <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão..."></textarea>
+                                    <label for="sub-select-cesta" class="block text-sm font-medium text-gray-700">Cesta Básica</label>
+                                    <select id="sub-select-cesta" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                        <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
+                                        <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
+                                        <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
+                                        <option value="Pequena Koblenz" data-valor="220.00">Pequena kolenz</option>
+                                        <option value="mÉDIA Bonini" data-valor="320.00">Média Bonini</option>
+                                        <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
+                                        <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
+                                        <option value="Grande Koblenz" data-valor="390.00">Grande koblenz</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Partes Alteradas</label>
-                                    <div class="mt-2 space-y-2">
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
+                                    <label for="sub-input-quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
+                                    <input type="number" id="sub-input-quantidade" value="1" min="1" step="1" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                </div>
+                            </div>
+                            <div class="md:col-span-1 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
+                                    <div class="mt-2 flex space-x-4">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="sub-tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Normal</span>
                                         </label>
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">Alimento</span>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="sub-tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Alterada</span>
                                         </label>
-                                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                                            <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
-                                            <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Brinde?</label>
+                                    <div class="mt-2 flex space-x-4">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="sub-brinde" value="Não" checked class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Não</span>
                                         </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="sub-brinde" value="Sim" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Sim</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="sub-campo-brinde-descricao" class="hidden">
+                                    <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Qual o brinde?</label>
+                                    <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
+                                </div>
+                            </div>
+                            <div class="md:col-span-1 space-y-4">
+                                <div id="sub-campo-alterada" class="hidden space-y-4">
+                                    <div>
+                                        <label for="sub-codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
+                                        <textarea id="sub-codigo-alterada" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Partes Alteradas</label>
+                                        <div class="mt-2 space-y-2">
+                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                                <input type="checkbox" name="sub-partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                                <span class="ml-3 text-sm font-medium text-gray-900">Arroz</span>
+                                            </label>
+                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                                <input type="checkbox" name="sub-partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                                <span class="ml-3 text-sm font-medium text-gray-900">Alimento</span>
+                                            </label>
+                                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                                                <input type="checkbox" name="sub-partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                                                <span class="ml-3 text-sm font-medium text-gray-900">Limpeza</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button type="button" id="btn-add-cesta" class="flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                            Adicionar Cesta
-                        </button>
-                    </div>
-                </fieldset>
-                
-                <!-- Seção 3: Resumo do Pedido -->
-                <fieldset class="bg-white border border-gray-300 rounded-lg p-4">
-                    <legend class="text-lg font-medium text-gray-900 mb-4 px-2">3. Resumo do Pedido</legend>
-                    <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
-                        <p id="lista-cestas-vazia" class="text-center text-gray-700 py-2">Nenhuma cesta adicionada.</p>
-                    </div>
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Valor Total do Pedido</label>
-                            <div id="display-valor" class="mt-1 text-2xl font-bold text-gray-900">
-                                R$ 0,00
+                        <div class="mt-4 flex justify-end">
+                            <button type="button" id="btn-add-cesta" class="flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                Adicionar Cesta
+                            </button>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Seção 3: Resumo do Pedido -->
+                    <fieldset class="bg-white border border-gray-300 rounded-lg p-4">
+                        <legend class="text-lg font-medium text-gray-900 mb-4 px-2">3. Resumo do Pedido</legend>
+                        <div id="lista-cestas-no-pedido" class="space-y-2 mb-4">
+                            <p id="lista-cestas-vazia" class="text-center text-gray-700 py-2">Nenhuma cesta adicionada.</p>
+                        </div>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Valor Total do Pedido</label>
+                                <div id="display-valor" class="mt-1 text-2xl font-bold text-gray-900">
+                                    R$ 0,00
+                                </div>
                             </div>
+                            <button id="btn-submit-form" type="submit" class="w-full md:w-auto flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-6 py-4 text-base font-medium text-white shadow-sm hover:bg-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                <span id="btn-submit-form-text">Lançar Entrega</span>
+                            </button>
                         </div>
-                        <button id="btn-submit-form" type="submit" class="w-full md:w-auto flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-6 py-4 text-base font-medium text-white shadow-sm hover:bg-blue-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                            <span id="btn-submit-form-text">Lançar Entrega</span>
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-        </div>
-    </main>
-
-    <!-- =================================================================== -->
-    <!-- PÁGINA 3: MODO (CONFIGURAÇÕES E DESPESAS) -->
-    <!-- =================================================================== -->
-    <main id="page-modo" class="page">
-        <!-- Cabeçalho Fixo da Página -->
-        <header class="sticky top-0 z-30 bg-white shadow-sm p-4">
-            <h2 class="container mx-auto max-w-5xl text-xl font-semibold text-gray-900">Modo & Despesas</h2>
-        </header>
-
-        <div class="p-4">
-            <div class="container mx-auto max-w-5xl space-y-6">
-                <!-- Seção de Troca de Modo -->
-                <section class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Selecionar Modo de Exibição</h3>
-                    <div class="flex flex-col space-y-2">
-                        <button id="btn-modo-admin" class="text-gray-700 font-semibold py-3 px-4 rounded-md text-left border border-gray-300">
-                            ADMIN (Visão Completa)
-                        </button>
-                        <button id="btn-modo-entregador" class="text-gray-700 font-semibold py-3 px-4 rounded-md text-left border border-gray-300">
-                            ENTREGADOR (Ver Entregas/Despesas)
-                        </button>
-                        <button id="btn-modo-montador" class="text-gray-700 font-semibold py-3 px-4 rounded-md text-left border border-gray-300">
-                            MONTADOR (Ver Resumo/Montagem)
-                        </button>
-                    </div>
-                </section>
-                
-                <!-- Seção de Despesas da Rota (Apenas Entregador) -->
-                <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md entregador-view">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
-                    <div class="grid grid-cols-1 gap-4 items-end">
-                        <div>
-                            <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                            <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                            <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                            <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                        </div>
-                    </div>
-                </section>
+                    </fieldset>
+                </form>
             </div>
         </div>
-    </main>
-
-    <!-- =================================================================== -->
-    <!-- NAVEGAÇÃO INFERIOR FIXA -->
-    <!-- =================================================================== -->
-    <nav id="bottom-nav">
-        <!-- Botão Rota -->
-        <button id="nav-btn-rota" class="nav-button nav-button-active">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h1.5m-1.5 0H5.625m1.5 0v2.25m0-2.25h1.5m-1.5 0H5.625m7.5 0v2.25m0-2.25h1.5m-1.5 0h-1.5m-1.5 0H1.5m1.5 0v2.25m0-2.25h1.5m-1.5 0H1.5m7.5 0v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0H1.5m9 0v2.25m0-2.25h1.5m-1.5 0h-1.5m-1.5 0H5.625m7.5 0v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m1.5 0H1.5M15 6.75v2.25m0-2.25h1.5M15 6.75V15m0 0v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5m15 0v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5M15 9V6.75m0 2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5m7.5 6v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5M15 15v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5m-1.5-3v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5M15 12v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5m1.5-3v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5M15 9v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5m12-9v2.25m0-2.25h1.5m-1.5 0h-1.5m1.5 0h1.5m-1.5 0h-1.5m-1.5 0H1.5" />
-            </svg>
-            <span>Rota</span>
-        </button>
-        <!-- Botão Adicionar -->
-        <button id="nav-btn-adicionar" class="nav-button admin-view">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span>Adicionar</span>
-        </button>
-        <!-- Botão Modo -->
-        <button id="nav-btn-modo" class="nav-button">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>Modo</span>
-        </button>
-    </nav>
+    </div>
     
 
     <!-- =================================================================== -->
@@ -635,12 +603,15 @@
             // --- Seletores de Elementos ---
             
             // Lógica de Página e Navegação
-            const pages = document.querySelectorAll('.page');
-            const navBtnRota = document.getElementById('nav-btn-rota');
-            const navBtnAdicionar = document.getElementById('nav-btn-adicionar');
-            const navBtnModo = document.getElementById('nav-btn-modo');
+            const bodyEl = document.body;
+            // (Páginas removidas, agora é um layout de modal)
             
-            // Página Rota
+            // Nova Barra Superior
+            const btnTopAdmin = document.getElementById('btn-top-admin');
+            const btnTopEntregador = document.getElementById('btn-top-entregador');
+            const btnTopMontador = document.getElementById('btn-top-montador');
+            
+            // Página Rota (Header Admin)
             const btnToggleAdminHeader = document.getElementById('btn-toggle-admin-header');
             const iconToggleOpen = document.getElementById('icon-toggle-open');
             const iconToggleClose = document.getElementById('icon-toggle-close');
@@ -654,21 +625,21 @@
             const displayDiaSemana = document.getElementById('display-dia-semana');
             const btnExcluirRota = document.getElementById('btn-excluir-rota');
 
-            // Página Modo
-            const bodyEl = document.body;
-            const btnModoAdmin = document.getElementById('btn-modo-admin');
-            const btnModoEntregador = document.getElementById('btn-modo-entregador');
-            const btnModoMontador = document.getElementById('btn-modo-montador');
+            // Seção Despesas (Entregador)
             const inputDespesaAbastecimento = document.getElementById('input-despesa-abastecimento');
             const inputDespesaAlimentacao = document.getElementById('input-despesa-alimentacao');
             const inputDespesaExtra = document.getElementById('input-despesa-extra');
 
-            // Página Formulário
+            // Novo Modal de Formulário
+            const modalForm = document.getElementById('modal-form');
+            const btnAbrirFormModal = document.getElementById('btn-abrir-form-modal'); // FAB
+            const btnFecharFormModal = document.getElementById('btn-fechar-form-modal'); // Botão "Cancelar" no header do modal
+            
+            // Formulário (Dentro do Modal)
             const formEntrega = document.getElementById('form-entrega');
             const formEntregaTitle = document.getElementById('form-entrega-title');
             const btnSubmitForm = document.getElementById('btn-submit-form');
             const btnSubmitFormText = document.getElementById('btn-submit-form-text');
-            const btnCancelarForm = document.getElementById('btn-cancelar-form'); // Botão no cabeçalho do form
             const inputCliente = document.getElementById('input-cliente');
             const datalistClientes = document.getElementById('lista-clientes');
             const infoClienteSelecionado = document.getElementById('info-cliente-selecionado');
@@ -754,31 +725,21 @@
             // --- Funções de Navegação e UI ---
             
             /**
-             * Alterna a visibilidade das páginas principais
+             * Abre o modal do formulário
              */
-            function navigateTo(pageId) {
-                pages.forEach(page => {
-                    page.classList.remove('page-active');
-                    if (page.id === pageId) {
-                        page.classList.add('page-active');
-                    }
-                });
-                
-                // Atualiza botões da barra de navegação
-                navBtnRota.classList.remove('nav-button-active');
-                navBtnModo.classList.remove('nav-button-active');
-                // O botão Adicionar não tem estado "ativo"
-                
-                if (pageId === 'page-rota') {
-                    navBtnRota.classList.add('nav-button-active');
-                } else if (pageId === 'page-modo') {
-                    navBtnModo.classList.add('nav-button-active');
-                }
-                
-                // Garante que o scroll vá para o topo da nova página
-                window.scrollTo(0, 0);
+            function abrirFormModal() {
+                modalForm.style.display = 'block';
+                bodyEl.classList.add('overflow-hidden'); // Impede scroll do body
             }
-            
+
+            /**
+             * Fecha o modal do formulário
+             */
+            function fecharFormModal() {
+                modalForm.style.display = 'none';
+                bodyEl.classList.remove('overflow-hidden');
+            }
+
             /**
              * Alterna entre os modos Admin, Entregador e Montador
              */
@@ -786,28 +747,28 @@
                 modoAtual = modo;
                 bodyEl.classList.remove('modo-admin', 'modo-entregador', 'modo-montador');
                 
-                // Atualiza botões na página "Modo"
-                btnModoAdmin.classList.remove('bg-blue-600', 'text-white');
-                btnModoEntregador.classList.remove('bg-blue-600', 'text-white');
-                btnModoMontador.classList.remove('bg-blue-600', 'text-white');
+                // Atualiza botões na barra SUPERIOR
+                btnTopAdmin.classList.remove('btn-modo-ativo');
+                btnTopEntregador.classList.remove('btn-modo-ativo');
+                btnTopMontador.classList.remove('btn-modo-ativo');
 
                 if (modo === 'admin') {
                     bodyEl.classList.add('modo-admin');
-                    btnModoAdmin.classList.add('bg-blue-600', 'text-white');
+                    btnTopAdmin.classList.add('btn-modo-ativo');
                 } else if (modo === 'entregador') {
                     bodyEl.classList.add('modo-entregador');
-                    btnModoEntregador.classList.add('bg-blue-600', 'text-white');
+                    btnTopEntregador.classList.add('btn-modo-ativo');
                 } else if (modo === 'montador') {
                     bodyEl.classList.add('modo-montador');
-                    btnModoMontador.classList.add('bg-blue-600', 'text-white');
+                    btnTopMontador.classList.add('btn-modo-ativo');
                 }
             }
             
             /**
-             * Colapsa/Expande o header de admin na página de Rota
+             * Define o estado (aberto/fechado) do header de admin
              */
-            function toggleAdminHeader() {
-                adminHeaderAberto = !adminHeaderAberto;
+            function setAdminHeaderState(aberto) {
+                adminHeaderAberto = aberto;
                 if (adminHeaderAberto) {
                     adminHeaderContent.classList.remove('hidden');
                     iconToggleOpen.classList.remove('hidden');
@@ -819,17 +780,11 @@
                 }
             }
 
-            /**
-             * Exibe o modal de aviso com uma mensagem
-             */
             function mostrarAviso(mensagem) {
                 modalAvisoTexto.textContent = mensagem;
                 modalAviso.classList.remove('hidden');
             }
 
-            /**
-             * Fecha o modal de aviso
-             */
             function fecharAviso() {
                 modalAviso.classList.add('hidden');
             }
@@ -923,8 +878,7 @@
                 toggleSubCampoBrinde();
                 
                 // Garante que o header de admin comece aberto
-                adminHeaderAberto = true;
-                toggleAdminHeader();
+                setAdminHeaderState(true);
             }
 
             function getEntregasAtivas() {
@@ -1424,7 +1378,7 @@
                     } else {
                         mostrarAviso("Erro: Não foi possível encontrar a entrega para atualizar.");
                     }
-                    sairModoEdicao(); // Também navega de volta para 'rota'
+                    sairModoEdicao(); // Também fecha o modal
                 } else {
                     // MODO NOVA ENTREGA
                     const novaEntrega = {
@@ -1443,8 +1397,8 @@
                     renderCestasNoPedido();
                     atualizarValorCesta();
                     resetarSubFormCesta();
-                    // Navega de volta para a rota
-                    navigateTo('page-rota');
+                    // Fecha o modal
+                    fecharFormModal();
                 }
                 
                 salvarLocalStorage();
@@ -1478,8 +1432,8 @@
                 formEntregaTitle.textContent = 'Editar Entrega';
                 btnSubmitFormText.textContent = 'Atualizar Entrega';
 
-                // 6. Navega para a página do formulário
-                navigateTo('page-form');
+                // 6. Abre o modal do formulário
+                abrirFormModal();
             }
 
             function sairModoEdicao() {
@@ -1498,10 +1452,8 @@
                 formEntregaTitle.textContent = 'Lançar Nova Entrega';
                 btnSubmitFormText.textContent = 'Lançar Entrega';
                 
-                // Se o usuário cancelou, navega de volta para a rota
-                if (document.getElementById('page-form').classList.contains('page-active')) {
-                    navigateTo('page-rota');
-                }
+                // Fecha o modal (se estiver aberto)
+                fecharFormModal();
             }
 
             // --- Funções de Lógica dos Cards (Ações) ---
@@ -1967,16 +1919,15 @@
             
             // --- Inicialização e Event Listeners ---
             
-            // Navegação Principal
-            navBtnRota.addEventListener('click', () => navigateTo('page-rota'));
-            navBtnAdicionar.addEventListener('click', () => {
+            // Navegação (Nova Lógica de Modal e Top Bar)
+            btnAbrirFormModal.addEventListener('click', () => {
                 sairModoEdicao(); // Garante que é um formulário novo
-                navigateTo('page-form');
+                abrirFormModal();
             });
-            navBtnModo.addEventListener('click', () => navigateTo('page-modo'));
+            btnFecharFormModal.addEventListener('click', sairModoEdicao);
 
             // Página Rota (Admin Header)
-            btnToggleAdminHeader.addEventListener('click', toggleAdminHeader);
+            btnToggleAdminHeader.addEventListener('click', () => setAdminHeaderState(!adminHeaderAberto));
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
                 localStorage.setItem('rotaAtivaId', rotaAtivaId);
@@ -1987,21 +1938,22 @@
             inputDataRota.addEventListener('change', atualizarInfoRota);
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
             
-            // Página Rota (Lista)
+            // Página Rota (Lista e Filtros)
             listaEntregasEl.addEventListener('click', handleCardClick);
             filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
 
-            // Página Modo
-            btnModoAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnModoEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnModoMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            // Página Modo (Agora na Top Bar)
+            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
+            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
+            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            
+            // Seção Despesas (Listeners)
             inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
             inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
             inputDespesaExtra.addEventListener('change', salvarDespesas);
 
-            // Página Formulário
+            // Página Formulário (Dentro do Modal)
             formEntrega.addEventListener('submit', adicionarOuAtualizarEntrega);
-            btnCancelarForm.addEventListener('click', sairModoEdicao);
             inputCliente.addEventListener('input', (e) => {
                 const cliente = CLIENTES_CACHE[e.target.value.toLowerCase()];
                 if (cliente) {
@@ -2031,7 +1983,7 @@
                 if (!rotaAtiva) return;
                 salvarLocalStorage();
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-Nenhum]/gi, '_')}_${rotaAtiva.data}.json`;
                 compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
             });
             btnFecharAviso.addEventListener('click', fecharAviso);
