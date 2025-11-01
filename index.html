@@ -2070,7 +2070,8 @@
                 
                 const jsonDados = JSON.stringify(entrega, null, 2);
                 const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-n]/gi, '_')}.json`;
+                // CORRIGIDO: O regex estava [^a-z0-n] (letra n), mudei para [^a-z0-9] (número 9)
+                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}.json`;
                 
                 await compartilharOuBaixar(blob, nomeArquivo);
             }
@@ -2375,7 +2376,8 @@
                 if (!rotaAtiva) return;
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
                 const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-n]/gi, '_')}_${rotaAtiva.data}.json`;
+                // CORRIGIDO: O regex estava [^a-z0-n] (letra n), mudei para [^a-z0-9] (número 9)
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
                 compartilharOuBaixar(blob, nomeArquivo);
             });
             // NOVO: Listener para o botão de gerar resumo WPP
@@ -2398,6 +2400,7 @@
     </script>
 </body>
 </html>
+
 
 
 
