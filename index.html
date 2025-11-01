@@ -210,31 +210,15 @@
             </div>
         </header>
 
-        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para todos -->
-        <div class="flex flex-wrap gap-2 mb-4">
-            <button id="btn-importar-card" class="rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200">Importar Card</button>
-            <button id="btn-exportar" class="rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">Exportar Rota</button>
-            <button id="btn-carregar" class="rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700">Carregar Rota</button>
+        <!-- MODIFICADO: Botões de Import/Export agora são visíveis para Admin/Montador e em grid -->
+        <div class="admin-view montador-view grid grid-cols-3 gap-2 mb-4">
+            <button class="btn-importar-card rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200 flex items-center justify-center text-center h-full">Importar Card</button>
+            <button class="btn-exportar rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700 flex items-center justify-center text-center h-full">Exportar Rota</button>
+            <button class="btn-carregar rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700 flex items-center justify-center text-center h-full">Carregar Rota</button>
         </div>
 
-        <!-- Seção de Despesas (Entregador) -->
-        <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
-            <div class="grid grid-cols-1 gap-4 items-end">
-                <div>
-                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-            </div>
-        </section>
+        <!-- Seção de Despesas (Entregador) - MOVIDA PARA O FIM -->
+        <!-- <section id="secao-despesas" ... > ... </section> -->
 
         <!-- Painel de Resumo (Montador) -->
         <section id="secao-resumo" class="montador-view bg-white p-4 rounded-lg shadow-md mb-4 space-y-2">
@@ -271,10 +255,8 @@
 
         <!-- MODIFICADO: Filtros de Rota agora são STICKY e roláveis no mobile -->
         <div id="filtros-rota" class="sticky top-24 sm:top-20 z-20 bg-gray-100 py-2 flex flex-nowrap overflow-x-auto gap-2 mb-4">
-            <button data-filtro="TODAS" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm flex-shrink-0">
-                TODAS
-            </button>
-            <button data-filtro="CUIABÁ" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ flex-shrink-0">
+            <!-- REMOVIDO: Botão "TODAS" -->
+            <button data-filtro="CUIABÁ" class="btn-filtro-rota btn-filtro-ativo text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-CUIABÁ flex-shrink-0">
                 CUIABÁ
             </button>
             <button data-filtro="VG" class="btn-filtro-rota text-sm font-medium py-2 px-4 rounded-full border border-gray-400 bg-white shadow-sm rota-VG flex-shrink-0">
@@ -293,6 +275,32 @@
             <!-- Cards serão injetados aqui pelo JavaScript -->
         </div>
         <p id="lista-vazia" class="text-center text-gray-700 py-10">Nenhuma entrega na rota.</p>
+
+        <!-- Botões de Ação (Entregador) - NOVO LOCAL -->
+        <div class="entregador-view grid grid-cols-3 gap-2 mb-4 mt-8">
+            <button class="btn-importar-card rounded-md bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium shadow-sm hover:bg-blue-200 flex items-center justify-center text-center h-full">Importar Card</button>
+            <button class="btn-exportar rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700 flex items-center justify-center text-center h-full">Exportar Rota</button>
+            <button class="btn-carregar rounded-md bg-gray-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-gray-700 flex items-center justify-center text-center h-full">Carregar Rota</button>
+        </div>
+
+        <!-- Seção de Despesas (Entregador) - MOVIDA PARA CÁ -->
+        <section id="secao-despesas" class="bg-white p-6 rounded-lg shadow-md mb-6 entregador-view">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Despesas da Rota</h2>
+            <div class="grid grid-cols-1 gap-4 items-end">
+                <div>
+                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
+                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+                <div>
+                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
+                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+                <div>
+                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
+                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                </div>
+            </div>
+        </section>
 
         <!-- Espaçador para o FAB não cobrir o último card -->
         <div class="h-24"></div> 
@@ -677,9 +685,10 @@
             const modalClienteValor = document.getElementById('modal-cliente-valor');
             const modalErrorPagamento = document.getElementById('modal-error-pagamento');
 
-            const btnExportar = document.getElementById('btn-exportar');
-            const btnCarregar = document.getElementById('btn-carregar');
-            const btnImportarCard = document.getElementById('btn-importar-card');
+            /* MODIFICADO: Seletores de Botão por CLASSE */
+            const btnsExportar = document.querySelectorAll('.btn-exportar');
+            const btnsCarregar = document.querySelectorAll('.btn-carregar');
+            const btnsImportarCard = document.querySelectorAll('.btn-importar-card');
             
             const modalExportar = document.getElementById('modal-exportar');
             const exportRelatorioEl = document.getElementById('export-relatorio');
@@ -716,7 +725,7 @@
             let editingEntregaId = null;
             
             let cestasDoPedidoAtual = []; // "Carrinho" do formulário
-            let filtroRotaAtiva = 'TODOS';
+            let filtroRotaAtiva = 'CUIABÁ'; // MODIFICADO: Padrão alterado
             let modoAtual = 'admin'; // 'admin', 'entregador', 'montador'
 
             // --- Funções ---
@@ -974,15 +983,21 @@
 
                 const entregasFiltradas = entregas.filter(e => {
                     const rotaPedido = e.rotaEntrega || 'N/A';
-                    if (filtroRotaAtiva === 'TODOS') return true;
+                    if (filtroRotaAtiva === 'TODOS') return true; // Mantido por segurança, embora 'TODOS' não exista mais no UI
                     return rotaPedido === filtroRotaAtiva;
                 });
                 
+                /* REMOVIDO: A ordenação automática por rota.
+                  Agora a lista respeitará a ordem manual definida pelas setas.
+                */
+                const entregasOrdenadas = entregasFiltradas;
+                /*
                 const entregasOrdenadas = entregasFiltradas.sort((a, b) => {
                     const rotaA = a.rotaEntrega || 'N/A';
                     const rotaB = b.rotaEntrega || 'N/A';
                     return rotaA.localeCompare(rotaB);
                 });
+                */
 
                 if (entregasOrdenadas.length === 0) {
                     listaVaziaEl.classList.remove('hidden');
@@ -1396,7 +1411,7 @@
                 salvarLocalStorage();
                 
                 // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o novo pedido apareça
-                resetarFiltroParaTodas();
+                resetarFiltroParaPadrao();
                 
                 renderizarEntregas();
                 renderizarResumo();
@@ -1513,6 +1528,10 @@
                     entregas[index].horarioEntrega = new Date().toISOString();
                 }
                 salvarLocalStorage();
+                
+                // CORREÇÃO: Reseta o filtro para "TODAS" para garantir que o card importado apareça
+                resetarFiltroParaPadrao();
+                
                 renderizarEntregas();
                 renderizarResumo();
             }
@@ -1914,10 +1933,14 @@
             }
             
             // CORREÇÃO: Nova função para resetar o filtro
-            function resetarFiltroParaTodas() {
-                filtroRotaAtiva = 'TODOS';
+            function resetarFiltroParaPadrao() {
+                filtroRotaAtiva = 'CUIABÁ'; // MODIFICADO
                 document.querySelectorAll('.btn-filtro-rota').forEach(btn => btn.classList.remove('btn-filtro-ativo'));
-                document.querySelector('.btn-filtro-rota[data-filtro="TODAS"]').classList.add('btn-filtro-ativo');
+                // MODIFICADO
+                const primeiroFiltro = document.querySelector('.btn-filtro-rota[data-filtro="CUIABÁ"]');
+                if (primeiroFiltro) {
+                    primeiroFiltro.classList.add('btn-filtro-ativo');
+                }
             }
             
             function atualizarFiltroRota(e) {
@@ -1988,7 +2011,10 @@
             btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
             formPagamento.addEventListener('submit', salvarPagamento);
             btnFecharWhatsApp.addEventListener('click', () => modalWhatsApp.classList.add('hidden'));
-            btnExportar.addEventListener('click', exportarDados);
+            
+            /* MODIFICADO: Event listeners para querySelectorAll */
+            btnsExportar.forEach(btn => btn.addEventListener('click', exportarDados));
+            
             btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
             btnBaixarJson.addEventListener('click', () => {
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
@@ -2001,9 +2027,10 @@
             btnFecharAviso.addEventListener('click', fecharAviso);
 
             // Importação/Exportação de Arquivos
-            btnCarregar.addEventListener('click', () => inputCarregarArquivo.click());
+            /* MODIFICADO: Event listeners para querySelectorAll */
+            btnsCarregar.forEach(btn => btn.addEventListener('click', () => inputCarregarArquivo.click()));
             inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
-            btnImportarCard.addEventListener('click', () => inputCarregarCard.click());
+            btnsImportarCard.forEach(btn => btn.addEventListener('click', () => inputCarregarCard.click()));
             inputCarregarCard.addEventListener('change', handleCardImportado);
             
             // Inicialização
@@ -2012,4 +2039,5 @@
     </script>
 </body>
 </html>
+
 
