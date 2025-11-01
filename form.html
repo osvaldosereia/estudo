@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de JSON de Cadastro</title>
+    <!-- Carrega o Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define a fonte Inter como padrão */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Melhora a aparência do texto do JSON no <pre> */
+        #json-output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Formulário de Cadastro</h1>
+        <p class="text-center text-gray-600 mb-8">Preencha os dados para gerar o JSON correspondente.</p>
+
+        <!-- Formulário de Entrada -->
+        <form id="cadastro-form" class="space-y-5">
+            <div>
+                <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                <input type="text" id="nome" name="nome" required
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Ex: 010 Natalia">
+            </div>
+
+            <div>
+                <label for="celular" class="block text-sm font-medium text-gray-700 mb-2">Celular (com código do país)</label>
+                <input type="tel" id="celular" name="celular" required
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Ex: 5565984685473">
+            </div>
+
+            <div>
+                <label for="endereco" class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                <input type="text" id="endereco" name="endereco" required
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Ex: 010 Natalia (ou o nome da rua)">
+            </div>
+
+            <div>
+                <label for="complemento" class="block text-sm font-medium text-gray-700 mb-2">Complemento</label>
+                <textarea id="complemento" name="complemento" rows="3" required
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Ex: Rua 14 quadra 20 casa 01..."></textarea>
+            </div>
+
+            <div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                    Gerar JSON
+                </button>
+            </div>
+        </form>
+
+        <!-- Área de Saída do JSON -->
+        <div id="output-area" class="mt-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">JSON Gerado</h2>
+            
+            <div class="relative">
+                <!-- Onde o JSON formatado aparecerá -->
+                <pre id="json-output" class="bg-gray-900 text-green-300 p-6 rounded-lg overflow-x-auto text-sm"></pre>
+                
+                <!-- Botão de Copiar -->
+                <button id="copy-btn"
+                        class="absolute top-3 right-3 bg-gray-700 text-white py-1 px-3 rounded-md text-xs font-medium hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                    Copiar
+                </button>
+            </div>
+            
+            <!-- Mensagem de confirmação de cópia -->
+            <span id="copy-message" class="block text-sm text-green-600 font-medium mt-3 h-4"></span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('cadastro-form');
+            const jsonOutput = document.getElementById('json-output');
+            const outputArea = document.getElementById('output-area');
+            const copyBtn = document.getElementById('copy-btn');
+            const copyMessage = document.getElementById('copy-message');
+
+            /**
+             * Gera um ID único no formato: timestamp-5CARACTERES
+             */
+            function generateRandomId() {
+                const timestamp = Date.now();
+                // Gera uma string aleatória de 5 caracteres
+                const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+                return `${timestamp}-${randomPart}`;
+            }
+
+            // Manipulador para o envio do formulário
+            form.addEventListener('submit', (e) => {
+                e.preventDefault(); // Impede o envio real do formulário
+
+                // Cria um objeto FormData para pegar os valores
+                const formData = new FormData(form);
+                
+                // Constrói o objeto de dados no formato solicitado
+                const data = {
+                    id: generateRandomId(),
+                    nome: formData.get('nome'),
+                    celular: formData.get('celular'),
+                    endereco: formData.get('endereco'),
+                    complemento: formData.get('complemento')
+                };
+
+                // Converte o objeto para uma string JSON formatada (com 2 espaços de indentação)
+                const jsonString = JSON.stringify(data, null, 2);
+
+                // Exibe o JSON na tela
+                jsonOutput.textContent = jsonString;
+                outputArea.classList.remove('hidden');
+                
+                // Limpa a mensagem de cópia
+                copyMessage.textContent = '';
+            });
+
+            // Manipulador para o botão de copiar
+            copyBtn.addEventListener('click', () => {
+                const jsonText = jsonOutput.textContent;
+                if (!jsonText) return;
+
+                // Cria uma área de texto temporária para usar o 'execCommand'
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = jsonText;
+                // Evita que a tela "pule" ao adicionar o elemento
+                tempTextArea.style.position = 'absolute';
+                tempTextArea.style.left = '-9999px';
+                
+                document.body.appendChild(tempTextArea);
+                
+                tempTextArea.select();
+                tempTextArea.setSelectionRange(0, 99999); // Para compatibilidade móvel
+
+                try {
+                    // Tenta copiar o texto
+                    document.execCommand('copy');
+                    copyMessage.textContent = 'Copiado com sucesso!';
+                } catch (err) {
+                    console.error('Falha ao copiar: ', err);
+                    copyMessage.textContent = 'Falha ao copiar!';
+                }
+
+                // Remove o elemento temporário
+                document.body.removeChild(tempTextArea);
+
+                // Limpa a mensagem após 2 segundos
+                setTimeout(() => {
+                    copyMessage.textContent = '';
+                }, 2000);
+            });
+        });
+    </script>
+
+</body>
+</html>
