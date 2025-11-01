@@ -1828,6 +1828,44 @@
                     rotasSelecionadas.includes(e.rotaEntrega)
                 );
 
+                // =================================================================
+                // ##### NOVA INCLUSÃO (Relatório de Entregas) #####
+                // =================================================================
+                const entregasCanceladas = rotaAtiva.entregas.filter(e => 
+                    e.status === 'Cancelada' && 
+                    rotasSelecionadas.includes(e.rotaEntrega)
+                );
+                
+                let relatorioTexto = "";
+
+                if (entregasConcluidas.length > 0) {
+                    relatorioTexto += "\n\n--- RELATÓRIO DE ENTREGAS ---\n\n";
+                    entregasConcluidas.forEach(e => {
+                        const cestas = migrarFormatoCestas(e);
+                        const valorTotal = cestas.reduce((total, cesta) => total + (cesta.valor * cesta.quantidade), 0);
+                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
+                        relatorioTexto += `Valor: ${formatarMoeda(valorTotal)}\n`;
+                        relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
+                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
+                        relatorioTexto += `-----------------------------\n`;
+                    });
+                }
+
+                if (entregasCanceladas.length > 0) {
+                    relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
+                    entregasCanceladas.forEach(e => {
+                        relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
+                        relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
+                        relatorioTexto += `-----------------------------\n`;
+                    });
+                }
+                
+                // Adiciona o relatório de entregas ao texto principal
+                whatsappTexto += relatorioTexto;
+                // =================================================================
+                // ##### FIM DA INCLUSÃO #####
+                // =================================================================
+
                 let totalVendido = 0;
                 let totalPorPagamento = {};
                 entregasConcluidas.forEach(e => {
@@ -2103,9 +2141,12 @@
             btnModoAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
             btnModoEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
             btnModoMontador.addEventListener('click', () => setModoVisualizacao('montador'));
-            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
-            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
-            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            
+            // ##### CORREÇÃO DO CICLO DE MODO MOBILE #####
+            // Agora, clicar no botão mobile alterna para o PRÓXIMO modo
+            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('entregador'));
+            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('montador'));
+            btnTopMontador.addEventListener('click', () => setModoVisualizacao('admin'));
 
             // Gerenciamento de Rota (Admin)
             selectRotaAtiva.addEventListener('change', (e) => {
@@ -2208,3 +2249,5 @@
     </script>
 </body>
 </html>
+
+
