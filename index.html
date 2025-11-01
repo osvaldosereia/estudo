@@ -1594,7 +1594,8 @@
                 abrirFormModal();
             }
 
-            function sairModoEdicao() {
+            // NOVO: Função dedicada para resetar o formulário
+            function resetarFormularioCompleto() {
                 editingEntregaId = null;
                 cestasDoPedidoAtual = []; // Esvazia o carrinho
                 formEntrega.reset();
@@ -1611,7 +1612,11 @@
                 // Muda UI do Formulário
                 modalFormTitle.textContent = "Lançar Nova Entrega";
                 btnSubmitFormText.textContent = "Lançar Entrega";
-                
+            }
+
+            // MODIFICADO: Agora usa a nova função de reset
+            function sairModoEdicao() {
+                resetarFormularioCompleto();
                 fecharFormModal();
             }
 
@@ -2314,8 +2319,9 @@
             listaEntregasEl.addEventListener('click', handleCardClick);
 
             // Modal Formulário
+            // MODIFICADO: Agora usa a nova função de reset
             btnAbrirFormModal.addEventListener('click', () => {
-                sairModoEdicao(); // Garante que é um formulário novo
+                resetarFormularioCompleto(); // Garante que é um formulário novo
                 abrirFormModal();
             });
             btnFecharFormModal.addEventListener('click', sairModoEdicao);
@@ -2392,6 +2398,7 @@
     </script>
 </body>
 </html>
+
 
 
 
