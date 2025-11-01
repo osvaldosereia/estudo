@@ -1,5 +1,4 @@
 const CLIENTES_DB = [
-    [
   {
     "id": "1743716759186-AbC9O",
     "nome": "010 Natalia",
