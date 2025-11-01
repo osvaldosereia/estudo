@@ -153,34 +153,66 @@
             display: none;
         }
 
-        /* NOVO: Estilos para o Relatório Visual */
+        /* ATUALIZADO: Estilos para o Relatório Visual */
         #visual-report-content h3 {
             font-size: 1.5rem; /* text-2xl */
             font-weight: 600; /* font-semibold */
             margin-top: 1.5rem; /* mt-6 */
             padding-bottom: 0.5rem; /* pb-2 */
             border-bottom-width: 2px;
+            margin-bottom: 1rem; /* mb-4 */
         }
-        #visual-report-content h4 {
-            font-size: 1.125rem; /* text-lg */
+        
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem; /* gap-4 */
+        }
+
+        .report-card {
+            background-color: #ffffff; /* bg-white */
+            border-radius: 0.5rem; /* rounded-lg */
+            border-width: 1px; /* border */
+            border-color: #e5e7eb; /* border-gray-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-sm */
+            padding: 1rem; /* p-4 */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .report-card-count {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 700; /* font-bold */
+            color: #1d4ed8; /* text-blue-700 */
+        }
+        
+        .report-card-name {
+            font-size: 1rem; /* text-base */
             font-weight: 600; /* font-semibold */
-            margin-top: 1rem; /* mt-4 */
-            margin-left: 0.5rem; /* ml-2 */
+            color: #1f2937; /* text-gray-800 */
+            margin-top: 0.25rem; /* mt-1 */
+            flex-grow: 1; /* Faz o nome preencher o espaço */
         }
-        #visual-report-content p {
-            font-size: 0.875rem; /* text-sm */
-            margin-left: 1.5rem; /* ml-6 */
-            padding: 0.25rem 0; /* py-1 */
-            border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
+
+        .report-card-details {
+            font-size: 0.75rem; /* text-xs */
+            color: #6b7280; /* text-gray-500 */
+            margin-top: 0.75rem; /* mt-3 */
+            padding-top: 0.75rem; /* pt-3 */
+            border-top-width: 1px; /* border-t */
+            border-color: #f3f4f6; /* border-gray-100 */
+            line-height: 1.4; /* leading-snug */
         }
-        #visual-report-content p .tipo-cesta {
-            font-weight: 500; /* font-medium */
-            color: #4b5563; /* text-gray-600 */
+
+        .report-card-details .detalhe-alterada {
+            font-weight: 700; /* font-bold */
+            color: #f97316; /* text-orange-500 */
         }
-        #visual-report-content p .brinde-cesta {
-            font-weight: 600; /* font-semibold */
+        .report-card-details .detalhe-brinde {
+            font-weight: 700; /* font-bold */
             color: #db2777; /* text-pink-600 */
         }
+
     </style>
 </head>
 <!-- CORREÇÃO: Adicionado 'modo-admin' como padrão para o FAB aparecer -->
@@ -1349,7 +1381,7 @@
                 summaryRotasBreakdown.innerHTML = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: <strong>${q}</strong>`).join('<br>') || 'N/A';
             }
             
-            // NOVO: Função para gerar o relatório visual
+            // ATUALIZADO: Função para gerar o relatório visual
             function renderizarRelatorioVisual() {
                 const rotaAtiva = getRotaAtiva();
                 if (!rotaAtiva) {
@@ -1364,57 +1396,117 @@
                     return;
                 }
 
-                // 1. Agrupar por Rota (CUIABÁ, VG, CPA, COXIPÓ)
-                const rotasAgrupadas = {
-                    'CUIABÁ': [],
-                    'VG': [],
-                    'CPA': [],
-                    'COXIPÓ': []
+                // 1. Agrupar cestas por rota
+                const cestasPorRota = {
+                    'CUIABÁ': {},
+                    'VG': {},
+                    'CPA': {},
+                    'COXIPÓ': {}
                 };
 
+                let totalPedidos = 0;
+
                 entregas.forEach(entrega => {
+                    totalPedidos++;
                     const rotaKey = entrega.rotaEntrega || 'CUIABÁ';
-                    if (rotasAgrupadas.hasOwnProperty(rotaKey)) {
-                        rotasAgrupadas[rotaKey].push(entrega);
-                    }
+                    if (!cestasPorRota.hasOwnProperty(rotaKey)) return; // F-safe
+
+                    const cestas = migrarFormatoCestas(entrega);
+
+                    cestas.forEach(cesta => {
+                        let detalhes = [];
+                        
+                        if (cesta.tipo === 'Alterada') {
+                            detalhes.push(formatarDetalhesRelatorio('Alterada'));
+                            if (cesta.codigoFinal) {
+                                detalhes.push(formatarDetalhesRelatorio(`Final: ${cesta.codigoFinal}`));
+                            }
+                        } else {
+                            detalhes.push(formatarDetalhesRelatorio('Normal'));
+                        }
+
+                        if (cesta.brinde === 'Sim') {
+                            const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) 
+                                                ? `: ${cesta.brindeOpcoes.join(', ')}`
+                                                : '';
+                            detalhes.push(formatarDetalhesRelatorio(`Brinde${brindesTxt}`));
+                        }
+
+                        // Criar uma chave única para agrupar
+                        const chaveUnica = `${cesta.nome} | ${detalhes.join(' | ')}`;
+                        const qtd = cesta.quantidade;
+
+                        if (!cestasPorRota[rotaKey][chaveUnica]) {
+                            cestasPorRota[rotaKey][chaveUnica] = 0;
+                        }
+                        cestasPorRota[rotaKey][chaveUnica] += qtd;
+                    });
                 });
 
                 let htmlFinal = '';
+                let totalCestas = 0;
 
                 // 2. Iterar sobre os grupos de rota
-                for (const nomeRota in rotasAgrupadas) {
-                    const entregasDaRota = rotasAgrupadas[nomeRota];
-                    if (entregasDaRota.length === 0) continue;
+                for (const nomeRota in cestasPorRota) {
+                    const cestas = cestasPorRota[nomeRota];
+                    const chavesCestas = Object.keys(cestas).sort(); // Ordenar alfabeticamente
+                    
+                    if (chavesCestas.length === 0) continue;
 
                     let rotaClass = `rota-${nomeRota}`;
-                    htmlFinal += `<h3 class="border-l-4 ${rotaClass} pl-2">${nomeRota} (${entregasDaRota.length} Pedidos)</h3>`;
+                    htmlFinal += `<h3 class="border-l-4 ${rotaClass} pl-2">${nomeRota}</h3>`;
+                    htmlFinal += '<div class="report-grid">';
 
-                    // 3. Iterar sobre as entregas
-                    entregasDaRota.forEach(entrega => {
-                        htmlFinal += `<h4>-- ${entrega.cliente.nome}</h4>`;
+                    // 3. Iterar sobre as cestas agrupadas
+                    chavesCestas.forEach(chaveUnica => {
+                        const quantidade = cestas[chaveUnica];
+                        totalCestas += quantidade;
                         
-                        const cestas = migrarFormatoCestas(entrega);
+                        const partes = chaveUnica.split(' | ');
+                        const nome = partes[0];
+                        const detalhes = partes.slice(1).join('<br>'); // Pega o resto como detalhes
 
-                        // 4. Iterar sobre as cestas
-                        cestas.forEach(cesta => {
-                            let detalhesCesta = '';
-                            if (cesta.tipo === 'Alterada') {
-                                detalhesCesta = `<span class="tipo-cesta"> (Alterada${cesta.codigoFinal ? ` - Final: ${cesta.codigoFinal}` : ''})</span>`;
-                            } else {
-                                detalhesCesta = `<span class="tipo-cesta"> (Normal)</span>`;
-                            }
-
-                            if (cesta.brinde === 'Sim') {
-                                const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
-                                detalhesCesta += ` <span class="brinde-cesta">[Brinde: ${brindesTxt}]</span>`;
-                            }
-
-                            htmlFinal += `<p>--- ${cesta.quantidade}x ${cesta.nome} ${detalhesCesta}</p>`;
-                        });
+                        htmlFinal += `
+                            <div class="report-card">
+                                <span class="report-card-count">${quantidade}x</span>
+                                <span class="report-card-name">${nome}</span>
+                                <span class="report-card-details">${detalhes}</span>
+                            </div>
+                        `;
                     });
+
+                    htmlFinal += '</div>'; // Fim do report-grid
                 }
                 
-                visualReportContent.innerHTML = htmlFinal;
+                // Adicionar um cabeçalho de resumo
+                const resumoHeader = `
+                    <div class="mb-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                        <h2 class="text-2xl font-semibold text-gray-800">Resumo Total da Rota</h2>
+                        <div class="flex space-x-6 mt-2">
+                            <div class="flex-1">
+                                <span class="block text-sm font-medium text-gray-500">Total de Pedidos</span>
+                                <span class="text-3xl font-bold text-gray-900">${totalPedidos}</span>
+                            </div>
+                            <div class="flex-1">
+                                <span class="block text-sm font-medium text-gray-500">Total de Cestas</span>
+                                <span class="text-3xl font-bold text-gray-900">${totalCestas}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                visualReportContent.innerHTML = resumoHeader + htmlFinal;
+            }
+
+            // NOVO: Helper para formatar tags do relatório
+            function formatarDetalhesRelatorio(detalhe) {
+                if (detalhe.startsWith('Alterada') || detalhe.startsWith('Final:')) {
+                    return `<span class="detalhe-alterada">${detalhe}</span>`;
+                }
+                if (detalhe.startsWith('Brinde')) {
+                    return `<span class="detalhe-brinde">${detalhe}</span>`;
+                }
+                return detalhe;
             }
 
 
@@ -2441,6 +2533,7 @@
     </script>
 </body>
 </html>
+
 
 
 
