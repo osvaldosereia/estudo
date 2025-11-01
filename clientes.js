@@ -642,7 +642,7 @@
             // --- Constantes ---
             const MAX_ROTAS = 30; // Limite de rotas salvas
             const ADMIN_WHATSAPP_NUMBER = "65984491018"; // Número para compartilhar pedido
-            const CHAVE_PIX_PADRAO = "Aqui vai sua chave PIX (CNPJ, Celular, Email ou Aleatória)"; // Chave Pix Padrão
+            const CHAVE_PIX_PADRAO = "65984491018 - PIX CELULAR"; // Chave Pix Padrão
 
             // --- Seletores de Elementos ---
             
