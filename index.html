@@ -63,8 +63,12 @@
         .modo-admin .admin-view {
             display: block; /* ou flex, grid, etc. */
         }
+        /* CORREÇÃO: Visibilidade no mobile */
         .modo-admin .btn-top-admin {
             display: inline-flex;
+        }
+        .modo-admin #btn-abrir-form-modal {
+            display: flex; /* Garante que o FAB apareça */
         }
 
         /* Modo ENTREGADOR */
@@ -115,7 +119,8 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 antialiased">
+<!-- CORREÇÃO: Adicionado 'modo-admin' como padrão para o FAB aparecer -->
+<body class="bg-gray-100 antialiased modo-admin">
     
     <!-- =================================================================== -->
     <!-- BARRA SUPERIOR FIXA (NAV) -->
@@ -125,7 +130,8 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <!-- Título -->
                 <div class="flex justify-between items-center">
-                    <h1 class="text-2xl font-bold text-gray-900">Rota de Entrega</h1>
+                    <!-- MODIFICADO: Título -->
+                    <h1 class="text-2xl font-bold text-gray-900">ROTA</h1>
                     <!-- Botões de Modo (Visíveis no Mobile, escondidos no SM+) -->
                     <div class="sm:hidden flex-shrink-0">
                         <button id="btn-top-admin" class="btn-top-nav text-xs font-medium py-2 px-3 rounded-md bg-blue-100 text-blue-700">ADMIN</button>
@@ -290,7 +296,8 @@
     <!-- =================================================================== -->
     <!-- BOTÃO FLUTUANTE (FAB) PARA ABRIR MODAL -->
     <!-- =================================================================== -->
-    <button id="btn-abrir-form-modal" class="admin-view fixed z-30 bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+    <!-- MODIFICADO: Removido 'admin-view' para ser controlado por JS, adicionado 'flex' -->
+    <button id="btn-abrir-form-modal" class="fixed z-30 bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
@@ -404,9 +411,23 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div id="sub-campo-brinde" class="hidden md:col-span-2">
-                                    <label for="sub-input-brinde-descricao" class="block text-sm font-medium text-gray-700">Descrição do Brinde</label>
-                                    <input type="text" id="sub-input-brinde-descricao" class="mt-1 block w-full rounded-md border-gray-400 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Panetone">
+                                <!-- MODIFICADO: Campo Brinde (Checkboxes) -->
+                                <div id="sub-campo-brinde" class="hidden md:col-span-2 space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Opções de Brinde (Múltiplo)</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
+                                            <input type="checkbox" name="sub-brinde-opcoes" value="OVO" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-700">OVO</span>
+                                        </label>
+                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
+                                            <input type="checkbox" name="sub-brinde-opcoes" value="AMACIANTE" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-700">AMACIANTE</span>
+                                        </label>
+                                        <label class="flex items-center p-2 bg-white rounded-md border border-gray-300 has-[:checked]:bg-pink-50 has-[:checked]:border-pink-400">
+                                            <input type="checkbox" name="sub-brinde-opcoes" value="CAFÉ 250g" class="h-4 w-4 border-gray-400 text-pink-600 focus:ring-pink-500 rounded">
+                                            <span class="ml-3 text-sm font-medium text-gray-700">CAFÉ 250g</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="md:col-span-1 space-y-4">
@@ -550,8 +571,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
                 <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Baixar/Compartilhar Arquivo da Rota (.json)
                 </button>
 
@@ -560,8 +580,34 @@
                     <pre class="text-xs text-gray-700">Nenhuma entrega concluída.</pre>
                 </div>
 
+                <!-- MODIFICADO: Seleção de Rotas para Resumo WPP -->
+                <div id="export-whatsapp-seletor" class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecione as rotas para o Resumo WhatsApp:</label>
+                    <div id="export-wpp-error" class="text-red-600 text-sm mb-2 hidden">Selecione ao menos uma rota.</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="export-rota-wpp" value="CUIABÁ" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-700">CUIABÁ</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="export-rota-wpp" value="VG" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-700">VG</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="export-rota-wpp" value="CPA" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-700">CPA</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                            <input type="checkbox" name="export-rota-wpp" value="COXIPÓ" class="h-4 w-4 border-gray-400 text-blue-600 focus:ring-blue-500 rounded">
+                            <span class="ml-3 text-sm font-medium text-gray-700">COXIPÓ</span>
+                        </label>
+                    </div>
+                </div>
                 <div id="export-whatsapp-link" class="mt-4">
                     <!-- Link do WhatsApp será gerado aqui -->
+                    <button type="button" id="btn-gerar-resumo-wpp" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
+                        Gerar Resumo WhatsApp
+                    </button>
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
@@ -660,10 +706,10 @@
             const subSelectCesta = document.getElementById('sub-select-cesta');
             const subInputQuantidade = document.getElementById('sub-input-quantidade');
             const subCampoBrinde = document.getElementById('sub-campo-brinde');
-            const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao');
+            // const subInputBrindeDescricao = document.getElementById('sub-input-brinde-descricao'); // REMOVIDO
             const subCampoAlterada = document.getElementById('sub-campo-alterada');
             const subCodigoAlterada = document.getElementById('sub-codigo-alterada');
-            const subCodigoFinal = document.getElementById('sub-codigo-final'); // NOVO SELETOR
+            const subCodigoFinal = document.getElementById('sub-codigo-final');
 
             // Modal Form -> Lista de Cestas (Carrinho)
             const listaCestasNoPedidoEl = document.getElementById('lista-cestas-no-pedido');
@@ -693,6 +739,8 @@
             const exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
             const btnBaixarJson = document.getElementById('btn-baixar-json');
             const btnFecharExportar = document.getElementById('btn-fechar-exportar');
+            const btnGerarResumoWpp = document.getElementById('btn-gerar-resumo-wpp'); // NOVO
+            const exportWppError = document.getElementById('export-wpp-error'); // NOVO
 
             // Modal Aviso
             const modalAviso = document.getElementById('modal-aviso');
@@ -727,6 +775,7 @@
              */
             function setModoVisualizacao(modo) {
                 modoAtual = modo;
+                // CORREÇÃO: Garante que a classe base sempre exista
                 body.className = `bg-gray-100 antialiased modo-${modo}`;
                 
                 // Atualiza botões da barra superior (mobile)
@@ -791,6 +840,7 @@
                 return dia.charAt(0).toUpperCase() + dia.slice(1);
             }
             function normalizarString(str) {
+                if (typeof str !== 'string') return '';
                 return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             }
 
@@ -927,7 +977,11 @@
              */
             function migrarFormatoCestas(entrega) {
                 if (Array.isArray(entrega.cestas)) {
-                    return entrega.cestas; // Já está no formato novo
+                    // Garante que o formato novo tenha os campos novos (brindeOpcoes)
+                    return entrega.cestas.map(cesta => ({
+                        ...cesta,
+                        brindeOpcoes: cesta.brindeOpcoes || (cesta.brindeDescricao ? [cesta.brindeDescricao] : [])
+                    }));
                 }
                 // Formato antigo: migra
                 if (entrega.cesta && entrega.cesta.nome) {
@@ -937,7 +991,8 @@
                         quantidade: entrega.quantidade || 1,
                         tipo: entrega.tipo || 'Normal',
                         brinde: entrega.brinde || 'Não',
-                        brindeDescricao: entrega.brindeDescricao || '',
+                        brindeDescricao: entrega.brindeDescricao || '', // Mantém por segurança
+                        brindeOpcoes: entrega.brindeOpcoes || (entrega.brindeDescricao ? [entrega.brindeDescricao] : []), // Migra brindeDescricao
                         codigoAlterada: entrega.codigoAlterada || '',
                         codigoFinal: entrega.codigoFinal || '',
                         partesAlteradas: entrega.partesAlteradas || []
@@ -958,9 +1013,6 @@
                     return rotaPedido === filtroRotaAtiva;
                 });
                 
-                /* REMOVIDO: A ordenação automática por rota.
-                  Agora a lista respeitará a ordem manual definida pelas setas.
-                */
                 const entregasOrdenadas = entregasFiltradas;
 
                 if (entregasOrdenadas.length === 0) {
@@ -981,7 +1033,6 @@
 
                     card.className = `bg-white p-4 rounded-lg shadow-sm border border-gray-200 border-l-4 flex flex-col w-full overflow-hidden ${rotaClass} ${statusClass}`;
                     
-                    // MODIFICADO: Definição de obsInfo movida para ANTES de infoClienteHtml
                     let obsInfo = '';
                     if (entrega.observacao) {
                         obsInfo = `
@@ -1001,19 +1052,15 @@
                         statusInfo = `<div class="text-xs text-blue-700 mt-2"><span class="font-semibold">Status:</span> MONTADO | <span class="font-semibold">Horário:</span> ${formatarData(entrega.horarioMontagem)}</div>`;
                     }
                     
-                    // MODIFICADO: idInfo removido
-                    const clienteId = null; // entrega.cliente.id || entrega.cliente.Id || entrega.cliente.ID || null;
-                    let idInfo = ''; // clienteId ? `<p class="text-xs text-gray-500 font-mono truncate" title="ID: ${clienteId}">ID: ${clienteId}</p>` : '';
+                    let idInfo = ''; 
 
                     let infoClienteHtml = `
                         <div class="flex-1 min-w-0">
                             ${idInfo}
-                            <!-- MODIFICADO: 'truncate' removido, 'break-words' adicionado -->
                             <p class="text-xl font-semibold text-gray-900 break-words" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
                             <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
                             <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
                             <p class="text-sm text-gray-700 break-words montador-hidden" title="${entrega.cliente.celular || ''}">Cel: ${entrega.cliente.celular || 'Sem celular'}</p>
-                            <!-- MODIFICADO: obsInfo movido para cá -->
                             ${obsInfo}
                         </div>
                         <div class="flex flex-col items-center justify-center admin-view ml-2">
@@ -1037,13 +1084,14 @@
                         
                         let tagsCesta = '';
                         // MODIFICADO: Lógica da tag Brinde
-                        if (cesta.brinde === 'Sim') tagsCesta += `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde: ${cesta.brindeDescricao || 'Sim'}</span>`;
-                        // MODIFICADO: Lógica da tag Alterada
+                        if (cesta.brinde === 'Sim') {
+                            const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
+                            tagsCesta += `<span class="text-xs font-semibold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">Brinde: ${brindesTxt}</span>`;
+                        }
                         if (cesta.tipo === 'Alterada') tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Cesta: Alterada</span>`;
                         if (cesta.codigoFinal) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Final: ${cesta.codigoFinal}</span>`;
                         if (cesta.partesAlteradas && cesta.partesAlteradas.length > 0) tagsCesta += `<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Partes: ${cesta.partesAlteradas.join(', ')}</span>`;
                         
-                        // MODIFICADO: Detalhes (codigoAlterada) movido para dentro do box da cesta
                         let detalhesCestaHtml = '';
                         if (cesta.tipo === 'Alterada' && cesta.codigoAlterada) {
                              detalhesCestaHtml = `
@@ -1063,7 +1111,6 @@
                                 <div class="mt-1 flex flex-wrap gap-1">
                                     ${tagsCesta}
                                 </div>
-                                <!-- MODIFICADO: Bloco de detalhes injetado aqui -->
                                 ${detalhesCestaHtml}
                             </div>
                         `;
@@ -1071,38 +1118,35 @@
 
                     // Botões de Ação (Editar, Cancelar, Entregar, Montar)
                     let botoesAcaoHtml = '';
+                    // CORREÇÃO: Botão Editar agora é 'admin-view'
+                    const btnEditarHtml = `
+                        <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                            Editar
+                        </button>`;
+                    
                     if (entrega.status === 'Pendente') {
                         botoesAcaoHtml = `
-                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                                Editar
-                            </button>
+                            ${btnEditarHtml}
                             <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
                                 Cancelar
                             </button>
-                            <!-- MODIFICADO: col-span-2 para Entregador -->
                             <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar Entrega
                             </button>
-                            <!-- MODIFICADO: col-span-2 para Montador -->
                             <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-blue-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar como Montado
                             </button>
                         `;
                     } else if (entrega.status === 'Montado') {
                          botoesAcaoHtml = `
-                            <button class="btn-editar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 flex justify-center items-center col-span-1" data-id="${entrega.id}" title="Editar Pedido">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                                Editar
-                            </button>
+                            ${btnEditarHtml}
                             <button class="btn-cancelar-entrega admin-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 col-span-1" data-id="${entrega.id}">
                                 Cancelar
                             </button>
-                            <!-- MODIFICADO: col-span-2 para Entregador -->
                             <button class="btn-entregue entregador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-400 hover:bg-gray-50 col-span-2" data-id="${entrega.id}">
                                 Marcar Entrega
                             </button>
-                            <!-- MODIFICADO: col-span-2 para Montador -->
                             <button class="btn-montado montador-view w-full rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-blue-600 text-white cursor-not-allowed col-span-2" data-id="${entrega.id}" disabled>
                                 Montado
                             </button>
@@ -1130,7 +1174,6 @@
 
                         <!-- Blocos de Info (Obs, Detalhes, Status) -->
                         <div class="mt-2 space-y-2 overflow-hidden">
-                            <!-- MODIFICADO: obsInfo e detalhesInfo removidos daqui -->
                             ${statusInfo}
                         </div>
                         
@@ -1175,7 +1218,6 @@
                 let pedidosRotaBreakdown = {};
 
                 entregas.forEach(entrega => {
-                    // MODIFICADO: Pedidos cancelados são ignorados do resumo
                     if (entrega.status === 'Cancelada') return;
 
                     const rotaPedido = entrega.rotaEntrega || 'N/A';
@@ -1189,12 +1231,10 @@
                     });
                 });
 
-                summaryTotalPedidos.textContent = entregas.filter(e => e.status !== 'Cancelada').length; // MODIFICADO
+                summaryTotalPedidos.textContent = entregas.filter(e => e.status !== 'Cancelada').length;
                 summaryTotalCestas.textContent = totalCestas;
-                // MODIFICADO: Formato de lista (com <br>)
                 summaryCestasBreakdown.innerHTML = Object.entries(cestasBreakdown).map(([n, q]) => `${n}: <strong>${q}</strong>`).join('<br>') || 'N/A';
                 summaryRotasBreakdown.innerHTML = Object.entries(rotasBreakdown).map(([r, q]) => `${r}: <strong>${q}</strong>`).join('<br>') || 'N/A';
-                // REMOVIDO: summaryPedidosRotaBreakdown.textContent = Object.entries(pedidosRotaBreakdown).map(([r, q]) => `${r}: ${q}`).join(' | ') || 'N/A';
             }
             
             // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
@@ -1221,6 +1261,10 @@
                 const partesAlteradas = 
                     Array.from(document.querySelectorAll('input[name="sub-partes_alteradas"]:checked'))
                          .map(input => input.value);
+                // MODIFICADO: Captura Brindes
+                const brindeOpcoes = 
+                    Array.from(document.querySelectorAll('input[name="sub-brinde-opcoes"]:checked'))
+                         .map(input => input.value);
 
                 const novaCesta = {
                     nome: selectedOption.value,
@@ -1228,9 +1272,10 @@
                     quantidade: parseInt(subInputQuantidade.value) || 1,
                     tipo: document.querySelector('input[name="sub-tipo-cesta"]:checked').value,
                     brinde: document.querySelector('input[name="sub-brinde"]:checked').value,
-                    brindeDescricao: subInputBrindeDescricao.value || '',
+                    brindeOpcoes: brindeOpcoes, // NOVO
+                    brindeDescricao: '', // REMOVIDO: brindeOpcoes substitui
                     codigoAlterada: subCodigoAlterada.value || '',
-                    codigoFinal: subCodigoFinal.value || '', // NOVO
+                    codigoFinal: subCodigoFinal.value || '',
                     partesAlteradas: partesAlteradas
                 };
                 
@@ -1244,9 +1289,10 @@
                 subInputQuantidade.value = 1;
                 document.querySelector('input[name="sub-tipo-cesta"][value="Normal"]').checked = true;
                 document.querySelector('input[name="sub-brinde"][value="Não"]').checked = true;
-                subInputBrindeDescricao.value = '';
+                // MODIFICADO: Reseta Checkboxes de Brinde
+                document.querySelectorAll('input[name="sub-brinde-opcoes"]:checked').forEach(cb => cb.checked = false);
                 subCodigoAlterada.value = '';
-                subCodigoFinal.value = ''; // NOVO
+                subCodigoFinal.value = '';
                 document.querySelectorAll('input[name="sub-partes_alteradas"]:checked').forEach(cb => cb.checked = false);
                 toggleSubCampoAlterada();
                 toggleSubCampoBrinde();
@@ -1304,7 +1350,8 @@
                 const entregas = rotaAtiva.entregas;
 
                 const nomeClienteSelecionado = inputCliente.value;
-                const clienteSelecionado = CLIENTES_CACHE[nomeClienteSelecionado.toLowerCase()];
+                // CORREÇÃO: Usar normalizarString para buscar no cache
+                const clienteSelecionado = CLIENTES_CACHE[normalizarString(nomeClienteSelecionado)];
                 let clienteData;
                 if (clienteSelecionado) {
                     clienteData = clienteSelecionado;
@@ -1341,9 +1388,10 @@
                         // Limpa campos antigos legados
                         delete entregas[index].cesta; delete entregas[index].quantidade;
                         delete entregas[index].tipo; delete entregas[index].brinde;
-                        delete entregas[index].brindeDescricao; delete entregas[index].codigoAlterada;
+                        delete entregas[index].brindeDescricao; delete entregas[index].brindeOpcoes; // Limpa o legado (agora está dentro de 'cestas')
+                        delete entregas[index].codigoAlterada;
                         delete entregas[index].partesAlteradas;
-                        delete entregas[index].codigoFinal; // Limpa o legado (embora seja novo, é melhor limpar se existir solto)
+                        delete entregas[index].codigoFinal;
                         
                         mostrarAviso("Entrega atualizada com sucesso!");
                     } else {
@@ -1626,7 +1674,11 @@
                 const cestas = migrarFormatoCestas(entrega);
                 cestas.forEach(cesta => {
                     resumo += `*${cesta.quantidade}x ${cesta.nome}* (${formatarMoeda(cesta.valor * cesta.quantidade)})\n`;
-                    if (cesta.brinde === 'Sim') resumo += `  - Brinde: ${cesta.brindeDescricao || 'Sim'}\n`;
+                    // MODIFICADO: Lógica de Brinde
+                    if (cesta.brinde === 'Sim') {
+                        const brindesTxt = (cesta.brindeOpcoes && cesta.brindeOpcoes.length > 0) ? cesta.brindeOpcoes.join(', ') : 'Sim';
+                        resumo += `  - Brinde: ${brindesTxt}\n`;
+                    }
                     if (cesta.tipo === 'Alterada') {
                         resumo += `  - Cesta: Alterada\n`;
                         if (cesta.codigoFinal) resumo += `  - Final: ${cesta.codigoFinal}\n`;
@@ -1678,6 +1730,7 @@
                 }
             }
             
+            // MODIFICADO: Apenas abre o modal
             function exportarDados() {
                 const rotaAtiva = getRotaAtiva();
                 if (!rotaAtiva || rotaAtiva.entregas.length === 0) {
@@ -1685,16 +1738,14 @@
                     return;
                 }
                 
-                // 1. Prepara Relatório de Entregas Concluídas
+                // Prepara Relatório de Entregas Concluídas (para o <pre>)
                 const entregasConcluidas = rotaAtiva.entregas.filter(e => e.status === 'Entregue');
                 const entregasCanceladas = rotaAtiva.entregas.filter(e => e.status === 'Cancelada');
                 let relatorioTexto = "Nenhuma entrega finalizada.\n";
-                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n\n`;
 
                 if (entregasConcluidas.length > 0 || entregasCanceladas.length > 0) {
                     relatorioTexto = "";
                 }
-
                 if (entregasConcluidas.length > 0) {
                     relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
                     entregasConcluidas.forEach(e => {
@@ -1707,7 +1758,6 @@
                         relatorioTexto += `-----------------------------\n`;
                     });
                 }
-
                 if (entregasCanceladas.length > 0) {
                     relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
                     entregasCanceladas.forEach(e => {
@@ -1716,9 +1766,43 @@
                         relatorioTexto += `-----------------------------\n`;
                     });
                 }
+                exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
+
+                // Limpa o link WPP antigo e reseta o seletor
+                exportWhatsappLinkEl.innerHTML = `
+                    <button type="button" id="btn-gerar-resumo-wpp" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
+                        Gerar Resumo WhatsApp
+                    </button>`;
+                exportWppError.classList.add('hidden');
+                document.querySelectorAll('input[name="export-rota-wpp"]:checked').forEach(cb => cb.checked = false);
                 
-                // 3. Prepara Texto para WhatsApp
-                const entregasPendentes = rotaAtiva.entregas.filter(e => e.status === 'Pendente' || e.status === 'Montado');
+                // Adiciona o listener ao botão (precisa ser aqui, pois o botão é recriado)
+                document.getElementById('btn-gerar-resumo-wpp').addEventListener('click', gerarResumoWhatsApp);
+
+                modalExportar.classList.remove('hidden');
+            }
+
+            // MODIFICADO: Nova função para gerar o resumo WPP
+            function gerarResumoWhatsApp() {
+                const rotaAtiva = getRotaAtiva();
+                const rotasSelecionadas = 
+                    Array.from(document.querySelectorAll('input[name="export-rota-wpp"]:checked'))
+                         .map(input => input.value);
+                
+                if (rotasSelecionadas.length === 0) {
+                    exportWppError.classList.remove('hidden');
+                    return;
+                }
+                exportWppError.classList.add('hidden');
+
+                let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n\n`;
+
+                // Filtra entregas pendentes pelas rotas selecionadas
+                const entregasPendentes = rotaAtiva.entregas.filter(e => 
+                    (e.status === 'Pendente' || e.status === 'Montado') && 
+                    rotasSelecionadas.includes(e.rotaEntrega)
+                );
+
                 whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
                 if(entregasPendentes.length > 0) {
                     entregasPendentes.forEach((e, index) => {
@@ -1726,10 +1810,15 @@
                         // ... (gerar resumo do pedido)
                     });
                 } else {
-                    whatsappTexto += `Nenhuma entrega pendente.\n`;
+                    whatsappTexto += `Nenhuma entrega pendente para as rotas selecionadas.\n`;
                 }
                 
-                // 4. Relatório Financeiro (WhatsApp)
+                // Relatório Financeiro (AGORA CONSIDERA APENAS ROTAS SELECIONADAS)
+                const entregasConcluidas = rotaAtiva.entregas.filter(e => 
+                    e.status === 'Entregue' && 
+                    rotasSelecionadas.includes(e.rotaEntrega)
+                );
+
                 let totalVendido = 0;
                 let totalPorPagamento = {};
                 entregasConcluidas.forEach(e => {
@@ -1747,36 +1836,38 @@
                     }
                 });
 
-                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
+                whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO (Rotas: ${rotasSelecionadas.join(', ')}) ---\n`;
                 whatsappTexto += `*Vendas Concluídas:*\n`;
                 whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
                 
                 whatsappTexto += `\n*Recebimentos por Forma:*\n`;
-                Object.keys(totalPorPagamento).forEach(forma => {
-                    whatsappTexto += `   ${forma}: ${formatarMoeda(totalPorPagamento[forma])}\n`;
-                });
+                if(Object.keys(totalPorPagamento).length > 0) {
+                    Object.keys(totalPorPagamento).forEach(forma => {
+                        whatsappTexto += `   ${forma}: ${formatarMoeda(totalPorPagamento[forma])}\n`;
+                    });
+                } else {
+                    whatsappTexto += 'Nenhum recebimento.\n';
+                }
 
-                // Despesas
+                // Despesas (Despesas são da rota inteira, não por sub-rota)
                 const despesas = rotaAtiva.despesas;
                 const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
-                whatsappTexto += `\n*Despesas da Rota:*\n`;
+                whatsappTexto += `\n*Despesas da Rota (Total):*\n`;
                 whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
                 whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
                 whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
                 whatsappTexto += `Total Despesas: *${formatarMoeda(totalDespesas)}*\n`;
                 
                 const balanco = totalVendido - totalDespesas;
-                whatsappTexto += `\n*BALANÇO (Vendido - Despesas):* *${formatarMoeda(balanco)}*\n`;
-                
-                exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
+                whatsappTexto += `\n*BALANÇO (Vendido ${rotasSelecionadas.join(', ')} - Despesas Totais):* *${formatarMoeda(balanco)}*\n`;
                 
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
+                
+                // Substitui o botão "Gerar" pelo link
                 exportWhatsappLinkEl.innerHTML = `
                     <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
                         Enviar Resumo no WhatsApp
                     </a>`;
-
-                modalExportar.classList.remove('hidden');
             }
             
             async function exportarCardComoJson(id) {
@@ -1887,7 +1978,6 @@
                         rotaAtiva.entregas.push(novaEntrega);
                         salvarTodasAsRotas();
                         
-                        // CORREÇÃO: Reseta o filtro para a rota do card importado
                         resetarFiltroParaPadrao(novaEntrega.rotaEntrega);
                         
                         renderizarEntregas();
@@ -1902,10 +1992,7 @@
                 e.target.value = null;
             }
             
-            // CORREÇÃO: Nova função para resetar o filtro para a ROTA DO PEDIDO
             function resetarFiltroParaPadrao(rotaDoPedido = null) {
-                // Se uma rota específica for fornecida (ao salvar), mude para ela.
-                // Se não (ao carregar), mude para o padrão 'CUIABÁ'.
                 let filtroAlvo = rotaDoPedido || 'CUIABÁ';
                 filtroRotaAtiva = filtroAlvo; 
 
@@ -1915,7 +2002,6 @@
                 if (filtroAtivoBtn) {
                     filtroAtivoBtn.classList.add('btn-filtro-ativo');
                 } else {
-                    // Fallback se a rota do pedido não tiver um filtro (ex: "N/A")
                     const primeiroFiltro = document.querySelector('.btn-filtro-rota[data-filtro="CUIABÁ"]');
                     if (primeiroFiltro) {
                         primeiroFiltro.classList.add('btn-filtro-ativo');
@@ -1976,14 +2062,14 @@
                         localStorage.setItem('rotaAtivaId', rotaAtivaId);
                     }
                 }
+                
+                // 5. Define o modo inicial (ANTES de carregar a rota, para o FAB aparecer)
+                setModoVisualizacao('admin');
 
-                // 5. Popular o <select> e carregar a rota ativa na tela
+                // 6. Popular o <select> e carregar a rota ativa na tela
                 popularSelectRotas();
                 carregarRotaAtiva();
-                
-                // 6. Define o modo inicial
-                setModoVisualizacao('admin');
-                
+                                
                 // 7. Define o filtro inicial
                 resetarFiltroParaPadrao(null); // Usa o padrão 'CUIABÁ'
             }
@@ -2031,6 +2117,7 @@
             // Modal Formulário -> Cliente
             inputCliente.addEventListener('input', (e) => {
                 const nome = e.target.value;
+                // CORREÇÃO: Usar normalizarString para buscar no cache
                 const cliente = CLIENTES_CACHE[normalizarString(nome)];
                 if (cliente) {
                     displayClienteEndereco.textContent = cliente.endereco || '-';
@@ -2078,6 +2165,9 @@
                 const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
                 compartilharOuBaixar(blob, nomeArquivo);
             });
+            // NOVO: Listener para o botão de gerar resumo WPP
+            btnGerarResumoWpp.addEventListener('click', gerarResumoWhatsApp);
+
 
             // Modal Aviso
             btnFecharAviso.addEventListener('click', fecharAviso);
