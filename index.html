@@ -839,10 +839,19 @@
                 const dia = data.toLocaleDateString('pt-BR', { weekday: 'long' });
                 return dia.charAt(0).toUpperCase() + dia.slice(1);
             }
+            
+            // ####################
+            // ##### CORREÇÃO #####
+            // ####################
+            // Adicionado .trim() para remover espaços em branco do início e fim,
+            // corrigindo a busca por clientes que têm espaços no nome (ex: "1008 ").
             function normalizarString(str) {
                 if (typeof str !== 'string') return '';
-                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
             }
+            // ####################
+            // ### FIM DA CORREÇÃO ###
+            // ####################
 
             // --- Funções de Gerenciamento de Rotas (Admin) ---
 
@@ -1877,9 +1886,22 @@
                 
                 const jsonDados = JSON.stringify(entrega, null, 2);
                 const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-9]/gi, '_')}.json`;
+                const nomeArquivo = `card_${entrega.cliente.nome.replace(/[^a-z0-n]/gi, '_')}.json`;
                 
                 await compartilharOuBaixar(blob, nomeArquivo);
+            }
+            
+            // NOVO: Handle para carregar rota (substitui o antigo 'handleArquivoCarregado')
+            function handleArquivoCarregado(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const jsonDados = event.target.result;
+                    carregarDados(jsonDados); // Chama a função unificada
+                };
+                reader.readAsText(file);
+                e.target.value = null; // Limpa para permitir carregar o mesmo arquivo
             }
 
             function carregarDados(jsonDados) {
@@ -2033,6 +2055,7 @@
                             const option = document.createElement('option');
                             option.value = cliente.nome;
                             datalistClientes.appendChild(option);
+                            // CORREÇÃO: Usa a função normalizarString corrigida
                             CLIENTES_CACHE[normalizarString(cliente.nome)] = cliente;
                         });
                     } else {
@@ -2162,7 +2185,7 @@
                 if (!rotaAtiva) return;
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
                 const blob = new Blob([jsonDados], { type: 'application/json' });
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-n]/gi, '_')}_${rotaAtiva.data}.json`;
                 compartilharOuBaixar(blob, nomeArquivo);
             });
             // NOVO: Listener para o botão de gerar resumo WPP
@@ -2185,4 +2208,3 @@
     </script>
 </body>
 </html>
-
