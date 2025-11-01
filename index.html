@@ -62,7 +62,8 @@
 
         /* Modo ADMIN (Padrão) */
         .modo-admin .admin-view {
-            display: block; /* ou flex, grid, etc. */
+            /* ATUALIZADO: Mudei de 'block' para 'flex' para corresponder ao uso do botão */
+            display: flex; /* ou flex, grid, etc. */
         }
         /* CORREÇÃO: Visibilidade no mobile */
         .modo-admin .btn-top-admin {
@@ -70,6 +71,10 @@
         }
         .modo-admin #btn-abrir-form-modal {
             display: flex; /* Garante que o FAB apareça */
+        }
+        /* NOVO: Regra Específica para o botão cancelar (que não é flex) */
+        .modo-admin .btn-cancelar-entrega.admin-view {
+            display: block;
         }
 
         /* Modo ENTREGADOR */
@@ -82,6 +87,10 @@
         .modo-entregador #btn-abrir-form-modal {
             display: none; /* Entregador não lança pedido */
         }
+        /* NOVO: Regra explícita para ESCONDER admin-view */
+        .modo-entregador .admin-view {
+            display: none !important;
+        }
 
         /* Modo MONTADOR */
         .modo-montador .montador-view {
@@ -92,6 +101,10 @@
         }
         .modo-montador #btn-abrir-form-modal {
             display: none;
+        }
+        /* NOVO: Regra explícita para ESCONDER admin-view */
+        .modo-montador .admin-view {
+            display: none !important;
         }
 
         /* NOVO: Modo RELATORIO */
@@ -2428,6 +2441,7 @@
     </script>
 </body>
 </html>
+
 
 
 
