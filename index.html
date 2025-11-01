@@ -128,10 +128,9 @@
         }
 
         /* Lógica de visibilidade para Modo Montador */
-        .montador-hidden {
-            .modo-montador & {
-                display: none;
-            }
+        /* CORRIGIDO: A sintaxe aninhada (SASS) foi convertida para CSS puro */
+        .modo-montador .montador-hidden {
+            display: none;
         }
     </style>
 </head>
@@ -616,10 +615,6 @@
             const btnTopMontador = document.getElementById('btn-top-montador');
             
             <!-- MODIFICADO: Seletores do Header Admin removidos (agora não é colapsável)
-            const btnToggleAdminHeader = document.getElementById('btn-toggle-admin-header');
-            const iconToggleOpen = document.getElementById('icon-toggle-open');
-            const iconToggleClose = document.getElementById('icon-toggle-close');
-            const adminHeaderContent = document.getElementById('admin-header-content');
             -->
             
             // Gerenciamento de Rotas (Dentro do Header)
@@ -707,7 +702,6 @@
             const summaryTotalCestas = document.getElementById('summary-total-cestas');
             const summaryCestasBreakdown = document.getElementById('summary-cestas-breakdown');
             const summaryRotasBreakdown = document.getElementById('summary-rotas-breakdown');
-            const summaryPedidosRotaBreakdown = document.getElementById('summary-pedidos-rota-breakdown');
             
             const filtrosRotaContainer = document.getElementById('filtros-rota');
 
@@ -724,7 +718,6 @@
             let cestasDoPedidoAtual = []; // "Carrinho" do formulário
             let filtroRotaAtiva = 'TODOS';
             let modoAtual = 'admin'; // 'admin', 'entregador', 'montador'
-            // REMOVIDO: let adminHeaderAberto = true;
 
             // --- Funções ---
 
@@ -769,8 +762,6 @@
                     btnTopMontador.classList.add('btn-modo-ativo');
                 }
             }
-            
-            <!-- MODIFICADO: Função 'setAdminHeaderState' removida -->
             
             function mostrarAviso(mensagem) {
                 modalAvisoTexto.textContent = mensagem;
@@ -868,10 +859,6 @@
                 
                 toggleSubCampoAlterada();
                 toggleSubCampoBrinde();
-                
-                <!-- MODIFICADO: Header de admin não precisa mais ser setado
-                setAdminHeaderState(true);
-                -->
             }
 
             function getEntregasAtivas() {
@@ -1472,6 +1459,8 @@
                     return entrega.cestas.map(c => {
                         const cestaLimpa = { ...c };
                         delete cestaLimpa.rotaEntrega;
+                        // Garante que o campo 'codigoFinal' exista
+                        cestaLimpa.codigoFinal = cestaLimpa.codigoFinal || '';
                         return cestaLimpa;
                     });
                 }
@@ -1480,7 +1469,8 @@
                         nome: entrega.cesta.nome, valor: entrega.cesta.valor,
                         quantidade: entrega.quantidade || 1, tipo: entrega.tipo || 'Normal',
                         brinde: entrega.brinde || 'Não', brindeDescricao: entrega.brindeDescricao || '',
-                        codigoAlterada: entrega.codigoAlterada || '', partesAlteradas: entrega.partesAlteradas || []
+                        codigoAlterada: entrega.codigoAlterada || '', partesAlteradas: entrega.partesAlteradas || [],
+                        codigoFinal: entrega.codigoFinal || ''
                     }];
                 }
                 return [];
@@ -1636,6 +1626,7 @@
                 cestas.forEach((cesta, index) => {
                     texto += `  *Item ${index + 1}: ${cesta.quantidade}x ${cesta.nome}*\n`;
                     if (cesta.tipo === 'Alterada') {
+                        if (cesta.codigoFinal) texto += `    Final: ${cesta.codigoFinal}\n`;
                         if (cesta.codigoAlterada) texto += `    Detalhes: ${cesta.codigoAlterada}\n`;
                     }
                 });
@@ -1948,9 +1939,77 @@
             btnFecharFormModal.addEventListener('click', sairModoEdicao);
 
             <!-- MODIFICADO: Listener do Header Admin removido
-            btnToggleAdminHeader.addEventListener('click', () => setAdminHeaderState(!adminHeaderAberto));
             -->
             selectRotaAtiva.addEventListener('change', (e) => {
                 rotaAtivaId = e.target.value;
                 localStorage.setItem('rotaAtivaId', rotaAtivaId);
+                carregarRotaAtiva();
+            });
+            btnNovaRota.addEventListener('click', () => criarNovaRota(true));
+            inputNomeRota.addEventListener('change', atualizarInfoRota);
+            inputDataRota.addEventListener('change', atualizarInfoRota);
+            btnExcluirRota.addEventListener('click', excluirRotaAtiva);
+            
+            // Página Rota (Lista e Filtros)
+            listaEntregasEl.addEventListener('click', handleCardClick);
+            filtrosRotaContainer.addEventListener('click', atualizarFiltroRota);
+
+            // Página Modo (Agora na Top Bar)
+            btnTopAdmin.addEventListener('click', () => setModoVisualizacao('admin'));
+            btnTopEntregador.addEventListener('click', () => setModoVisualizacao('entregador'));
+            btnTopMontador.addEventListener('click', () => setModoVisualizacao('montador'));
+            
+            // Seção Despesas (Listeners)
+            inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
+            inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
+            inputDespesaExtra.addEventListener('change', salvarDespesas);
+
+            // Página Formulário (Dentro do Modal)
+            formEntrega.addEventListener('submit', adicionarOuAtualizarEntrega);
+            inputCliente.addEventListener('input', (e) => {
+                const cliente = CLIENTES_CACHE[e.target.value.toLowerCase()];
+                if (cliente) {
+                    displayClienteEndereco.textContent = cliente.endereco || '-';
+                    displayClienteComplemento.textContent = cliente.complemento || '-';
+                    displayClienteCelular.textContent = cliente.celular || '-';
+                    infoClienteSelecionado.classList.remove('hidden');
+                } else {
+                    infoClienteSelecionado.classList.add('hidden');
+                }
+            });
+            
+            // Página Formulário (Sub-form Cestas)
+            btnAddCesta.addEventListener('click', adicionarCestaAoPedido);
+            document.querySelectorAll('input[name="sub-tipo-cesta"]').forEach(r => r.addEventListener('change', toggleSubCampoAlterada));
+            document.querySelectorAll('input[name="sub-brinde"]').forEach(r => r.addEventListener('change', toggleSubCampoBrinde));
+            listaCestasNoPedidoEl.addEventListener('click', handleRemoverCesta);
+            
+            // Modais
+            btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
+            formPagamento.addEventListener('submit', salvarPagamento);
+            btnFecharWhatsApp.addEventListener('click', () => modalWhatsApp.classList.add('hidden'));
+            btnExportar.addEventListener('click', exportarDados);
+            btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
+            btnBaixarJson.addEventListener('click', () => {
+                const rotaAtiva = todasAsRotas[rotaAtivaId];
+                if (!rotaAtiva) return;
+                salvarLocalStorage();
+                const jsonDados = JSON.stringify(rotaAtiva, null, 2);
+                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-Nenhum]/gi, '_')}_${rotaAtiva.data}.json`;
+                compartilharOuBaixarArquivo(jsonDados, nomeArquivo, 'application/json');
+            });
+            btnFecharAviso.addEventListener('click', fecharAviso);
+
+            // Importação/Exportação de Arquivos
+            btnCarregar.addEventListener('click', () => inputCarregarArquivo.click());
+            inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
+            btnImportarCard.addEventListener('click', () => inputCarregarCard.click());
+            inputCarregarCard.addEventListener('change', handleCardImportado);
+            
+            // Inicialização
+            iniciarAplicativo();
+        });
+    </script>
+</body>
+</html>
 
