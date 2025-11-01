@@ -8,7 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- NOVO: Carrega o Banco de Dados de Clientes -->
     <!-- Este arquivo DEVE estar na mesma pasta que este HTML -->
-    <script src="clientes.js"></script>
+    <!-- ATUALIZADO: Adicionado ?v=2 para forçar o navegador a recarregar o arquivo -->
+    <script src="clientes.js?v=2"></script>
     <style>
         /* Estilos Globais */
         body {
@@ -1405,6 +1406,33 @@
 
 
             // --- Funções de Lógica do Formulário (Adicionar/Editar) ---
+
+            // ######################################################
+            // ##### INÍCIO DA CORREÇÃO #####
+            // ######################################################
+            // Estas duas funções estavam faltando, o que impedia
+            // o script de carregar os event listeners corretamente.
+
+            function toggleSubCampoAlterada() {
+                const tipo = document.querySelector('input[name="sub-tipo-cesta"]:checked').value;
+                if (tipo === 'Alterada') {
+                    subCampoAlterada.classList.remove('hidden');
+                } else {
+                    subCampoAlterada.classList.add('hidden');
+                }
+            }
+            function toggleSubCampoBrinde() {
+                const brinde = document.querySelector('input[name="sub-brinde"]:checked').value;
+                if (brinde === 'Sim') {
+                    subCampoBrinde.classList.remove('hidden');
+                } else {
+                    subCampoBrinde.classList.add('hidden');
+                }
+            }
+
+            // ######################################################
+            // ##### FIM DA CORREÇÃO #####
+            // ######################################################
             
             function adicionarCestaAoPedido() {
                 const selectedOption = subSelectCesta.options[subSelectCesta.selectedIndex];
@@ -2400,6 +2428,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
