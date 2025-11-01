@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planilha de Cartões</title>
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca de ícones (para os botões de ordenação e exclusão) -->
+    <script src="https://unpkg.com/lucide-react@0.395.0/dist/umd/lucide.min.js"></script>
+    <style>
+        /* Estilo para a fonte Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ajuste para inputs de número sem setas (spinners) */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 antialiased">
+
+    <!-- Container Principal -->
+    <div class="container mx-auto max-w-full p-4 sm:p-6 lg:p-8">
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Planilha de Gerenciamento de Cartões</h1>
+
+        <!-- Seção de Estatísticas (Cabeçalho) -->
+        <div id="stats-header" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Cards de Estatísticas serão injetados aqui -->
+            <div class="bg-white p-4 rounded-lg shadow-md flex flex-col justify-center items-center">
+                <span class="text-sm font-medium text-gray-500">Carregando...</span>
+            </div>
+        </div>
+        
+        <!-- Div para Saldo por Data de Crédito -->
+        <div id="saldo-por-data-container" class="bg-white p-6 rounded-lg shadow-md mb-6">
+             <h3 class="text-lg font-semibold mb-2 text-gray-700">Saldo Atual por Data de Crédito</h3>
+             <div id="saldo-por-data" class="text-sm text-gray-600">
+                <span>Carregando...</span>
+             </div>
+        </div>
+
+        <!-- Seção para Adicionar Novo Cartão (Formulário) -->
+        <form id="add-card-form" class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <h2 class="text-xl font-semibold text-gray-800 col-span-full mb-2">Adicionar Novo Cartão</h2>
+            
+            <!-- Campos do Formulário -->
+            <div>
+                <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
+                <input type="text" id="nome" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone</label>
+                <input type="tel" id="telefone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
+                <input type="text" id="empresa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="bandeira" class="block text-sm font-medium text-gray-700">Bandeira</label>
+                <input type="text" id="bandeira" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="dataCredito" class="block text-sm font-medium text-gray-700">Data do Crédito</label>
+                <input type="date" id="dataCredito" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="valor" class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                <input type="number" id="valor" step="0.01" min="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="senha" class="block text-sm font-medium text-gray-700">Senha</label>
+                <input type="text" id="senha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="percentualComissao" class="block text-sm font-medium text-gray-700">% Comissão</label>
+                <input type="number" id="percentualComissao" step="0.01" min="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            
+            <!-- Botão de Envio -->
+            <div class="col-span-full flex justify-end">
+                <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Adicionar Cartão
+                </button>
+            </div>
+        </form>
+
+        <!-- Seção da Tabela de Cartões -->
+        <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <!-- Cabeçalhos da Tabela (Clicáveis para Ordenação) -->
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('nome')">Nome <span class="sort-icon" data-key="nome"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('telefone')">Telefone <span class="sort-icon" data-key="telefone"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('empresa')">Empresa <span class="sort-icon" data-key="empresa"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('bandeira')">Bandeira <span class="sort-icon" data-key="bandeira"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('dataCredito')">Data Crédito <span class="sort-icon" data-key="dataCredito"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('valor')">Valor <span class="sort-icon" data-key="valor"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Senha
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('uso')">Uso <span class="sort-icon" data-key="uso"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('dataUso')">Data do Uso <span class="sort-icon" data-key="dataUso"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('saldoAtual')">Saldo Atual <span class="sort-icon" data-key="saldoAtual"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('percentualComissao')">% Comissão <span class="sort-icon" data-key="percentualComissao"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button class="flex items-center gap-1 hover:text-gray-700" onclick="requestSort('valorComissao')">Valor Comissão <span class="sort-icon" data-key="valorComissao"></span></button>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="cards-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Linhas da tabela serão injetadas aqui -->
+                    <tr>
+                        <td colspan="13" class="px-4 py-4 text-sm text-gray-500 text-center">Carregando dados...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- ID do Usuário (para fins de colaboração/debug) -->
+        <div class="mt-4 text-center text-xs text-gray-500">
+            <p>Conectado como: <span id="user-id-display">...</span></p>
+        </div>
+        
+    </div> <!-- Fim do Container Principal -->
+
+    <!-- Scripts Firebase (Módulos) -->
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            addDoc, 
+            setDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            collection,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuração do Firebase ---
+        
+        // Variáveis globais de configuração (fornecidas pelo ambiente)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, auth, db;
+        let userId;
+        let cartoesCollectionRef; // Referência da coleção do Firestore
+        
+        // Estado da aplicação
+        let cartoes = []; // Array principal com os dados
+        let sortConfig = { key: 'dataCredito', direction: 'descending' }; // Ordenação inicial
+
+        // --- Inicialização ---
+
+        function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Habilita logs detalhados do Firestore
+                setLogLevel('Debug');
+                console.log("Firebase inicializado. App ID:", appId);
+
+                // Listener de autenticação
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log("Usuário autenticado:", user.uid);
+                        handleAuth(user);
+                    } else if (initialAuthToken) {
+                        console.log("Tentando login com Custom Token...");
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } catch (error) {
+                            console.error("Erro no login com Custom Token:", error);
+                            await signInAnonymously(auth); // Fallback para anônimo
+                        }
+                    } else {
+                        console.log("Nenhum usuário logado, fazendo login anônimo...");
+                        await signInAnonymously(auth);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Erro ao inicializar o Firebase:", error);
+                document.getElementById('cards-table-body').innerHTML = `<tr><td colspan="13" class="px-4 py-4 text-sm text-red-600 text-center">Erro ao conectar ao banco de dados. Verifique o console.</td></tr>`;
+            }
+        }
+
+        // --- Autenticação e Carregamento de Dados ---
+        
+        function handleAuth(user) {
+            if (!user || !db) return;
+            
+            userId = user.uid;
+            document.getElementById('user-id-display').textContent = userId;
+            
+            // Define a referência da coleção DEPOIS de ter o userId
+            const collectionPath = `artifacts/${appId}/users/${userId}/cartoes`;
+            console.log("Caminho da coleção:", collectionPath);
+            cartoesCollectionRef = collection(db, collectionPath);
+            
+            // Inicia o listener em tempo real
+            attachSnapshotListener();
+        }
+        
+        function attachSnapshotListener() {
+            if (!cartoesCollectionRef) {
+                console.error("Referência da coleção não definida.");
+                return;
+            }
+            
+            onSnapshot(cartoesCollectionRef, (snapshot) => {
+                console.log("Snapshot recebido, documentos:", snapshot.size);
+                cartoes = []; // Limpa o array
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Adiciona os dados calculados para ordenação
+                    const valor = data.valor || 0;
+                    const uso = data.uso || 0;
+                    const percentualComissao = data.percentualComissao || 0;
+                    const saldoAtual = valor - uso;
+                    const valorComissao = valor * (percentualComissao / 100);
+                    
+                    cartoes.push({ 
+                        id: doc.id, 
+                        ...data,
+                        // Adiciona campos calculados para facilitar a ordenação
+                        saldoAtual,
+                        valorComissao
+                    });
+                });
+                
+                // Atualiza a UI
+                render();
+                
+            }, (error) => {
+                console.error("Erro ao ouvir snapshot:", error);
+                document.getElementById('cards-table-body').innerHTML = `<tr><td colspan="13" class="px-4 py-4 text-sm text-red-600 text-center">Erro ao carregar dados. Verifique o console.</td></tr>`;
+            });
+        }
+        
+        // --- Renderização (Atualização da UI) ---
+
+        function render() {
+            if (!auth.currentUser) {
+                console.log("Renderização pausada, usuário não autenticado.");
+                return;
+            }
+            sortCartoes();
+            renderEstatisticas();
+            renderTabela();
+            updateSortIcons();
+            // Carrega os ícones
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
+        function renderEstatisticas() {
+            const statsContainer = document.getElementById('stats-header');
+            const saldoPorDataContainer = document.getElementById('saldo-por-data');
+
+            const quantidade = cartoes.length;
+            const valorTotal = cartoes.reduce((acc, c) => acc + (c.valor || 0), 0);
+            const comissaoTotal = cartoes.reduce((acc, c) => acc + c.valorComissao, 0);
+            const comissaoMedia = quantidade > 0 ? (cartoes.reduce((acc, c) => acc + (c.percentualComissao || 0), 0) / quantidade) : 0;
+            const saldoTotalAtual = cartoes.reduce((acc, c) => acc + c.saldoAtual, 0);
+
+            // Agrupar Saldo Atual por Data de Crédito
+            const saldoPorData = cartoes.reduce((acc, c) => {
+                const data = c.dataCredito || 'Sem Data';
+                if (!acc[data]) {
+                    acc[data] = 0;
+                }
+                acc[data] += c.saldoAtual;
+                return acc;
+            }, {});
+            
+            // Ordena as datas (do mais recente para o mais antigo)
+            const datasOrdenadas = Object.keys(saldoPorData).sort((a, b) => b.localeCompare(a));
+
+            // HTML para Estatísticas
+            statsContainer.innerHTML = `
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-gray-500 truncate">Qtd. Cartões</h3>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900">${quantidade}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-gray-500 truncate">Valor Total (Crédito)</h3>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900">${formatCurrency(valorTotal)}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-gray-500 truncate">Saldo Total (Atual)</h3>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900">${formatCurrency(saldoTotalAtual)}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-gray-500 truncate">Total Comissão</h3>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900">${formatCurrency(comissaoTotal)}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-gray-500 truncate">Comissão Média</h3>
+                    <p class="mt-1 text-3xl font-semibold text-gray-900">${formatPercentage(comissaoMedia)}</p>
+                </div>
+            `;
+            
+            // HTML para Saldo por Data
+            if (datasOrdenadas.length > 0) {
+                saldoPorDataContainer.innerHTML = datasOrdenadas.map(data => `
+                    <div class="flex justify-between py-1 border-b border-gray-100 last:border-b-0">
+                        <span class="font-medium">${formatDate(data)}:</span>
+                        <span class="text-gray-800 font-semibold">${formatCurrency(saldoPorData[data])}</span>
+                    </div>
+                `).join('');
+            } else {
+                saldoPorDataContainer.innerHTML = `<span class="text-gray-500">Nenhum dado de saldo para exibir.</span>`;
+            }
+        }
+
+        function renderTabela() {
+            const tableBody = document.getElementById('cards-table-body');
+            if (cartoes.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="13" class="px-4 py-4 text-sm text-gray-500 text-center">Nenhum cartão cadastrado.</td></tr>`;
+                return;
+            }
+            
+            tableBody.innerHTML = cartoes.map(cartao => {
+                const valor = cartao.valor || 0;
+                const uso = cartao.uso || 0;
+                const percentualComissao = cartao.percentualComissao || 0;
+                
+                // Cálculos feitos na renderização (os valores para ordenação já estão no objeto)
+                const saldoAtual = cartao.saldoAtual;
+                const valorComissao = cartao.valorComissao;
+                
+                // Define a cor do saldo
+                const saldoColor = saldoAtual > 0 ? 'text-green-600' : (saldoAtual < 0 ? 'text-red-600' : 'text-gray-700');
+
+                return `
+                    <tr class="hover:bg-gray-50 text-sm">
+                        <td class="px-4 py-3 whitespace-nowrap">${cartao.nome || ''}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${cartao.telefone || ''}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${cartao.empresa || ''}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${cartao.bandeira || ''}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${formatDate(cartao.dataCredito)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800">${formatCurrency(valor)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${cartao.senha || ''}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <input 
+                                type="number" 
+                                value="${uso}" 
+                                onchange="updateCartao('${cartao.id}', 'uso', this.valueAsNumber)"
+                                class="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <input 
+                                type="date" 
+                                value="${cartao.dataUso || ''}" 
+                                onchange="updateCartao('${cartao.id}', 'dataUso', this.value)"
+                                class="w-36 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap font-semibold ${saldoColor}">${formatCurrency(saldoAtual)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${formatPercentage(percentualComissao)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800">${formatCurrency(valorComissao)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <button onclick="deleteCartao('${cartao.id}')" class="text-red-600 hover:text-red-800" title="Excluir Cartão">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // --- Manipulação de Dados (CRUD) ---
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!cartoesCollectionRef) {
+                console.error("A coleção não está pronta. Tente novamente.");
+                return;
+            }
+
+            // Pega os valores do formulário
+            const nome = document.getElementById('nome').value;
+            const telefone = document.getElementById('telefone').value;
+            const empresa = document.getElementById('empresa').value;
+            const bandeira = document.getElementById('bandeira').value;
+            const dataCredito = document.getElementById('dataCredito').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+            const senha = document.getElementById('senha').value;
+            const percentualComissao = parseFloat(document.getElementById('percentualComissao').value);
+            
+            const novoCartao = {
+                nome,
+                telefone,
+                empresa,
+                bandeira,
+                dataCredito,
+                valor: isNaN(valor) ? 0 : valor,
+                senha,
+                percentualComissao: isNaN(percentualComissao) ? 0 : percentualComissao,
+                uso: 0, // Valor inicial de uso
+                dataUso: "" // Data de uso inicial
+            };
+            
+            try {
+                await addDoc(cartoesCollectionRef, novoCartao);
+                console.log("Cartão adicionado!");
+                e.target.reset(); // Limpa o formulário
+            } catch (error) {
+                console.error("Erro ao adicionar cartão: ", error);
+            }
+        }
+        
+        window.updateCartao = async (id, field, value) => {
+            console.log(`Atualizando ${id}: ${field} = ${value}`);
+            if (!db || !userId) return;
+            
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/cartoes`, id);
+            
+            // Converte o valor se for número (ex: 'uso')
+            let valorAtualizado = (field === 'uso') ? (isNaN(value) ? 0 : Number(value)) : value;
+
+            try {
+                await updateDoc(docRef, {
+                    [field]: valorAtualizado
+                });
+                console.log("Documento atualizado.");
+                // O onSnapshot vai pegar a mudança e chamar o render() automaticamente.
+            } catch (error) {
+                console.error("Erro ao atualizar documento: ", error);
+            }
+        }
+        
+        window.deleteCartao = async (id) => {
+            // Usa um modal customizado em vez de confirm()
+            if (await showConfirmModal(`Tem certeza que deseja excluir este cartão?`)) {
+                if (!db || !userId) return;
+                console.log("Excluindo cartão:", id);
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/cartoes`, id);
+                try {
+                    await deleteDoc(docRef);
+                    console.log("Cartão excluído.");
+                    // O onSnapshot vai pegar a mudança e chamar o render() automaticamente.
+                } catch (error) {
+                    console.error("Erro ao excluir cartão: ", error);
+                }
+            }
+        }
+
+        // --- Ordenação ---
+
+        function sortCartoes() {
+            const { key, direction } = sortConfig;
+            if (!key) return;
+            
+            cartoes.sort((a, b) => {
+                let aValue = a[key];
+                let bValue = b[key];
+                
+                // Tratamento para diferentes tipos de dados
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                    bValue = bValue ? bValue.toLowerCase() : '';
+                }
+                
+                if (aValue < bValue) {
+                    return direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        
+        window.requestSort = (key) => {
+            let direction = 'ascending';
+            if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+                direction = 'descending';
+            }
+            sortConfig = { key, direction };
+            console.log("Ordenando por:", sortConfig);
+            render(); // Re-renderiza com a nova ordenação
+        }
+        
+        function updateSortIcons() {
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                const key = icon.getAttribute('data-key');
+                if (key === sortConfig.key) {
+                    if (sortConfig.direction === 'ascending') {
+                        icon.innerHTML = `<i data-lucide="arrow-up" class="w-3 h-3"></i>`;
+                    } else {
+                        icon.innerHTML = `<i data-lucide="arrow-down" class="w-3 h-3"></i>`;
+                    }
+                } else {
+                    icon.innerHTML = `<i data-lucide="unfold-vertical" class="w-3 h-3 text-gray-400"></i>`;
+                }
+            });
+        }
+
+        // --- Helpers ---
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+        }
+
+        function formatPercentage(value) {
+            return (value || 0).toFixed(2) + '%';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                // Tenta criar a data. O formato YYYY-MM-DD é universal
+                const date = new Date(dateString + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+                if (isNaN(date.getTime())) return dateString; // Retorna a string original se for inválida
+                
+                // Formata para DD/MM/YYYY
+                return date.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dateString; // Retorna original em caso de erro
+            }
+        }
+        
+        // --- Modal de Confirmação (Substituto do window.confirm) ---
+        
+        function showConfirmModal(message) {
+            return new Promise((resolve) => {
+                // Remove modal antigo se existir
+                const oldModal = document.getElementById('confirm-modal-overlay');
+                if (oldModal) oldModal.remove();
+
+                // Cria o overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'confirm-modal-overlay';
+                overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity';
+                
+                // Cria o conteúdo do modal
+                const modal = document.createElement('div');
+                modal.className = 'bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 transform transition-all scale-95 opacity-0';
+                
+                // Mensagem
+                const msg = document.createElement('p');
+                msg.className = 'text-lg font-medium text-gray-800 mb-4';
+                msg.textContent = message;
+                modal.appendChild(msg);
+                
+                // Container dos botões
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'flex justify-end gap-3';
+                
+                // Botão Cancelar
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2';
+                cancelBtn.textContent = 'Cancelar';
+                cancelBtn.onclick = () => {
+                    closeModal(false);
+                };
+                
+                // Botão Confirmar (Excluir)
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2';
+                confirmBtn.textContent = 'Excluir';
+                confirmBtn.onclick = () => {
+                    closeModal(true);
+                };
+                
+                btnContainer.appendChild(cancelBtn);
+                btnContainer.appendChild(confirmBtn);
+                modal.appendChild(btnContainer);
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                // Animação de entrada
+                requestAnimationFrame(() => {
+                    overlay.classList.add('opacity-100');
+                    modal.classList.remove('scale-95', 'opacity-0');
+                    modal.classList.add('scale-100', 'opacity-100');
+                });
+                
+                function closeModal(result) {
+                    modal.classList.remove('scale-100', 'opacity-100');
+                    modal.classList.add('scale-95', 'opacity-0');
+                    overlay.classList.remove('opacity-100');
+                    overlay.classList.add('opacity-0');
+                    
+                    setTimeout(() => {
+                        overlay.remove();
+                        resolve(result);
+                    }, 150); // Aguarda a transição
+                }
+            });
+        }
+        
+        // --- Event Listeners ---
+        
+        // Listener do formulário
+        document.getElementById('add-card-form').addEventListener('submit', handleFormSubmit);
+
+        // Inicializa o app
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+            // Carrega os ícones iniciais
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+
+    </script>
+</body>
+</html>
