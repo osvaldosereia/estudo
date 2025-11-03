@@ -12,7 +12,7 @@ const CLIENTES_DB = [
   "celular": "65922129303",
   "endereco": "VG08819",
   "complemento": "RUA DIAMANTINNO, Q4, C26, JD GLORIA"
-}
+},
   {
     "id": "1747405315026-AbC9O",
     "nome": "1002 VG ALAMEDA",
