@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762181458712-J6BPP",
+  "nome": "vg5567 - pq do lago - Cartão Anderson Ribeiro",
+  "celular": "65993498596",
+  "endereco": "vg5567",
+  "complemento": "RUA VICENTE FERREIRA, Q32, C10 - PQ DO LAGO"
+},
+  {
   "id": "1762180559948-UUI39",
   "nome": "VG08819 - JD GLORIA",
   "celular": "65922129303",
