@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762182043397-NBO23",
+  "nome": "VG8330 - PG DO LAGO - MIKAELA",
+  "celular": "65993551917",
+  "endereco": "VG8330",
+  "complemento": "SEX SHOP MIKA SECRET´S"
+}
+  {
   "id": "1762181458712-J6BPP",
   "nome": "vg5567 - pq do lago - Cartão Anderson Ribeiro",
   "celular": "65993498596",
