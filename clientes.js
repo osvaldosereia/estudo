@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762180559948-UUI39",
+  "nome": "VG08819 - JD GLORIA",
+  "celular": "65922129303",
+  "endereco": "VG08819",
+  "complemento": "RUA DIAMANTINNO, Q4, C26, JD GLORIA"
+}
+  {
     "id": "1747405315026-AbC9O",
     "nome": "1002 VG ALAMEDA",
     "celular": "55659",
