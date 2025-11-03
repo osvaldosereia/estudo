@@ -12,7 +12,7 @@ const CLIENTES_DB = [
   "celular": "65993551917",
   "endereco": "VG8330",
   "complemento": "SEX SHOP MIKA SECRET´S"
-}
+},
   {
   "id": "1762181458712-J6BPP",
   "nome": "vg5567 - pq do lago - Cartão Anderson Ribeiro",
