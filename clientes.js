@@ -30,7 +30,7 @@ const CLIENTES_DB = [
   {
   "id": "1762180559948-UUI39",
   "nome": "VG08819 - JD GLORIA",
-  "celular": "65922129303",
+  "celular": "65992129303",
   "endereco": "VG08819",
   "complemento": "RUA DIAMANTINNO, Q4, C26, JD GLORIA"
 },
