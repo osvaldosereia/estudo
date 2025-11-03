@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762182557155-9B0KD",
+  "nome": "AC13 VG SAO MATEUS KAROL",
+  "celular": "65996033210",
+  "endereco": "AC13",
+  "complemento": "RUA G, Q12, LOTE 21 - SAO MATEUS VG"
+},
+  {
   "id": "1762182043397-NBO23",
   "nome": "VG8330 - PG DO LAGO - MIKAELA",
   "celular": "65993551917",
