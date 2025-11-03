@@ -761,7 +761,7 @@
             // --- Constantes ---
             const MAX_ROTAS = 30; // Limite de rotas salvas
             const ADMIN_WHATSAPP_NUMBER = "65984491018"; // Número para compartilhar pedido
-            const CHAVE_PIX_PADRAO = "Aqui vai sua chave PIX (CNPJ, Celular, Email ou Aleatória)"; // Chave Pix Padrão
+            const CHAVE_PIX_PADRAO = "65984491018 - PIX CELULAR - OSVALDO SEREIA JUNIOR"; // Chave Pix Padrão
 
             // --- Seletores de Elementos ---
             
@@ -1919,16 +1919,16 @@
 
                 switch (acao) {
                     case 'avisar-chegando':
-                        texto = `Olá ${nomeCliente}! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado!`;
+                        texto = `Olá! Sou o entregador da sua Cesta Básica. Estou chegando ao seu endereço em alguns minutos. Por favor, confirme que há alguém no local para receber. Obrigado!`;
                         break;
                     case 'avisar-na-porta':
-                        texto = `Olá ${nomeCliente}, bom dia! O entregador da sua Cesta Básica já está na porta da sua casa aguardando. Obrigado!`;
+                        texto = `Olá, o entregador da sua Cesta Básica já está na porta da sua casa aguardando. Obrigado!`;
                         break;
                     case 'agradecer':
-                        texto = `Obrigado ${nomeCliente} pela compra. Esperamos você no proximo mês!`;
+                        texto = `Obrigado pela compra. Esperamos você no proximo mês!`;
                         break;
                     case 'enviar-pix':
-                        texto = `Olá ${nomeCliente}! O valor total do seu pedido é ${formatarMoeda(valorTotal)}. \n\nNossa chave Pix é:\n${CHAVE_PIX_PADRAO}\n\nPor favor, envie o comprovante. Obrigado!`;
+                        texto = `Olá! O valor total do seu pedido é ${formatarMoeda(valorTotal)}. \n\nNossa chave Pix é:\n${CHAVE_PIX_PADRAO}\n\nPor favor, envie o comprovante. Obrigado!`;
                         break;
                     case 'compartilhar-admin':
                         numeroDestino = ADMIN_WHATSAPP_NUMBER;
