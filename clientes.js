@@ -2104,7 +2104,7 @@ const CLIENTES_DB = [
     "nome": "Cpa0883 Paiaguás ",
     "celular": "5565999144624",
     "endereco": "Cpa0883",
-    "complemento": "Rua las Vegas, S/N\nBairro três poderes / Cuiabá \nCasa em frente à barbearia R.F"
+    "complemento": "Rua las Vegas, 399 \nBairro três poderes / Cuiabá \nCasa em frente à barbearia R.F"
   },
   {
     "id": "1744639339802-AbC9O",
