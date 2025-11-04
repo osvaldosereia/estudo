@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762275711937-AEARW",
+  "nome": "cba4456 cpa dr fabio",
+  "celular": "065981718042",
+  "endereco": "cba4456",
+  "complemento": "av ayrton sena, q90 c13 dr fabio"
+},
+  {
   "id": "1762275367899-L780L",
   "nome": "CS2041 CUIABA CENTRO ",
   "celular": "65993123520",
