@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762275256835-8ZGBW",
+  "nome": "AA027",
+  "celular": "65992533137",
+  "endereco": "AA027",
+  "complemento": "RUA JARDIM DAS FLORES, 417, RIBEIRAO DO LIPA"
+},
+  {
   "id": "1762182557155-9B0KD",
   "nome": "AC13 VG SAO MATEUS KAROL",
   "celular": "65996033210",
