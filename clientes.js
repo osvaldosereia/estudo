@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762275367899-L780L",
+  "nome": "CS2041 CUIABA CENTRO ",
+  "celular": "65993123520",
+  "endereco": "CS2041",
+  "complemento": "RUA JOAQUIM MURTINHO, 1250"
+},
+  {
   "id": "1762275256835-8ZGBW",
   "nome": "AA027",
   "celular": "65992533137",
