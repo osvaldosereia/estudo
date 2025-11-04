@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762276707213-UYM0A",
+  "nome": "CPA1123 FINAL DO CPA",
+  "celular": "065981391216",
+  "endereco": "CPA1123",
+  "complemento": "RUA 14, C 11, JARDIM AROEIRA"
+},
+  {
   "id": "1762276045151-R0ZN6",
   "nome": "cpa4492 final do cpa",
   "celular": "992003993",
