@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762351573821-RS898",
+  "nome": "VG PONTEC FILHA MAIARA",
+  "celular": "65992811081",
+  "endereco": "VG PONTEC",
+  "complemento": "EMPRESA LADO ESQUERDO, CASA TERREA, TEM A LOGO GRANDE DA FRENTE, RUIM PRA ESTACIONAR"
+},
+  {
   "id": "1762276707213-UYM0A",
   "nome": "CPA1123 FINAL DO CPA",
   "celular": "065981391216",
