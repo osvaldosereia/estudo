@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762352531745-32XN0",
+  "nome": "TT03 VG CANELAS EDILAYNE",
+  "celular": "065993384740",
+  "endereco": "TT03",
+  "complemento": "RUA MENA BERRETO, 9, KITNET AMARELA, CANELAS"
+},
+  {
   "id": "1762351573821-RS898",
   "nome": "VG PONTEC FILHA MAIARA",
   "celular": "65992811081",
