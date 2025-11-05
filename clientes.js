@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762353337333-A4LAD",
+  "nome": "TT3193 COXIPO PQ OHARA PREDIO ",
+  "celular": "65992978170",
+  "endereco": "TT3193",
+  "complemento": "COND CHAPADA DOS MONTES, BLOCO F306, APTO 287"
+},
+  {
   "id": "1762352531745-32XN0",
   "nome": "TT03 VG CANELAS EDILAYNE",
   "celular": "065993384740",
