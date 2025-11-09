@@ -46,6 +46,17 @@
             background-repeat: no-repeat;
             background-size: 1.25em 1.25em;
         }
+        /* Classe para transição suave de elementos retráteis */
+        .collapse-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        .collapse-content.open {
+            max-height: 1000px; /* Valor grande para cobrir todo o conteúdo */
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -57,54 +68,44 @@
         </header>
 
         <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Gerenciar Rota</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="md:col-span-2">
-                    <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
-                    <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        </select>
-                </div>
-                <div class="md:col-span-1">
-                    <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        Nova Rota
-                    </button>
-                </div>
-                <div class="md:col-span-1">
-                    <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                        Excluir Rota
-                    </button>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
-                    <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
-                </div>
-                <div class="md:col-span-2">
-                    <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
-                    <div class="flex items-center">
-                        <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-base min-w-[120px] justify-center">-</span>
-                    </div>
-                </div>
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-2xl font-semibold text-gray-700">Gerenciar Rota</h2>
+                <button id="btn-toggle-gerenciar-rota" class="text-gray-500 hover:text-gray-700 p-2 rounded-full">
+                    <svg id="icon-chevron" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
             </div>
-        </section>
+            
+            <div id="content-gerenciar-rota" class="collapse-content">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
+                        <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                            </select>
+                    </div>
+                    <div class="md:col-span-1">
+                        <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Nova Rota
+                        </button>
+                    </div>
+                    <div class="md:col-span-1">
+                        <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
+                            Excluir Rota
+                        </button>
+                    </div>
 
-        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Despesas da Rota</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                    <input type="number" id="input-despesa-abastecimento" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                    <input type="number" id="input-despesa-alimentacao" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                    <input type="number" id="input-despesa-extra" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    <div class="md:col-span-2">
+                        <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
+                        <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
+                        <div class="flex items-center">
+                            <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                            <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-base min-w-[120px] justify-center">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -270,12 +271,58 @@
         </div>
         
     </div>
+    
+    <div id="modal-whatsapp-opcoes" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Mensagens Rápidas para <span id="modal-whatsapp-cliente-nome"></span></h3>
+                <p class="text-sm text-gray-600 mb-6">Cesta: <strong id="modal-whatsapp-cesta-info"></strong></p>
+                
+                <div class="space-y-3">
+                    <button id="btn-msg-chegando" data-msg-id="1" class="w-full text-left rounded-md border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100">
+                        1. 🚗 Aviso de Chegada (10 minutos)
+                    </button>
+                    
+                    <button id="btn-msg-cheguei" data-msg-id="2" class="w-full text-left rounded-md border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100">
+                        2. 🚪 Cheguei no local
+                    </button>
+                    
+                    <button id="btn-msg-pix" data-msg-id="3" class="w-full text-left rounded-md border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100">
+                        3. 💰 Dados PIX para Pagamento
+                    </button>
+
+                    <button id="btn-msg-pedido" data-msg-id="4" class="w-full text-left rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-100">
+                        4. 🚨 Enviar Pedido para Gerente (65996884599)
+                    </button>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
+                <button type="button" id="btn-fechar-whatsapp-opcoes" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+            </div>
+        </div>
+    </div>
+
 
     <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden">
             <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota</h3>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Exportar Rota e Despesas</h3>
                 
+                <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Despesas da Rota</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
+                    <div>
+                        <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
+                        <input type="number" id="modal-despesa-abastecimento" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
+                        <input type="number" id="modal-despesa-alimentacao" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
+                        <input type="number" id="modal-despesa-extra" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
+                    </div>
+                </div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
                 <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -321,7 +368,10 @@
          */
 
         // --- Constantes Globais ---
-        const MENSAGEM_WHATSAPP = "Aqui é o entregador da Cesta Básica, chego ai em alguns minutos. Por favor me de um ok. Obrigado.";
+        const PIX_NOME = "Osvaldo Sereia Junior";
+        const PIX_CELULAR = "65984491018";
+        const NUMERO_GERENTE = "5565996884599"; // Inclui o 55 DDI
+        const NOME_EMPRESA = "Cesta Básica Dona Antônia";
         const MAX_ROTAS = 30;
 
         // --- Estado da Aplicação ---
@@ -329,15 +379,25 @@
         let rotaAtivaId = null;
         let CLIENTES_CACHE = {}; 
         let entregaParaPagarId = null;
+        let entregaParaWhatsappId = null; // ID da entrega no modal de WhatsApp
 
-        // --- Seletores de Elementos (Definidos dentro do DOMContentLoaded para segurança) ---
+        // --- Seletores de Elementos (Inicializados no DOMContentLoaded) ---
         let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
-        let inputDespesaAbastecimento, inputDespesaAlimentacao, inputDespesaExtra;
+        let inputDespesaAbastecimento, inputDespesaAlimentacao, inputDespesaExtra; // REMOVIDOS do corpo
+        let modalDespesaAbastecimento, modalDespesaAlimentacao, modalDespesaExtra; // NOVOS Seletores no Modal
+        let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; // NOVOS para o collapse
         let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, selectCesta, inputValorCesta, campoAlterada, codigoAlteradaInput, listaEntregasEl, listaVaziaEl;
         let modalPagamento, formPagamento, btnCancelarPagamento, modalClienteNome, modalClienteValor, modalErrorPagamento, btnExportar, btnCarregar, modalExportar, exportRelatorioEl, exportWhatsappLinkEl, btnFecharExportar, modalAviso, modalAvisoTexto, btnFecharAviso, inputCarregarArquivo;
-        
-        // Função de inicialização dos seletores
+        let modalWhatsappOpcoes, modalWhatsappClienteNome, modalWhatsappCestaInfo, btnFecharWhatsappOpcoes;
+
+
         function inicializarSeletores() {
+            // Seção Retrátil
+            btnToggleGerenciarRota = document.getElementById('btn-toggle-gerenciar-rota');
+            contentGerenciarRota = document.getElementById('content-gerenciar-rota');
+            iconChevron = document.getElementById('icon-chevron');
+
+            // Gerenciamento de Rota
             btnNovaRota = document.getElementById('btn-nova-rota');
             selectRotaAtiva = document.getElementById('select-rota-ativa');
             inputNomeRota = document.getElementById('input-nome-rota');
@@ -345,10 +405,12 @@
             displayDiaSemana = document.getElementById('display-dia-semana');
             btnExcluirRota = document.getElementById('btn-excluir-rota');
 
-            inputDespesaAbastecimento = document.getElementById('input-despesa-abastecimento');
-            inputDespesaAlimentacao = document.getElementById('input-despesa-alimentacao');
-            inputDespesaExtra = document.getElementById('input-despesa-extra');
+            // Despesas no Modal
+            modalDespesaAbastecimento = document.getElementById('modal-despesa-abastecimento');
+            modalDespesaAlimentacao = document.getElementById('modal-despesa-alimentacao');
+            modalDespesaExtra = document.getElementById('modal-despesa-extra');
 
+            // Lançamento de Entrega
             formEntrega = document.getElementById('form-entrega');
             inputCliente = document.getElementById('input-cliente');
             datalistClientes = document.getElementById('lista-clientes');
@@ -364,6 +426,7 @@
             listaEntregasEl = document.getElementById('lista-entregas');
             listaVaziaEl = document.getElementById('lista-vazia');
 
+            // Modais
             modalPagamento = document.getElementById('modal-pagamento');
             formPagamento = document.getElementById('form-pagamento');
             btnCancelarPagamento = document.getElementById('btn-cancelar-pagamento');
@@ -380,6 +443,12 @@
             modalAvisoTexto = document.getElementById('modal-aviso-texto');
             btnFecharAviso = document.getElementById('btn-fechar-aviso');
             inputCarregarArquivo = document.getElementById('input-carregar-arquivo');
+            
+            // Modal WhatsApp Opções
+            modalWhatsappOpcoes = document.getElementById('modal-whatsapp-opcoes');
+            modalWhatsappClienteNome = document.getElementById('modal-whatsapp-cliente-nome');
+            modalWhatsappCestaInfo = document.getElementById('modal-whatsapp-cesta-info');
+            btnFecharWhatsappOpcoes = document.getElementById('btn-fechar-whatsapp-opcoes');
         }
 
         // --- Funções de Utilitários ---
@@ -439,6 +508,21 @@
                 });
             }
         }
+        
+        /**
+         * NOVO: Função para alternar o estado de visibilidade da seção Gerenciar Rota.
+         */
+        function toggleGerenciarRota() {
+            const isOpen = contentGerenciarRota.classList.toggle('open');
+            if (isOpen) {
+                iconChevron.classList.remove('rotate-90');
+                iconChevron.classList.add('-rotate-90');
+            } else {
+                iconChevron.classList.remove('-rotate-90');
+                iconChevron.classList.add('rotate-90');
+            }
+        }
+
 
         // --- Funções de Persistência (LocalStorage) ---
 
@@ -467,18 +551,22 @@
         function salvarLocalStorage() {
             salvarTodasAsRotas();
         }
-
-        function salvarDespesas() {
+        
+        /**
+         * NOVO: Salva os valores de despesa APENAS no objeto da rota (dentro do modal de exportação)
+         */
+        function salvarDespesasDoModal() {
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) return;
 
+            // Lendo os valores dos inputs DENTRO DO MODAL
             rota.despesas = {
-                abastecimento: parseFloat(inputDespesaAbastecimento.value) || 0,
-                alimentacao: parseFloat(inputDespesaAlimentacao.value) || 0,
-                extra: parseFloat(inputDespesaExtra.value) || 0
+                abastecimento: parseFloat(modalDespesaAbastecimento.value) || 0,
+                alimentacao: parseFloat(modalDespesaAlimentacao.value) || 0,
+                extra: parseFloat(modalDespesaExtra.value) || 0
             };
 
-            salvarTodasAsRotas();
+            salvarTodasAsRotas(); // Salva a rota com as despesas atualizadas
         }
 
 
@@ -541,6 +629,20 @@
             }
             return [];
         }
+        
+        /**
+         * NOVO: Carrega as despesas da rota ativa nos inputs do Modal de Exportação.
+         */
+        function carregarDespesasNoModal() {
+            const rota = todasAsRotas[rotaAtivaId];
+            if (!rota) return;
+             // Garante que o objeto despesas exista no carregamento
+            rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
+            
+            modalDespesaAbastecimento.value = (rota.despesas.abastecimento || 0).toFixed(2);
+            modalDespesaAlimentacao.value = (rota.despesas.alimentacao || 0).toFixed(2);
+            modalDespesaExtra.value = (rota.despesas.extra || 0).toFixed(2);
+        }
 
         function popularSelectRotas() {
             selectRotaAtiva.innerHTML = '';
@@ -579,11 +681,6 @@
             inputDataRota.value = rota.data;
             displayDiaSemana.textContent = getDiaDaSemana(rota.data);
 
-            rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-            inputDespesaAbastecimento.value = (rota.despesas.abastecimento || 0).toFixed(2);
-            inputDespesaAlimentacao.value = (rota.despesas.alimentacao || 0).toFixed(2);
-            inputDespesaExtra.value = (rota.despesas.extra || 0).toFixed(2);
-
             selectRotaAtiva.value = rotaAtivaId;
             
             renderizarEntregas();
@@ -614,6 +711,11 @@
                 popularSelectRotas();
                 carregarRotaAtiva();
                 mostrarAviso(`Nova Rota '${novaRota.nome}' criada e definida como ativa.`);
+                
+                // Abre a seção retrátil após criar uma nova rota
+                if (!contentGerenciarRota.classList.contains('open')) {
+                    toggleGerenciarRota();
+                }
             }
         }
 
@@ -732,7 +834,8 @@
                     const numeroFinal = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
                     
                     if(numeroFinal.length >= 10) { 
-                        whatsappHref = `https://api.whatsapp.com/send?phone=${numeroFinal}&text=${encodeURIComponent(MENSAGEM_WHATSAPP)}`;
+                        // NOTE: O HREF não será usado diretamente, mas o botão precisa ser habilitado
+                        whatsappHref = `javascript:void(0);`; 
                         whatsappDisabled = false;
                         whatsappClass = 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200';
                     }
@@ -764,7 +867,7 @@
                         </div>
                     </div>
                     <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col sm:flex-row gap-2">
-                        <a href="${whatsappHref}" target="_blank" class="btn-card-whatsapp w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm ${whatsappClass}" title="Enviar WhatsApp" ${whatsappDisabled ? 'disabled' : ''}>
+                        <a href="${whatsappHref}" data-id="${entrega.id}" target="_blank" class="btn-card-whatsapp btn-whatsapp-modal w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm ${whatsappClass}" title="Opções de Mensagem" ${whatsappDisabled ? 'disabled' : ''}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 inline-block"><path d="M12.031 2.316A10.009 10.009 0 0 0 2.083 12.26c0 1.956.495 3.864 1.43 5.518L2 22l4.492-1.472A9.914 9.914 0 0 0 12.031 22h.005a10.009 10.009 0 0 0 9.957-9.74A10.009 10.009 0 0 0 12.031 2.316zM17.07 15.696c-.19.34-.35.34-.644.512-.294.172-.63.268-1.28.256-1.127-.024-2.812-.55-4.137-1.875s-2.074-3.04-2.098-4.168c-.012-.65.084-.986.256-1.28.172-.294.332-.454.512-.644.34-.34.78-.813 1.05-.737.27.076.438.2.628.627.19.427.63.172.82.024.19-.148.166-.272.19-.444.024-.172.19-.344.24-.512.05-.168.048-.34.024-.512-.024-.172-.096-.32-.192-.488-.096-.168-.22-.408-.344-.512-.124-.104-.268-.168-.444-.192-.176-.024-.34-.024-.512-.024-.528.024-1.056.12-1.554.268-.498.148-.96.344-1.396.644-1.218.84-2.285 2.01-2.99 3.282-.705 1.272-1.074 2.658-1.074 4.072 0 .54.048.972.144 1.344.096.372.24.716.444 1.032.204.316.444.596.72.84.276.244.6.43.956.548.356.118.756.142 1.188.142 1.056-.024 1.84-.42 2.508-1.008.668-.588 1.08-1.38 1.08-2.296.0-.512-.072-.94-.192-1.308-.12-.368-.312-.614-.588-.738z"/></svg>
                         </a>
                         <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
@@ -793,6 +896,82 @@
                 listaEntregasEl.appendChild(card);
             });
         }
+        
+        // --- Funções Específicas do WhatsApp ---
+
+        function abrirModalWhatsapp(id) {
+            const entregas = getEntregasAtivas();
+            const entrega = entregas.find(e => e.id.toString() === id);
+            if (!entrega) return;
+
+            entregaParaWhatsappId = id;
+
+            // Preenche info do modal
+            modalWhatsappClienteNome.textContent = entrega.cliente.nome;
+            let cestaInfo = `${entrega.cesta.nome} (${formatarMoeda(entrega.cesta.valor)})`;
+            if (entrega.tipo === 'Alterada') {
+                cestaInfo += ' - ALTERADA';
+            }
+            if (entrega.brinde === 'Sim') {
+                cestaInfo += ' + BRINDE';
+            }
+            modalWhatsappCestaInfo.textContent = cestaInfo;
+            
+            modalWhatsappOpcoes.classList.remove('hidden');
+        }
+
+        function fecharModalWhatsapp() {
+            modalWhatsappOpcoes.classList.add('hidden');
+            entregaParaWhatsappId = null;
+        }
+
+        function gerarMensagem(msgId, entrega) {
+            const clienteNome = entrega.cliente.nome;
+            const cestaValor = formatarMoeda(entrega.cesta.valor);
+            const numeroCliente = (entrega.cliente.celular.replace(/\D/g, '').startsWith('55') ? '' : '55') + entrega.cliente.celular.replace(/\D/g, '');
+            
+            let mensagem = "";
+            let numeroDestino = numeroCliente;
+            let targetBlank = true;
+
+            switch(msgId) {
+                case 1: // Chegando em 10 minutos
+                    mensagem = `Olá, aqui é o entregador da ${NOME_EMPRESA}. A sua cesta básica chegará em 10 minutos.`;
+                    break;
+                case 2: // Cheguei
+                    mensagem = `Olá, cheguei, já pode sair para receber a cesta.`;
+                    break;
+                case 3: // PIX
+                    mensagem = `Dados do pix para pagamento:\n*PIX*: ${PIX_CELULAR} (celular)\n*Nome*: ${PIX_NOME}\n*Valor Total*: ${cestaValor}`;
+                    break;
+                case 4: // Pedido para Gerente
+                    // Requer número do gerente e mensagem específica
+                    numeroDestino = NUMERO_GERENTE;
+                    targetBlank = true; // Abre em nova aba para o gerente
+
+                    let detalhesAlterada = '';
+                    if (entrega.tipo === 'Alterada') {
+                        detalhesAlterada = ` - *Alterada: ${entrega.codigoAlterada || 'Detalhes a verificar'}*`;
+                        if (entrega.partesAlteradas && entrega.partesAlteradas.length > 0) {
+                            detalhesAlterada += ` (Partes: ${entrega.partesAlteradas.join(', ')})`;
+                        }
+                    }
+                    let brinde = entrega.brinde === 'Sim' ? " com BRINDE" : "";
+
+                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\nCliente: ${clienteNome}\nCesta: ${entrega.cesta.nome}${detalhesAlterada}${brinde}\nValor: ${cestaValor}\nCelular Cliente: ${entrega.cliente.celular}`;
+                    break;
+                default:
+                    return;
+            }
+
+            const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
+            
+            // Fecha o modal e abre o link
+            fecharModalWhatsapp();
+            window.open(url, targetBlank ? '_blank' : '_self');
+        }
+
+        // --- Funções de Submissão e Movimentação (Mantidas) ---
 
         function adicionarEntrega(e) {
             e.preventDefault();
@@ -858,108 +1037,7 @@
             atualizarValorCesta();
             toggleCampoAlterada();
         }
-
-        function abrirGoogleMaps(query) {
-            const enderecoFormatado = query.trim();
-            if (!enderecoFormatado) {
-                mostrarAviso('O cliente não possui um endereço cadastrado para abrir no mapa.');
-                return;
-            }
-            // URL CORRETA para Google Maps
-            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoFormatado)}`;
-            window.open(url, '_blank');
-        }
-
-        function abrirModalPagamento(id) {
-            const entregas = getEntregasAtivas();
-            const entrega = entregas.find(e => e.id.toString() === id);
-            if (!entrega) return;
-
-            entregaParaPagarId = id;
-            
-            modalClienteNome.textContent = entrega.cliente.nome;
-            modalClienteValor.textContent = formatarMoeda(entrega.cesta.valor);
-            
-            formPagamento.reset();
-            modalErrorPagamento.classList.add('hidden');
-
-            modalPagamento.classList.remove('hidden');
-        }
-
-        function fecharModalPagamento() {
-            modalPagamento.classList.add('hidden');
-            entregaParaPagarId = null;
-        }
-
-        function cancelarEntrega(id) {
-            if (!confirm("Tem certeza que deseja MARCAR ESTA ENTREGA COMO CANCELADA?")) return;
-
-            const entregas = getEntregasAtivas();
-            const index = entregas.findIndex(e => e.id.toString() === id);
-            if (index !== -1) {
-                entregas[index].status = "Cancelada";
-                entregas[index].formaPagamento = [];
-                entregas[index].horarioEntrega = new Date().toISOString();
-            }
-            salvarLocalStorage();
-            renderizarEntregas();
-        }
-
-        function moverEntrega(id, direcao) {
-            const entregas = getEntregasAtivas();
-            const index = entregas.findIndex(e => e.id.toString() === id);
-            if (index === -1) return;
-
-            if (entregas[index].status !== 'Pendente') return;
-
-            if (direcao === 'cima' && index > 0) {
-                [entregas[index - 1], entregas[index]] = [entregas[index], entregas[index - 1]];
-            } else if (direcao === 'baixo' && index < entregas.length - 1) {
-                [entregas[index + 1], entregas[index]] = [entregas[index], entregas[index + 1]];
-            } else {
-                return;
-            }
-
-            salvarLocalStorage();
-            renderizarEntregas();
-        }
-
-        function handleCardClick(e) {
-            const btnCima = e.target.closest('.btn-mover-cima');
-            if (btnCima && !btnCima.disabled) {
-                moverEntrega(btnCima.dataset.id, 'cima');
-                return;
-            }
-
-            const btnBaixo = e.target.closest('.btn-mover-baixo');
-            if (btnBaixo && !btnBaixo.disabled) {
-                moverEntrega(btnBaixo.dataset.id, 'baixo');
-                return;
-            }
-
-            const btnCancelar = e.target.closest('.btn-cancelar-entrega');
-            if (btnCancelar && !btnCancelar.disabled) {
-                cancelarEntrega(btnCancelar.dataset.id);
-                return;
-            }
-
-            const btnMaps = e.target.closest('.btn-card-maps');
-            if (btnMaps && !btnMaps.disabled) {
-                const cardId = btnMaps.closest('[data-id]').dataset.id;
-                const entregas = getEntregasAtivas();
-                const entrega = entregas.find(e => e.id.toString() === cardId);
-                if (entrega) {
-                    abrirGoogleMaps(entrega.cliente.endereco);
-                }
-                return;
-            }
-
-            const target = e.target.closest('.btn-entregue');
-            if (target && !target.disabled && target.textContent.trim() === 'Marcar Entrega') {
-                abrirModalPagamento(target.dataset.id);
-            }
-        }
-
+        
         function salvarPagamento(e) {
             e.preventDefault();
             
@@ -984,30 +1062,21 @@
             renderizarEntregas();
             fecharModalPagamento();
         }
-
-        // --- Funções de Exportação/Importação ---
-
-        function downloadArquivo(data, filename) {
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
+        
+        // --- Funções de Exportação/Importação (Adaptadas para Despesas no Modal) ---
+        
         function exportarDados() {
             const rotaAtiva = todasAsRotas[rotaAtivaId];
             if (!rotaAtiva) {
                 mostrarAviso("Nenhuma rota ativa para exportar.");
                 return;
             }
+            // 1. Carrega Despesas (Para a interface do modal)
+            carregarDespesasNoModal();
+            // 2. Garante que as despesas salvas (que acabaram de ser lidas) estão no objeto da rota
+            salvarDespesasDoModal(); 
+            
             const entregas = rotaAtiva.entregas;
-
-            salvarLocalStorage();
 
             const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
             const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
@@ -1103,6 +1172,7 @@
                  whatsappTexto += `   Nenhum.\n`;
             }
 
+            // Despesas (Lendo do objeto da rota que foi atualizado com os dados do modal)
             const despesas = rotaAtiva.despesas;
             const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
             
@@ -1126,6 +1196,19 @@
                 </a>`;
 
             modalExportar.classList.remove('hidden');
+        }
+
+        // Função de carregarDados e handleArquivoCarregado (mantidas)
+        function downloadArquivo(data, filename) {
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function carregarDados(jsonDados) {
@@ -1228,6 +1311,7 @@
             e.target.value = null;
         }
 
+
         // --- Inicialização e Event Listeners ---
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1235,10 +1319,13 @@
             inicializarSeletores();
             
             // 2. Associa Event Listeners
+
+            // Gerenciamento de Rota Retrátil
+            btnToggleGerenciarRota.addEventListener('click', toggleGerenciarRota);
+            
+            // Rota
             selectRotaAtiva.addEventListener('change', (e) => {
                 atualizarInfoRota(); 
-                salvarDespesas(); 
-                
                 rotaAtivaId = e.target.value;
                 localStorage.setItem('rotaAtivaId', rotaAtivaId);
                 carregarRotaAtiva();
@@ -1248,10 +1335,14 @@
             inputDataRota.addEventListener('change', atualizarInfoRota);
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
 
-            inputDespesaAbastecimento.addEventListener('change', salvarDespesas);
-            inputDespesaAlimentacao.addEventListener('change', salvarDespesas);
-            inputDespesaExtra.addEventListener('change', salvarDespesas);
+            // Despesas (Agora no Modal de Exportação)
+            // Se as despesas mudarem no modal, salva automaticamente ao perder o foco (blur)
+            modalDespesaAbastecimento.addEventListener('change', salvarDespesasDoModal);
+            modalDespesaAlimentacao.addEventListener('change', salvarDespesasDoModal);
+            modalDespesaExtra.addEventListener('change', salvarDespesasDoModal);
 
+
+            // Cliente e Lançamento
             inputCliente.addEventListener('input', (e) => {
                 const nome = e.target.value.toLowerCase().trim();
                 const cliente = CLIENTES_CACHE[nome];
@@ -1271,19 +1362,50 @@
             });
             formEntrega.addEventListener('submit', adicionarEntrega);
 
+            // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
+            
+            // NOVO: Ação específica para abrir o Modal de WhatsApp
+            listaEntregasEl.addEventListener('click', (e) => {
+                const btnWhatsapp = e.target.closest('.btn-whatsapp-modal');
+                if (btnWhatsapp && !btnWhatsapp.disabled) {
+                    // O data-id está no próprio botão
+                    abrirModalWhatsapp(btnWhatsapp.dataset.id); 
+                }
+            });
 
+            // Modal de Pagamento
             btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
             formPagamento.addEventListener('submit', salvarPagamento);
+            
+            // NOVO: Modal de WhatsApp Opções
+            btnFecharWhatsappOpcoes.addEventListener('click', fecharModalWhatsapp);
+            // Delegação de evento para os 4 botões de mensagem
+            modalWhatsappOpcoes.addEventListener('click', (e) => {
+                const btnMsg = e.target.closest('[data-msg-id]');
+                if (btnMsg) {
+                    const idEntrega = entregaParaWhatsappId;
+                    const entregas = getEntregasAtivas();
+                    const entrega = entregas.find(e => e.id.toString() === idEntrega);
+                    if (entrega) {
+                        gerarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
+                    }
+                }
+            });
 
+
+            // Ações Globais (Exportar/Carregar)
             btnExportar.addEventListener('click', exportarDados);
+            // NOVO: Carrega despesas do localstorage nos inputs do modal antes de abri-lo
+            btnExportar.addEventListener('click', carregarDespesasNoModal);
             btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
 
             document.getElementById('btn-baixar-json').addEventListener('click', () => {
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) return;
                 
-                salvarLocalStorage();
+                // Antes de baixar, salva as despesas caso o usuário tenha editado
+                salvarDespesasDoModal(); 
                 
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
                 
