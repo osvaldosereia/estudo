@@ -836,7 +836,6 @@
                 card.dataset.id = entrega.id;
                 const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
                 
-                // Quebra de texto garantida no card
                 card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : (entrega.status === 'Cancelada' ? 'cancelada' : '')} break-words`;
                 
                 // NOVO: Coleta info de Brinde
@@ -850,7 +849,6 @@
                 if (entrega.tipo === 'Alterada') {
                     const alteracoes = [];
                     if (entrega.codigoAlterada) {
-                         // Substitui quebras de linha para exibição no card
                          const detalhesFormatados = entrega.codigoAlterada.replace(/\n/g, ' | ');
                          alteracoes.push(`Det: ${detalhesFormatados}`);
                     }
@@ -908,18 +906,16 @@
                     if(numeroFinal.length >= 10) { 
                         whatsappHref = `javascript:void(0);`; 
                         whatsappDisabled = false;
-                        whatsappClass = 'bg-green-600 text-white hover:bg-green-700'; /* Botão WhatsApp em verde sólido */
+                        whatsappClass = 'bg-green-600 text-white hover:bg-green-700'; 
                     }
                 }
                 
                 // Definição dos botões simples (texto)
                 const btnClassesBase = "w-full text-sm font-medium shadow-sm py-3 rounded-md";
                 
-                // Botões 1 e 2
                 const btnWhatsapp = `<button data-id="${entrega.id}" class="btn-whatsapp-modal ${btnClassesBase} ${whatsappClass}" ${whatsappDisabled || isFinalizada ? 'disabled' : ''}>WHATSAPP</button>`;
                 const btnMaps = `<button class="btn-card-maps ${btnClassesBase} bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" ${isFinalizada ? 'disabled' : ''}>MAPA</button>`;
                 
-                // Botões 3 e 4
                 const btnAcaoPrincipal = entrega.status === 'Pendente' ? `
                     <button class="btn-entregue ${btnClassesBase} bg-blue-600 text-white hover:bg-blue-700" data-id="${entrega.id}">ENTREGUE</button>
                 ` : `<button class="btn-entregue ${btnClassesBase} bg-green-600 text-white cursor-not-allowed" disabled>ENTREGUE</button>`;
@@ -1026,14 +1022,33 @@
 
                     let detalhesAlterada = '';
                     if (entrega.tipo === 'Alterada') {
-                        // NOVO: Usa a formatação correta para preservar as quebras de linha no WhatsApp
-                        const detalhesFormatados = entrega.codigoAlterada.trim().length > 0 ? `\n   *Detalhe:* ${entrega.codigoAlterada}` : '';
                         
-                        detalhesAlterada = ` - *Cesta Alterada:*`;
-                        detalhesAlterada += detalhesFormatados;
+                        // Formatação TIRA/POR
+                        const linhasDetalhe = entrega.codigoAlterada.split('\n');
+                        let tira = [];
+                        let por = [];
+
+                        linhasDetalhe.forEach(linha => {
+                            const linhaTrim = linha.trim();
+                            if (linhaTrim.toUpperCase().startsWith('TIRA:')) {
+                                tira.push(linhaTrim.substring(5).trim());
+                            } else if (linhaTrim.toUpperCase().startsWith('POR:')) {
+                                por.push(linhaTrim.substring(4).trim());
+                            }
+                        });
+
+                        detalhesAlterada += "\n*ALTERADA:*";
+                        if (tira.length > 0) {
+                            detalhesAlterada += "\nTIRA:";
+                            detalhesAlterada += "\n" + tira.join(', ');
+                        }
+                        if (por.length > 0) {
+                            detalhesAlterada += "\nPOR:";
+                            detalhesAlterada += "\n" + por.join(', ');
+                        }
 
                         if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) {
-                            detalhesAlterada += `\n   *Itens:* ${entrega.partesAlteradas.join(', ')}`;
+                            detalhesAlterada += `\n*Itens Alterados*: ${entrega.partesAlteradas.join(', ')}`;
                         }
                     }
                     
@@ -1090,7 +1105,6 @@
                 Array.from(formEntrega.querySelectorAll('input[name="partes_alteradas"]:checked'))
                      .map(input => input.value);
             
-            // Coleta Brindes (Checkboxes)
             const brindesSelecionados = Array.from(formEntrega.querySelectorAll('input[name="brindes_opcoes"]:checked')).map(input => input.value);
             
             const novaEntrega = {
@@ -1120,7 +1134,6 @@
             atualizarValorCesta();
             toggleCampoAlterada();
             
-            // Abre a seção Lançamento automaticamente após lançar uma entrega
             if (!contentLancamento.classList.contains('open')) {
                 toggleLancamento();
             }
@@ -1392,7 +1405,7 @@
             const despesas = rotaAtiva.despesas;
             const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
             
-            // CORRIGIDO: Inclusão das despesas no relatório do WhatsApp
+            // Inclusão das despesas no relatório do WhatsApp
             whatsappTexto += `\n*Despesas da Rota:*\n`;
             whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
             whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
