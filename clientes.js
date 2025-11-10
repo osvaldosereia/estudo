@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762782804631-U2MG6",
+  "nome": "VG0093 MARIO ANDREAZA",
+  "celular": "065992974468",
+  "endereco": "VG0093",
+  "complemento": "RUA LUCIA PEREIRA, Q3, C1, CASA DE ESQUINA"
+},
+  {
   "id": "1762782541176-4ROWU",
   "nome": "XR77 CPA JD FLORIANOPOLIS",
   "celular": "065992040313",
