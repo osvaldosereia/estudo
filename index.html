@@ -734,7 +734,7 @@ POR: Café, Açúcar"></textarea>
             
             // 5. Popular o <select> e carregar a rota ativa na tela
             popularSelectRotas();
-            popularFiltrosRegiao(); // NOVO
+            popularFiltrosRegiao();
             carregarRotaAtiva();
         }
 
@@ -783,7 +783,7 @@ POR: Café, Açúcar"></textarea>
         }
 
         /**
-         * NOVO: Popula os chips de filtro de região
+         * Popula os chips de filtro de região
          */
         function popularFiltrosRegiao() {
             filtrosRegiaoEl.innerHTML = '';
@@ -800,7 +800,7 @@ POR: Café, Açúcar"></textarea>
         }
 
         /**
-         * NOVO: Filtra e renderiza as entregas com base na região ativa
+         * Filtra e renderiza as entregas com base na região ativa
          */
         function filtrarEntregas(novaRegiao) {
             if (novaRegiao) {
@@ -1106,9 +1106,9 @@ POR: Café, Açúcar"></textarea>
                         
                         detalhesAlterada += "\n*ALTERADA:*";
                         
-                        // Adiciona as quebras de linha e o conteúdo do textarea
                         const detalhes = entrega.codigoAlterada.trim();
                         if (detalhes.length > 0) {
+                            // Adiciona identação de 3 espaços para manter a estrutura de lista
                             const detalhesFormatados = detalhes.split('\n').map(line => `   ${line}`).join('\n');
                             detalhesAlterada += `\n${detalhesFormatados}`; 
                         }
@@ -1167,7 +1167,7 @@ POR: Café, Açúcar"></textarea>
                 return;
             }
             
-            // NOVO: Coleta Região
+            // Coleta Região
             const regiaoSelecionadaEl = document.querySelector('input[name="regiao-entrega"]:checked');
             if (!regiaoSelecionadaEl) {
                 mostrarAviso('Por favor, selecione a Região da Entrega.');
@@ -1185,7 +1185,7 @@ POR: Café, Açúcar"></textarea>
                 id: Date.now(),
                 cliente: clienteData,
                 observacao: obsClienteInput.value.trim(),
-                regiao: regiaoSelecionada, // NOVO CAMPO
+                regiao: regiaoSelecionada, 
                 cesta: {
                     nome: selectedOption.value,
                     valor: parseFloat(inputValorCesta.value)
@@ -1310,16 +1310,22 @@ POR: Café, Açúcar"></textarea>
                 return;
             }
             
+            // CORRIGIDO: Checa clique no botão ENTREGUE
+            const target = e.target.closest('.btn-entregue');
+            if (target && !target.disabled && target.textContent.trim() === 'ENTREGUE') {
+                 // Ação de ENTREGA, se estiver pendente
+                const cardId = target.dataset.id;
+                abrirModalPagamento(cardId);
+                return;
+            }
+
+            // Ação WhatsApp
             const btnWhatsapp = e.target.closest('.btn-whatsapp-modal');
             if (btnWhatsapp && !btnWhatsapp.disabled) {
                 abrirModalWhatsapp(btnWhatsapp.dataset.id); 
                 return;
             }
 
-            const target = e.target.closest('.btn-entregue');
-            if (target && !target.disabled && target.textContent.trim() === 'Marcar Entrega') {
-                abrirModalPagamento(target.dataset.id);
-            }
         }
 
         function salvarPagamento(e) {
@@ -1499,6 +1505,7 @@ POR: Café, Açúcar"></textarea>
 
             exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
             
+            // CORRIGIDO: Botão de Exportação para o WhatsApp
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
             exportWhatsappLinkEl.innerHTML = `
                 <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
@@ -1532,7 +1539,7 @@ POR: Café, Açúcar"></textarea>
 
                     dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
                     dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
-                        regiao: e.regiao || 'CUIABA', // NOVO: Garante o campo
+                        regiao: e.regiao || 'CUIABA', 
                         brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
                         partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
@@ -1562,7 +1569,7 @@ POR: Café, Açúcar"></textarea>
                     }
 
                     rotaAtiva.entregas = dadosCarregados.map(e => ({
-                        regiao: e.regiao || 'CUIABA', // NOVO: Garante o campo
+                        regiao: e.regiao || 'CUIABA', 
                         brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
                         partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
@@ -1668,7 +1675,7 @@ POR: Café, Açúcar"></textarea>
             });
             formEntrega.addEventListener('submit', adicionarEntrega);
             
-            // NOVO: Listener para filtros de região
+            // Listener para filtros de região
             filtrosRegiaoEl.addEventListener('click', (e) => {
                 const chip = e.target.closest('.chip-regiao');
                 if (chip && chip.dataset.regiao !== regiaoAtiva) {
@@ -1745,3 +1752,5 @@ POR: Café, Açúcar"></textarea>
             atualizarValorCesta();
         });
     </script>
+</body>
+</html>
