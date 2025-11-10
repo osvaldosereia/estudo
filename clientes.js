@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762786154204-2XZZD",
+  "nome": "G0039 coxipo tijucal",
+  "celular": "038 992435605",
+  "endereco": "G0039",
+  "complemento": "RUA DOS CRISANTEMOS, CASA 144"
+},
+  {
   "id": "1762783228078-ZICQ7",
   "nome": "VG1821 NOVO MUNDO",
   "celular": "065981654371",
