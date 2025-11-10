@@ -98,6 +98,13 @@
         .card-info-item.brinde {
             color: #9d174d; /* Rosa escuro */
         }
+        
+        /* NOVO: Estilo para quebras de linha em campos multiline no card */
+        .card-multiline {
+            white-space: pre-wrap; /* Preserva quebras de linha e wraps o texto */
+            font-size: 0.95rem;
+            color: #b45309;
+        }
 
     </style>
 </head>
@@ -241,7 +248,8 @@
                         <div id="campo-alterada" class="hidden space-y-4">
                             <div>
                                 <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                <textarea id="codigo-alterada" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão&#10;Ligar 10 minutos antes."></textarea>
+                                <textarea id="codigo-alterada" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: TIRA: Arroz, Feijão
+POR: Café, Açúcar"></textarea>
                             </div>
 
                             <div id="campo-partes-alteradas">
@@ -838,24 +846,27 @@
                 
                 card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : (entrega.status === 'Cancelada' ? 'cancelada' : '')} break-words`;
                 
-                // NOVO: Coleta info de Brinde
+                // --- Bloco de Informações ---
+                
                 let infoBrinde = '';
                 if (Array.isArray(entrega.brindes) && entrega.brindes.length > 0) {
                     infoBrinde = `<p class="card-info-item brinde">BRINDE(S): ${entrega.brindes.join(', ')}</p>`;
                 }
 
-                // NOVO: Coleta info de Alteração
                 let infoAlteracao = '';
                 if (entrega.tipo === 'Alterada') {
-                    const alteracoes = [];
-                    if (entrega.codigoAlterada) {
-                         const detalhesFormatados = entrega.codigoAlterada.replace(/\n/g, ' | ');
-                         alteracoes.push(`Det: ${detalhesFormatados}`);
-                    }
-                    if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) alteracoes.push(`Itens: ${entrega.partesAlteradas.join(', ')}`);
+                    // Novo: Preserva as quebras de linha e remove o prefixo no Card
+                    const detalhes = entrega.codigoAlterada.trim();
+                    const itensAlterados = Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0
+                        ? `<p class="card-info-item alterada">Itens Alterados: ${entrega.partesAlteradas.join(', ')}</p>`
+                        : '';
                     
-                    if (alteracoes.length > 0) {
-                         infoAlteracao = `<p class="card-info-item alterada">ALTERADA: ${alteracoes.join(' | ')}</p>`;
+                    if (detalhes || itensAlterados) {
+                        infoAlteracao = `
+                            <p class="card-info-item alterada">ALTERADA:</p>
+                            ${detalhes ? `<p class="card-multiline">${detalhes}</p>` : ''}
+                            ${itensAlterados}
+                        `;
                     }
                 }
 
@@ -878,7 +889,6 @@
                     `;
                 }
 
-                // NOVO: OBSERVAÇÃO DO CLIENTE
                 let obsInfo = '';
                 if (entrega.observacao) {
                     obsInfo = `<p class="card-info-item text-red-600 font-bold break-words-mobile">OBS: ${entrega.observacao}</p>`;
@@ -1023,32 +1033,18 @@
                     let detalhesAlterada = '';
                     if (entrega.tipo === 'Alterada') {
                         
-                        // Formatação TIRA/POR
-                        const linhasDetalhe = entrega.codigoAlterada.split('\n');
-                        let tira = [];
-                        let por = [];
-
-                        linhasDetalhe.forEach(linha => {
-                            const linhaTrim = linha.trim();
-                            if (linhaTrim.toUpperCase().startsWith('TIRA:')) {
-                                tira.push(linhaTrim.substring(5).trim());
-                            } else if (linhaTrim.toUpperCase().startsWith('POR:')) {
-                                por.push(linhaTrim.substring(4).trim());
-                            }
-                        });
+                        // NOVO: Formatação que preserva as quebras de linha E a estrutura TIRA/POR
+                        const detalhes = entrega.codigoAlterada.trim();
 
                         detalhesAlterada += "\n*ALTERADA:*";
-                        if (tira.length > 0) {
-                            detalhesAlterada += "\nTIRA:";
-                            detalhesAlterada += "\n" + tira.join(', ');
-                        }
-                        if (por.length > 0) {
-                            detalhesAlterada += "\nPOR:";
-                            detalhesAlterada += "\n" + por.join(', ');
+                        
+                        // Adiciona as quebras de linha e o conteúdo do textarea
+                        if (detalhes.length > 0) {
+                            detalhesAlterada += `\n${detalhes}`; 
                         }
 
                         if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) {
-                            detalhesAlterada += `\n*Itens Alterados*: ${entrega.partesAlteradas.join(', ')}`;
+                            detalhesAlterada += `\n\n*Itens Alterados*: ${entrega.partesAlteradas.join(', ')}`;
                         }
                     }
                     
@@ -1342,13 +1338,18 @@
                     if (e.observacao) { whatsappTexto += `   OBS (Cliente): ${e.observacao}\n`; }
                     if(e.tipo === 'Alterada') {
                         // NOVO: Preserva as quebras de linha na formatação para o gerente
-                        const detalhesFormatados = e.codigoAlterada.trim().length > 0 ? `\n   *Detalhe:* ${e.codigoAlterada}` : '';
+                        const detalhes = e.codigoAlterada.trim();
+
+                        whatsappTexto += `\n   *Cesta Alterada:*`;
                         
-                        whatsappTexto += `   *Cesta Alterada:*`;
-                        whatsappTexto += detalhesFormatados;
+                        if (detalhes.length > 0) {
+                            // Adiciona identação de 3 espaços para manter a estrutura de lista
+                            const detalhesFormatados = detalhes.split('\n').map(line => `   ${line}`).join('\n');
+                            whatsappTexto += `\n${detalhesFormatados}`; 
+                        }
                         
                         if (Array.isArray(e.partesAlteradas) && e.partesAlteradas.length > 0) { 
-                            whatsappTexto += `\n   *Itens:* ${e.partesAlteradas.join(', ')}`;
+                            whatsappTexto += `\n   *Itens Alterados*: ${e.partesAlteradas.join(', ')}`;
                         }
                         whatsappTexto += '\n'; // Adiciona uma quebra de linha após o bloco alterado
                     }
