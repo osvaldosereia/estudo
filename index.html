@@ -464,7 +464,7 @@ POR: Café, Açúcar"></textarea>
     <script>
         /**
          * =================================================================
-         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado e Otimizado)
+         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado para Fluxo Simplificado)
          * =================================================================
          */
 
@@ -474,7 +474,7 @@ POR: Café, Açúcar"></textarea>
         const NUMERO_GERENTE = "5565996884599"; 
         const NOME_EMPRESA = "Cesta Básica Dona Antônia";
         const MAX_ROTAS = 30;
-        const REGIOES = ["VG", "CUIABA", "COXIPO", "CPA"]; // Ordem lógica para filtros
+        const REGIOES = ["VG", "CUIABA", "COXIPO", "CPA"];
 
         // --- Estado da Aplicação ---
         let todasAsRotas = {};
@@ -482,7 +482,7 @@ POR: Café, Açúcar"></textarea>
         let CLIENTES_CACHE = {}; 
         let entregaParaPagarId = null;
         let entregaParaWhatsappId = null; 
-        let regiaoAtiva = 'VG'; // Estado inicial do filtro de região (VG, CUIABA, COXIPO, CPA)
+        let regiaoAtiva = 'VG';
 
         // --- Seletores de Elementos (Inicializados no DOMContentLoaded) ---
         let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
@@ -528,14 +528,14 @@ POR: Café, Açúcar"></textarea>
             displayClienteComplemento = document.getElementById('display-cliente-complemento');
             displayClienteCelular = document.getElementById('display-cliente-celular');
             obsClienteInput = document.getElementById('obs-cliente');
-            radioRegioes = document.getElementById('radio-regioes'); // NOVO
+            radioRegioes = document.getElementById('radio-regioes');
             selectCesta = document.getElementById('select-cesta');
             inputValorCesta = document.getElementById('input-valor-cesta');
             campoAlterada = document.getElementById('campo-alterada');
             codigoAlteradaInput = document.getElementById('codigo-alterada');
             listaEntregasEl = document.getElementById('lista-entregas');
             listaVaziaEl = document.getElementById('lista-vazia');
-            filtrosRegiaoEl = document.getElementById('filtros-regiao'); // NOVO
+            filtrosRegiaoEl = document.getElementById('filtros-regiao');
 
             // Modais
             modalPagamento = document.getElementById('modal-pagamento');
@@ -824,7 +824,7 @@ POR: Café, Açúcar"></textarea>
 
             selectRotaAtiva.value = rotaAtivaId;
             
-            filtrarEntregas(regiaoAtiva); // Usa a nova função de filtro
+            filtrarEntregas(regiaoAtiva);
         }
 
         function criarNovaRota(atualizarTela = true) {
@@ -899,7 +899,6 @@ POR: Café, Açúcar"></textarea>
         function renderizarEntregas() {
             listaEntregasEl.innerHTML = '';
             
-            // 1. Filtra as entregas pela região ativa
             const entregas = getEntregasAtivas().filter(e => e.regiao === regiaoAtiva);
 
             if (entregas.length === 0) {
@@ -926,7 +925,6 @@ POR: Café, Açúcar"></textarea>
 
                 let infoAlteracao = '';
                 if (entrega.tipo === 'Alterada') {
-                    // Novo: Preserva as quebras de linha e remove o prefixo no Card
                     const detalhes = entrega.codigoAlterada.trim();
                     const itensAlterados = Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0
                         ? `<p class="card-info-item alterada">Itens Alterados: ${entrega.partesAlteradas.join(', ')}</p>`
@@ -1071,6 +1069,41 @@ POR: Café, Açúcar"></textarea>
             entregaParaWhatsappId = null;
         }
 
+        /**
+         * NOVO: Gera um relatório rápido e abre o WhatsApp (para o número de Pagamento)
+         * @param {Object} entrega - O objeto da entrega.
+         * @param {Array} formasPagamento - Array de strings com as formas de pagamento.
+         */
+        function gerarRelatorioRapidoWhatsapp(entrega, formasPagamento) {
+             const numeroDestino = `55${PIX_CELULAR}`; // Sempre para o número de pagamento
+             const cestaValor = formatarMoeda(entrega.cesta.valor);
+             const horaEntrega = formatarData(entrega.horarioEntrega).split(' ')[1]; // Pega apenas a hora
+
+             let mensagem = `*✅ ENTREGA CONCLUÍDA - Relatório Rápido*\n\n`;
+             mensagem += `*Cliente:* ${entrega.cliente.nome}\n`;
+             mensagem += `*Região:* ${entrega.regiao}\n`;
+             mensagem += `*Cesta:* ${entrega.cesta.nome}\n`;
+             mensagem += `*Valor:* ${cestaValor}\n`;
+             mensagem += `*Formas de Pagamento:* ${formasPagamento.join(', ')}\n`;
+             mensagem += `*Hora:* ${horaEntrega}\n\n`;
+             
+             // Incluir observações, se houver, para contexto do financeiro
+             if (entrega.observacao || entrega.tipo === 'Alterada') {
+                 mensagem += `--- Detalhes da Cesta ---\n`;
+                 if (entrega.tipo === 'Alterada' && entrega.codigoAlterada.trim()) {
+                     // Adiciona o detalhe multi-linha de forma limpa
+                     mensagem += `*Alteração Detalhe:*\n${entrega.codigoAlterada.trim()}\n`;
+                 }
+                 if (entrega.observacao) {
+                    mensagem += `*Obs Cliente:* ${entrega.observacao}\n`;
+                 }
+             }
+
+             const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
+             window.open(url, '_blank');
+        }
+
+
         function gerarMensagem(msgId, entrega) {
             const clienteNome = entrega.cliente.nome;
             const cestaValor = formatarMoeda(entrega.cesta.valor);
@@ -1108,7 +1141,6 @@ POR: Café, Açúcar"></textarea>
                         
                         const detalhes = entrega.codigoAlterada.trim();
                         if (detalhes.length > 0) {
-                            // Adiciona identação de 3 espaços para manter a estrutura de lista
                             const detalhesFormatados = detalhes.split('\n').map(line => `   ${line}`).join('\n');
                             detalhesAlterada += `\n${detalhesFormatados}`; 
                         }
@@ -1202,7 +1234,6 @@ POR: Café, Açúcar"></textarea>
             entregas.push(novaEntrega);
             salvarLocalStorage();
             
-            // Renderiza, garantindo que o novo pedido apareça no filtro ativo
             filtrarEntregas(regiaoAtiva); 
 
             formEntrega.reset();
@@ -1312,8 +1343,10 @@ POR: Café, Açúcar"></textarea>
             
             // CORRIGIDO: Checa clique no botão ENTREGUE
             const target = e.target.closest('.btn-entregue');
-            if (target && !target.disabled && target.textContent.trim() === 'ENTREGUE') {
-                 // Ação de ENTREGA, se estiver pendente
+            // Verifica se o texto é 'ENTREGUE' (ação pendente) ou 'Marcar Entrega' (backup)
+            const isMarcarEntrega = target && target.textContent.trim().toUpperCase().includes('ENTREGUE') && !target.disabled;
+            
+            if (isMarcarEntrega) {
                 const cardId = target.dataset.id;
                 abrirModalPagamento(cardId);
                 return;
@@ -1328,6 +1361,9 @@ POR: Café, Açúcar"></textarea>
 
         }
 
+        /**
+         * MODIFICADO: Salva a entrega e redireciona para o WhatsApp com relatório rápido.
+         */
         function salvarPagamento(e) {
             e.preventDefault();
             
@@ -1342,15 +1378,23 @@ POR: Café, Açúcar"></textarea>
             
             const entregas = getEntregasAtivas();
             const index = entregas.findIndex(e => e.id.toString() === entregaParaPagarId);
+            
             if (index !== -1) {
+                // 1. Atualiza o status e salva
                 entregas[index].status = "Entregue";
                 entregas[index].formaPagamento = formasPagamentoSelecionadas;
                 entregas[index].horarioEntrega = new Date().toISOString();
+                
+                salvarLocalStorage();
+                renderizarEntregas();
+                fecharModalPagamento();
+
+                // 2. Gera e envia o relatório rápido via WhatsApp
+                gerarRelatorioRapidoWhatsapp(entregas[index], formasPagamentoSelecionadas);
+
+            } else {
+                fecharModalPagamento();
             }
-            
-            salvarLocalStorage();
-            renderizarEntregas();
-            fecharModalPagamento();
         }
         
         // --- Funções de Exportação/Relatório ---
@@ -1505,7 +1549,7 @@ POR: Café, Açúcar"></textarea>
 
             exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
             
-            // CORRIGIDO: Botão de Exportação para o WhatsApp
+            // CORRIGIDO: Botão de Exportação para o WhatsApp (Garante que o botão é recriado)
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
             exportWhatsappLinkEl.innerHTML = `
                 <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
