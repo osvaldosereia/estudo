@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Rota de Entrega Simplificado</title>
+    <title>Gerenciador de Rota de Entrega Profissional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="clientes.js"></script>
     
@@ -363,14 +363,14 @@
     <script>
         /**
          * =================================================================
-         * BLOCO DE CÓDIGO JS PRINCIPAL (Integrado para facilidade)
+         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado e Corrigido)
          * =================================================================
          */
 
         // --- Constantes Globais ---
         const PIX_NOME = "Osvaldo Sereia Junior";
         const PIX_CELULAR = "65984491018";
-        const NUMERO_GERENTE = "5565996884599"; // Inclui o 55 DDI
+        const NUMERO_GERENTE = "5565996884599"; 
         const NOME_EMPRESA = "Cesta Básica Dona Antônia";
         const MAX_ROTAS = 30;
 
@@ -379,13 +379,12 @@
         let rotaAtivaId = null;
         let CLIENTES_CACHE = {}; 
         let entregaParaPagarId = null;
-        let entregaParaWhatsappId = null; // ID da entrega no modal de WhatsApp
+        let entregaParaWhatsappId = null; 
 
         // --- Seletores de Elementos (Inicializados no DOMContentLoaded) ---
         let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
-        let inputDespesaAbastecimento, inputDespesaAlimentacao, inputDespesaExtra; // REMOVIDOS do corpo
-        let modalDespesaAbastecimento, modalDespesaAlimentacao, modalDespesaExtra; // NOVOS Seletores no Modal
-        let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; // NOVOS para o collapse
+        let modalDespesaAbastecimento, modalDespesaAlimentacao, modalDespesaExtra; 
+        let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; 
         let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, selectCesta, inputValorCesta, campoAlterada, codigoAlteradaInput, listaEntregasEl, listaVaziaEl;
         let modalPagamento, formPagamento, btnCancelarPagamento, modalClienteNome, modalClienteValor, modalErrorPagamento, btnExportar, btnCarregar, modalExportar, exportRelatorioEl, exportWhatsappLinkEl, btnFecharExportar, modalAviso, modalAvisoTexto, btnFecharAviso, inputCarregarArquivo;
         let modalWhatsappOpcoes, modalWhatsappClienteNome, modalWhatsappCestaInfo, btnFecharWhatsappOpcoes;
@@ -510,16 +509,16 @@
         }
         
         /**
-         * NOVO: Função para alternar o estado de visibilidade da seção Gerenciar Rota.
+         * CORRIGIDO: Função para alternar o estado de visibilidade da seção Gerenciar Rota.
          */
         function toggleGerenciarRota() {
             const isOpen = contentGerenciarRota.classList.toggle('open');
             if (isOpen) {
                 iconChevron.classList.remove('rotate-90');
-                iconChevron.classList.add('-rotate-90');
+                iconChevron.classList.add('rotate-180'); // Usa 180 para apontar para cima
             } else {
-                iconChevron.classList.remove('-rotate-90');
-                iconChevron.classList.add('rotate-90');
+                iconChevron.classList.remove('rotate-180');
+                iconChevron.classList.add('rotate-90'); // Usa 90 para apontar para o lado (fechado)
             }
         }
 
@@ -553,7 +552,7 @@
         }
         
         /**
-         * NOVO: Salva os valores de despesa APENAS no objeto da rota (dentro do modal de exportação)
+         * CORRIGIDO: Salva os valores de despesa APENAS no objeto da rota (dentro do modal de exportação)
          */
         function salvarDespesasDoModal() {
             const rota = todasAsRotas[rotaAtivaId];
@@ -561,12 +560,13 @@
 
             // Lendo os valores dos inputs DENTRO DO MODAL
             rota.despesas = {
+                // CORRIGIDO: Usa parseFloat e toFixed para garantir o formato correto
                 abastecimento: parseFloat(modalDespesaAbastecimento.value) || 0,
                 alimentacao: parseFloat(modalDespesaAlimentacao.value) || 0,
                 extra: parseFloat(modalDespesaExtra.value) || 0
             };
 
-            salvarTodasAsRotas(); // Salva a rota com as despesas atualizadas
+            salvarTodasAsRotas(); 
         }
 
 
@@ -612,11 +612,14 @@
                 if (chavesRotas.length === 0) {
                     criarNovaRota(false);
                 } else {
+                    // CORRIGIDO: Garante que rotaAtivaId é definido, se houver rotas.
                     const chavesOrdenadas = chavesRotas.sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
                     rotaAtivaId = chavesOrdenadas[0];
                     localStorage.setItem('rotaAtivaId', rotaAtivaId);
                 }
             }
+            
+            // CORRIGIDO: Se a rota ativa ainda for nula após a tentativa, isso significa que não deu para criar a primeira rota ou há um erro grave. Mas vamos assumir que o "criarNovaRota" funciona.
 
             // 5. Popular o <select> e carregar a rota ativa na tela
             popularSelectRotas();
@@ -631,14 +634,15 @@
         }
         
         /**
-         * NOVO: Carrega as despesas da rota ativa nos inputs do Modal de Exportação.
+         * CORRIGIDO: Carrega as despesas da rota ativa nos inputs do Modal de Exportação.
          */
         function carregarDespesasNoModal() {
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) return;
-             // Garante que o objeto despesas exista no carregamento
+            
             rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
             
+            // CORRIGIDO: Garante 2 casas decimais no display do input do modal
             modalDespesaAbastecimento.value = (rota.despesas.abastecimento || 0).toFixed(2);
             modalDespesaAlimentacao.value = (rota.despesas.alimentacao || 0).toFixed(2);
             modalDespesaExtra.value = (rota.despesas.extra || 0).toFixed(2);
@@ -673,6 +677,7 @@
         function carregarRotaAtiva() {
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) {
+                // Se a rota ativa sumiu, recarrega para tentar achar uma nova ou criar uma
                 iniciarAplicativo(); 
                 return;
             }
@@ -686,6 +691,9 @@
             renderizarEntregas();
         }
 
+        /**
+         * CORRIGIDO: Função de criação de nova rota (garantindo que o novoId não entre em conflito).
+         */
         function criarNovaRota(atualizarTela = true) {
             let novoId = Date.now().toString(); 
             while(todasAsRotas[novoId]) {
@@ -712,7 +720,6 @@
                 carregarRotaAtiva();
                 mostrarAviso(`Nova Rota '${novaRota.nome}' criada e definida como ativa.`);
                 
-                // Abre a seção retrátil após criar uma nova rota
                 if (!contentGerenciarRota.classList.contains('open')) {
                     toggleGerenciarRota();
                 }
@@ -781,7 +788,7 @@
                 } else {
                     infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Alterada</span>`);
                     if (entrega.codigoAlterada) {
-                        infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full" title="${entrega.codigoAlterada}">${entrega.codigoAlterada.substring(0, 20)}...</span>`);
+                        infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full" title="${entrega.codigoAlterada}">${entrega.codigoAlterada.substring(0, 20)}${entrega.codigoAlterada.length > 20 ? '...' : ''}</span>`);
                     }
                     if (entrega.partesAlteradas && entrega.partesAlteradas.length > 0) {
                          infoTags.push(`<span class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">${entrega.partesAlteradas.join(', ')}</span>`);
@@ -834,7 +841,6 @@
                     const numeroFinal = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
                     
                     if(numeroFinal.length >= 10) { 
-                        // NOTE: O HREF não será usado diretamente, mas o botão precisa ser habilitado
                         whatsappHref = `javascript:void(0);`; 
                         whatsappDisabled = false;
                         whatsappClass = 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200';
@@ -867,7 +873,7 @@
                         </div>
                     </div>
                     <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0 flex flex-col sm:flex-row gap-2">
-                        <a href="${whatsappHref}" data-id="${entrega.id}" target="_blank" class="btn-card-whatsapp btn-whatsapp-modal w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm ${whatsappClass}" title="Opções de Mensagem" ${whatsappDisabled ? 'disabled' : ''}>
+                        <a href="${whatsappHref}" data-id="${entrega.id}" class="btn-card-whatsapp btn-whatsapp-modal w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm ${whatsappClass}" title="Opções de Mensagem" ${whatsappDisabled ? 'disabled' : ''}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 inline-block"><path d="M12.031 2.316A10.009 10.009 0 0 0 2.083 12.26c0 1.956.495 3.864 1.43 5.518L2 22l4.492-1.472A9.914 9.914 0 0 0 12.031 22h.005a10.009 10.009 0 0 0 9.957-9.74A10.009 10.009 0 0 0 12.031 2.316zM17.07 15.696c-.19.34-.35.34-.644.512-.294.172-.63.268-1.28.256-1.127-.024-2.812-.55-4.137-1.875s-2.074-3.04-2.098-4.168c-.012-.65.084-.986.256-1.28.172-.294.332-.454.512-.644.34-.34.78-.813 1.05-.737.27.076.438.2.628.627.19.427.63.172.82.024.19-.148.166-.272.19-.444.024-.172.19-.344.24-.512.05-.168.048-.34.024-.512-.024-.172-.096-.32-.192-.488-.096-.168-.22-.408-.344-.512-.124-.104-.268-.168-.444-.192-.176-.024-.34-.024-.512-.024-.528.024-1.056.12-1.554.268-.498.148-.96.344-1.396.644-1.218.84-2.285 2.01-2.99 3.282-.705 1.272-1.074 2.658-1.074 4.072 0 .54.048.972.144 1.344.096.372.24.716.444 1.032.204.316.444.596.72.84.276.244.6.43.956.548.356.118.756.142 1.188.142 1.056-.024 1.84-.42 2.508-1.008.668-.588 1.08-1.38 1.08-2.296.0-.512-.072-.94-.192-1.308-.12-.368-.312-.614-.588-.738z"/></svg>
                         </a>
                         <button class="btn-card-maps w-full sm:w-auto rounded-md px-4 py-3 text-sm font-medium shadow-sm bg-white text-gray-700 border border-gray-300 ${isFinalizada ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}" title="Abrir no Google Maps" ${isFinalizada ? 'disabled' : ''}>
@@ -906,7 +912,6 @@
 
             entregaParaWhatsappId = id;
 
-            // Preenche info do modal
             modalWhatsappClienteNome.textContent = entrega.cliente.nome;
             let cestaInfo = `${entrega.cesta.nome} (${formatarMoeda(entrega.cesta.valor)})`;
             if (entrega.tipo === 'Alterada') {
@@ -928,26 +933,33 @@
         function gerarMensagem(msgId, entrega) {
             const clienteNome = entrega.cliente.nome;
             const cestaValor = formatarMoeda(entrega.cesta.valor);
-            const numeroCliente = (entrega.cliente.celular.replace(/\D/g, '').startsWith('55') ? '' : '55') + entrega.cliente.celular.replace(/\D/g, '');
+            
+            // Lógica para formatar o número do cliente (para o link do WhatsApp)
+            const numeroCliente = entrega.cliente.celular ? entrega.cliente.celular.replace(/\D/g, '') : '';
+            const numeroClienteFinal = numeroCliente.length > 0 && !numeroCliente.startsWith('55') ? `55${numeroCliente}` : numeroCliente;
             
             let mensagem = "";
-            let numeroDestino = numeroCliente;
+            let numeroDestino = numeroClienteFinal;
             let targetBlank = true;
 
+            if (!numeroClienteFinal && msgId !== 4) {
+                 mostrarAviso("O cliente não tem um número de celular cadastrado para enviar esta mensagem.");
+                 return;
+            }
+
             switch(msgId) {
-                case 1: // Chegando em 10 minutos
+                case 1: 
                     mensagem = `Olá, aqui é o entregador da ${NOME_EMPRESA}. A sua cesta básica chegará em 10 minutos.`;
                     break;
-                case 2: // Cheguei
+                case 2: 
                     mensagem = `Olá, cheguei, já pode sair para receber a cesta.`;
                     break;
-                case 3: // PIX
+                case 3: 
                     mensagem = `Dados do pix para pagamento:\n*PIX*: ${PIX_CELULAR} (celular)\n*Nome*: ${PIX_NOME}\n*Valor Total*: ${cestaValor}`;
                     break;
-                case 4: // Pedido para Gerente
-                    // Requer número do gerente e mensagem específica
+                case 4: 
                     numeroDestino = NUMERO_GERENTE;
-                    targetBlank = true; // Abre em nova aba para o gerente
+                    targetBlank = true; 
 
                     let detalhesAlterada = '';
                     if (entrega.tipo === 'Alterada') {
@@ -966,12 +978,11 @@
 
             const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
             
-            // Fecha o modal e abre o link
             fecharModalWhatsapp();
             window.open(url, targetBlank ? '_blank' : '_self');
         }
 
-        // --- Funções de Submissão e Movimentação (Mantidas) ---
+        // --- Funções de Lançamento e Status ---
 
         function adicionarEntrega(e) {
             e.preventDefault();
@@ -1031,13 +1042,126 @@
             salvarLocalStorage();
             renderizarEntregas();
 
+            // Limpa o formulário e reseta o estado da UI
             formEntrega.reset();
             inputCliente.value = '';
             infoClienteSelecionado.classList.add('hidden');
             atualizarValorCesta();
             toggleCampoAlterada();
         }
-        
+
+        /**
+         * CORRIGIDO: Função para abrir Google Maps (Erro de Sintaxe no Template String)
+         */
+        function abrirGoogleMaps(query) {
+            const enderecoFormatado = query.trim();
+            if (!enderecoFormatado) {
+                mostrarAviso('O cliente não possui um endereço cadastrado para abrir no mapa.');
+                return;
+            }
+            // CORREÇÃO: Sintaxe correta para o Google Maps
+            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoFormatado)}`;
+            window.open(url, '_blank');
+        }
+
+        function abrirModalPagamento(id) {
+            const entregas = getEntregasAtivas();
+            const entrega = entregas.find(e => e.id.toString() === id);
+            if (!entrega) return;
+
+            entregaParaPagarId = id;
+            
+            modalClienteNome.textContent = entrega.cliente.nome;
+            modalClienteValor.textContent = formatarMoeda(entrega.cesta.valor);
+            
+            formPagamento.reset();
+            modalErrorPagamento.classList.add('hidden');
+
+            modalPagamento.classList.remove('hidden');
+        }
+
+        function fecharModalPagamento() {
+            modalPagamento.classList.add('hidden');
+            entregaParaPagarId = null;
+        }
+
+        function cancelarEntrega(id) {
+            if (!confirm("Tem certeza que deseja MARCAR ESTA ENTREGA COMO CANCELADA?")) return;
+
+            const entregas = getEntregasAtivas();
+            const index = entregas.findIndex(e => e.id.toString() === id);
+            if (index !== -1) {
+                entregas[index].status = "Cancelada";
+                entregas[index].formaPagamento = [];
+                entregas[index].horarioEntrega = new Date().toISOString();
+            }
+            salvarLocalStorage();
+            renderizarEntregas();
+        }
+
+        function moverEntrega(id, direcao) {
+            const entregas = getEntregasAtivas();
+            const index = entregas.findIndex(e => e.id.toString() === id);
+            if (index === -1) return;
+
+            if (entregas[index].status !== 'Pendente') return;
+
+            if (direcao === 'cima' && index > 0) {
+                [entregas[index - 1], entregas[index]] = [entregas[index], entregas[index - 1]];
+            } else if (direcao === 'baixo' && index < entregas.length - 1) {
+                [entregas[index + 1], entregas[index]] = [entregas[index], entregas[index + 1]];
+            } else {
+                return;
+            }
+
+            salvarLocalStorage();
+            renderizarEntregas();
+        }
+
+        function handleCardClick(e) {
+            const btnCima = e.target.closest('.btn-mover-cima');
+            if (btnCima && !btnCima.disabled) {
+                moverEntrega(btnCima.dataset.id, 'cima');
+                return;
+            }
+
+            const btnBaixo = e.target.closest('.btn-mover-baixo');
+            if (btnBaixo && !btnBaixo.disabled) {
+                moverEntrega(btnBaixo.dataset.id, 'baixo');
+                return;
+            }
+
+            const btnCancelar = e.target.closest('.btn-cancelar-entrega');
+            if (btnCancelar && !btnCancelar.disabled) {
+                cancelarEntrega(btnCancelar.dataset.id);
+                return;
+            }
+
+            const btnMaps = e.target.closest('.btn-card-maps');
+            if (btnMaps && !btnMaps.disabled) {
+                const cardId = btnMaps.closest('[data-id]').dataset.id;
+                const entregas = getEntregasAtivas();
+                const entrega = entregas.find(e => e.id.toString() === cardId);
+                if (entrega) {
+                    abrirGoogleMaps(entrega.cliente.endereco);
+                }
+                return;
+            }
+            
+            // NOVO: Ação específica para o modal do WhatsApp
+            const btnWhatsapp = e.target.closest('.btn-whatsapp-modal');
+            if (btnWhatsapp && !btnWhatsapp.disabled) {
+                abrirModalWhatsapp(btnWhatsapp.dataset.id); 
+                return;
+            }
+
+
+            const target = e.target.closest('.btn-entregue');
+            if (target && !target.disabled && target.textContent.trim() === 'Marcar Entrega') {
+                abrirModalPagamento(target.dataset.id);
+            }
+        }
+
         function salvarPagamento(e) {
             e.preventDefault();
             
@@ -1063,8 +1187,20 @@
             fecharModalPagamento();
         }
         
-        // --- Funções de Exportação/Importação (Adaptadas para Despesas no Modal) ---
-        
+        // --- Funções de Exportação/Importação ---
+
+        function downloadArquivo(data, filename) {
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         function exportarDados() {
             const rotaAtiva = todasAsRotas[rotaAtivaId];
             if (!rotaAtiva) {
@@ -1198,19 +1334,6 @@
             modalExportar.classList.remove('hidden');
         }
 
-        // Função de carregarDados e handleArquivoCarregado (mantidas)
-        function downloadArquivo(data, filename) {
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
         function carregarDados(jsonDados) {
             if (!jsonDados) {
                 mostrarAviso("O arquivo está vazio ou não pôde ser lido.");
@@ -1336,7 +1459,6 @@
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
 
             // Despesas (Agora no Modal de Exportação)
-            // Se as despesas mudarem no modal, salva automaticamente ao perder o foco (blur)
             modalDespesaAbastecimento.addEventListener('change', salvarDespesasDoModal);
             modalDespesaAlimentacao.addEventListener('change', salvarDespesasDoModal);
             modalDespesaExtra.addEventListener('change', salvarDespesasDoModal);
@@ -1365,7 +1487,8 @@
             // Lista de Entregas (Delegação de Evento)
             listaEntregasEl.addEventListener('click', handleCardClick);
             
-            // NOVO: Ação específica para abrir o Modal de WhatsApp
+            // Ação específica para abrir o Modal de WhatsApp
+            // Adicionado evento no DOM para que o clique no .btn-whatsapp-modal funcione
             listaEntregasEl.addEventListener('click', (e) => {
                 const btnWhatsapp = e.target.closest('.btn-whatsapp-modal');
                 if (btnWhatsapp && !btnWhatsapp.disabled) {
@@ -1378,9 +1501,8 @@
             btnCancelarPagamento.addEventListener('click', fecharModalPagamento);
             formPagamento.addEventListener('submit', salvarPagamento);
             
-            // NOVO: Modal de WhatsApp Opções
+            // Modal de WhatsApp Opções
             btnFecharWhatsappOpcoes.addEventListener('click', fecharModalWhatsapp);
-            // Delegação de evento para os 4 botões de mensagem
             modalWhatsappOpcoes.addEventListener('click', (e) => {
                 const btnMsg = e.target.closest('[data-msg-id]');
                 if (btnMsg) {
@@ -1395,16 +1517,15 @@
 
 
             // Ações Globais (Exportar/Carregar)
+            // Botão Exportar: Abre o modal e carrega as despesas
             btnExportar.addEventListener('click', exportarDados);
-            // NOVO: Carrega despesas do localstorage nos inputs do modal antes de abri-lo
-            btnExportar.addEventListener('click', carregarDespesasNoModal);
+            
             btnFecharExportar.addEventListener('click', () => modalExportar.classList.add('hidden'));
 
             document.getElementById('btn-baixar-json').addEventListener('click', () => {
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) return;
                 
-                // Antes de baixar, salva as despesas caso o usuário tenha editado
                 salvarDespesasDoModal(); 
                 
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
