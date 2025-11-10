@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762783087038-AXUSV",
+  "nome": "COX5858 TIJUCAL",
+  "celular": "065999523237",
+  "endereco": "COX5858",
+  "complemento": "RUA 214, CASA 14, VERDE CLARO, PORTAO GRADE BRANCA, CASINHA NO FUNDO ( TEM 2 CASAS JUNTAS)"
+},
+  {
   "id": "1762782804631-U2MG6",
   "nome": "VG0093 MARIO ANDREAZA",
   "celular": "065992974468",
