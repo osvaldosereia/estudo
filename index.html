@@ -68,6 +68,37 @@
                 overflow-y: auto;
             }
         }
+
+        /* Otimização para quebra de texto em mobile (end. e obs.) */
+        .break-words-mobile {
+            word-wrap: break-word; /* Para navegadores antigos */
+            overflow-wrap: break-word; /* Padrão moderno */
+            min-width: 0; /* Ajuda o flexbox a forçar a quebra */
+        }
+        
+        /* Estilos para o checklist do card */
+        .card-info-item {
+            font-size: 0.95rem; /* Um pouco maior que 'text-sm' */
+            font-weight: 500; /* Medium */
+            color: #4b5563; /* Cor cinza padrão */
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .card-info-item::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #6b7280; /* Cinza mais escuro */
+            font-weight: bold;
+        }
+        /* Cores mais sutis para os itens especiais */
+        .card-info-item.alterada {
+            color: #b45309; /* âmbar-700 */
+        }
+        .card-info-item.brinde {
+            color: #9d174d; /* Rosa escuro */
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -210,7 +241,7 @@
                         <div id="campo-alterada" class="hidden space-y-4">
                             <div>
                                 <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                <input type="text" id="codigo-alterada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão">
+                                <textarea id="codigo-alterada" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Sem arroz, +1 feijão&#10;Ligar 10 minutos antes."></textarea>
                             </div>
 
                             <div id="campo-partes-alteradas">
@@ -392,7 +423,7 @@
     <script>
         /**
          * =================================================================
-         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado, Corrigido e Otimizado para Mobile)
+         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado e Otimizado)
          * =================================================================
          */
 
@@ -414,7 +445,7 @@
         let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
         let modalDespesaAbastecimento, modalDespesaAlimentacao, modalDespesaExtra; 
         let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; 
-        let btnToggleLancamento, contentLancamento, iconChevronLancamento; // NOVO: Lançamento Retrátil
+        let btnToggleLancamento, contentLancamento, iconChevronLancamento; 
         let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, selectCesta, inputValorCesta, campoAlterada, codigoAlteradaInput, listaEntregasEl, listaVaziaEl;
         let modalPagamento, formPagamento, btnCancelarPagamento, modalClienteNome, modalClienteValor, modalErrorPagamento, btnExportar, btnCarregar, modalExportar, exportRelatorioEl, exportWhatsappLinkEl, btnFecharExportar, btnFecharExportarTop, modalAviso, modalAvisoTexto, btnFecharAviso, inputCarregarArquivo;
         let modalWhatsappOpcoes, modalWhatsappClienteNome, modalWhatsappCestaInfo, btnFecharWhatsappOpcoes;
@@ -473,7 +504,7 @@
             exportRelatorioEl = document.getElementById('export-relatorio');
             exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
             btnFecharExportar = document.getElementById('btn-fechar-exportar');
-            btnFecharExportarTop = document.getElementById('btn-fechar-exportar-top'); // NOVO: Botão fechar mobile
+            btnFecharExportarTop = document.getElementById('btn-fechar-exportar-top'); 
             modalAviso = document.getElementById('modal-aviso');
             modalAvisoTexto = document.getElementById('modal-aviso-texto');
             btnFecharAviso = document.getElementById('btn-fechar-aviso');
@@ -533,10 +564,8 @@
             const tipo = document.querySelector('input[name="tipo-cesta"]:checked').value;
             if (tipo === 'Alterada') {
                 campoAlterada.classList.remove('hidden');
-                codigoAlteradaInput.required = true;
             } else {
                 campoAlterada.classList.add('hidden');
-                codigoAlteradaInput.required = false;
                 codigoAlteradaInput.value = '';
                 document.querySelectorAll('input[name="partes_alteradas"]:checked').forEach(cb => {
                     cb.checked = false;
@@ -544,9 +573,6 @@
             }
         }
         
-        /**
-         * Função para alternar o estado de visibilidade da seção Gerenciar Rota.
-         */
         function toggleGerenciarRota() {
             const isOpen = contentGerenciarRota.classList.toggle('open');
             if (isOpen) {
@@ -558,9 +584,6 @@
             }
         }
         
-        /**
-         * NOVO: Função para alternar o estado de visibilidade da seção Lançamento.
-         */
         function toggleLancamento() {
             const isOpen = contentLancamento.classList.toggle('open');
             if (isOpen) {
@@ -601,14 +624,10 @@
             salvarTodasAsRotas();
         }
         
-        /**
-         * Salva os valores de despesa APENAS no objeto da rota (lendo do modal de exportação)
-         */
         function salvarDespesasDoModal() {
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) return;
 
-            // Lendo os valores dos inputs DENTRO DO MODAL
             rota.despesas = {
                 abastecimento: parseFloat(modalDespesaAbastecimento.value) || 0,
                 alimentacao: parseFloat(modalDespesaAlimentacao.value) || 0,
@@ -679,9 +698,6 @@
             return [];
         }
         
-        /**
-         * Carrega as despesas da rota ativa nos inputs do Modal de Exportação.
-         */
         function carregarDespesasNoModal() {
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) return;
@@ -761,7 +777,6 @@
                 carregarRotaAtiva();
                 mostrarAviso(`Nova Rota '${novaRota.nome}' criada e definida como ativa.`);
                 
-                // Abre a seção "Gerenciar Rota" ao criar uma nova
                 if (!contentGerenciarRota.classList.contains('open')) {
                     toggleGerenciarRota();
                 }
@@ -821,23 +836,28 @@
                 card.dataset.id = entrega.id;
                 const isFinalizada = entrega.status === 'Entregue' || entrega.status === 'Cancelada';
                 
+                // Quebra de texto garantida no card
                 card.className = `p-4 bg-white rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all ${entrega.status === 'Entregue' ? 'entregue' : (entrega.status === 'Cancelada' ? 'cancelada' : '')} break-words`;
                 
                 // NOVO: Coleta info de Brinde
                 let infoBrinde = '';
                 if (Array.isArray(entrega.brindes) && entrega.brindes.length > 0) {
-                    infoBrinde = `<p class="text-sm font-semibold text-pink-600">BRINDE(S): ${entrega.brindes.join(', ')}</p>`;
+                    infoBrinde = `<p class="card-info-item brinde">BRINDE(S): ${entrega.brindes.join(', ')}</p>`;
                 }
 
                 // NOVO: Coleta info de Alteração
                 let infoAlteracao = '';
                 if (entrega.tipo === 'Alterada') {
                     const alteracoes = [];
-                    if (entrega.codigoAlterada) alteracoes.push(`Det: ${entrega.codigoAlterada}`);
+                    if (entrega.codigoAlterada) {
+                         // Substitui quebras de linha para exibição no card
+                         const detalhesFormatados = entrega.codigoAlterada.replace(/\n/g, ' | ');
+                         alteracoes.push(`Det: ${detalhesFormatados}`);
+                    }
                     if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) alteracoes.push(`Itens: ${entrega.partesAlteradas.join(', ')}`);
                     
                     if (alteracoes.length > 0) {
-                         infoAlteracao = `<p class="text-sm font-semibold text-yellow-700">ALTERADA: ${alteracoes.join(' | ')}</p>`;
+                         infoAlteracao = `<p class="card-info-item alterada">ALTERADA: ${alteracoes.join(' | ')}</p>`;
                     }
                 }
 
@@ -845,32 +865,34 @@
                 let statusInfo = '';
                 if (entrega.status === 'Entregue') {
                     statusInfo = `
-                        <div class="text-xs text-green-700 mt-1 sm:ml-4 font-medium">
-                            <span class="font-bold">Pgto:</span> ${entrega.formaPagamento.join(', ')} |
-                            <span class="font-bold">Hora:</span> ${formatarData(entrega.horarioEntrega)}
+                        <div class="mt-2 text-sm font-semibold text-green-700">
+                            Status: Entregue<br>
+                            Pagamento: ${entrega.formaPagamento.join(', ')}<br>
+                            Hora: ${formatarData(entrega.horarioEntrega)}
                         </div>
                     `;
                 } else if (entrega.status === 'Cancelada') {
                     statusInfo = `
-                        <div class="text-xs text-red-700 mt-1 sm:ml-4 font-medium">
-                            <span class="font-bold">Status:</span> CANCELADA | 
-                            <span class="font-bold">Hora:</span> ${formatarData(entrega.horarioEntrega)}
+                        <div class="mt-2 text-sm font-semibold text-red-700">
+                            Status: Cancelada<br>
+                            Hora: ${formatarData(entrega.horarioEntrega)}
                         </div>
                     `;
                 }
 
+                // NOVO: OBSERVAÇÃO DO CLIENTE
                 let obsInfo = '';
                 if (entrega.observacao) {
-                    obsInfo = `<p class="text-base text-red-600 font-bold mt-1">OBS: ${entrega.observacao}</p>`;
+                    obsInfo = `<p class="card-info-item text-red-600 font-bold break-words-mobile">OBS: ${entrega.observacao}</p>`;
                 }
 
-                // NOVO: Aumentado o tamanho da fonte (text-base -> text-lg, text-sm -> text-base, etc.)
+                // Layout de Informações Principais (Mobile e Desktop)
                 let infoClienteHtml = `
-                    <p class="text-lg font-bold text-gray-800 truncate" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
-                    <p class="text-base text-gray-600 truncate" title="${entrega.cliente.endereco || ''}">${entrega.cliente.endereco || 'Sem endereço'}</p>
-                    <p class="text-base text-gray-500 truncate" title="${entrega.cliente.complemento || ''}">${entrega.cliente.complemento || 'Sem complemento'}</p>
-                    <p class="text-base font-bold text-blue-600">${entrega.cliente.celular || 'Sem celular'}</p>
-                    <p class="text-lg font-bold text-gray-700 mt-2">${entrega.cesta.nome} - <span class="font-extrabold text-blue-800">${formatarMoeda(entrega.cesta.valor)}</span></p>
+                    <p class="text-lg font-bold text-gray-800 break-words-mobile" title="${entrega.cliente.nome}">${entrega.cliente.nome}</p>
+                    <p class="text-base text-gray-600 break-words-mobile" title="${entrega.cliente.endereco || ''}">Endereço: ${entrega.cliente.endereco || 'Sem endereço'}</p>
+                    <p class="text-base text-gray-500 break-words-mobile" title="${entrega.cliente.complemento || ''}">Complemento: ${entrega.cliente.complemento || '-'}</p>
+                    <p class="text-base font-bold text-blue-600">Celular: ${entrega.cliente.celular || 'Sem celular'}</p>
+                    <p class="text-lg font-bold text-gray-700 mt-2">CESTA: ${entrega.cesta.nome} - <span class="font-extrabold text-blue-800">${formatarMoeda(entrega.cesta.valor)}</span></p>
                 `;
                 
                 const isPrimeiro = index === 0;
@@ -886,18 +908,21 @@
                     if(numeroFinal.length >= 10) { 
                         whatsappHref = `javascript:void(0);`; 
                         whatsappDisabled = false;
-                        whatsappClass = 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200';
+                        whatsappClass = 'bg-green-600 text-white hover:bg-green-700'; /* Botão WhatsApp em verde sólido */
                     }
                 }
                 
-                // NOVO: Definição dos botões simples (texto) e classes de alinhamento
+                // Definição dos botões simples (texto)
                 const btnClassesBase = "w-full text-sm font-medium shadow-sm py-3 rounded-md";
-                const btnMaps = `<button class="btn-card-maps ${btnClassesBase} bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" ${isFinalizada ? 'disabled' : ''}>MAPA</button>`;
-                const btnWhatsapp = `<button data-id="${entrega.id}" class="btn-whatsapp-modal ${btnClassesBase} ${whatsappClass}" ${whatsappDisabled || isFinalizada ? 'disabled' : ''}>WHATSAPP</button>`;
                 
+                // Botões 1 e 2
+                const btnWhatsapp = `<button data-id="${entrega.id}" class="btn-whatsapp-modal ${btnClassesBase} ${whatsappClass}" ${whatsappDisabled || isFinalizada ? 'disabled' : ''}>WHATSAPP</button>`;
+                const btnMaps = `<button class="btn-card-maps ${btnClassesBase} bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" ${isFinalizada ? 'disabled' : ''}>MAPA</button>`;
+                
+                // Botões 3 e 4
                 const btnAcaoPrincipal = entrega.status === 'Pendente' ? `
                     <button class="btn-entregue ${btnClassesBase} bg-blue-600 text-white hover:bg-blue-700" data-id="${entrega.id}">ENTREGUE</button>
-                ` : `<button class="btn-entregue ${btnClassesBase} bg-green-600 text-white cursor-not-allowed" disabled>${entrega.status.toUpperCase()}</button>`;
+                ` : `<button class="btn-entregue ${btnClassesBase} bg-green-600 text-white cursor-not-allowed" disabled>ENTREGUE</button>`;
                 
                 const btnCancelar = entrega.status === 'Pendente' ? `
                     <button class="btn-cancelar-entrega ${btnClassesBase} bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">CANCELAR</button>
@@ -916,15 +941,15 @@
                                 </button>
                             </div>
 
-                            <div class="truncate w-full min-w-0">
+                            <div class="w-full min-w-0 space-y-1">
                                 ${infoClienteHtml}
                             </div>
                         </div>
                         
-                        <div class="mt-2 sm:ml-12 w-full space-y-1 text-sm">
+                        <div class="mt-4 sm:ml-12 w-full space-y-1">
+                            ${obsInfo}
                             ${infoAlteracao}
                             ${infoBrinde}
-                            ${obsInfo}
                             ${statusInfo}
                         </div>
                     </div>
@@ -1001,15 +1026,21 @@
 
                     let detalhesAlterada = '';
                     if (entrega.tipo === 'Alterada') {
-                        detalhesAlterada = ` - *Alterada: ${entrega.codigoAlterada || 'Detalhes a verificar'}*`;
+                        // NOVO: Usa a formatação correta para preservar as quebras de linha no WhatsApp
+                        const detalhesFormatados = entrega.codigoAlterada.trim().length > 0 ? `\n   *Detalhe:* ${entrega.codigoAlterada}` : '';
+                        
+                        detalhesAlterada = ` - *Cesta Alterada:*`;
+                        detalhesAlterada += detalhesFormatados;
+
                         if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) {
-                            detalhesAlterada += ` (Itens: ${entrega.partesAlteradas.join(', ')})`;
+                            detalhesAlterada += `\n   *Itens:* ${entrega.partesAlteradas.join(', ')}`;
                         }
                     }
                     
-                    let brindes = Array.isArray(entrega.brindes) && entrega.brindes.length > 0 ? ` (Brindes: ${entrega.brindes.join(', ')})` : "";
+                    let brindes = Array.isArray(entrega.brindes) && entrega.brindes.length > 0 ? `\n*Brindes*: ${entrega.brindes.join(', ')}` : "";
+                    let obsCliente = entrega.observacao ? `\n*Obs Cliente*: ${entrega.observacao}` : "";
 
-                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\nCliente: ${clienteNome}\nCesta: ${entrega.cesta.nome}${detalhesAlterada}${brindes}\nValor: ${cestaValor}\nCelular Cliente: ${entrega.cliente.celular}`;
+                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\n*Cliente*: ${clienteNome}\n*Cesta*: ${entrega.cesta.nome}${detalhesAlterada}${brindes}${obsCliente}\n*Valor Total*: ${cestaValor}\n*Celular Cliente*: ${entrega.cliente.celular}`;
                     break;
                 default:
                     return;
@@ -1059,7 +1090,7 @@
                 Array.from(formEntrega.querySelectorAll('input[name="partes_alteradas"]:checked'))
                      .map(input => input.value);
             
-            // NOVO: Coleta Brindes (Checkboxes)
+            // Coleta Brindes (Checkboxes)
             const brindesSelecionados = Array.from(formEntrega.querySelectorAll('input[name="brindes_opcoes"]:checked')).map(input => input.value);
             
             const novaEntrega = {
@@ -1073,7 +1104,7 @@
                 tipo: document.querySelector('input[name="tipo-cesta"]:checked').value,
                 codigoAlterada: codigoAlteradaInput.value.trim(),
                 partesAlteradas: partesAlteradasSelecionadas,
-                brindes: brindesSelecionados, // NOVO CAMPO DE BRINDES
+                brindes: brindesSelecionados, 
                 status: "Pendente",
                 formaPagamento: [],
                 horarioEntrega: null
@@ -1101,7 +1132,6 @@
                 mostrarAviso('O cliente não possui um endereço cadastrado para abrir no mapa.');
                 return;
             }
-            // CORREÇÃO: Sintaxe correta para o Google Maps
             const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoFormatado)}`;
             window.open(url, '_blank');
         }
@@ -1190,7 +1220,6 @@
                 return;
             }
             
-            // Ação específica para abrir o modal do WhatsApp
             const btnWhatsapp = e.target.closest('.btn-whatsapp-modal');
             if (btnWhatsapp && !btnWhatsapp.disabled) {
                 abrirModalWhatsapp(btnWhatsapp.dataset.id); 
@@ -1253,7 +1282,6 @@
                 return;
             }
             
-            // 1. Garante que as despesas digitadas no modal estão salvas antes de gerar o relatório
             salvarDespesasDoModal(); 
             
             const entregas = rotaAtiva.entregas;
@@ -1300,8 +1328,16 @@
                     if (Array.isArray(e.brindes) && e.brindes.length > 0) { whatsappTexto += `   BRINDE(S): ${e.brindes.join(', ')}\n`; }
                     if (e.observacao) { whatsappTexto += `   OBS (Cliente): ${e.observacao}\n`; }
                     if(e.tipo === 'Alterada') {
-                        if (e.codigoAlterada) { whatsappTexto += `   OBS (Cesta): ${e.codigoAlterada}\n`; }
-                        if (Array.isArray(e.partesAlteradas) && e.partesAlteradas.length > 0) { whatsappTexto += `   Partes Alteradas: ${e.partesAlteradas.join(', ')}\n`; }
+                        // NOVO: Preserva as quebras de linha na formatação para o gerente
+                        const detalhesFormatados = e.codigoAlterada.trim().length > 0 ? `\n   *Detalhe:* ${e.codigoAlterada}` : '';
+                        
+                        whatsappTexto += `   *Cesta Alterada:*`;
+                        whatsappTexto += detalhesFormatados;
+                        
+                        if (Array.isArray(e.partesAlteradas) && e.partesAlteradas.length > 0) { 
+                            whatsappTexto += `\n   *Itens:* ${e.partesAlteradas.join(', ')}`;
+                        }
+                        whatsappTexto += '\n'; // Adiciona uma quebra de linha após o bloco alterado
                     }
                 });
             } else {
@@ -1356,11 +1392,12 @@
             const despesas = rotaAtiva.despesas;
             const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
             
+            // CORRIGIDO: Inclusão das despesas no relatório do WhatsApp
             whatsappTexto += `\n*Despesas da Rota:*\n`;
             whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
             whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
             whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
-            whatsappTexto += `Total Despesas: *${formatarMoeda(totalDespesas)}*\n`;
+            whatsappTexto += `*Total Despesas:* ${formatarMoeda(totalDespesas)}\n`;
 
             const balanco = totalVendido - totalDespesas;
             whatsappTexto += `\n*BALANÇO FINAL (Vendido - Despesas):*\n`;
@@ -1401,7 +1438,6 @@
 
                     dadosCarregados.despesas = dadosCarregados.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
                     dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
-                        // Migra brinde de string para array se for o formato antigo, senão usa o novo campo
                         brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
                         partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
@@ -1431,7 +1467,7 @@
                     }
 
                     rotaAtiva.entregas = dadosCarregados.map(e => ({
-                         brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
+                        brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
                         partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
                         ...e,
@@ -1491,7 +1527,7 @@
             // Gerenciamento de Rota Retrátil
             btnToggleGerenciarRota.addEventListener('click', toggleGerenciarRota);
             
-            // Lançamento Retrátil (Inicia fechado, então a classe 'open' é removida no início)
+            // Lançamento Retrátil (Inicia fechado, ajustando o estado inicial)
             if (contentLancamento) {
                 contentLancamento.classList.remove('open');
                 iconChevronLancamento.classList.add('rotate-90');
