@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762787338273-1C08B",
+  "nome": "CBA2509 SANTA ISABEL",
+  "celular": "065992811718",
+  "endereco": "CBA2509",
+  "complemento": "MURO AZUL, KITNET 202 - MIKA"
+},
+  {
   "id": "1762786506179-N10KT",
   "nome": "COX3667 PQ CUIABA",
   "celular": "065992766579",
