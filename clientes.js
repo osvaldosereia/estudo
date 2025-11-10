@@ -32,7 +32,7 @@ const CLIENTES_DB = [
   "nome": "VG1821 NOVO MUNDO",
   "celular": "065981654371",
   "endereco": "VG1821",
-  "complemento": "RUA 3 Q3 C24"
+  "complemento": "RUA 3 Q3 C27"
 },
   {
   "id": "1762783087038-AXUSV",
@@ -4304,14 +4304,7 @@ const CLIENTES_DB = [
     "endereco": "Vg1786",
     "complemento": "Rua =diego botelho casa area 1a qdra 93 residencial jatoba bairro paiaguas varzea grande"
   },
-  {
-    "id": "1745675597120-AbC9O",
-    "nome": "VG1821 VG JACARANDA",
-    "celular": "5565981654371",
-    "endereco": "VG1821",
-    "complemento": "Rua 17 Quadra 08 cs 24"
-  },
-  {
+    {
     "id": "1748018499796-AbC9O",
     "nome": "VG1832 VG AEROPORTO",
     "celular": "5565992692844",
