@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762871665352-V3NEI",
+  "nome": "VG4828 CAPAO GRANDE",
+  "celular": "65992540093",
+  "endereco": "VG4828",
+  "complemento": "CAPAO GRANDE, CASA AZUL, TEM UMAS 2 CASAS DENTRO, PODE ENTRAR E A CASA DO FUNDO"
+},
+  {
   "id": "1762870899027-UEXRZ",
   "nome": "VG7923 JD MARINGA",
   "celular": "65996765714",
