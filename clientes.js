@@ -2781,9 +2781,9 @@ const CLIENTES_DB = [
   {
     "id": "1752084750937-AbC9O",
     "nome": "Cs22909 Bg Primavera",
-    "celular": "55659",
+    "celular": "5565984173416",
     "endereco": "Cs22909",
-    "complemento": ""
+    "complemento": "rua VEREADOR BENEDITO, Q4, C9, CASA MURO FECHADO, PORTAO GRADE, TERRENO GRANDE, CASA NO FUNDO"
   },
   {
     "id": "1746279242992-AbC9O",
