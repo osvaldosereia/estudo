@@ -3973,7 +3973,7 @@ const CLIENTES_DB = [
     "nome": "PE862 CUIABA BARBADO",
     "celular": "5565993417737",
     "endereco": "Pe862",
-    "complemento": "Avenida tranquedo Neves número 873 Barbado"
+    "complemento": "Avenida tranquedo Neves. 873, ESQUINA, LOJA QUE ARRUMA BANCO DE CARRO, Barbado"
   },
   {
     "id": "1744294451835-AbC9O",
