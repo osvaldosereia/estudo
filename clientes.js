@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762878422947-25F7I",
+  "nome": "VG656 JD DOS ESTADOS",
+  "celular": "65996315780",
+  "endereco": "VG656",
+  "complemento": "CASA DO LADO ESQUERO, MURO FECHADO E PORTAO FECHADO, MURO SO NO REBOCO"
+},
+  {
   "id": "1762874079568-C2ZF5",
   "nome": "COX0071 TIJUCAL",
   "celular": "65992390164",
