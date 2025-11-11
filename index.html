@@ -395,49 +395,49 @@
     </div>
 
 
-  <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 overflow-hidden sm:m-8 sm:rounded-lg">
-            <div class="p-6">
-                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
-                    <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-                
-                <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Regiões para Backup</h4>
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
-                    </label>
-                </div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Baixar Arquivo da Rota (.json)
-                </button>
-                
-                </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
-                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-            </div>
-        </div>
-    </div>
+ <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 overflow-hidden sm:m-8 sm:rounded-lg">
+        <div class="p-6">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
+                <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Regiões para Backup</h4>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                    <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                    <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                    <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                    <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
+                </label>
+            </div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
+            <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Baixar Arquivo da Rota (.json)
+            </button>
+            
+            </div>
+        <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
+            <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+        </div>
+    </div>
+</div>
 
     <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
@@ -1286,7 +1286,7 @@
         function gerarMensagem(msgId, entrega) {
             const clienteNome = entrega.cliente.nome;
             
-            // NOVO: Calcula o valor total do pedido (usando o valor ajustado se houver)
+            // Calcula o valor total do pedido (usando o valor ajustado se houver)
             const totalPedido = entrega.cestas[0].valorTotalAjustado 
                 ? formatarValorFloat(entrega.cestas[0].valorTotalAjustado)
                 : entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
@@ -1345,6 +1345,7 @@
                     return;
             }
 
+            // CORRIGIDO: O link do WhatsApp deve codificar a mensagem e usar o número de destino
             const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
             
             fecharModalWhatsapp();
@@ -1652,7 +1653,7 @@
             modalExportar.classList.add('hidden');
         }
 
-        function exportarDados() {
+       function exportarDados() {
             const rotaAtiva = todasAsRotas[rotaAtivaId];
             if (!rotaAtiva) {
                 mostrarAviso("Nenhuma rota ativa para exportar.");
