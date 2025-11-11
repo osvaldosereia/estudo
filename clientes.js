@@ -2857,7 +2857,7 @@ const CLIENTES_DB = [
   },
   {
     "id": "1746879303260-AbC9O",
-    "nome": "CS3487 VG CENTRO ",
+    "nome": "CS3487 VG CENTRO",
     "celular": "5565999649993",
     "endereco": "CS3487",
     "complemento": "Rua Travessa capitão Costa número 19 centro sul beco sem saída portão amarelo segunda casa"
