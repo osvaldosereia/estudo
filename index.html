@@ -1979,14 +1979,7 @@
             toggleCampoAlteradaAdicionar();
             renderizarListaCestasPedido(); // Inicia com o display do total correto
             
-            // Verifica se deve esconder a seção de lançamento (se a rota não estiver vazia)
-            const entregasNaRota = getEntregasAtivas();
-            if (entregasNaRota.length > 0) {
-                 const lancamentoSection = document.querySelector('section.bg-white.p-6.rounded-lg.shadow-md.mb-8');
-                 if (lancamentoSection) {
-                     lancamentoSection.style.display = 'none';
-                 }
-            }
+           
         });
     </script>
 </body>
