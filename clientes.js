@@ -8,9 +8,9 @@ const CLIENTES_DB = [
   },
   {
   "id": "1762874079568-C2ZF5",
-  "nome": "COX7701 TIJUCAL",
+  "nome": "COX0071 TIJUCAL",
   "celular": "65992390164",
-  "endereco": "COX7701",
+  "endereco": "COX0071",
   "complemento": "RUA 205, Q58, C57, TIJUCAL"
 },
   {
