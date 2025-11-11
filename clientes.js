@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762870899027-UEXRZ",
+  "nome": "VG7923 JD MARINGA",
+  "celular": "65996765714",
+  "endereco": "VG7923",
+  "complemento": "RESID SANTA BARBARA, ETAPA 4, BLOCO 17, APTO 404"
+},
+  {
   "id": "1762787338273-1C08B",
   "nome": "CBA2509 SANTA ISABEL",
   "celular": "065992811718",
