@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762872617621-AZ8JC",
+  "nome": "COX8870 COXIPO AV TORRES",
+  "celular": "65992030961",
+  "endereco": "COX8870",
+  "complemento": "RUA SAO JERONIMO, CASA 867, SAO FRANCISCO"
+},
+  {
   "id": "1762872256638-T7O09",
   "nome": "P366 CPA JD VITORIA",
   "celular": "65992245585",
