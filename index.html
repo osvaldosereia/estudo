@@ -123,268 +123,177 @@
             <h1 class="text-3xl font-bold text-gray-800">Gerenciador de Rotas de Entrega</h1>
         </header>
 
-        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-2xl font-semibold text-gray-700">Gerenciar Rota</h2>
-                <button id="btn-toggle-gerenciar-rota" class="text-gray-500 hover:text-gray-700 p-2 rounded-full">
-                    <svg id="icon-chevron" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </button>
-            </div>
-            
-            <div id="content-gerenciar-rota" class="collapse-content">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div class="md:col-span-2">
-                        <label for="select-rota-ativa" class="block text-sm font-medium text-gray-700">Rota Ativa</label>
-                        <select id="select-rota-ativa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                            </select>
-                    </div>
-                    <div class="md:col-span-1">
-                        <button id="btn-nova-rota" class="w-full flex justify-center items-center rounded-md border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                            Nova Rota
-                        </button>
-                    </div>
-                    <div class="md:col-span-1">
-                        <button id="btn-excluir-rota" class="w-full flex justify-center items-center rounded-md border border-gray-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700 shadow-sm hover:bg-red-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 100 2h2a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
-                            Excluir Rota
-                        </button>
-                    </div>
+       <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+    <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h2 class="text-2xl font-semibold text-gray-700">Lançar Nova Entrega</h2>
+         <button id="btn-toggle-lancamento" class="text-gray-500 hover:text-gray-700 p-2 rounded-full">
+            <svg id="icon-chevron-lancamento" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        </button>
+    </div>
 
-                    <div class="md:col-span-2">
-                        <label for="input-nome-rota" class="block text-sm font-medium text-gray-700">Nome da Rota</label>
-                        <input type="text" id="input-nome-rota" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Entregas Manhã">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="input-data-rota" class="block text-sm font-medium text-gray-700">Data da Rota</label>
-                        <div class="flex items-center">
-                            <input type="date" id="input-data-rota" class="mt-1 block w-full rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                            <span id="display-dia-semana" class="mt-1 inline-flex items-center px-3 py-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-base min-w-[120px] justify-center">-</span>
-                        </div>
+    <div id="content-lancamento" class="collapse-content">
+        <form id="form-entrega" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div class="md:col-span-1 space-y-4">
+                <div>
+                    <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                    <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
+                    <datalist id="lista-clientes">
+                        <option value="Carregando clientes..."></option> 
+                    </datalist>
+                </div>
+
+                <div id="info-cliente-selecionado" class="hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
+                    <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
+                    <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
+                    <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Região da Entrega <span class="text-red-500">*</span></label>
+                    <div id="radio-regioes" class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                            <input type="radio" name="regiao-entrega" value="COXIPO" required class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">COXIPÓ</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                            <input type="radio" name="regiao-entrega" value="VG" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">VG</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                            <input type="radio" name="regiao-entrega" value="CUIABA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">CUIABÁ</span>
+                        </label>
+                        <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                            <input type="radio" name="regiao-entrega" value="CPA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-gray-700">CPA</span>
+                        </label>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-2xl font-semibold text-gray-700">Lançar Nova Entrega</h2>
-                 <button id="btn-toggle-lancamento" class="text-gray-500 hover:text-gray-700 p-2 rounded-full">
-                    <svg id="icon-chevron-lancamento" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </button>
+                <div>
+                    <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
+                    <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
+                </div>
             </div>
 
-            <div id="content-lancamento" class="collapse-content">
-                <form id="form-entrega" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-1 space-y-4">
+                <div class="border border-blue-200 p-3 rounded-md bg-blue-50 space-y-3">
+                    <label class="block text-sm font-bold text-gray-700">Adicionar Cesta ao Pedido <span class="text-red-500">*</span></label>
                     
-                    <div class="md:col-span-1 space-y-4">
-                        <div>
-                            <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
-                            <datalist id="lista-clientes">
-                                <option value="Carregando clientes..."></option> 
-                            </datalist>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="col-span-2">
+                            <select id="select-cesta-adicionar" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                                <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
+                                <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
+                                <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
+                                <option value="Pequena Koblenz" data-valor="220.00">Pequena Kolenz</option>
+                                <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
+                                <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
+                                <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
+                                <option value="Grande Koblenz" data-valor="390.00">Grande Koblenz</option>
+                            </select>
                         </div>
-
-                        <div id="info-cliente-selecionado" class="hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
-                            <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
-                            <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
-                            <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
+                        <div class="col-span-1">
+                            <input type="number" id="input-qtd-cesta-adicionar" min="1" value="1" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base">
                         </div>
-
+                        <div class="col-span-1 flex items-center">
+                            <input type="number" id="input-valor-cesta-adicionar" step="0.01" min="0" value="165.00" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base font-bold" placeholder="Valor">
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-blue-100 pt-3 space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Região da Entrega <span class="text-red-500">*</span></label>
-                            <div id="radio-regioes" class="mt-2 grid grid-cols-2 gap-2 text-sm">
-                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="regiao-entrega" value="COXIPO" required class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-gray-700">COXIPÓ</span>
+                            <label class="block text-sm font-medium text-gray-700">Tipo (Alterada/Normal)</label>
+                            <div class="mt-2 flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="tipo-cesta-adicionar" value="Normal" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Normal</span>
                                 </label>
-                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="regiao-entrega" value="VG" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-gray-700">VG</span>
-                                </label>
-                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="regiao-entrega" value="CUIABA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-gray-700">CUIABÁ</span>
-                                </label>
-                                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                                    <input type="radio" name="regiao-entrega" value="CPA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-gray-700">CPA</span>
+                                <label class="flex items-center">
+                                    <input type="radio" name="tipo-cesta-adicionar" value="Alterada" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Alterada</span>
                                 </label>
                             </div>
                         </div>
-
+                        
+                        <div id="campo-alterada-adicionar" class="hidden space-y-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                            <label for="codigo-alterada-adicionar" class="block text-sm font-bold text-red-700">Detalhe da Alteração</label>
+                            <textarea id="codigo-alterada-adicionar" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 py-2 px-3 text-sm" placeholder="Ex: TIRA: Arroz, Feijão | POR: Café, Açúcar"></textarea>
+                            
+                            <div id="campo-partes-alteradas-adicionar">
+                                <label class="block text-sm font-medium text-red-700">Itens Alterados</label>
+                                <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                        <input type="checkbox" name="partes_alteradas_adicionar" value="Arroz" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                        <span class="ml-2 font-medium text-gray-700">Arroz</span>
+                                    </label>
+                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                        <input type="checkbox" name="partes_alteradas_adicionar" value="Alimento" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                        <span class="ml-2 font-medium text-gray-700">Alimento (Geral)</span>
+                                    </label>
+                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                        <input type="checkbox" name="partes_alteradas_adicionar" value="Limpeza" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                        <span class="ml-2 font-medium text-gray-700">Limpeza</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div>
-                            <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-                            <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
+                            <label class="block text-sm font-medium text-gray-700">Brinde (Opcional)</label>
+                            <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="brindes_adicionar" value="Ovo" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                                    <span class="ml-2 text-gray-700">Ovo</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="brindes_adicionar" value="Amaciante" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                                    <span class="ml-2 text-gray-700">Amaciante</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="brindes_adicionar" value="Cafe 250g" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                                    <span class="ml-2 text-gray-700">Café 250g</span>
+                                </label>
+                            </div>
                         </div>
-                        
-                        
                     </div>
-<form id="form-entrega" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-    <div class="md:col-span-1 space-y-4">
-        <div>
-            <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
-            <datalist id="lista-clientes">
-                <option value="Carregando clientes..."></option> 
-            </datalist>
-        </div>
-
-        <div id="info-cliente-selecionado" class="hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
-            <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
-            <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
-            <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Região da Entrega <span class="text-red-500">*</span></label>
-            <div id="radio-regioes" class="mt-2 grid grid-cols-2 gap-2 text-sm">
-                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                    <input type="radio" name="regiao-entrega" value="COXIPO" required class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-gray-700">COXIPÓ</span>
-                </label>
-                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                    <input type="radio" name="regiao-entrega" value="VG" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-gray-700">VG</span>
-                </label>
-                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                    <input type="radio" name="regiao-entrega" value="CUIABA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-gray-700">CUIABÁ</span>
-                </label>
-                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                    <input type="radio" name="regiao-entrega" value="CPA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-gray-700">CPA</span>
-                </label>
-            </div>
-        </div>
-
-        <div>
-            <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
-            <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
-        </div>
-        
-        
-    </div>
-
-    <div class="md:col-span-1 space-y-4">
-        <div class="border border-blue-200 p-3 rounded-md bg-blue-50 space-y-3">
-            <label class="block text-sm font-bold text-gray-700">Adicionar Cesta ao Pedido <span class="text-red-500">*</span></label>
-            
-            <div class="grid grid-cols-4 gap-2">
-                <div class="col-span-2">
-                    <select id="select-cesta-adicionar" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                        <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
-                        <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
-                        <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
-                        <option value="Pequena Koblenz" data-valor="220.00">Pequena Kolenz</option>
-                        <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
-                        <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
-                        <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
-                        <option value="Grande Koblenz" data-valor="390.00">Grande Koblenz</option>
-                    </select>
-                </div>
-                <div class="col-span-1">
-                    <input type="number" id="input-qtd-cesta-adicionar" min="1" value="1" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base">
-                </div>
-                <div class="col-span-1 flex items-center">
-                    <input type="number" id="input-valor-cesta-adicionar" step="0.01" min="0" value="165.00" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base font-bold" placeholder="Valor">
-                </div>
-            </div>
-            
-            <div class="border-t border-blue-100 pt-3 space-y-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tipo (Alterada/Normal)</label>
-                    <div class="mt-2 flex space-x-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="tipo-cesta-adicionar" value="Normal" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Normal</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="tipo-cesta-adicionar" value="Alterada" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Alterada</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div id="campo-alterada-adicionar" class="hidden space-y-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <label for="codigo-alterada-adicionar" class="block text-sm font-bold text-red-700">Detalhe da Alteração</label>
-                    <textarea id="codigo-alterada-adicionar" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 py-2 px-3 text-sm" placeholder="Ex: TIRA: Arroz, Feijão | POR: Café, Açúcar"></textarea>
                     
-                    <div id="campo-partes-alteradas-adicionar">
-                        <label class="block text-sm font-medium text-red-700">Itens Alterados</label>
-                        <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
-                                <input type="checkbox" name="partes_alteradas_adicionar" value="Arroz" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
-                                <span class="ml-2 font-medium text-gray-700">Arroz</span>
-                            </label>
-                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
-                                <input type="checkbox" name="partes_alteradas_adicionar" value="Alimento" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
-                                <span class="ml-2 font-medium text-gray-700">Alimento (Geral)</span>
-                            </label>
-                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
-                                <input type="checkbox" name="partes_alteradas_adicionar" value="Limpeza" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
-                                <span class="ml-2 font-medium text-gray-700">Limpeza</span>
-                            </label>
-                        </div>
+                    <button type="button" id="btn-adicionar-cesta" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Adicionar Cesta à Lista
+                    </button>
+                </div>
+            </div>
+
+            <div class="md:col-span-1 space-y-4">
+                <div class="space-y-3">
+                    <label class="block text-sm font-bold text-gray-700">Itens no Pedido (Total: <span id="display-total-pedido" class="text-green-600">R$ 0,00</span>)</label>
+                    <div id="lista-cestas-pedido" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-white rounded-md border border-gray-300">
+                        <p class="text-sm text-gray-500">Nenhuma cesta adicionada.</p>
+                    </div>
+                    
+                    <label for="input-valor-total-pedido" class="block text-sm font-medium text-gray-700">Ajuste Manual do Valor (Opcional)</label>
+                    <input type="number" id="input-valor-total-pedido" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base font-bold text-lg" placeholder="0.00">
+                </div>
+                
+                <div class="pt-2">
+                    <label class="block text-sm font-medium text-gray-700">Informações Adicionais do Pedido</label>
+                    <div class="text-sm text-gray-600 border-l-4 border-gray-200 pl-3 py-2 bg-gray-50 rounded-r-md mt-2">
+                        <p>Os detalhes de Alteração e Brindes são salvos individualmente para cada cesta acima.</p>
                     </div>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Brinde (Opcional)</label>
-                    <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
-                        <label class="flex items-center">
-                            <input type="checkbox" name="brindes_adicionar" value="Ovo" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                            <span class="ml-2 text-gray-700">Ovo</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" name="brindes_adicionar" value="Amaciante" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                            <span class="ml-2 text-gray-700">Amaciante</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" name="brindes_adicionar" value="Cafe 250g" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                            <span class="ml-2 text-gray-700">Café 250g</span>
-                        </label>
-                    </div>
+                <div class="pt-6 flex flex-col">
+                    <button type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Lançar Entrega
+                    </button>
                 </div>
             </div>
-            
-            <button type="button" id="btn-adicionar-cesta" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                Adicionar Cesta à Lista
-            </button>
-        </div>
+        </form>
     </div>
-
-    <div class="md:col-span-1 space-y-4">
-        <div class="space-y-3">
-            <label class="block text-sm font-bold text-gray-700">Itens no Pedido (Total: <span id="display-total-pedido" class="text-green-600">R$ 0,00</span>)</label>
-            <div id="lista-cestas-pedido" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-white rounded-md border border-gray-300">
-                <p class="text-sm text-gray-500">Nenhuma cesta adicionada.</p>
-            </div>
-            
-            <label for="input-valor-total-pedido" class="block text-sm font-medium text-gray-700">Ajuste Manual do Valor (Opcional)</label>
-            <input type="number" id="input-valor-total-pedido" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base font-bold text-lg" placeholder="0.00">
-        </div>
-        
-        <div class="pt-2">
-            <label class="block text-sm font-medium text-gray-700">Informações Adicionais do Pedido</label>
-            <div class="text-sm text-gray-600 border-l-4 border-gray-200 pl-3 py-2 bg-gray-50 rounded-r-md mt-2">
-                <p>Os detalhes de Alteração e Brindes são salvos individualmente para cada cesta acima.</p>
-            </div>
-        </div>
-        
-        <div class="pt-6 flex flex-col">
-            <button type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                Lançar Entrega
-            </button>
-        </div>
-    </div>
-</form>
-            </div>
-        </section>
+</section>
 
         <section>
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
