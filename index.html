@@ -396,72 +396,54 @@
     </div>
 
 
-  <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden sm:m-8 sm:rounded-lg">
-        <div class="p-6">
-             <div class="flex justify-between items-center mb-4 sm:hidden">
-                <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
-                <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-4 hidden sm:block">Exportar Rota e Relatórios</h3>
-            
-            <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-3 border-b pb-1">Filtro de Região (Relatório e Resumo)</h4>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                <label class="flex items-center">
-                    <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                    <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
-                </label>
-                <label class="flex items-center">
-                    <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                    <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
-                </label>
-                <label class="flex items-center">
-                    <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                    <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
-                </label>
-                <label class="flex items-center">
-                    <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                    <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
-                </label>
-            </div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-            <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Baixar Arquivo da Rota (.json)
-            </button>
+ <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 overflow-hidden sm:m-8 sm:rounded-lg">
+            <div class="p-6">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
+                    <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                
+                <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Regiões para Backup</h4>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
+                    </label>
+                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
+                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Baixar Arquivo da Rota (.json)
+                </button>
+                
+                </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
+                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+            </div>
+        </div>
+    </div>
 
-            <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
-            <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md bg-gray-50">
-                <pre class="text-xs text-gray-700">Selecione as regiões para gerar o relatório...</pre>
-            </div>
-            
-            <div id="export-whatsapp-link" class="mt-4">
-            </div>
-
-        </div>
-        <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
-            <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-        </div>
-    </div>
-</div>
-
-    <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção</h3>
-                <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
-                <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
+    <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        </div>
+    
+    <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
 
 
 <script>
@@ -476,7 +458,7 @@
         const PIX_CELULAR = "65984491018";
         const NUMERO_GERENTE = "5565996884599"; 
         const NOME_EMPRESA = "Cesta Básica Dona Antônia";
-        const MAX_ROTAS = 30;
+        const MAX_ROTAS = 1; // Simplificado para apenas uma rota
         const REGIOES = ["VG", "CUIABA", "COXIPO", "CPA"];
         
         // REMOVIDO: Frases de incentivo (simplificação)
@@ -500,8 +482,7 @@
 
 
         // --- Seletores de Elementos (Inicializados no DOMContentLoaded) ---
-        let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
-        let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; 
+        let btnNovaRotaSimples;
         let btnToggleLancamento, contentLancamento, iconChevronLancamento; 
         let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, listaEntregasEl, listaVaziaEl, radioRegioes;
         let modalPagamento, formPagamento, btnCancelarPagamento, modalClienteNome, modalClienteValor, modalErrorPagamento, btnExportar, btnCarregar, modalExportar, exportRelatorioEl, exportWhatsappLinkEl, btnFecharExportar, btnFecharExportarTop, modalAviso, modalAvisoTexto, btnFecharAviso, inputCarregarArquivo;
@@ -515,16 +496,7 @@
 
 
         function inicializarSeletores() {
-            // Seção Gerenciar Rota (APENAS UM BOTÃO AGORA)
-            // btnToggleGerenciarRota = document.getElementById('btn-toggle-gerenciar-rota'); // REMOVIDO
-            // contentGerenciarRota = document.getElementById('content-gerenciar-rota'); // REMOVIDO
-            // iconChevron = document.getElementById('icon-chevron'); // REMOVIDO
-            // selectRotaAtiva = document.getElementById('select-rota-ativa'); // REMOVIDO
-            // inputNomeRota = document.getElementById('input-nome-rota'); // REMOVIDO
-            // inputDataRota = document.getElementById('input-data-rota'); // REMOVIDO
-            // displayDiaSemana = document.getElementById('display-dia-semana'); // REMOVIDO
-            // btnExcluirRota = document.getElementById('btn-excluir-rota'); // REMOVIDO
-
+            
             // Seção Retrátil - Lançamento
             btnToggleLancamento = document.getElementById('btn-toggle-lancamento');
             contentLancamento = document.getElementById('content-lancamento');
@@ -585,7 +557,7 @@
             placarEntregasEl = document.getElementById('placar-entregas');
 
             // NOVO: Botão Nova Rota Simples
-            document.getElementById('btn-nova-rota-simples').addEventListener('click', resetarTudoEIniciarNovaRota);
+            btnNovaRotaSimples = document.getElementById('btn-nova-rota-simples');
             
         }
 
@@ -707,11 +679,11 @@
 
         function salvarTodasAsRotas() {
             const chavesRotas = Object.keys(todasAsRotas);
-            if (chavesRotas.length > MAX_ROTAS) {
-                const chavesOrdenadas = chavesRotas.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-                const chavesParaRemover = chavesOrdenadas.slice(0, chavesOrdenadas.length - MAX_ROTAS);
-                
-                chavesParaRemover.forEach(chave => {
+            // Simplificação: Garantimos que só haja uma rota salva
+            const chavesOrdenadas = chavesRotas.sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+
+            if (chavesOrdenadas.length > MAX_ROTAS) {
+                 chavesOrdenadas.slice(MAX_ROTAS).forEach(chave => {
                     delete todasAsRotas[chave];
                 });
             }
@@ -782,7 +754,7 @@
                 }
             }
             
-            // 5. Popular o <select> (REMOVIDO), popular filtros e carregar rota
+            // 5. Popular filtros e carregar rota
             popularFiltrosRegiao();
             carregarRotaAtiva();
         }
@@ -862,7 +834,8 @@
                 despesas: { abastecimento: 0, alimentacao: 0, extra: 0 } 
             };
 
-            todasAsRotas = {}; // Remove rotas antigas
+            // Simplificação: Remove rotas antigas
+            todasAsRotas = {}; 
             todasAsRotas[novoId] = novaRota;
             rotaAtivaId = novoId;
 
@@ -903,8 +876,6 @@
             const resumoRegioes = REGIOES.map(regiao => 
                 `${contagemPorRegiao[regiao]} ${regiao}`).join(' | ');
 
-            const fraseMotivacional = FRASES_GAMIFICADAS[indiceFrase % FRASES_GAMIFICADAS.length];
-            
             // REMOVIDO: Frase Motivacional (Simplificação)
             placarEntregasEl.innerHTML = `
                 <p class="text-xl font-bold mb-2">Falta(m) ${totalFaltam} entrega(s) para o sucesso total! 🎉</p>
@@ -999,7 +970,6 @@
                 }).join('');
                 
                 // NOVO: Cálculo do Valor Total do Pedido
-                // Usa valor ajustado se houver, caso contrário, calcula.
                 const valorTotalPedido = entrega.cestas[0].valorTotalAjustado 
                     ? formatarValorFloat(entrega.cestas[0].valorTotalAjustado)
                     : entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
@@ -1687,7 +1657,7 @@
         function exportarDados() {
             const rotaAtiva = todasAsRotas[rotaAtivaId];
             if (!rotaAtiva) {
-                exportRelatorioEl.querySelector('pre').textContent = "Nenhuma rota ativa para gerar relatório.";
+                mostrarAviso("Nenhuma rota ativa para exportar.");
                 return;
             }
             
@@ -1696,167 +1666,26 @@
                 Array.from(document.querySelectorAll('input[name="regiao-exportar"]:checked'))
                      .map(input => input.value);
             
-            const entregas = rotaAtiva.entregas.filter(e => regioesSelecionadas.includes(e.regiao));
-            
             if (regioesSelecionadas.length === 0) {
-                exportRelatorioEl.querySelector('pre').textContent = "Selecione pelo menos uma região para gerar o relatório.";
-                return;
-            }
-
-
-            const entregasConcluidas = entregas.filter(e => e.status === 'Entregue');
-            const entregasCanceladas = entregas.filter(e => e.status === 'Cancelada');
-            
-            let relatorioTexto = "";
-            let whatsappTexto = `*Resumo da Rota: ${rotaAtiva.nome}* (${new Date(rotaAtiva.data + 'T12:00:00').toLocaleDateString('pt-BR')})\n`;
-            whatsappTexto += `*Regiões no Relatório: ${regioesSelecionadas.join(', ')}*\n\n`;
-
-            if (entregasConcluidas.length === 0 && entregasCanceladas.length === 0) {
-                relatorioTexto = "Nenhuma entrega finalizada nas regiões selecionadas.";
-            }
-
-            if (entregasConcluidas.length > 0) {
-                relatorioTexto += "--- RELATÓRIO DE ENTREGAS CONCLUÍDAS ---\n\n";
-                entregasConcluidas.forEach(e => {
-                    // Cálculo do valor total
-                    const totalPedido = e.cestas[0].valorTotalAjustado 
-                        ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
-                        : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
-                    
-                    relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
-                    relatorioTexto += `Região: ${e.regiao}\n`;
-                    relatorioTexto += `Valor: ${formatarMoeda(totalPedido)}\n`;
-                    relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
-                    relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
-                    relatorioTexto += `-----------------------------\n`;
-                });
-            }
-
-            if (entregasCanceladas.length > 0) {
-                relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
-                entregasCanceladas.forEach(e => {
-                    relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
-                    relatorioTexto += `Região: ${e.regiao}\n`;
-                    relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
-                    relatorioTexto += `-----------------------------\n`;
-                });
+                 mostrarAviso("Selecione pelo menos uma região para baixar o arquivo de backup.");
+                 return;
             }
             
-            const entregasPendentes = entregas.filter(e => e.status === 'Pendente');
-            whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
-            if(entregasPendentes.length > 0) {
-                entregasPendentes.forEach((e, index) => {
-                    // Cestas: Nome e detalhes
-                    const cestasInfo = e.cestas.map(c => {
-                         let info = `${c.qtd}x ${c.nome}`;
-                         if (c.tipo === 'Alterada') info += ' (ALT)';
-                         if (c.brindes.length > 0) info += ' (+B)';
-                         return info;
-                    }).join(' | ');
+            // Filtra as entregas que serão incluídas no arquivo JSON de backup
+            const entregasFiltradas = rotaAtiva.entregas.filter(e => regioesSelecionadas.includes(e.regiao));
 
-                    whatsappTexto += `${index + 1}. *${e.cliente.nome}* (${e.cliente.celular || 'Sem Celular'}) - Região: ${e.regiao}\n`;
-                    if (e.cliente.endereco) { whatsappTexto += `   End: ${e.cliente.endereco}\n`; }
-                    // Detalhe das cestas
-                    const totalPedido = e.cestas[0].valorTotalAjustado 
-                        ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
-                        : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
-                    whatsappTexto += `   Cestas: ${cestasInfo} (${formatarMoeda(totalPedido)})\n`;
-                    
-                    // Detalhes da Alteração (individual por cesta)
-                    e.cestas.filter(c => c.tipo === 'Alterada').forEach((c, cIndex) => {
-                         whatsappTexto += `\n   *DETALHES DA CESTA ${cIndex + 1} (${c.nome}):*`;
-                         const detalhes = c.codigoAlterada.trim();
-                         if (detalhes.length > 0) {
-                            whatsappTexto += `\n${detalhes.split('\n').map(line => `   ${line}`).join('\n')}`; 
-                         }
-                         if (Array.isArray(c.partesAlteradas) && c.partesAlteradas.length > 0) { 
-                            whatsappTexto += `\n   *Itens Alterados*: ${c.partesAlteradas.join(', ')}`;
-                         }
-                         whatsappTexto += '\n';
-                    });
-                    
-                    if (e.observacao) { whatsappTexto += `\n   *OBS Pedido*: ${e.observacao}\n`; }
-                    whatsappTexto += '\n';
-                });
-            } else {
-                whatsappTexto += `Nenhuma entrega pendente nas regiões selecionadas.\n`;
-            }
+            // Cria um objeto de rota temporário para exportação (apenas com as entregas filtradas)
+            const rotaParaExportar = {
+                ...rotaAtiva,
+                entregas: entregasFiltradas
+            };
             
-            // Seção Relatório Financeiro
-            whatsappTexto += `\n\n--- RELATÓRIO FINANCEIRO ---\n`;
+            const jsonDados = JSON.stringify(rotaParaExportar, null, 2);
             
-            let totalVendido = 0;
-            let totalPorCesta = {};
-            let totalPorPagamento = {};
-
-            entregasConcluidas.forEach(e => {
-                const valorTotalPedido = e.cestas[0].valorTotalAjustado 
-                    ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
-                    : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
-                
-                totalVendido += valorTotalPedido;
-                
-                e.cestas.forEach(c => {
-                    totalPorCesta[c.nome] = (totalPorCesta[c.nome] || 0) + (c.valor * c.qtd);
-                });
-
-                if (e.formaPagamento.length === 0) {
-                    totalPorPagamento['N/A'] = (totalPorPagamento['N/A'] || 0) + valorTotalPedido;
-                } else {
-                    const valorDividido = valorTotalPedido / e.formaPagamento.length;
-                    e.formaPagamento.forEach(forma => {
-                        totalPorPagamento[forma] = (totalPorPagamento[forma] || 0) + valorDividido;
-                    });
-                }
-            });
-
-            whatsappTexto += `\n*Vendas Concluídas:*\n`;
-            whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
-
-            whatsappTexto += `\n*Detalhado por Cesta (Valor Base):*\n`;
-            if (Object.keys(totalPorCesta).length > 0) {
-                Object.keys(totalPorCesta).forEach(nomeCesta => {
-                    whatsappTexto += `   ${nomeCesta}: ${formatarMoeda(totalPorCesta[nomeCesta])}\n`;
-                });
-            } else {
-                whatsappTexto += `   Nenhuma.\n`;
-            }
-
-            whatsappTexto += `\n*Recebimentos por Forma:*\n`;
-            if (Object.keys(totalPorPagamento).length > 0) {
-                Object.keys(totalPorPagamento).forEach(forma => {
-                    whatsappTexto += `   ${forma}: ${formatarMoeda(formatarValorFloat(totalPorPagamento[forma]))}\n`;
-                });
-            } else {
-                 whatsappTexto += `   Nenhum.\n`;
-            }
-
-            // Despesas (MANTIDO NA ESTRUTURA, MAS SEM EDIÇÃO DE UI)
-            const despesas = rotaAtiva.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-            const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
+            const nomeArquivo = `backup_rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
             
-            // Inclusão das despesas no relatório do WhatsApp
-            whatsappTexto += `\n*Despesas da Rota:*\n`;
-            whatsappTexto += `   Abastecimento: ${formatarMoeda(despesas.abastecimento || 0)}\n`;
-            whatsappTexto += `   Alimentação: ${formatarMoeda(despesas.alimentacao || 0)}\n`;
-            whatsappTexto += `   Extras: ${formatarMoeda(despesas.extra || 0)}\n`;
-            whatsappTexto += `*Total Despesas:* ${formatarMoeda(totalDespesas)}\n`;
-
-            const balanco = totalVendido - totalDespesas;
-            whatsappTexto += `\n*BALANÇO FINAL (Vendido - Despesas):*\n`;
-            whatsappTexto += `*${formatarMoeda(balanco)}*\n`;
-
-            exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
-            
-            // Botão de Exportação para o WhatsApp (AGORA É O RELATÓRIO COMPLETO DO GERENTE)
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${NUMERO_GERENTE}&text=${encodeURIComponent(whatsappTexto)}`;
-            exportWhatsappLinkEl.innerHTML = `
-                <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM5.5 8.5A1.5 1.5 0 017 7h6a1.5 1.5 0 011.5 1.5v3A1.5 1.5 0 0113 13H7a1.5 1.5 0 01-1.5-1.5v-3z" /></svg>
-                    Enviar *Relatório Completo* no WhatsApp (Gerente)
-                </a>`;
-
-            modalExportar.classList.remove('hidden');
+            downloadArquivo(jsonDados, nomeArquivo);
+            fecharModalExportar();
         }
 
         function carregarDados(jsonDados) {
@@ -1971,6 +1800,13 @@
                 } else {
                     throw new Error('Formato de arquivo JSON desconhecido ou lista vazia.');
                 }
+                
+                // NOVO: Esconde a seção Lançar Nova Entrega após carregar uma rota.
+                const lancamentoSection = document.querySelector('section.bg-white.p-6.rounded-lg.shadow-md.mb-8');
+                if (lancamentoSection) {
+                     lancamentoSection.style.display = 'none';
+                }
+
 
             } catch (error) {
                 console.error("Erro ao carregar JSON:", error);
@@ -2006,10 +1842,13 @@
             inicializarSeletores();
             
             // 2. Associa Event Listeners
-
-            // Gerenciamento Simplificado
-            // O botão Nova Rota Simples já está com o listener no inicializarSeletores()
             
+            // NOVO: Listener para o botão Nova Rota Simples
+            if (btnNovaRotaSimples) {
+                btnNovaRotaSimples.addEventListener('click', resetarTudoEIniciarNovaRota);
+            }
+            
+
             // Seção Retrátil - Lançamento
             if (btnToggleLancamento) {
                 contentLancamento.classList.remove('open');
@@ -2108,24 +1947,15 @@
             // Ações Globais (Exportar/Carregar)
             // Botão Exportar: Apenas abre o modal, exportarDados é chamado pelo listener de click na região
             btnExportar.addEventListener('click', () => {
-                exportarDados(); // Prepara o relatório com os filtros atuais (todos checados)
                 modalExportar.classList.remove('hidden');
             });
+            
+            // Botão de Download JSON (dentro do modal)
+            document.getElementById('btn-baixar-json').addEventListener('click', exportarDados);
             
             // Fechar Modal Exportar (Desktop e Mobile)
             btnFecharExportar.addEventListener('click', fecharModalExportar);
             btnFecharExportarTop.addEventListener('click', fecharModalExportar);
-
-            document.getElementById('btn-baixar-json').addEventListener('click', () => {
-                const rotaAtiva = todasAsRotas[rotaAtivaId];
-                if (!rotaAtiva) return;
-                
-                const jsonDados = JSON.stringify(rotaAtiva, null, 2);
-                
-                const nomeArquivo = `rota_${rotaAtiva.nome.replace(/[^a-z0-9]/gi, '_')}_${rotaAtiva.data}.json`;
-                
-                downloadArquivo(jsonDados, nomeArquivo);
-            });
 
             btnCarregar.addEventListener('click', () => {
                 inputCarregarArquivo.click();
@@ -2134,12 +1964,8 @@
             inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
             
             // Adiciona listener para recalcular o relatório/link do WhatsApp ao abrir/usar o modal
-            modalExportar.addEventListener('change', (e) => {
-                 if (e.target.closest('input[name="regiao-exportar"]')) {
-                    exportarDados();
-                 }
-            });
-
+            // REMOVIDO: O listener de 'change' do modal exportar (pois não tem mais relatório)
+            
             btnFecharAviso.addEventListener('click', fecharAviso);
 
             // 3. Inicia o app
@@ -2147,6 +1973,15 @@
             atualizarValorCestaAdicionar();
             toggleCampoAlteradaAdicionar();
             renderizarListaCestasPedido(); // Inicia com o display do total correto
+            
+            // Verifica se deve esconder a seção de lançamento (se a rota não estiver vazia)
+            const entregasNaRota = getEntregasAtivas();
+            if (entregasNaRota.length > 0) {
+                 const lancamentoSection = document.querySelector('section.bg-white.p-6.rounded-lg.shadow-md.mb-8');
+                 if (lancamentoSection) {
+                     lancamentoSection.style.display = 'none';
+                 }
+            }
         });
     </script>
 </body>
