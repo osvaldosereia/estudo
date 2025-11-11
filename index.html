@@ -132,9 +132,8 @@
                     Nova Rota
                 </button>
             </div>
-            
-            </header>
-
+        </header>
+        
         <section class="bg-white p-6 rounded-lg shadow-md mb-8">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 class="text-2xl font-semibold text-gray-700">Lançar Nova Entrega</h2>
@@ -316,7 +315,7 @@
                 </div>
             </div>
             <div id="placar-entregas" class="bg-blue-800 text-white p-4 rounded-lg shadow-lg mb-4">
-                </div>
+            </div>
 
             <div id="filtros-regiao" class="flex flex-wrap gap-2 mb-4">
             </div>
@@ -396,54 +395,64 @@
     </div>
 
 
- <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 overflow-hidden sm:m-8 sm:rounded-lg">
-            <div class="p-6">
-                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
-                    <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-                
-                <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Regiões para Backup</h4>
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                        <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
-                    </label>
-                </div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
-                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Baixar Arquivo da Rota (.json)
-                </button>
-                
-                </div>
-            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
-                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
-            </div>
-        </div>
-    </div>
+  <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 overflow-hidden sm:m-8 sm:rounded-lg">
+            <div class="p-6">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Exportar Rota</h3>
+                    <button type="button" id="btn-fechar-exportar-top" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                
+                <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Regiões para Backup</h4>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="CUIABA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">CUIABÁ</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="COXIPO" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">COXIPÓ</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="VG" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">VG</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="regiao-exportar" value="CPA" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
+                        <span class="ml-2 text-sm font-medium text-gray-700">CPA</span>
+                    </label>
+                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Backup da Rota (Arquivo)</label>
+                <button type="button" id="btn-baixar-json" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Baixar Arquivo da Rota (.json)
+                </button>
+                
+                </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
+                <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-        </div>
-    
-    <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
+    <div id="modal-aviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Atenção</h3>
+                <p id="modal-aviso-texto" class="text-gray-600 mb-6">Mensagem de aviso.</p>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg">
+                <button type="button" id="btn-fechar-aviso" class="rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">OK</button>
+            </div>
+        </div>
+    </div>
+    
+
+    <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
 
 
 <script>
@@ -538,8 +547,6 @@
             btnExportar = document.getElementById('btn-exportar');
             btnCarregar = document.getElementById('btn-carregar');
             modalExportar = document.getElementById('modal-exportar');
-            exportRelatorioEl = document.getElementById('export-relatorio');
-            exportWhatsappLinkEl = document.getElementById('export-whatsapp-link');
             btnFecharExportar = document.getElementById('btn-fechar-exportar');
             btnFecharExportarTop = document.getElementById('btn-fechar-exportar-top'); 
             modalAviso = document.getElementById('modal-aviso');
@@ -613,7 +620,8 @@
 
         // NOVO: Toggle para o campo de alterada na seção de adicionar cesta
         function toggleCampoAlteradaAdicionar() {
-            const tipo = document.querySelector('input[name="tipo-cesta-adicionar"]:checked').value;
+            // Seletor corrigido para o novo layout
+            const tipo = document.querySelector('input[name="tipo-cesta-adicionar"]:checked').value; 
             if (tipo === 'Alterada') {
                 campoAlteradaAdicionar.classList.remove('hidden');
             } else {
@@ -653,14 +661,10 @@
                 entregas.push(entrega);
                 
                 // Re-ordenar forçando Pendentes primeiro
-                // O critério de ordenação deve garantir que:
-                // 1. Pendentes fiquem no topo (ordenados pela ordem original/criação)
-                // 2. Finalizadas/Canceladas fiquem no final (ordenadas pela ordem de finalização)
                 entregas.sort((a, b) => {
                     if (a.status === 'Pendente' && b.status !== 'Pendente') return -1;
                     if (a.status !== 'Pendente' && b.status === 'Pendente') return 1;
-                    
-                    // Se ambos forem pendentes, manter a ordem de inserção (implícita no array)
+
                     // Se ambos forem finalizados, ordenar pelo horário de entrega (mais recente por último)
                     if (a.status !== 'Pendente' && b.status !== 'Pendente') {
                         return new Date(a.horarioEntrega) - new Date(b.horarioEntrega);
@@ -747,7 +751,7 @@
                 if (chavesRotas.length === 0) {
                     criarNovaRota(false);
                 } else {
-                    // Mantém a rota mais recente como ativa, já que não temos UI de gerenciamento
+                    // Mantém a rota mais recente como ativa
                     const chavesOrdenadas = chavesRotas.sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
                     rotaAtivaId = chavesOrdenadas[0];
                     localStorage.setItem('rotaAtivaId', rotaAtivaId);
@@ -766,10 +770,6 @@
             return [];
         }
         
-        // REMOVIDO: carregarDespesasNoModal()
-
-        // REMOVIDO: popularSelectRotas() - não há mais select de rotas
-
         /**
          * Popula os chips de filtro de região
          */
@@ -801,8 +801,6 @@
 
 
         function carregarRotaAtiva() {
-            // Não precisamos carregar nome/data da rota, já que não há UI para isso.
-            // Apenas garantimos que o estado do app está correto.
             const rota = todasAsRotas[rotaAtivaId];
             if (!rota) {
                 iniciarAplicativo(); 
@@ -1902,6 +1900,7 @@
                 }
             });
             
+            // CORRIGIDO: Adiciona o listener de submit ao formulário
             formEntrega.addEventListener('submit', adicionarEntrega);
             
             // Listener para filtros de região
@@ -1938,7 +1937,7 @@
                     const entregas = getEntregasAtivas();
                     const entrega = entregas.find(e => e.id.toString() === idEntrega);
                     if (entrega) {
-                        gerarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
+                        generarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
                     }
                 }
             });
