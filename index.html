@@ -1316,11 +1316,11 @@
                 case 3: 
                     mensagem = `Dados do pix para pagamento:\n*PIX*: ${PIX_CELULAR} (celular)\n*Nome*: ${PIX_NOME}\n*Valor Total*: ${cestaValor}`;
                     break;
-                case 4: 
+               case 4: 
                     numeroDestino = NUMERO_GERENTE;
                     targetBlank = true; 
                     
-                    // --- Início da Mensagem Simplificada ---
+                    // --- Início da Mensagem Simplificada (Corrigida) ---
                     
                     mensagem = `*PEDIDO PARA GERENTE*\n\n`;
                     mensagem += `*Região da Entrega:* ${entrega.regiao}\n`;
@@ -1334,18 +1334,22 @@
                         if (c.tipo === 'Alterada') {
                             mensagem += `*Status:* ALTERADA\n`;
                             
-                            // Lista de Itens Alterados (dos checkboxes)
+                            // 1. Itens Alterados (dos checkboxes)
                             if (Array.isArray(c.partesAlteradas) && c.partesAlteradas.length > 0) {
                                 mensagem += `*Itens Alterados:* ${c.partesAlteradas.join(', ')}\n`;
-                            } else {
-                                // Caso esteja marcada como "Alterada" mas sem itens selecionados
-                                mensagem += `*Itens Alterados:* (Nenhum item marcado)\n`;
                             }
+
+                            // 2. Detalhe da Alteração (Campo de Texto Digitado)
+                            const detalhes = c.codigoAlterada.trim();
+                            if (detalhes.length > 0) {
+                                // Adiciona a descrição digitada
+                                mensagem += `*Detalhe (Texto):* ${detalhes}\n`;
+                            }
+                            
                         } else {
                             // Se for Normal
                             mensagem += `*Status:* Normal\n`;
                         }
-                        // O campo de texto (detalhe da alteração) foi omitido, conforme solicitado.
                     });
                     
                     // --- Fim da Mensagem Simplificada ---
