@@ -1932,7 +1932,7 @@
             // Modal de WhatsApp Opções
             btnFecharWhatsappOpcoes.addEventListener('click', fecharModalWhatsapp);
             
-            // CORRIGIDO: Delega o evento de clique para os botões internos com data-msg-id
+            // CORRIGIDO: Delega o evento de clique para os botões internos e CHAMA a função correta
             modalWhatsappOpcoes.addEventListener('click', (e) => {
                 const btnMsg = e.target.closest('[data-msg-id]');
                 if (btnMsg) {
@@ -1941,6 +1941,7 @@
                     const entrega = entregas.find(e => e.id.toString() === idEntrega);
                     
                     if (entrega) {
+                        // CORREÇÃO APLICADA: Chama a função gerarMensagem com o ID do botão
                         gerarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
                     }
                 }
