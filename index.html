@@ -1320,27 +1320,36 @@
                     numeroDestino = NUMERO_GERENTE;
                     targetBlank = true; 
                     
-                    let detalhesCestas = '';
+                    // --- Início da Mensagem Simplificada ---
+                    
+                    mensagem = `*PEDIDO PARA GERENTE*\n\n`;
+                    mensagem += `*Região da Entrega:* ${entrega.regiao}\n`;
+
+                    // Itera sobre todas as cestas do pedido
                     entrega.cestas.forEach((c, index) => {
-                        detalhesCestas += `\n--- Cesta ${index + 1} (${c.qtd}x ${c.nome}) ---`;
+                        mensagem += `\n--- Cesta ${index + 1} ---\n`;
+                        mensagem += `*Cesta:* ${c.qtd}x ${c.nome}\n`;
+                        
+                        // Verifica se é Alterada
                         if (c.tipo === 'Alterada') {
-                            detalhesCestas += `\n*ALTERADA:*`;
-                            const detalhes = c.codigoAlterada.trim();
-                            if (detalhes.length > 0) {
-                                detalhesCestas += `\n${detalhes.split('\n').map(line => `   ${line}`).join('\n')}`; 
-                            }
+                            mensagem += `*Status:* ALTERADA\n`;
+                            
+                            // Lista de Itens Alterados (dos checkboxes)
                             if (Array.isArray(c.partesAlteradas) && c.partesAlteradas.length > 0) {
-                                detalhesCestas += `\n*Itens Alterados*: ${c.partesAlteradas.join(', ')}`;
+                                mensagem += `*Itens Alterados:* ${c.partesAlteradas.join(', ')}\n`;
+                            } else {
+                                // Caso esteja marcada como "Alterada" mas sem itens selecionados
+                                mensagem += `*Itens Alterados:* (Nenhum item marcado)\n`;
                             }
+                        } else {
+                            // Se for Normal
+                            mensagem += `*Status:* Normal\n`;
                         }
-                        if (Array.isArray(c.brindes) && c.brindes.length > 0) { 
-                             detalhesCestas += `\n*Brindes*: ${c.brindes.join(', ')}`;
-                        }
+                        // O campo de texto (detalhe da alteração) foi omitido, conforme solicitado.
                     });
-
-                    let obsCliente = entrega.observacao ? `\n\n*Obs Pedido*: ${entrega.observacao}` : "";
-
-                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\n*Cliente*: ${clienteNome}\n*Valor Total*: ${cestaValor}\n*Celular Cliente*: ${entrega.cliente.celular}${detalhesCestas}${obsCliente}`;
+                    
+                    // --- Fim da Mensagem Simplificada ---
+                    
                     break;
                 default:
                     return;
