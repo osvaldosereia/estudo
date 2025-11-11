@@ -1345,7 +1345,7 @@
                     return;
             }
 
-            // CORRIGIDO: O link do WhatsApp deve codificar a mensagem e usar o número de destino
+            // CORREÇÃO FINAL: Garante que a mensagem é codificada corretamente para a URL
             const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
             
             fecharModalWhatsapp();
