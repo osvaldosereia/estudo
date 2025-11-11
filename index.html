@@ -221,103 +221,168 @@
                         
                         
                     </div>
+<form id="form-entrega" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+    <div class="md:col-span-1 space-y-4">
+        <div>
+            <label for="input-cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+            <input type="text" id="input-cliente" list="lista-clientes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Digite ou selecione um cliente...">
+            <datalist id="lista-clientes">
+                <option value="Carregando clientes..."></option> 
+            </datalist>
+        </div>
 
-                   <div class="md:col-span-1 space-y-4">
-    <div class="border border-blue-200 p-3 rounded-md bg-blue-50 space-y-3">
-        <label class="block text-sm font-bold text-gray-700">Cestas no Pedido <span class="text-red-500">*</span></label>
-        
-        <div id="lista-cestas-pedido" class="space-y-2">
+        <div id="info-cliente-selecionado" class="hidden space-y-2 text-sm text-gray-600 border-l-4 border-blue-200 pl-3 py-2 bg-blue-50 rounded-r-md">
+            <p><strong>Endereço:</strong> <span id="display-cliente-endereco">-</span></p>
+            <p><strong>Complemento:</strong> <span id="display-cliente-complemento">-</span></p>
+            <p><strong>Celular:</strong> <span id="display-cliente-celular">-</span></p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Região da Entrega <span class="text-red-500">*</span></label>
+            <div id="radio-regioes" class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                    <input type="radio" name="regiao-entrega" value="COXIPO" required class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-gray-700">COXIPÓ</span>
+                </label>
+                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                    <input type="radio" name="regiao-entrega" value="VG" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-gray-700">VG</span>
+                </label>
+                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                    <input type="radio" name="regiao-entrega" value="CUIABA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-gray-700">CUIABÁ</span>
+                </label>
+                <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-300 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                    <input type="radio" name="regiao-entrega" value="CPA" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-gray-700">CPA</span>
+                </label>
             </div>
+        </div>
+
+        <div>
+            <label for="obs-cliente" class="block text-sm font-medium text-gray-700">Observação (Opcional)</label>
+            <input type="text" id="obs-cliente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: Casa azul, portão branco">
+        </div>
         
-        <div class="flex space-x-2">
-             <select id="select-cesta-adicionar" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
-                <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
-                <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
-                <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
-                <option value="Pequena Koblenz" data-valor="220.00">Pequena Kolenz</option>
-                <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
-                <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
-                <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
-                <option value="Grande Koblenz" data-valor="390.00">Grande Koblenz</option>
-            </select>
-            <input type="number" id="input-qtd-cesta-adicionar" min="1" value="1" class="w-20 text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base">
-        </div>
-        <button type="button" id="btn-adicionar-cesta" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600">
-            Adicionar à Lista (Total: <span id="display-total-pedido">R$ 0,00</span>)
-        </button>
-    </div>
-    <div>
-        <label for="input-valor-total-pedido" class="block text-sm font-medium text-gray-700">Valor **FINAL** do Pedido (R$)</label>
-        <input type="number" id="input-valor-total-pedido" step="0.01" min="0" value="0.00" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base font-bold text-lg" placeholder="0.00">
+        
     </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Tipo da Cesta</label>
-        <div class="mt-2 flex space-x-4">
-            <label class="flex items-center">
-                <input type="radio" name="tipo-cesta" value="Normal" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                <span class="ml-2 text-sm text-gray-700">Normal</span>
-            </label>
-            <label class="flex items-center">
-                <input type="radio" name="tipo-cesta" value="Alterada" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
-                <span class="ml-2 text-sm text-gray-700">Alterada</span>
-            </label>
-        </div>
-    </div>
-
-     <div>
-        <label class="block text-sm font-medium text-gray-700">Brinde (Opcional)</label>
-        <div class="mt-2 space-y-2">
-            <label class="flex items-center">
-                <input type="checkbox" name="brindes_opcoes" value="Ovo" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                <span class="ml-2 text-sm text-gray-700">Ovo</span>
-            </label>
-            <label class="flex items-center">
-                <input type="checkbox" name="brindes_opcoes" value="Amaciante" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                <span class="ml-2 text-sm text-gray-700">Amaciante</span>
-            </label>
-            <label class="flex items-center">
-                <input type="checkbox" name="brindes_opcoes" value="Cafe 250g" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
-                <span class="ml-2 text-sm text-gray-700">Café 250g</span>
-            </label>
-        </div>
-    </div>
-</div>
+    <div class="md:col-span-1 space-y-4">
+        <div class="border border-blue-200 p-3 rounded-md bg-blue-50 space-y-3">
+            <label class="block text-sm font-bold text-gray-700">Adicionar Cesta ao Pedido <span class="text-red-500">*</span></label>
+            
+            <div class="grid grid-cols-4 gap-2">
+                <div class="col-span-2">
+                    <select id="select-cesta-adicionar" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base">
+                        <option value="Mini Bonini" data-valor="165.00">Mini Bonini</option>
+                        <option value="Mini Koblenz" data-valor="170.00">Mini Koblenz</option>
+                        <option value="Pequena Bonini" data-valor="215.00">Pequena Bonini</option>
+                        <option value="Pequena Koblenz" data-valor="220.00">Pequena Kolenz</option>
+                        <option value="Média Bonini" data-valor="320.00">Média Bonini</option>
+                        <option value="Média Koblenz" data-valor="325.00">Média Koblenz</option>
+                        <option value="Grande Bonini" data-valor="380.00">Grande Bonini</option>
+                        <option value="Grande Koblenz" data-valor="390.00">Grande Koblenz</option>
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <input type="number" id="input-qtd-cesta-adicionar" min="1" value="1" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base">
+                </div>
+                <div class="col-span-1 flex items-center">
+                    <input type="number" id="input-valor-cesta-adicionar" step="0.01" min="0" value="165.00" class="w-full text-center rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-2 text-base font-bold" placeholder="Valor">
+                </div>
+            </div>
+            
+            <div class="border-t border-blue-100 pt-3 space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo (Alterada/Normal)</label>
+                    <div class="mt-2 flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="tipo-cesta-adicionar" value="Normal" checked class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Normal</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="tipo-cesta-adicionar" value="Alterada" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Alterada</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="campo-alterada-adicionar" class="hidden space-y-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <label for="codigo-alterada-adicionar" class="block text-sm font-bold text-red-700">Detalhe da Alteração</label>
+                    <textarea id="codigo-alterada-adicionar" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 py-2 px-3 text-sm" placeholder="Ex: TIRA: Arroz, Feijão | POR: Café, Açúcar"></textarea>
                     
-                    <div class="md:col-span-1 space-y-4">
-                        <div id="campo-alterada" class="hidden space-y-4">
-                            <div>
-                                <label for="codigo-alterada" class="block text-sm font-medium text-gray-700">Detalhe (Cesta Alterada)</label>
-                                <textarea id="codigo-alterada" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="Ex: TIRA: Arroz, Feijão
-POR: Café, Açúcar"></textarea>
-                            </div>
-
-                            <div id="campo-partes-alteradas">
-                                <label class="block text-sm font-medium text-gray-700">Itens Alterados</label>
-                                <div class="mt-2 space-y-2">
-                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                        <input type="checkbox" name="partes_alteradas" value="Arroz" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                        <span class="ml-3 text-sm font-medium text-gray-700">Arroz</span>
-                                    </label>
-                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                        <input type="checkbox" name="partes_alteradas" value="Alimento" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                        <span class="ml-3 text-sm font-medium text-gray-700">Alimento (Geral)</span>
-                                    </label>
-                                    <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
-                                        <input type="checkbox" name="partes_alteradas" value="Limpeza" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded">
-                                        <span class="ml-3 text-sm font-medium text-gray-700">Limpeza</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="pt-6 flex flex-col">
-                            <button type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Lançar Entrega
-                            </button>
+                    <div id="campo-partes-alteradas-adicionar">
+                        <label class="block text-sm font-medium text-red-700">Itens Alterados</label>
+                        <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                <input type="checkbox" name="partes_alteradas_adicionar" value="Arroz" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                <span class="ml-2 font-medium text-gray-700">Arroz</span>
+                            </label>
+                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                <input type="checkbox" name="partes_alteradas_adicionar" value="Alimento" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                <span class="ml-2 font-medium text-gray-700">Alimento (Geral)</span>
+                            </label>
+                            <label class="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 has-[:checked]:bg-red-100 has-[:checked]:border-red-300">
+                                <input type="checkbox" name="partes_alteradas_adicionar" value="Limpeza" class="h-4 w-4 border-gray-300 text-red-600 focus:ring-red-500 rounded">
+                                <span class="ml-2 font-medium text-gray-700">Limpeza</span>
+                            </label>
                         </div>
                     </div>
-                </form>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Brinde (Opcional)</label>
+                    <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="brindes_adicionar" value="Ovo" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                            <span class="ml-2 text-gray-700">Ovo</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="brindes_adicionar" value="Amaciante" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                            <span class="ml-2 text-gray-700">Amaciante</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="brindes_adicionar" value="Cafe 250g" class="h-4 w-4 border-gray-300 text-pink-600 focus:ring-pink-500 rounded">
+                            <span class="ml-2 text-gray-700">Café 250g</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" id="btn-adicionar-cesta" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Adicionar Cesta à Lista
+            </button>
+        </div>
+    </div>
+
+    <div class="md:col-span-1 space-y-4">
+        <div class="space-y-3">
+            <label class="block text-sm font-bold text-gray-700">Itens no Pedido (Total: <span id="display-total-pedido" class="text-green-600">R$ 0,00</span>)</label>
+            <div id="lista-cestas-pedido" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-white rounded-md border border-gray-300">
+                <p class="text-sm text-gray-500">Nenhuma cesta adicionada.</p>
+            </div>
+            
+            <label for="input-valor-total-pedido" class="block text-sm font-medium text-gray-700">Ajuste Manual do Valor (Opcional)</label>
+            <input type="number" id="input-valor-total-pedido" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base font-bold text-lg" placeholder="0.00">
+        </div>
+        
+        <div class="pt-2">
+            <label class="block text-sm font-medium text-gray-700">Informações Adicionais do Pedido</label>
+            <div class="text-sm text-gray-600 border-l-4 border-gray-200 pl-3 py-2 bg-gray-50 rounded-r-md mt-2">
+                <p>Os detalhes de Alteração e Brindes são salvos individualmente para cada cesta acima.</p>
+            </div>
+        </div>
+        
+        <div class="pt-6 flex flex-col">
+            <button type="submit" class="w-full flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Lançar Entrega
+            </button>
+        </div>
+    </div>
+</form>
             </div>
         </section>
 
@@ -410,7 +475,7 @@ POR: Café, Açúcar"></textarea>
     </div>
 
 
-   <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
+  <div id="modal-exportar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 overflow-hidden sm:m-8 sm:rounded-lg">
         <div class="p-6">
              <div class="flex justify-between items-center mb-4 sm:hidden">
@@ -419,23 +484,7 @@ POR: Café, Açúcar"></textarea>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-4 hidden sm:block">Exportar Rota e Despesas</h3>
-
-            <h4 class="text-lg font-semibold text-gray-700 mt-2 mb-3 border-b pb-1">Despesas da Rota</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
-                <div>
-                    <label for="input-despesa-abastecimento" class="block text-sm font-medium text-gray-700">Abastecimento (R$)</label>
-                    <input type="number" id="modal-despesa-abastecimento" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-alimentacao" class="block text-sm font-medium text-gray-700">Alimentação (R$)</label>
-                    <input type="number" id="modal-despesa-alimentacao" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-                <div>
-                    <label for="input-despesa-extra" class="block text-sm font-medium text-gray-700">Extras (R$)</label>
-                    <input type="number" id="modal-despesa-extra" step="0.01" min="0" value="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-base" placeholder="0.00">
-                </div>
-            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 hidden sm:block">Exportar Rota e Relatórios</h3>
             
             <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-3 border-b pb-1">Filtro de Região (Relatório e Resumo)</h4>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -466,11 +515,12 @@ POR: Café, Açúcar"></textarea>
 
             <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-2">Relatório de Entregas Concluídas</h4>
             <div id="export-relatorio" class="w-full max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md bg-gray-50">
-                <pre class="text-xs text-gray-700">Nenhuma entrega concluída.</pre>
+                <pre class="text-xs text-gray-700">Selecione as regiões para gerar o relatório...</pre>
+            </div>
+            
+            <div id="export-whatsapp-link" class="mt-4">
             </div>
 
-            <div id="export-whatsapp-link" class="mt-4">
-                </div>
         </div>
         <div class="bg-gray-50 px-6 py-4 flex justify-end rounded-b-lg hidden sm:flex">
             <button type="button" id="btn-fechar-exportar" class="rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Fechar</button>
@@ -493,10 +543,10 @@ POR: Café, Açúcar"></textarea>
     <input type="file" id="input-carregar-arquivo" class="hidden" accept=".json,application/json">
 
 
-   <script>
+ <script>
         /**
          * =================================================================
-         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado para Fluxo Simplificado)
+         * BLOCO DE CÓDIGO JS PRINCIPAL (Revisado para Alteração por Cesta)
          * =================================================================
          */
 
@@ -533,21 +583,23 @@ POR: Café, Açúcar"></textarea>
         let regiaoAtiva = 'VG';
         
         // NOVO: Estado temporário das cestas no formulário de lançamento
+        // Estrutura do item: { idTemp, nome, valor, qtd, tipo, codigoAlterada, partesAlteradas, brindes }
         let cestasNoPedido = [];
+
 
         // --- Seletores de Elementos (Inicializados no DOMContentLoaded) ---
         let btnNovaRota, selectRotaAtiva, inputNomeRota, inputDataRota, displayDiaSemana, btnExcluirRota;
-        let modalDespesaAbastecimento, modalDespesaAlimentacao, modalDespesaExtra; 
         let btnToggleGerenciarRota, contentGerenciarRota, iconChevron; 
         let btnToggleLancamento, contentLancamento, iconChevronLancamento; 
-        let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, campoAlterada, codigoAlteradaInput, listaEntregasEl, listaVaziaEl, radioRegioes;
+        let formEntrega, inputCliente, datalistClientes, infoClienteSelecionado, displayClienteEndereco, displayClienteComplemento, displayClienteCelular, obsClienteInput, listaEntregasEl, listaVaziaEl, radioRegioes;
         let modalPagamento, formPagamento, btnCancelarPagamento, modalClienteNome, modalClienteValor, modalErrorPagamento, btnExportar, btnCarregar, modalExportar, exportRelatorioEl, exportWhatsappLinkEl, btnFecharExportar, btnFecharExportarTop, modalAviso, modalAvisoTexto, btnFecharAviso, inputCarregarArquivo;
         let modalWhatsappOpcoes, modalWhatsappClienteNome, modalWhatsappCestaInfo, btnFecharWhatsappOpcoes;
         let filtrosRegiaoEl;
         
         // NOVOS SELETORES
         let placarEntregasEl;
-        let selectCestaAdicionar, inputQtdCestaAdicionar, btnAdicionarCesta, listaCestasPedidoEl, displayTotalPedidoEl, inputValorTotalPedidoEl;
+        let selectCestaAdicionar, inputQtdCestaAdicionar, btnAdicionarCesta, listaCestasPedidoEl, displayTotalPedidoEl, inputValorTotalPedidoEl, inputValorCestaAdicionar;
+        let campoAlteradaAdicionar, codigoAlteradaAdicionar;
 
 
         function inicializarSeletores() {
@@ -569,11 +621,6 @@ POR: Café, Açúcar"></textarea>
             displayDiaSemana = document.getElementById('display-dia-semana');
             btnExcluirRota = document.getElementById('btn-excluir-rota');
 
-            // Despesas no Modal
-            modalDespesaAbastecimento = document.getElementById('modal-despesa-abastecimento');
-            modalDespesaAlimentacao = document.getElementById('modal-despesa-alimentacao');
-            modalDespesaExtra = document.getElementById('modal-despesa-extra');
-
             // Lançamento de Entrega
             formEntrega = document.getElementById('form-entrega');
             inputCliente = document.getElementById('input-cliente');
@@ -584,19 +631,21 @@ POR: Café, Açúcar"></textarea>
             displayClienteCelular = document.getElementById('display-cliente-celular');
             obsClienteInput = document.getElementById('obs-cliente');
             radioRegioes = document.getElementById('radio-regioes');
-            campoAlterada = document.getElementById('campo-alterada');
-            codigoAlteradaInput = document.getElementById('codigo-alterada');
             listaEntregasEl = document.getElementById('lista-entregas');
             listaVaziaEl = document.getElementById('lista-vazia');
             filtrosRegiaoEl = document.getElementById('filtros-regiao');
             
-            // NOVOS SELETORES DE LANÇAMENTO
+            // NOVOS SELETORES DE LANÇAMENTO (Multi-Cestas)
             selectCestaAdicionar = document.getElementById('select-cesta-adicionar');
             inputQtdCestaAdicionar = document.getElementById('input-qtd-cesta-adicionar');
             btnAdicionarCesta = document.getElementById('btn-adicionar-cesta');
             listaCestasPedidoEl = document.getElementById('lista-cestas-pedido');
             displayTotalPedidoEl = document.getElementById('display-total-pedido');
             inputValorTotalPedidoEl = document.getElementById('input-valor-total-pedido'); // Campo de Valor Final
+            inputValorCestaAdicionar = document.getElementById('input-valor-cesta-adicionar');
+            campoAlteradaAdicionar = document.getElementById('campo-alterada-adicionar');
+            codigoAlteradaAdicionar = document.getElementById('codigo-alterada-adicionar');
+
 
             // Modais
             modalPagamento = document.getElementById('modal-pagamento');
@@ -671,16 +720,22 @@ POR: Café, Açúcar"></textarea>
             return dia.charAt(0).toUpperCase() + dia.slice(1);
         }
 
-        // REMOVIDA: atualizarValorCesta - substituída por atualizarListaCestas
+        // NOVO: Função para obter o valor da cesta selecionada para adicionar
+        function atualizarValorCestaAdicionar() {
+            const selectedOption = selectCestaAdicionar.options[selectCestaAdicionar.selectedIndex];
+            const valor = selectedOption ? selectedOption.dataset.valor || "165.00" : "165.00"; 
+            inputValorCestaAdicionar.value = parseFloat(valor).toFixed(2);
+        }
 
-        function toggleCampoAlterada() {
-            const tipo = document.querySelector('input[name="tipo-cesta"]:checked').value;
+        // NOVO: Toggle para o campo de alterada na seção de adicionar cesta
+        function toggleCampoAlteradaAdicionar() {
+            const tipo = document.querySelector('input[name="tipo-cesta-adicionar"]:checked').value;
             if (tipo === 'Alterada') {
-                campoAlterada.classList.remove('hidden');
+                campoAlteradaAdicionar.classList.remove('hidden');
             } else {
-                campoAlterada.classList.add('hidden');
-                codigoAlteradaInput.value = '';
-                document.querySelectorAll('input[name="partes_alteradas"]:checked').forEach(cb => {
+                campoAlteradaAdicionar.classList.add('hidden');
+                codigoAlteradaAdicionar.value = '';
+                document.querySelectorAll('input[name="partes_alteradas_adicionar"]:checked').forEach(cb => {
                     cb.checked = false;
                 });
             }
@@ -718,11 +773,32 @@ POR: Café, Açúcar"></textarea>
             
             if (index !== -1) {
                 const [entrega] = entregas.splice(index, 1);
+                
+                // NOVO: Inserir a entrega finalizada no final.
                 entregas.push(entrega);
+                
+                // Re-ordenar forçando Pendentes primeiro
+                // O critério de ordenação deve garantir que:
+                // 1. Pendentes fiquem no topo (ordenados pela ordem original/criação)
+                // 2. Finalizadas/Canceladas fiquem no final (ordenadas pela ordem de finalização)
+                entregas.sort((a, b) => {
+                    if (a.status === 'Pendente' && b.status !== 'Pendente') return -1;
+                    if (a.status !== 'Pendente' && b.status === 'Pendente') return 1;
+                    
+                    // Se ambos forem pendentes, manter a ordem de inserção (implícita no array)
+                    // Se ambos forem finalizados, ordenar pelo horário de entrega (mais recente por último)
+                    if (a.status !== 'Pendente' && b.status !== 'Pendente') {
+                        return new Date(a.horarioEntrega) - new Date(b.horarioEntrega);
+                    }
+
+                    return 0;
+                });
+                
                 salvarLocalStorage();
                 renderizarEntregas();
             }
         }
+
 
         // --- Funções de Persistência (LocalStorage) ---
 
@@ -752,19 +828,7 @@ POR: Café, Açúcar"></textarea>
             salvarTodasAsRotas();
         }
         
-        function salvarDespesasDoModal() {
-            const rota = todasAsRotas[rotaAtivaId];
-            if (!rota) return;
-
-            rota.despesas = {
-                abastecimento: parseFloat(modalDespesaAbastecimento.value) || 0,
-                alimentacao: parseFloat(modalDespesaAlimentacao.value) || 0,
-                extra: parseFloat(modalDespesaExtra.value) || 0
-            };
-
-            salvarTodasAsRotas(); 
-        }
-
+        // REMOVIDO: salvarDespesasDoModal() pois despesas foram removidas do fluxo do modal.
 
         // --- Funções de Gerenciamento de Rota ---
 
@@ -827,16 +891,7 @@ POR: Café, Açúcar"></textarea>
             return [];
         }
         
-        function carregarDespesasNoModal() {
-            const rota = todasAsRotas[rotaAtivaId];
-            if (!rota) return;
-            
-            rota.despesas = rota.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
-            
-            modalDespesaAbastecimento.value = (rota.despesas.abastecimento || 0).toFixed(2);
-            modalDespesaAlimentacao.value = (rota.despesas.alimentacao || 0).toFixed(2);
-            modalDespesaExtra.value = (rota.despesas.extra || 0).toFixed(2);
-        }
+        // REMOVIDO: carregarDespesasNoModal()
 
         function popularSelectRotas() {
             selectRotaAtiva.innerHTML = '';
@@ -910,6 +965,8 @@ POR: Café, Açúcar"></textarea>
             // NOVO: Garantir que a lista de cestas do formulário esteja limpa
             cestasNoPedido = [];
             renderizarListaCestasPedido();
+            atualizarValorCestaAdicionar(); // Para iniciar com o valor correto
+            toggleCampoAlteradaAdicionar(); // Para iniciar o campo alterada escondido
 
             filtrarEntregas(regiaoAtiva);
         }
@@ -927,7 +984,7 @@ POR: Café, Açúcar"></textarea>
                 nome: `Rota ${Object.keys(todasAsRotas).length + 1}`,
                 data: hoje,
                 entregas: [],
-                despesas: { abastecimento: 0, alimentacao: 0, extra: 0 }
+                despesas: { abastecimento: 0, alimentacao: 0, extra: 0 } // Mantido na estrutura, mas sem UI para edição
             };
 
             todasAsRotas[novoId] = novaRota;
@@ -1012,12 +1069,20 @@ POR: Café, Açúcar"></textarea>
             
             // 1. Separar pendentes (e ordenar), e finalizadas/canceladas (e ordenar)
             const todasEntregas = getEntregasAtivas();
-            const pendentes = todasEntregas.filter(e => e.status === 'Pendente' && e.regiao === regiaoAtiva);
-            const finalizadas = todasEntregas.filter(e => e.status !== 'Pendente' && e.regiao === regiaoAtiva)
-                                            .sort((a, b) => new Date(b.horarioEntrega) - new Date(a.horarioEntrega));
+            const entregasRenderizar = todasEntregas.filter(e => e.regiao === regiaoAtiva)
+                .sort((a, b) => {
+                    // Pendente primeiro
+                    if (a.status === 'Pendente' && b.status !== 'Pendente') return -1;
+                    if (a.status !== 'Pendente' && b.status === 'Pendente') return 1;
 
-            const entregasRenderizar = [...pendentes, ...finalizadas];
-
+                    // Se ambos são finalizadas/canceladas, ordenar por horário de entrega (mais recente por último)
+                    if (a.status !== 'Pendente' && b.status !== 'Pendente') {
+                        return new Date(a.horarioEntrega) - new Date(b.horarioEntrega);
+                    }
+                    
+                    // Se ambos são pendentes, manter a ordem natural (que é a ordem de lançamento/movimentação)
+                    return 0;
+                });
 
             if (entregasRenderizar.length === 0) {
                 listaVaziaEl.classList.remove('hidden');
@@ -1026,6 +1091,9 @@ POR: Café, Açúcar"></textarea>
             }
             
             listaVaziaEl.classList.add('hidden');
+            
+            let primeiroPendenteIndex = entregasRenderizar.findIndex(e => e.status === 'Pendente');
+
 
             entregasRenderizar.forEach((entrega, index) => {
                 const card = document.createElement('div');
@@ -1033,8 +1101,8 @@ POR: Café, Açúcar"></textarea>
                 const isFinalizada = entrega.status !== 'Pendente';
                 const isPendente = entrega.status === 'Pendente';
                 
-                // NOVO: Destaque da próxima (primeira pendente)
-                const isProxima = isPendente && index === 0; 
+                // Destaque da próxima (primeira pendente)
+                const isProxima = isPendente && index === primeiroPendenteIndex; 
 
                 // Estilização base + status
                 card.className = `p-4 bg-white rounded-lg shadow-md border flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all relative overflow-hidden break-words 
@@ -1044,61 +1112,73 @@ POR: Café, Açúcar"></textarea>
                 
                 // --- Bloco de Informações ---
                 
-                // NOVO: Mostrar todas as cestas
-                const listaCestasHtml = entrega.cestas.map(c => 
-                    `<p class="text-lg font-bold text-gray-700 mt-1">${c.qtd}x ${c.nome} - <span class="font-extrabold text-blue-800">${formatarMoeda(c.valor * c.qtd)}</span></p>`
-                ).join('');
+                // NOVO: Renderizar todas as cestas com seus detalhes
+                const listaCestasHtml = entrega.cestas.map(cesta => {
+                    const itemTotal = cesta.valor * cesta.qtd;
+                    
+                    let infoBrinde = '';
+                    if (Array.isArray(cesta.brindes) && cesta.brindes.length > 0) {
+                        infoBrinde = `<span class="text-xs font-semibold text-pink-700 ml-2">(BRINDES: ${cesta.brindes.join(', ')})</span>`;
+                    }
+
+                    let infoAlteracao = '';
+                    if (cesta.tipo === 'Alterada') {
+                        const detalhes = cesta.codigoAlterada.trim();
+                        const itensAlterados = Array.isArray(cesta.partesAlteradas) && cesta.partesAlteradas.length > 0
+                            ? `<span class="text-xs font-semibold text-red-700 ml-2"> (Itens: ${cesta.partesAlteradas.join(', ')})</span>`
+                            : '';
+                        
+                        infoAlteracao = `
+                            <div class="mt-1 text-sm font-bold text-amber-700">
+                                <span class="card-info-item alterada !p-0 !pl-0 !before:content-none">ALTERADA:</span>
+                                ${itensAlterados}
+                                ${detalhes ? `<pre class="card-multiline !mt-1 !mb-0 !ml-4">${detalhes}</pre>` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    return `
+                        <div class="border-t border-gray-100 pt-1 mt-1">
+                            <p class="text-lg font-bold text-gray-700">
+                                ${cesta.qtd}x ${cesta.nome} - <span class="font-extrabold text-blue-800">${formatarMoeda(itemTotal)}</span>
+                                ${infoBrinde}
+                            </p>
+                            ${infoAlteracao}
+                        </div>
+                    `;
+                }).join('');
                 
-                // NOVO: Cálculo do Valor Total
+                // NOVO: Cálculo do Valor Total do Pedido
                 const valorTotalPedido = entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
 
 
-                let infoBrinde = '';
-                if (Array.isArray(entrega.brindes) && entrega.brindes.length > 0) {
-                    infoBrinde = `<p class="card-info-item brinde">BRINDE(S): ${entrega.brindes.join(', ')}</p>`;
-                }
-
-                let infoAlteracao = '';
-                if (entrega.tipo === 'Alterada') {
-                    const detalhes = entrega.codigoAlterada.trim();
-                    const itensAlterados = Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0
-                        ? `<p class="card-info-item alterada">Itens Alterados: ${entrega.partesAlteradas.join(', ')}</p>`
-                        : '';
-                    
-                    if (detalhes || itensAlterados) {
-                        infoAlteracao = `
-                            <p class="card-info-item alterada">ALTERADA:</p>
-                            ${detalhes ? `<pre class="card-multiline">${detalhes}</pre>` : ''}
-                            ${itensAlterados}
-                        `;
-                    }
-                }
-
-
                 let statusInfo = '';
+                let faixaStatusTexto = '';
                 if (entrega.status === 'Entregue') {
                     statusInfo = `
-                        <div class="mt-2 text-sm font-semibold text-green-700">
+                        <div class="mt-4 text-sm font-semibold text-green-700">
                             Status: Entregue<br>
                             Pagamento: ${entrega.formaPagamento.join(', ')}<br>
                             Hora: ${formatarData(entrega.horarioEntrega)}
                         </div>
                     `;
+                    faixaStatusTexto = 'ENTREGUE';
                 } else if (entrega.status === 'Cancelada') {
                     statusInfo = `
-                        <div class="mt-2 text-sm font-semibold text-red-700">
+                        <div class="mt-4 text-sm font-semibold text-red-700">
                             Status: Cancelada<br>
                             Hora: ${formatarData(entrega.horarioEntrega)}
                         </div>
                     `;
+                    faixaStatusTexto = 'CANCELADA';
                 }
                 
-                // NOVO: Faixa de Status (para Entregue)
+                // Faixa de Status (para Entregue e Cancelada)
                 let faixaStatusHtml = '';
-                if (entrega.status === 'Entregue') {
+                if (isFinalizada) {
                     faixaStatusHtml = `
                         <div class="absolute inset-0 bg-white/70 flex items-center justify-center pointer-events-none z-10">
-                            <span class="text-7xl font-black text-green-500 opacity-80 transform -rotate-12 select-none">ENTREGUE</span>
+                            <span class="text-7xl font-black ${entrega.status === 'Entregue' ? 'text-green-500' : 'text-gray-500'} opacity-80 transform -rotate-12 select-none">${faixaStatusTexto}</span>
                         </div>
                     `;
                 }
@@ -1115,25 +1195,27 @@ POR: Café, Açúcar"></textarea>
                     <p class="text-base text-gray-500 break-words-mobile" title="${entrega.cliente.complemento || ''}">Complemento: ${entrega.cliente.complemento || '-'}</p>
                     <p class="text-base font-bold text-blue-600">Celular: ${entrega.cliente.celular || 'Sem celular'}</p>
                     
-                    <div class="mt-2">
-                        ${listaCestasHtml}
-                    </div>
+                    <p class="text-xl font-extrabold text-green-700 mt-2 border-t border-gray-300 pt-2">TOTAL PEDIDO: ${formatarMoeda(valorTotalPedido)}</p>
                     
-                    <p class="text-xl font-extrabold text-green-700 mt-2">TOTAL PEDIDO: ${formatarMoeda(valorTotalPedido)}</p>
+                    <div class="mt-2 w-full space-y-1">
+                        ${obsInfo}
+                    </div>
                 `;
                 
-                const isPrimeiro = index === 0;
-                const isUltimo = index === entregasRenderizar.length - 1;
+                // Mover Cima/Baixo só pode ser ativado em entregas pendentes
+                const isPrimeiroPendente = isPendente && index === primeiroPendenteIndex;
+                const isUltimoPendente = isPendente && (index === entregasRenderizar.filter(e => e.status === 'Pendente').length - 1);
+                
+                const podeMoverCima = isPendente && !isPrimeiroPendente;
+                const podeMoverBaixo = isPendente && !isUltimoPendente;
 
-                let whatsappHref = '#';
                 let whatsappDisabled = true;
                 let whatsappClass = 'bg-white text-gray-400 border border-gray-300 cursor-not-allowed';
-                if (entrega.cliente.celular && !isFinalizada) {
+                if (entrega.cliente.celular && isPendente) {
                     const numeroLimpo = entrega.cliente.celular.replace(/\D/g, '');
                     const numeroFinal = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
                     
                     if(numeroFinal.length >= 10) { 
-                        whatsappHref = `javascript:void(0);`; 
                         whatsappDisabled = false;
                         whatsappClass = 'bg-green-600 text-white hover:bg-green-700'; 
                     }
@@ -1142,18 +1224,16 @@ POR: Café, Açúcar"></textarea>
                 // Definição dos botões simples (texto)
                 const btnClassesBase = "w-full text-sm font-medium shadow-sm py-3 rounded-md";
                 
-                // NOVO: Os botões de ação devem ser desabilitados se o status for finalizado/cancelado
                 const desabilitarBotoes = isFinalizada ? 'disabled' : '';
-                const desabilitarMover = isFinalizada ? 'disabled' : '';
 
                 const btnWhatsapp = `<button data-id="${entrega.id}" class="btn-whatsapp-modal ${btnClassesBase} ${whatsappClass}" ${whatsappDisabled || isFinalizada ? 'disabled' : ''}>WHATSAPP</button>`;
                 const btnMaps = `<button class="btn-card-maps ${btnClassesBase} bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" ${desabilitarBotoes}>MAPA</button>`;
                 
-                const btnAcaoPrincipal = entrega.status === 'Pendente' ? `
+                const btnAcaoPrincipal = isPendente ? `
                     <button class="btn-entregue ${btnClassesBase} bg-blue-600 text-white hover:bg-blue-700" data-id="${entrega.id}">ENTREGUE</button>
                 ` : `<button class="btn-entregue ${btnClassesBase} bg-green-600 text-white cursor-not-allowed" disabled>ENTREGUE</button>`;
                 
-                const btnCancelar = entrega.status === 'Pendente' ? `
+                const btnCancelar = isPendente ? `
                     <button class="btn-cancelar-entrega ${btnClassesBase} bg-red-100 text-red-700 border border-red-300 hover:bg-red-200" data-id="${entrega.id}">CANCELAR</button>
                 ` : `<button class="btn-cancelar-entrega ${btnClassesBase} bg-gray-300 text-gray-600 cursor-not-allowed" disabled>CANCELAR</button>`;
 
@@ -1163,10 +1243,10 @@ POR: Café, Açúcar"></textarea>
                     <div class="flex-1 min-w-0 ${isFinalizada ? 'opacity-50' : ''}">
                         <div class="flex items-start">
                             <div class="flex flex-col items-center justify-center mr-3 pt-2 flex-shrink-0">
-                                <button class="btn-mover-cima text-gray-400 ${isPrimeiro || isFinalizada || isUltimo ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover Cima" ${isPrimeiro || isFinalizada || isUltimo ? 'disabled' : ''}>
+                                <button class="btn-mover-cima text-gray-400 ${podeMoverCima ? 'hover:text-blue-600' : 'opacity-25 cursor-not-allowed'}" data-id="${entrega.id}" title="Mover Cima" ${podeMoverCima ? '' : 'disabled'}>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
                                 </button>
-                                <button class="btn-mover-baixo text-gray-400 ${isUltimo || isFinalizada ? 'opacity-25 cursor-not-allowed' : 'hover:text-blue-600'}" data-id="${entrega.id}" title="Mover Baixo" ${isUltimo || isFinalizada ? 'disabled' : ''}>
+                                <button class="btn-mover-baixo text-gray-400 ${podeMoverBaixo ? 'hover:text-blue-600' : 'opacity-25 cursor-not-allowed'}" data-id="${entrega.id}" title="Mover Baixo" ${podeMoverBaixo ? '' : 'disabled'}>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                                 </button>
                             </div>
@@ -1176,10 +1256,8 @@ POR: Café, Açúcar"></textarea>
                             </div>
                         </div>
                         
-                        <div class="mt-4 sm:ml-12 w-full space-y-1">
-                            ${obsInfo}
-                            ${infoAlteracao}
-                            ${infoBrinde}
+                        <div class="mt-2 sm:ml-12 w-full">
+                            ${listaCestasHtml}
                             ${statusInfo}
                         </div>
                     </div>
@@ -1207,34 +1285,57 @@ POR: Café, Açúcar"></textarea>
         function adicionarCestaAoPedido() {
             const selectedOption = selectCestaAdicionar.options[selectCestaAdicionar.selectedIndex];
             const nome = selectedOption.value;
-            const valor = formatarValorFloat(selectedOption.dataset.valor);
+            const valor = formatarValorFloat(inputValorCestaAdicionar.value);
             const qtd = parseInt(inputQtdCestaAdicionar.value) || 1;
             
-            if (qtd < 1) {
-                mostrarAviso("A quantidade deve ser de no mínimo 1.");
+            if (qtd < 1 || valor <= 0) {
+                mostrarAviso("A quantidade deve ser >= 1 e o valor deve ser maior que 0.");
                 return;
             }
             
-            // Adiciona/Atualiza a cesta
-            const cestaExistente = cestasNoPedido.find(c => c.nome === nome);
-            if (cestaExistente) {
-                cestaExistente.qtd += qtd;
-            } else {
-                cestasNoPedido.push({ nome, valor, qtd });
+            const tipo = document.querySelector('input[name="tipo-cesta-adicionar"]:checked').value;
+            let codigoAlterada = '';
+            let partesAlteradas = [];
+            let brindes = [];
+
+            if (tipo === 'Alterada') {
+                codigoAlterada = codigoAlteradaAdicionar.value.trim();
+                partesAlteradas = Array.from(document.querySelectorAll('input[name="partes_alteradas_adicionar"]:checked')).map(input => input.value);
             }
             
-            // Reseta a quantidade para 1 para a próxima
+            brindes = Array.from(document.querySelectorAll('input[name="brindes_adicionar"]:checked')).map(input => input.value);
+
+            // Novo item na lista temporária
+            const novoItem = { 
+                idTemp: Date.now(), 
+                nome, 
+                valor, 
+                qtd, 
+                tipo, 
+                codigoAlterada, 
+                partesAlteradas, 
+                brindes 
+            };
+            
+            cestasNoPedido.push(novoItem);
+            
+            // Limpar formulário de adicionar item
+            selectCestaAdicionar.selectedIndex = 0;
             inputQtdCestaAdicionar.value = 1;
+            atualizarValorCestaAdicionar(); // Recarrega valor padrão
+            document.querySelector('input[name="tipo-cesta-adicionar"][value="Normal"]').checked = true;
+            toggleCampoAlteradaAdicionar(); // Esconde Alterada
+            document.querySelectorAll('input[name="brindes_adicionar"]:checked').forEach(cb => cb.checked = false);
             
             renderizarListaCestasPedido();
         }
 
         /**
          * Remove uma cesta da lista temporária do pedido.
-         * @param {string} nomeCesta - Nome da cesta a ser removida
+         * @param {string} idTemp - ID temporário da cesta a ser removida
          */
-        function removerCestaDoPedido(nomeCesta) {
-            cestasNoPedido = cestasNoPedido.filter(c => c.nome !== nomeCesta);
+        function removerCestaDoPedido(idTemp) {
+            cestasNoPedido = cestasNoPedido.filter(c => c.idTemp.toString() !== idTemp);
             renderizarListaCestasPedido();
         }
 
@@ -1247,7 +1348,7 @@ POR: Café, Açúcar"></textarea>
             
             if (cestasNoPedido.length === 0) {
                 listaCestasPedidoEl.innerHTML = '<p class="text-sm text-gray-500">Nenhuma cesta adicionada.</p>';
-                inputValorTotalPedidoEl.value = '0.00';
+                inputValorTotalPedidoEl.value = '';
                 displayTotalPedidoEl.textContent = 'R$ 0,00';
                 return;
             }
@@ -1256,20 +1357,27 @@ POR: Café, Açúcar"></textarea>
                 const itemTotal = cesta.valor * cesta.qtd;
                 total += itemTotal;
                 
+                const tipoTexto = cesta.tipo === 'Alterada' ? `<span class="font-bold text-red-600"> (ALT)</span>` : '';
+                const brindesTexto = cesta.brindes.length > 0 ? `<span class="font-normal text-pink-600 ml-2">(+Brinde)</span>` : '';
+
                 const itemEl = document.createElement('div');
-                itemEl.className = 'flex justify-between items-center bg-white p-2 rounded-md border border-blue-200';
+                itemEl.className = 'flex flex-col p-2 rounded-md border border-blue-200 bg-white shadow-sm';
                 itemEl.innerHTML = `
-                    <span class="text-sm font-medium text-gray-700">${cesta.qtd}x ${cesta.nome}</span>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-sm font-bold text-blue-600">${formatarMoeda(itemTotal)}</span>
-                        <button type="button" data-nome="${cesta.nome}" class="btn-remover-cesta text-red-500 hover:text-red-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-800">${cesta.qtd}x ${cesta.nome}${tipoTexto}${brindesTexto}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-bold text-blue-600">${formatarMoeda(itemTotal)}</span>
+                            <button type="button" data-id-temp="${cesta.idTemp}" class="btn-remover-cesta text-red-500 hover:text-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
                     </div>
+                    ${cesta.tipo === 'Alterada' ? `<p class="text-xs text-red-500 mt-1">Detalhes: ${cesta.codigoAlterada.substring(0, 50)}...</p>` : ''}
                 `;
                 listaCestasPedidoEl.appendChild(itemEl);
             });
             
+            // Preencher o campo de ajuste manual com o total calculado, mas permitir edição
             inputValorTotalPedidoEl.value = total.toFixed(2);
             displayTotalPedidoEl.textContent = formatarMoeda(total);
         }
@@ -1287,14 +1395,15 @@ POR: Café, Açúcar"></textarea>
             
             // NOVO: Info de Cesta no Modal WhatsApp
             const totalPedido = entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
-            let cestaInfo = `TOTAL: ${formatarMoeda(totalPedido)}. ${entrega.cestas.map(c => `${c.qtd}x ${c.nome}`).join(' | ')}`;
+            const cestaNomes = entrega.cestas.map(c => {
+                 let info = `${c.qtd}x ${c.nome}`;
+                 if (c.tipo === 'Alterada') info += ' (ALT)';
+                 if (c.brindes.length > 0) info += ' (+B)';
+                 return info;
+            }).join(' | ');
 
-            if (entrega.tipo === 'Alterada') {
-                cestaInfo += ' - ALTERADA';
-            }
-            if (Array.isArray(entrega.brindes) && entrega.brindes.length > 0) {
-                 cestaInfo += ` + BRINDE (${entrega.brindes.join(', ')}`;
-            }
+            let cestaInfo = `TOTAL: ${formatarMoeda(totalPedido)}. ${cestaNomes}`;
+            
             modalWhatsappCestaInfo.textContent = cestaInfo;
             
             modalWhatsappOpcoes.classList.remove('hidden');
@@ -1314,7 +1423,9 @@ POR: Café, Açúcar"></textarea>
              const numeroDestino = `55${PIX_CELULAR}`; // Sempre para o número de pagamento
              
              // NOVO: Calcula o valor total do pedido
-             const totalPedido = entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+             const totalPedido = entrega.cestas[0].valorTotalAjustado 
+                ? formatarValorFloat(entrega.cestas[0].valorTotalAjustado)
+                : entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
              const cestaValor = formatarMoeda(totalPedido);
              
              const horaEntrega = formatarData(entrega.horarioEntrega).split(' ')[1]; // Pega apenas a hora
@@ -1322,24 +1433,28 @@ POR: Café, Açúcar"></textarea>
              let mensagem = `*✅ ENTREGA CONCLUÍDA - Relatório Rápido*\n\n`;
              mensagem += `*Cliente:* ${entrega.cliente.nome}\n`;
              mensagem += `*Região:* ${entrega.regiao}\n`;
-             
-             // NOVO: Detalhe das cestas
-             mensagem += `*Cestas:* ${entrega.cestas.map(c => `${c.qtd}x ${c.nome}`).join(', ')}\n`;
-             mensagem += `*Valor:* ${cestaValor}\n`;
-             
+             mensagem += `*Valor Pago:* ${cestaValor}\n`;
              mensagem += `*Formas de Pagamento:* ${formasPagamento.join(', ')}\n`;
              mensagem += `*Hora:* ${horaEntrega}\n\n`;
              
-             // Incluir observações, se houver, para contexto do financeiro
-             if (entrega.observacao || entrega.tipo === 'Alterada') {
-                 mensagem += `--- Detalhes da Cesta ---\n`;
-                 if (entrega.tipo === 'Alterada' && entrega.codigoAlterada.trim()) {
-                     // Adiciona o detalhe multi-linha de forma limpa
-                     mensagem += `*Alteração Detalhe:*\n${entrega.codigoAlterada.trim()}\n`;
+             // Detalhe de cada cesta
+             mensagem += `--- Cestas do Pedido ---\n`;
+             entrega.cestas.forEach((c, index) => {
+                 mensagem += `*${index + 1}.* ${c.qtd}x ${c.nome}\n`;
+                 if (c.brindes.length > 0) {
+                     mensagem += `   *Brindes:* ${c.brindes.join(', ')}\n`;
                  }
-                 if (entrega.observacao) {
-                    mensagem += `*Obs Cliente:* ${entrega.observacao}\n`;
+                 if (c.tipo === 'Alterada') {
+                     mensagem += `   *ALTERADA:* ${c.codigoAlterada.trim()}\n`;
+                     if (c.partesAlteradas.length > 0) {
+                         mensagem += `   *Itens:* ${c.partesAlteradas.join(', ')}\n`;
+                     }
                  }
+             });
+
+             // Incluir observações do pedido, se houver
+             if (entrega.observacao) {
+                mensagem += `\n*Obs Pedido:* ${entrega.observacao}\n`;
              }
 
              const url = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(mensagem)}`;
@@ -1350,8 +1465,11 @@ POR: Café, Açúcar"></textarea>
         function gerarMensagem(msgId, entrega) {
             const clienteNome = entrega.cliente.nome;
             
-            // NOVO: Calcula o valor total do pedido
-            const totalPedido = entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+            // NOVO: Calcula o valor total do pedido (usando o valor ajustado se houver)
+            const totalPedido = entrega.cestas[0].valorTotalAjustado 
+                ? formatarValorFloat(entrega.cestas[0].valorTotalAjustado)
+                : entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+
             const cestaValor = formatarMoeda(totalPedido);
             
             const numeroCliente = entrega.cliente.celular ? entrega.cliente.celular.replace(/\D/g, '') : '';
@@ -1379,29 +1497,28 @@ POR: Café, Açúcar"></textarea>
                 case 4: 
                     numeroDestino = NUMERO_GERENTE;
                     targetBlank = true; 
-
-                    let detalhesAlterada = '';
-                    if (entrega.tipo === 'Alterada') {
-                        
-                        detalhesAlterada += "\n*ALTERADA:*";
-                        
-                        const detalhes = entrega.codigoAlterada.trim();
-                        if (detalhes.length > 0) {
-                            const detalhesFormatados = detalhes.split('\n').map(line => `   ${line}`).join('\n');
-                            detalhesAlterada += `\n${detalhesFormatados}`; 
-                        }
-
-                        if (Array.isArray(entrega.partesAlteradas) && entrega.partesAlteradas.length > 0) {
-                            detalhesAlterada += `\n\n*Itens Alterados*: ${entrega.partesAlteradas.join(', ')}`;
-                        }
-                    }
                     
-                    let cestasInfo = entrega.cestas.map(c => `${c.qtd}x ${c.nome} (${formatarMoeda(c.valor * c.qtd)})`).join(' | ');
+                    let detalhesCestas = '';
+                    entrega.cestas.forEach((c, index) => {
+                        detalhesCestas += `\n--- Cesta ${index + 1} (${c.qtd}x ${c.nome}) ---`;
+                        if (c.tipo === 'Alterada') {
+                            detalhesCestas += `\n*ALTERADA:*`;
+                            const detalhes = c.codigoAlterada.trim();
+                            if (detalhes.length > 0) {
+                                detalhesCestas += `\n${detalhes.split('\n').map(line => `   ${line}`).join('\n')}`; 
+                            }
+                            if (Array.isArray(c.partesAlteradas) && c.partesAlteradas.length > 0) {
+                                detalhesCestas += `\n*Itens Alterados*: ${c.partesAlteradas.join(', ')}`;
+                            }
+                        }
+                        if (Array.isArray(c.brindes) && c.brindes.length > 0) { 
+                             detalhesCestas += `\n*Brindes*: ${c.brindes.join(', ')}`;
+                        }
+                    });
 
-                    let brindes = Array.isArray(entrega.brindes) && entrega.brindes.length > 0 ? `\n*Brindes*: ${entrega.brindes.join(', ')}` : "";
-                    let obsCliente = entrega.observacao ? `\n*Obs Cliente*: ${entrega.observacao}` : "";
+                    let obsCliente = entrega.observacao ? `\n\n*Obs Pedido*: ${entrega.observacao}` : "";
 
-                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\n*Cliente*: ${clienteNome}\n*Cestas*: ${cestasInfo}${detalhesAlterada}${brindes}${obsCliente}\n*Valor Total*: ${cestaValor}\n*Celular Cliente*: ${entrega.cliente.celular}`;
+                    mensagem = `*NOVO PEDIDO (ENTREGA)*\n\n*Cliente*: ${clienteNome}\n*Valor Total*: ${cestaValor}\n*Celular Cliente*: ${entrega.cliente.celular}${detalhesCestas}${obsCliente}`;
                     break;
                 default:
                     return;
@@ -1457,25 +1574,28 @@ POR: Café, Açúcar"></textarea>
                 return;
             }
             const regiaoSelecionada = regiaoSelecionadaEl.value;
+            
+            // O valor final do pedido pode ter sido alterado manualmente
+            const valorAjustado = formatarValorFloat(inputValorTotalPedidoEl.value);
 
-            const partesAlteradasSelecionadas = 
-                Array.from(formEntrega.querySelectorAll('input[name="partes_alteradas"]:checked'))
-                     .map(input => input.value);
-            
-            const brindesSelecionados = Array.from(formEntrega.querySelectorAll('input[name="brindes_opcoes"]:checked')).map(input => input.value);
-            
+            // A nova estrutura da entrega armazena o array de cestas
             const novaEntrega = {
                 id: Date.now(),
                 cliente: clienteData,
                 observacao: obsClienteInput.value.trim(),
                 regiao: regiaoSelecionada, 
-                // NOVO: Agora é um array de cestas
-                cestas: [...cestasNoPedido], 
-                // Valor total não é mais necessário aqui, será calculado na renderização/exportação
-                tipo: document.querySelector('input[name="tipo-cesta"]:checked').value,
-                codigoAlterada: codigoAlteradaInput.value.trim(),
-                partesAlteradas: partesAlteradasSelecionadas,
-                brindes: brindesSelecionados, 
+                // A lista de cestas já contém todos os detalhes (tipo, alterada, brindes)
+                cestas: cestasNoPedido.map(c => ({ 
+                    nome: c.nome, 
+                    valor: c.valor, 
+                    qtd: c.qtd, 
+                    tipo: c.tipo, 
+                    codigoAlterada: c.codigoAlterada, 
+                    partesAlteradas: c.partesAlteradas,
+                    brindes: c.brindes,
+                    // Valor Ajustado é salvo no objeto principal para referência rápida se necessário
+                    valorTotalAjustado: valorAjustado
+                })), 
                 status: "Pendente",
                 formaPagamento: [],
                 horarioEntrega: null
@@ -1486,14 +1606,18 @@ POR: Café, Açúcar"></textarea>
             
             filtrarEntregas(regiaoAtiva); 
 
-            // NOVO: Resetar o formulário de cestas
+            // Resetar o formulário de cestas e inputs
             cestasNoPedido = [];
             renderizarListaCestasPedido();
 
             formEntrega.reset();
             inputCliente.value = '';
             infoClienteSelecionado.classList.add('hidden');
-            toggleCampoAlterada();
+            // Resetar o formulário de adicionar cesta
+            selectCestaAdicionar.selectedIndex = 0;
+            inputQtdCestaAdicionar.value = 1;
+            atualizarValorCestaAdicionar(); 
+            toggleCampoAlteradaAdicionar(); 
             
             // Aumenta o índice da frase motivacional
             indiceFrase = (indiceFrase + 1) % FRASES_GAMIFICADAS.length;
@@ -1509,6 +1633,7 @@ POR: Café, Açúcar"></textarea>
                 mostrarAviso('O cliente não possui um endereço cadastrado para abrir no mapa.');
                 return;
             }
+            // OBS: A URL foi corrigida aqui (removida a parte 'https://www.google.com/maps/search/?api=1&query=$')
             const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoFormatado)}`;
             window.open(url, '_blank');
         }
@@ -1518,8 +1643,11 @@ POR: Café, Açúcar"></textarea>
             const entrega = entregas.find(e => e.id.toString() === id);
             if (!entrega) return;
             
-            // NOVO: Cálculo do valor total
-            const totalPedido = entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+            // Cálculo do valor total
+            // Se houver valor ajustado (manual), usa-o. Caso contrário, calcula.
+            const totalPedido = entrega.cestas[0].valorTotalAjustado 
+                ? formatarValorFloat(entrega.cestas[0].valorTotalAjustado)
+                : entrega.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
 
             entregaParaPagarId = id;
             
@@ -1555,28 +1683,29 @@ POR: Café, Açúcar"></textarea>
         }
 
         function moverEntrega(id, direcao) {
-            const entregas = getEntregasAtivas().filter(e => e.status === 'Pendente' && e.regiao === regiaoAtiva); // Apenas pendentes na região ativa
             const todasEntregas = getEntregasAtivas();
-            const index = entregas.findIndex(e => e.id.toString() === id);
-            if (index === -1) return;
+            const pendentesNaRegiao = todasEntregas.filter(e => e.status === 'Pendente' && e.regiao === regiaoAtiva);
 
-            const entregaA = entregas[index];
-            let indexNaRotaA = todasEntregas.findIndex(e => e.id.toString() === entregaA.id.toString());
+            const indexEmPendentes = pendentesNaRegiao.findIndex(e => e.id.toString() === id);
+            if (indexEmPendentes === -1) return; 
 
-            let indexNaRotaB = -1;
-            
-            if (direcao === 'cima' && index > 0) {
-                const entregaB = entregas[index - 1];
-                indexNaRotaB = todasEntregas.findIndex(e => e.id.toString() === entregaB.id.toString());
-                
-            } else if (direcao === 'baixo' && index < entregas.length - 1) {
-                const entregaB = entregas[index + 1];
-                indexNaRotaB = todasEntregas.findIndex(e => e.id.toString() === entregaB.id.toString());
+            let novaPosicaoEmPendentes = indexEmPendentes;
 
+            if (direcao === 'cima' && indexEmPendentes > 0) {
+                novaPosicaoEmPendentes = indexEmPendentes - 1;
+            } else if (direcao === 'baixo' && indexEmPendentes < pendentesNaRegiao.length - 1) {
+                novaPosicaoEmPendentes = indexEmPendentes + 1;
             } else {
                 return;
             }
+
+            // Identificar as duas entregas envolvidas na lista GERAL
+            const entregaA = pendentesNaRegiao[indexEmPendentes];
+            const entregaB = pendentesNaRegiao[novaPosicaoEmPendentes];
             
+            const indexNaRotaA = todasEntregas.findIndex(e => e.id.toString() === entregaA.id.toString());
+            const indexNaRotaB = todasEntregas.findIndex(e => e.id.toString() === entregaB.id.toString());
+
             // Troca de posição na lista GERAL
             if (indexNaRotaA !== -1 && indexNaRotaB !== -1) {
                 [todasEntregas[indexNaRotaA], todasEntregas[indexNaRotaB]] = [todasEntregas[indexNaRotaB], todasEntregas[indexNaRotaA]];
@@ -1591,10 +1720,9 @@ POR: Café, Açúcar"></textarea>
         function handleCardClick(e) {
             // Verifica se o card não está em modo desabilitado (cancelada ou entregue)
             const cardEl = e.target.closest('[data-id]');
-            if (cardEl && cardEl.classList.contains('cancelada')) return;
-            // Se for entregue, apenas o mover-cima/baixo está desabilitado, os outros não.
-            // if (cardEl && cardEl.classList.contains('entregue')) return;
-
+            // Não bloqueia o clique se for entregue, apenas se for no botão cancelada/maps
+            // if (cardEl && cardEl.classList.contains('cancelada')) return; 
+            
             const btnCima = e.target.closest('.btn-mover-cima');
             if (btnCima && !btnCima.disabled) {
                 moverEntrega(btnCima.dataset.id, 'cima');
@@ -1706,13 +1834,13 @@ POR: Café, Açúcar"></textarea>
         function exportarDados() {
             const rotaAtiva = todasAsRotas[rotaAtivaId];
             if (!rotaAtiva) {
-                mostrarAviso("Nenhuma rota ativa para exportar.");
+                exportRelatorioEl.querySelector('pre').textContent = "Nenhuma rota ativa para gerar relatório.";
                 return;
             }
             
-            salvarDespesasDoModal(); 
+            // REMOVIDO: salvarDespesasDoModal(); 
             
-            // NOVO: Obter regiões selecionadas para filtro
+            // Obter regiões selecionadas para filtro
             const regioesSelecionadas = 
                 Array.from(document.querySelectorAll('input[name="regiao-exportar"]:checked'))
                      .map(input => input.value);
@@ -1720,7 +1848,7 @@ POR: Café, Açúcar"></textarea>
             const entregas = rotaAtiva.entregas.filter(e => regioesSelecionadas.includes(e.regiao));
             
             if (regioesSelecionadas.length === 0) {
-                mostrarAviso("Selecione pelo menos uma região para exportar o relatório.");
+                exportRelatorioEl.querySelector('pre').textContent = "Selecione pelo menos uma região para gerar o relatório.";
                 return;
             }
 
@@ -1737,12 +1865,15 @@ POR: Café, Açúcar"></textarea>
             }
 
             if (entregasConcluidas.length > 0) {
-                relatorioTexto += "--- RELATÓRIO DE ENTREGAS ---\n\n";
+                relatorioTexto += "--- RELATÓRIO DE ENTREGAS CONCLUÍDAS ---\n\n";
                 entregasConcluidas.forEach(e => {
-                    // NOVO: Cálculo do valor total
-                    const totalPedido = e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+                    // Cálculo do valor total
+                    const totalPedido = e.cestas[0].valorTotalAjustado 
+                        ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
+                        : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
                     
                     relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
+                    relatorioTexto += `Região: ${e.regiao}\n`;
                     relatorioTexto += `Valor: ${formatarMoeda(totalPedido)}\n`;
                     relatorioTexto += `Pagamento: ${e.formaPagamento.join(', ')}\n`;
                     relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
@@ -1754,6 +1885,7 @@ POR: Café, Açúcar"></textarea>
                 relatorioTexto += "\n--- ENTREGAS CANCELADAS ---\n\n";
                 entregasCanceladas.forEach(e => {
                     relatorioTexto += `Cliente: ${e.cliente.nome}\n`;
+                    relatorioTexto += `Região: ${e.regiao}\n`;
                     relatorioTexto += `Horário: ${formatarData(e.horarioEntrega)}\n`;
                     relatorioTexto += `-----------------------------\n`;
                 });
@@ -1763,31 +1895,37 @@ POR: Café, Açúcar"></textarea>
             whatsappTexto += `*Entregas Pendentes (${entregasPendentes.length})*:\n`;
             if(entregasPendentes.length > 0) {
                 entregasPendentes.forEach((e, index) => {
+                    // Cestas: Nome e detalhes
+                    const cestasInfo = e.cestas.map(c => {
+                         let info = `${c.qtd}x ${c.nome}`;
+                         if (c.tipo === 'Alterada') info += ' (ALT)';
+                         if (c.brindes.length > 0) info += ' (+B)';
+                         return info;
+                    }).join(' | ');
+
                     whatsappTexto += `${index + 1}. *${e.cliente.nome}* (${e.cliente.celular || 'Sem Celular'}) - Região: ${e.regiao}\n`;
                     if (e.cliente.endereco) { whatsappTexto += `   End: ${e.cliente.endereco}\n`; }
-                    if (e.cliente.complemento) { whatsappTexto += `   Comp: ${e.cliente.complemento}\n`; }
-                    // NOVO: Detalhe das cestas
-                    const totalPedido = e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
-                    whatsappTexto += `   Cestas: ${e.cestas.map(c => `${c.qtd}x ${c.nome}`).join(' | ')} (${formatarMoeda(totalPedido)})\n`;
+                    // Detalhe das cestas
+                    const totalPedido = e.cestas[0].valorTotalAjustado 
+                        ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
+                        : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+                    whatsappTexto += `   Cestas: ${cestasInfo} (${formatarMoeda(totalPedido)})\n`;
                     
-                    if (Array.isArray(e.brindes) && e.brindes.length > 0) { whatsappTexto += `   BRINDE(S): ${e.brindes.join(', ')}\n`; }
-                    if (e.observacao) { whatsappTexto += `   OBS (Cliente): ${e.observacao}\n`; }
-                    if(e.tipo === 'Alterada') {
-                        // Formatação para o gerente: preservando TIRA/POR e itens alterados
-                        const detalhes = e.codigoAlterada.trim();
-
-                        whatsappTexto += `\n   *Cesta Alterada:*`;
-                        
-                        if (detalhes.length > 0) {
-                            const detalhesFormatados = detalhes.split('\n').map(line => `   ${line}`).join('\n');
-                            whatsappTexto += `\n${detalhesFormatados}`; 
-                        }
-                        
-                        if (Array.isArray(e.partesAlteradas) && e.partesAlteradas.length > 0) { 
-                            whatsappTexto += `\n   *Itens Alterados*: ${e.partesAlteradas.join(', ')}`;
-                        }
-                        whatsappTexto += '\n'; // Adiciona uma quebra de linha após o bloco alterado
-                    }
+                    // Detalhes da Alteração (individual por cesta)
+                    e.cestas.filter(c => c.tipo === 'Alterada').forEach((c, cIndex) => {
+                         whatsappTexto += `\n   *DETALHES DA CESTA ${cIndex + 1} (${c.nome}):*`;
+                         const detalhes = c.codigoAlterada.trim();
+                         if (detalhes.length > 0) {
+                            whatsappTexto += `\n${detalhes.split('\n').map(line => `   ${line}`).join('\n')}`; 
+                         }
+                         if (Array.isArray(c.partesAlteradas) && c.partesAlteradas.length > 0) { 
+                            whatsappTexto += `\n   *Itens Alterados*: ${c.partesAlteradas.join(', ')}`;
+                         }
+                         whatsappTexto += '\n';
+                    });
+                    
+                    if (e.observacao) { whatsappTexto += `\n   *OBS Pedido*: ${e.observacao}\n`; }
+                    whatsappTexto += '\n';
                 });
             } else {
                 whatsappTexto += `Nenhuma entrega pendente nas regiões selecionadas.\n`;
@@ -1801,7 +1939,10 @@ POR: Café, Açúcar"></textarea>
             let totalPorPagamento = {};
 
             entregasConcluidas.forEach(e => {
-                const valorTotalPedido = e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+                const valorTotalPedido = e.cestas[0].valorTotalAjustado 
+                    ? formatarValorFloat(e.cestas[0].valorTotalAjustado)
+                    : e.cestas.reduce((total, c) => total + (c.valor * c.qtd), 0);
+                
                 totalVendido += valorTotalPedido;
                 
                 e.cestas.forEach(c => {
@@ -1821,7 +1962,7 @@ POR: Café, Açúcar"></textarea>
             whatsappTexto += `\n*Vendas Concluídas:*\n`;
             whatsappTexto += `Total Vendido: *${formatarMoeda(totalVendido)}*\n`;
 
-            whatsappTexto += `\n*Detalhado por Cesta:*\n`;
+            whatsappTexto += `\n*Detalhado por Cesta (Valor Base):*\n`;
             if (Object.keys(totalPorCesta).length > 0) {
                 Object.keys(totalPorCesta).forEach(nomeCesta => {
                     whatsappTexto += `   ${nomeCesta}: ${formatarMoeda(totalPorCesta[nomeCesta])}\n`;
@@ -1839,8 +1980,8 @@ POR: Café, Açúcar"></textarea>
                  whatsappTexto += `   Nenhum.\n`;
             }
 
-            // Despesas (Lendo do objeto da rota que foi ATUALIZADO)
-            const despesas = rotaAtiva.despesas;
+            // Despesas (MANTIDO NA ESTRUTURA, MAS SEM EDIÇÃO DE UI)
+            const despesas = rotaAtiva.despesas || { abastecimento: 0, alimentacao: 0, extra: 0 };
             const totalDespesas = (despesas.abastecimento || 0) + (despesas.alimentacao || 0) + (despesas.extra || 0);
             
             // Inclusão das despesas no relatório do WhatsApp
@@ -1856,12 +1997,12 @@ POR: Café, Açúcar"></textarea>
 
             exportRelatorioEl.querySelector('pre').textContent = relatorioTexto;
             
-            // Botão de Exportação para o WhatsApp (Garante que o botão é recriado)
-            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappTexto)}`;
+            // Botão de Exportação para o WhatsApp (AGORA É O RELATÓRIO COMPLETO DO GERENTE)
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${NUMERO_GERENTE}&text=${encodeURIComponent(whatsappTexto)}`;
             exportWhatsappLinkEl.innerHTML = `
                 <a href="${whatsappUrl}" target="_blank" class="inline-flex items-center justify-center w-full rounded-md border border-transparent bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-green-600">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM5.5 8.5A1.5 1.5 0 017 7h6a1.5 1.5 0 011.5 1.5v3A1.5 1.5 0 0113 13H7a1.5 1.5 0 01-1.5-1.5v-3z" /></svg>
-                    Enviar Resumo no WhatsApp
+                    Enviar *Relatório Completo* no WhatsApp (Gerente)
                 </a>`;
 
             modalExportar.classList.remove('hidden');
@@ -1880,14 +2021,25 @@ POR: Café, Açúcar"></textarea>
                 const padronizarCestas = (entrega) => {
                     // Se já for a nova estrutura (array de cestas), usa
                     if (entrega.cestas && Array.isArray(entrega.cestas)) {
-                        return entrega.cestas;
+                        return entrega.cestas.map(c => ({
+                            ...c,
+                            tipo: c.tipo || 'Normal',
+                            codigoAlterada: c.codigoAlterada || '',
+                            partesAlteradas: c.partesAlteradas || [],
+                            brindes: c.brindes || [],
+                        }));
                     }
                     // Se for a estrutura antiga (cesta única), converte
                     if (entrega.cesta && typeof entrega.cesta === 'object') {
+                        // Converte a antiga estrutura de alteração/brinde para a nova estrutura individual
                         return [{
                             nome: entrega.cesta.nome || 'Cesta Padrão',
                             valor: parseFloat(entrega.cesta.valor) || 0,
-                            qtd: 1
+                            qtd: 1,
+                            tipo: entrega.tipo || 'Normal', // Tipo vinha no objeto entrega
+                            codigoAlterada: entrega.codigoAlterada || '', // Código vinha no objeto entrega
+                            partesAlteradas: entrega.partesAlteradas || [], // Partes alteradas vinha no objeto entrega
+                            brindes: (entrega.brindes && Array.isArray(entrega.brindes)) ? entrega.brindes : (entrega.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
                         }];
                     }
                     // Caso contrário, retorna um array vazio (erro de dados)
@@ -1920,12 +2072,13 @@ POR: Café, Açúcar"></textarea>
                     
                     dadosCarregados.entregas = dadosCarregados.entregas.map(e => ({
                         regiao: e.regiao || 'CUIABA', 
-                        brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
-                        partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
+                        status: e.status || "Pendente",
+                        formaPagamento: e.formaPagamento || [],
+                        horarioEntrega: e.horarioEntrega || null,
                         ...e,
                         cliente: padronizarCliente(e),
-                        cestas: padronizarCestas(e), // Converte ou usa o array
+                        cestas: padronizarCestas(e), // Converte/padroniza
                     }));
 
                     todasAsRotas[novoId] = dadosCarregados;
@@ -1947,15 +2100,13 @@ POR: Café, Açúcar"></textarea>
 
                     rotaAtiva.entregas = dadosCarregados.map(e => ({
                         regiao: e.regiao || 'CUIABA', 
-                        brindes: (e.brindes && Array.isArray(e.brindes)) ? e.brindes : (e.brinde === 'Sim' ? ['Brinde Padrão'] : []), 
-                        partesAlteradas: e.partesAlteradas || [],
                         observacao: e.observacao || '',
                         status: e.status || "Pendente",
                         formaPagamento: e.formaPagamento || [],
                         horarioEntrega: e.horarioEntrega || null,
                         ...e,
                         cliente: padronizarCliente(e),
-                        cestas: padronizarCestas(e), // Converte ou usa o array
+                        cestas: padronizarCestas(e), // Converte/padroniza
                     }));
                     
                     rotaAtiva.despesas = { abastecimento: 0, alimentacao: 0, extra: 0 }; 
@@ -2025,12 +2176,6 @@ POR: Café, Açúcar"></textarea>
             inputDataRota.addEventListener('change', atualizarInfoRota);
             btnExcluirRota.addEventListener('click', excluirRotaAtiva);
 
-            // Despesas (Agora no Modal de Exportação)
-            modalDespesaAbastecimento.addEventListener('change', salvarDespesasDoModal);
-            modalDespesaAlimentacao.addEventListener('change', salvarDespesasDoModal);
-            modalDespesaExtra.addEventListener('change', salvarDespesasDoModal);
-
-
             // Cliente e Lançamento
             inputCliente.addEventListener('input', (e) => {
                 const nome = e.target.value.toLowerCase().trim();
@@ -2045,22 +2190,36 @@ POR: Café, Açúcar"></textarea>
                 }
             });
 
-            // NOVO: Eventos para Múltiplas Cestas
+            // NOVO: Eventos para Múltiplas Cestas (Adicionar Item)
+            selectCestaAdicionar.addEventListener('change', atualizarValorCestaAdicionar);
+            document.querySelectorAll('input[name="tipo-cesta-adicionar"]').forEach(radio => {
+                radio.addEventListener('change', toggleCampoAlteradaAdicionar);
+            });
+
             btnAdicionarCesta.addEventListener('click', adicionarCestaAoPedido);
             listaCestasPedidoEl.addEventListener('click', (e) => {
                 const btnRemover = e.target.closest('.btn-remover-cesta');
                 if (btnRemover) {
-                    removerCestaDoPedido(btnRemover.dataset.nome);
+                    removerCestaDoPedido(btnRemover.dataset.idTemp);
                 }
             });
 
-            document.querySelectorAll('input[name="tipo-cesta"]').forEach(radio => {
-                radio.addEventListener('change', toggleCampoAlterada);
-            });
-            
             // NOVO: Listener para o campo de Valor Final (ajuste manual)
             inputValorTotalPedidoEl.addEventListener('change', (e) => {
-                displayTotalPedidoEl.textContent = formatarMoeda(e.target.value);
+                const totalCalculado = cestasNoPedido.reduce((total, c) => total + (c.valor * c.qtd), 0);
+                const valorAtual = formatarValorFloat(e.target.value);
+                
+                // Atualiza o display do botão para refletir o valor manual
+                displayTotalPedidoEl.textContent = formatarMoeda(valorAtual);
+                
+                if (valorAtual !== totalCalculado && valorAtual !== 0) {
+                     mostrarAviso(`O valor total foi ajustado manualmente para ${formatarMoeda(valorAtual)}. O valor original calculado era ${formatarMoeda(totalCalculado)}.`);
+                }
+                
+                // Salva o valor ajustado no primeiro item da lista para referência no objeto final
+                if (cestasNoPedido.length > 0) {
+                    cestasNoPedido[0].valorTotalAjustado = valorAtual;
+                }
             });
             
             formEntrega.addEventListener('submit', adicionarEntrega);
@@ -2099,18 +2258,16 @@ POR: Café, Açúcar"></textarea>
                     const entregas = getEntregasAtivas();
                     const entrega = entregas.find(e => e.id.toString() === idEntrega);
                     if (entrega) {
-                        gerarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
+                        generarMensagem(parseInt(btnMsg.dataset.msgId), entrega);
                     }
                 }
             });
 
 
             // Ações Globais (Exportar/Carregar)
-            // Botão Exportar: Carrega despesas e abre o modal
+            // Botão Exportar: Apenas abre o modal, exportarDados é chamado pelo listener de click na região
             btnExportar.addEventListener('click', () => {
-                carregarDespesasNoModal();
-                // A exportarDados() será chamada quando o usuário interagir com o modal, 
-                // mas precisamos abri-lo primeiro.
+                exportarDados(); // Prepara o relatório com os filtros atuais (todos checados)
                 modalExportar.classList.remove('hidden');
             });
             
@@ -2121,8 +2278,6 @@ POR: Café, Açúcar"></textarea>
             document.getElementById('btn-baixar-json').addEventListener('click', () => {
                 const rotaAtiva = todasAsRotas[rotaAtivaId];
                 if (!rotaAtiva) return;
-                
-                salvarDespesasDoModal(); 
                 
                 const jsonDados = JSON.stringify(rotaAtiva, null, 2);
                 
@@ -2137,9 +2292,9 @@ POR: Café, Açúcar"></textarea>
 
             inputCarregarArquivo.addEventListener('change', handleArquivoCarregado);
             
-            // NOVO: Adiciona listener para recalcular o relatório/link do WhatsApp ao abrir/usar o modal
-            modalExportar.addEventListener('click', (e) => {
-                 if (e.target.closest('input[name="regiao-exportar"]') || e.target.id === 'btn-exportar' || e.target.id === 'modal-exportar') {
+            // Adiciona listener para recalcular o relatório/link do WhatsApp ao abrir/usar o modal
+            modalExportar.addEventListener('change', (e) => {
+                 if (e.target.closest('input[name="regiao-exportar"]')) {
                     exportarDados();
                  }
             });
@@ -2148,9 +2303,10 @@ POR: Café, Açúcar"></textarea>
 
             // 3. Inicia o app
             iniciarAplicativo();
-            toggleCampoAlterada();
+            atualizarValorCestaAdicionar();
+            toggleCampoAlteradaAdicionar();
             renderizarListaCestasPedido(); // Inicia com o display do total correto
         });
     </script>
-</body>
+                </body>
 </html>
