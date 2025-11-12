@@ -7,6 +7,20 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762955854464-RLPEB",
+  "nome": "P372 VG CRISTO REI",
+  "celular": "65981636016",
+  "endereco": "P372",
+  "complemento": "CASA 9, CASA DE ESQUINA PORTAO BRANCO"
+},
+  {
+  "id": "1762955531601-011QL",
+  "nome": "cs5322 coxipo sta teresinha",
+  "celular": "65992132865",
+  "endereco": "cs5322",
+  "complemento": "RUA 20 Q8 C7 SANTA TERESINHA"
+},
+  {
   "id": "1762878422947-25F7I",
   "nome": "VG656 JD DOS ESTADOS",
   "celular": "65996315780",
