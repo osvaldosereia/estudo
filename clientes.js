@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762956078239-45B60",
+  "nome": "COX30083 COXIPO AV TORRES",
+  "celular": "65999599194",
+  "endereco": "COX30083",
+  "complemento": "RUA 30 Q29 C10 RESID SALVADOR COSTA MARQUES"
+},
+  {
   "id": "1762955854464-RLPEB",
   "nome": "P372 VG CRISTO REI",
   "celular": "65981636016",
