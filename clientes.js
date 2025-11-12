@@ -7,6 +7,27 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1762956717710-781R9",
+  "nome": "G0033 POÇÃO GENERAL MELO",
+  "celular": "65984357321",
+  "endereco": "G0033",
+  "complemento": "AV DESEMB ANTONIO QUIRINO DE ARAUJO, 1182, POÇÃO"
+},
+  {
+  "id": "1762956266471-0PIDH",
+  "nome": "CPA447 JD LEBLON",
+  "celular": "65984329861",
+  "endereco": "CPA447",
+  "complemento": "AV GONCALO ANTGUNES, 214 JD LEBLON, GRADE BRANCA, CASA AZUL, JANELA BRANCA"
+},
+  {
+  "id": "1762956387702-AFZHX",
+  "nome": "COX0442 STA LAURA ALINE",
+  "celular": "65992752750",
+  "endereco": "COX0442",
+  "complemento": "RUA CASTELO BRANCO, 148, SANTA LAURA"
+},
+  {
   "id": "1762956078239-45B60",
   "nome": "COX30083 COXIPO AV TORRES",
   "celular": "65999599194",
