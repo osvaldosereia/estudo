@@ -535,7 +535,7 @@ const CLIENTES_DB = [
     "id": "1744734094249-AbC9O",
     "nome": "246 VG CRISTO REI",
     "celular": "5565993125235",
-    "endereco": "246",
+    "endereco": "VG246",
     "complemento": "Rua Alacir de Lannes 295 Cristo rei Várzea Grande \n\nCasa Cinza de Esquina"
   },
   {
