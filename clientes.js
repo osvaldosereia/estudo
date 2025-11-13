@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1763055090543-D4SLK",
+  "nome": "cba8071 GRANDE TERCEIRO",
+  "celular": "66984337267",
+  "endereco": "CBA8071",
+  "complemento": "KITNET ESQUINA - LIGAR OU MANDAR MSG QUE ELE SAI AI FORA"
+},
+  {
   "id": "1762956717710-781R9",
   "nome": "G0033 POÇÃO GENERAL MELO",
   "celular": "65984357321",
