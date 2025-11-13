@@ -7,6 +7,13 @@ const CLIENTES_DB = [
     "complemento": "Rua 14 quadra 20  casa 01 Jardim Dos Estados VG"
   },
   {
+  "id": "1763055285958-T9ZVD",
+  "nome": "COX8440 AV TORRES",
+  "celular": "65981478687",
+  "endereco": "COX8440",
+  "complemento": "CLIENTE MARTHA ROCHA - COND PRIMOR DAS TORRES, Q23 LOTE 6"
+},
+  {
   "id": "1763055090543-D4SLK",
   "nome": "cba8071 GRANDE TERCEIRO",
   "celular": "66984337267",
